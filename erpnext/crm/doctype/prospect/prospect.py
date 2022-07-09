@@ -3,14 +3,18 @@
 
 import frappe
 from frappe.contacts.address_and_contact import load_address_and_contact
+from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 
-from erpnext.crm.utils import CRMNote, copy_comments, link_communications, link_open_events
+from erpnext.crm.utils import add_link_in_communication, copy_comments
 
 
-class Prospect(CRMNote):
+class Prospect(Document):
 	def onload(self):
 		load_address_and_contact(self)
+
+	def validate(self):
+		self.update_lead_details()
 
 	def on_update(self):
 		self.link_with_lead_contact_and_address()
@@ -19,24 +23,23 @@ class Prospect(CRMNote):
 		self.unlink_dynamic_links()
 
 	def after_insert(self):
-		carry_forward_communication_and_comments = frappe.db.get_single_value(
-			"CRM Settings", "carry_forward_communication_and_comments"
-		)
-
-		for row in self.get("leads"):
-			if carry_forward_communication_and_comments:
+		if frappe.db.get_single_value("CRM Settings", "carry_forward_communication_and_comments"):
+			for row in self.get("prospect_lead"):
 				copy_comments("Lead", row.lead, self)
-				link_communications("Lead", row.lead, self)
-			link_open_events("Lead", row.lead, self)
+				add_link_in_communication("Lead", row.lead, self)
 
-		for row in self.get("opportunities"):
-			if carry_forward_communication_and_comments:
-				copy_comments("Opportunity", row.opportunity, self)
-				link_communications("Opportunity", row.opportunity, self)
-			link_open_events("Opportunity", row.opportunity, self)
+	def update_lead_details(self):
+		for row in self.get("prospect_lead"):
+			lead = frappe.get_value(
+				"Lead", row.lead, ["lead_name", "status", "email_id", "mobile_no"], as_dict=True
+			)
+			row.lead_name = lead.lead_name
+			row.status = lead.status
+			row.email = lead.email_id
+			row.mobile_no = lead.mobile_no
 
 	def link_with_lead_contact_and_address(self):
-		for row in self.leads:
+		for row in self.prospect_lead:
 			links = frappe.get_all(
 				"Dynamic Link",
 				filters={"link_doctype": "Lead", "link_name": row.lead},
@@ -113,7 +116,9 @@ def make_opportunity(source_name, target_doc=None):
 		{
 			"Prospect": {
 				"doctype": "Opportunity",
-				"field_map": {"name": "party_name", "prospect_owner": "opportunity_owner"},
+				"field_map": {
+					"name": "party_name",
+				},
 			}
 		},
 		target_doc,
@@ -122,25 +127,3 @@ def make_opportunity(source_name, target_doc=None):
 	)
 
 	return doclist
-
-
-@frappe.whitelist()
-def get_opportunities(prospect):
-	return frappe.get_all(
-		"Opportunity",
-		filters={"opportunity_from": "Prospect", "party_name": prospect},
-		fields=[
-			"opportunity_owner",
-			"sales_stage",
-			"status",
-			"expected_closing",
-			"probability",
-			"opportunity_amount",
-			"currency",
-			"contact_person",
-			"contact_email",
-			"contact_mobile",
-			"creation",
-			"name",
-		],
-	)

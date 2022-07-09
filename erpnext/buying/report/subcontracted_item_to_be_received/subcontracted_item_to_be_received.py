@@ -11,18 +11,18 @@ def execute(filters=None):
 		frappe.msgprint(_("To Date must be greater than From Date"))
 
 	data = []
-	columns = get_columns(filters)
+	columns = get_columns()
 	get_data(data, filters)
 	return columns, data
 
 
-def get_columns(filters):
+def get_columns():
 	return [
 		{
-			"label": _("Subcontract Order"),
+			"label": _("Purchase Order"),
 			"fieldtype": "Link",
-			"fieldname": "subcontract_order",
-			"options": filters.order_type,
+			"fieldname": "purchase_order",
+			"options": "Purchase Order",
 			"width": 150,
 		},
 		{"label": _("Date"), "fieldtype": "Date", "fieldname": "date", "hidden": 1, "width": 150},
@@ -57,14 +57,14 @@ def get_columns(filters):
 
 
 def get_data(data, filters):
-	orders = get_subcontract_orders(filters)
-	orders_name = [order.name for order in orders]
-	subcontracted_items = get_subcontract_order_supplied_item(filters.order_type, orders_name)
-	for item in subcontracted_items:
-		for order in orders:
+	po = get_po(filters)
+	po_name = [v.name for v in po]
+	sub_items = get_purchase_order_item_supplied(po_name)
+	for item in sub_items:
+		for order in po:
 			if order.name == item.parent and item.received_qty < item.qty:
 				row = {
-					"subcontract_order": item.parent,
+					"purchase_order": item.parent,
 					"date": order.transaction_date,
 					"supplier": order.supplier,
 					"fg_item_code": item.item_code,
@@ -76,25 +76,22 @@ def get_data(data, filters):
 				data.append(row)
 
 
-def get_subcontract_orders(filters):
+def get_po(filters):
 	record_filters = [
+		["is_subcontracted", "=", 1],
 		["supplier", "=", filters.supplier],
 		["transaction_date", "<=", filters.to_date],
 		["transaction_date", ">=", filters.from_date],
 		["docstatus", "=", 1],
 	]
-
-	if filters.order_type == "Purchase Order":
-		record_filters.append(["is_old_subcontracting_flow", "=", 1])
-
 	return frappe.get_all(
-		filters.order_type, filters=record_filters, fields=["name", "transaction_date", "supplier"]
+		"Purchase Order", filters=record_filters, fields=["name", "transaction_date", "supplier"]
 	)
 
 
-def get_subcontract_order_supplied_item(order_type, orders):
+def get_purchase_order_item_supplied(po):
 	return frappe.get_all(
-		f"{order_type} Item",
-		filters=[("parent", "IN", orders)],
+		"Purchase Order Item",
+		filters=[("parent", "IN", po)],
 		fields=["parent", "item_code", "item_name", "qty", "received_qty"],
 	)

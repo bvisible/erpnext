@@ -57,5 +57,11 @@ frappe.query_reports["Lost Opportunity"] = {
 			"fieldtype": "Dynamic Link",
 			"options": "opportunity_from"
 		},
+		{
+			"fieldname":"contact_by",
+			"label": __("Next Contact By"),
+			"fieldtype": "Link",
+			"options": "User"
+		},
 	]
 };

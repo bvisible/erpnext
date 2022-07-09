@@ -55,7 +55,6 @@ frappe.query_reports["Sales Order Analysis"] = {
 				for (let option of status){
 					options.push({
 						"value": option,
-						"label": __(option),
 						"description": ""
 					})
 				}
