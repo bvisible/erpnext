@@ -169,8 +169,7 @@
   "column_break_114",
   "auto_repeat",
   "update_auto_repeat_reference",
-  "per_received",
-  "is_old_subcontracting_flow"
+  "per_received"
  ],
  "fields": [
   {
@@ -548,8 +547,7 @@
    "fieldname": "is_subcontracted",
    "fieldtype": "Check",
    "label": "Is Subcontracted",
-   "print_hide": 1,
-   "read_only": 1
+   "print_hide": 1
   },
   {
    "fieldname": "items_section",
@@ -1367,7 +1365,7 @@
    "width": "50px"
   },
   {
-    "depends_on": "eval:doc.is_subcontracted",
+   "depends_on": "eval:doc.update_stock && doc.is_subcontracted",
    "fieldname": "supplier_warehouse",
    "fieldtype": "Link",
    "label": "Supplier Warehouse",
@@ -1418,21 +1416,13 @@
    "label": "Advance Tax",
    "options": "Advance Tax",
    "read_only": 1
-  },
-  {
-   "default": "0",
-   "fieldname": "is_old_subcontracting_flow",
-   "fieldtype": "Check",
-   "hidden": 1,
-   "label": "Is Old Subcontracting Flow",
-   "read_only": 1
-   }
+  }
  ],
  "icon": "fa fa-file-text",
  "idx": 204,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-06-15 15:40:58.527065",
+ "modified": "2021-11-25 13:31:02.716727",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice",

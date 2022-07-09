@@ -56,10 +56,7 @@ def get_product_data(search=None, start=0, limit=12):
 		search = "%" + cstr(search) + "%"
 
 	# order by
-	query += """ ORDER BY ranking desc, modified desc limit %s offset %s""" % (
-		cint(limit),
-		cint(start),
-	)
+	query += """ ORDER BY ranking desc, modified desc limit %s, %s""" % (cint(start), cint(limit))
 
 	return frappe.db.sql(query, {"search": search}, as_dict=1)  # nosemgrep
 

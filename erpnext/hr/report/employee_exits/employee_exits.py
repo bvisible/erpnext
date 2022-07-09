@@ -5,7 +5,6 @@ import frappe
 from frappe import _
 from frappe.query_builder import Order
 from frappe.utils import getdate
-from pypika import functions as fn
 
 
 def execute(filters=None):
@@ -111,7 +110,7 @@ def get_data(filters):
 		)
 		.distinct()
 		.where(
-			(fn.Coalesce(fn.Cast(employee.relieving_date, "char"), "") != "")
+			((employee.relieving_date.isnotnull()) | (employee.relieving_date != ""))
 			& ((interview.name.isnull()) | ((interview.name.isnotnull()) & (interview.docstatus != 2)))
 			& ((fnf.name.isnull()) | ((fnf.name.isnotnull()) & (fnf.docstatus != 2)))
 		)

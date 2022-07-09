@@ -288,7 +288,7 @@ def get_project(doctype, txt, searchfield, start, page_len, filters):
 			%(mcond)s
 			{search_condition}
 		order by name
-		limit %(page_len)s offset %(start)s""".format(
+		limit %(start)s, %(page_len)s""".format(
 			search_columns=search_columns, search_condition=search_cond
 		),
 		{
