@@ -252,7 +252,6 @@
    "width": "100px"
   },
   {
-   "depends_on": "eval:doc.uom != doc.stock_uom",
    "fieldname": "stock_uom",
    "fieldtype": "Link",
    "label": "Stock UOM",
@@ -266,7 +265,6 @@
    "width": "100px"
   },
   {
-   "depends_on": "eval:doc.uom != doc.stock_uom",
    "fieldname": "conversion_factor",
    "fieldtype": "Float",
    "label": "Conversion Factor",
@@ -549,7 +547,6 @@
    "read_only": 1
   },
   {
-   "depends_on": "eval:doc.uom != doc.stock_uom",
    "fieldname": "stock_qty",
    "fieldtype": "Float",
    "label": "Accepted Qty in Stock UOM",
@@ -645,15 +642,12 @@
    "print_hide": 1
   },
   {
-   "depends_on": "eval:parent.is_old_subcontracting_flow",
    "fieldname": "bom",
    "fieldtype": "Link",
    "label": "BOM",
    "no_copy": 1,
    "options": "BOM",
-   "print_hide": 1,
-   "read_only": 1,
-   "read_only_depends_on": "eval:!parent.is_old_subcontracting_flow"
+   "print_hide": 1
   },
   {
    "default": "0",
@@ -884,7 +878,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "doc.returned_qty",
+   "depends_on": "returned_qty",
    "fieldname": "returned_qty",
    "fieldtype": "Float",
    "label": "Returned Qty in Stock UOM",
@@ -893,7 +887,6 @@
    "read_only": 1
   },
   {
-   "depends_on": "eval:doc.uom != doc.stock_uom",
    "fieldname": "received_stock_qty",
    "fieldtype": "Float",
    "label": "Received Qty in Stock UOM",
@@ -1001,7 +994,7 @@
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-06-17 05:32:16.483178",
+ "modified": "2022-04-11 13:07:32.061402",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Purchase Receipt Item",

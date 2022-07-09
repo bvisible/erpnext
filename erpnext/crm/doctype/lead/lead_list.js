@@ -16,7 +16,7 @@ frappe.listview_settings['Lead'] = {
 						prospect.prospect_owner = r.lead_owner;
 
 						leads.forEach(function(lead) {
-							let lead_prospect_row = frappe.model.add_child(prospect, 'leads');
+							let lead_prospect_row = frappe.model.add_child(prospect, 'prospect_lead');
 							lead_prospect_row.lead = lead.name;
 						});
 						frappe.set_route("Form", "Prospect", prospect.name);

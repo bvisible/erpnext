@@ -8,9 +8,7 @@
 		"transaction_date": "2013-12-12",
 		"items": [{
 			"item_name": "Test Item",
-			"description": "Some description",
-			"qty": 5,
-			"rate": 100
+			"description": "Some description"
 		}]
 	}
 ]

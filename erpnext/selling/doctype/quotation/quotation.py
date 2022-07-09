@@ -8,6 +8,7 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.utils import flt, getdate, nowdate
 
 from erpnext.controllers.selling_controller import SellingController
+from erpnext.crm.utils import add_link_in_communication, copy_comments
 
 form_grid_templates = {"items": "templates/form_grid/item_grid.html"}
 
@@ -35,6 +36,16 @@ class Quotation(SellingController):
 
 		make_packing_list(self)
 
+	def after_insert(self):
+		if frappe.db.get_single_value("CRM Settings", "carry_forward_communication_and_comments"):
+			if self.opportunity:
+				copy_comments("Opportunity", self.opportunity, self)
+				add_link_in_communication("Opportunity", self.opportunity, self)
+
+			elif self.quotation_to == "Lead" and self.party_name:
+				copy_comments("Lead", self.party_name, self)
+				add_link_in_communication("Lead", self.party_name, self)
+
 	def validate_valid_till(self):
 		if self.valid_till and getdate(self.valid_till) < getdate(self.transaction_date):
 			frappe.throw(_("Valid till date cannot be before transaction date"))
@@ -59,32 +70,8 @@ class Quotation(SellingController):
 					title=_("Unpublished Item"),
 				)
 
-	def get_ordered_status(self):
-		ordered_items = frappe._dict(
-			frappe.db.get_all(
-				"Sales Order Item",
-				{"prevdoc_docname": self.name, "docstatus": 1},
-				["item_code", "sum(qty)"],
-				group_by="item_code",
-				as_list=1,
-			)
-		)
-
-		status = "Open"
-		if ordered_items:
-			status = "Ordered"
-
-			for item in self.get("items"):
-				if item.qty > ordered_items.get(item.item_code, 0.0):
-					status = "Partially Ordered"
-
-		return status
-
-	def is_fully_ordered(self):
-		return self.get_ordered_status() == "Ordered"
-
-	def is_partially_ordered(self):
-		return self.get_ordered_status() == "Partially Ordered"
+	def has_sales_order(self):
+		return frappe.db.get_value("Sales Order Item", {"prevdoc_docname": self.name, "docstatus": 1})
 
 	def update_lead(self):
 		if self.quotation_to == "Lead" and self.party_name:
@@ -116,7 +103,7 @@ class Quotation(SellingController):
 
 	@frappe.whitelist()
 	def declare_enquiry_lost(self, lost_reasons_list, competitors, detailed_reason=None):
-		if not (self.is_fully_ordered() or self.is_partially_ordered()):
+		if not self.has_sales_order():
 			get_lost_reasons = frappe.get_list("Quotation Lost Reason", fields=["name"])
 			lost_reasons_lst = [reason.get("name") for reason in get_lost_reasons]
 			frappe.db.set(self, "status", "Lost")
@@ -207,15 +194,6 @@ def make_sales_order(source_name, target_doc=None):
 
 def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	customer = _make_customer(source_name, ignore_permissions)
-	ordered_items = frappe._dict(
-		frappe.db.get_all(
-			"Sales Order Item",
-			{"prevdoc_docname": source_name, "docstatus": 1},
-			["item_code", "sum(qty)"],
-			group_by="item_code",
-			as_list=1,
-		)
-	)
 
 	def set_missing_values(source, target):
 		if customer:
@@ -231,9 +209,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		target.run_method("calculate_taxes_and_totals")
 
 	def update_item(obj, target, source_parent):
-		balance_qty = obj.qty - ordered_items.get(obj.item_code, 0.0)
-		target.qty = balance_qty if balance_qty > 0 else 0
-		target.stock_qty = flt(target.qty) * flt(obj.conversion_factor)
+		target.stock_qty = flt(obj.qty) * flt(obj.conversion_factor)
 
 		if obj.against_blanket_order:
 			target.against_blanket_order = obj.against_blanket_order
@@ -249,7 +225,6 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 				"doctype": "Sales Order Item",
 				"field_map": {"parent": "prevdoc_docname"},
 				"postprocess": update_item,
-				"condition": lambda doc: doc.qty > 0,
 			},
 			"Sales Taxes and Charges": {"doctype": "Sales Taxes and Charges", "add_if_empty": True},
 			"Sales Team": {"doctype": "Sales Team", "add_if_empty": True},
@@ -268,7 +243,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 
 def set_expired_status():
 	# filter out submitted non expired quotations whose validity has been ended
-	cond = "`tabQuotation`.docstatus = 1 and `tabQuotation`.status != 'Expired' and `tabQuotation`.valid_till < %s"
+	cond = "qo.docstatus = 1 and qo.status != 'Expired' and qo.valid_till < %s"
 	# check if those QUO have SO against it
 	so_against_quo = """
 		SELECT
@@ -276,18 +251,13 @@ def set_expired_status():
 		WHERE
 			so_item.docstatus = 1 and so.docstatus = 1
 			and so_item.parent = so.name
-			and so_item.prevdoc_docname = `tabQuotation`.name"""
+			and so_item.prevdoc_docname = qo.name"""
 
 	# if not exists any SO, set status as Expired
-	frappe.db.multisql(
-		{
-			"mariadb": """UPDATE `tabQuotation`  SET `tabQuotation`.status = 'Expired' WHERE {cond} and not exists({so_against_quo})""".format(
-				cond=cond, so_against_quo=so_against_quo
-			),
-			"postgres": """UPDATE `tabQuotation` SET status = 'Expired' FROM `tabSales Order`, `tabSales Order Item` WHERE {cond} and not exists({so_against_quo})""".format(
-				cond=cond, so_against_quo=so_against_quo
-			),
-		},
+	frappe.db.sql(
+		"""UPDATE `tabQuotation` qo SET qo.status = 'Expired' WHERE {cond} and not exists({so_against_quo})""".format(
+			cond=cond, so_against_quo=so_against_quo
+		),
 		(nowdate()),
 	)
 

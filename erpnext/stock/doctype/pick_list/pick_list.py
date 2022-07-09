@@ -699,7 +699,7 @@ def get_pending_work_orders(doctype, txt, searchfield, start, page_length, filte
 			AND `company` = %(company)s
 			AND `name` like %(txt)s
 		ORDER BY
-			(case when locate(%(_txt)s, name) > 0 then locate(%(_txt)s, name) else 99999 end) name
+			if(locate(%(_txt)s, name), locate(%(_txt)s, name), 99999), name
 		LIMIT
 			%(start)s, %(page_length)s""",
 		{

@@ -4,7 +4,6 @@
 import unittest
 
 import frappe
-from frappe.tests.utils import FrappeTestCase
 from frappe.utils import flt, nowdate
 
 from erpnext.accounts.doctype.payment_entry.payment_entry import (
@@ -25,10 +24,7 @@ from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_orde
 test_dependencies = ["Item"]
 
 
-class TestPaymentEntry(FrappeTestCase):
-	def tearDown(self):
-		frappe.db.rollback()
-
+class TestPaymentEntry(unittest.TestCase):
 	def test_payment_entry_against_order(self):
 		so = make_sales_order()
 		pe = get_payment_entry("Sales Order", so.name, bank_account="_Test Cash - _TC")

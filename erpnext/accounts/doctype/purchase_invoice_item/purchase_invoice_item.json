@@ -195,7 +195,6 @@
    "label": "Rejected Qty"
   },
   {
-   "depends_on": "eval:doc.uom != doc.stock_uom",
    "fieldname": "stock_uom",
    "fieldtype": "Link",
    "label": "Stock UOM",
@@ -215,7 +214,6 @@
    "reqd": 1
   },
   {
-   "depends_on": "eval:doc.uom != doc.stock_uom",
    "fieldname": "conversion_factor",
    "fieldtype": "Float",
    "label": "UOM Conversion Factor",
@@ -224,7 +222,6 @@
    "reqd": 1
   },
   {
-   "depends_on": "eval:doc.uom != doc.stock_uom",
    "fieldname": "stock_qty",
    "fieldtype": "Float",
    "label": "Accepted Qty in Stock UOM",
@@ -619,13 +616,10 @@
    "search_index": 1
   },
   {
-   "depends_on": "eval:parent.is_old_subcontracting_flow",
    "fieldname": "bom",
    "fieldtype": "Link",
    "label": "BOM",
-   "options": "BOM",
-   "read_only": 1,
-   "read_only_depends_on": "eval:!parent.is_old_subcontracting_flow"
+   "options": "BOM"
   },
   {
    "default": "0",
@@ -877,7 +871,7 @@
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-06-17 05:31:10.520171",
+ "modified": "2021-11-15 17:04:07.191013",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice Item",
@@ -885,6 +879,5 @@
  "owner": "Administrator",
  "permissions": [],
  "sort_field": "modified",
- "sort_order": "DESC",
- "states": []
+ "sort_order": "DESC"
 }

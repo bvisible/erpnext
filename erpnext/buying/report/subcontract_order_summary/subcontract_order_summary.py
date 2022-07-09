@@ -8,7 +8,7 @@ from frappe import _
 
 def execute(filters=None):
 	columns, data = [], []
-	columns = get_columns(filters)
+	columns = get_columns()
 	data = get_data(filters)
 
 	return columns, data
@@ -20,45 +20,43 @@ def get_data(report_filters):
 
 	if orders:
 		supplied_items = get_supplied_items(orders, report_filters)
-		order_details = prepare_subcontracted_data(orders, supplied_items)
-		get_subcontracted_data(order_details, data)
+		po_details = prepare_subcontracted_data(orders, supplied_items)
+		get_subcontracted_data(po_details, data)
 
 	return data
 
 
 def get_subcontracted_orders(report_filters):
 	fields = [
-		f"`tab{report_filters.order_type} Item`.`parent` as order_id",
-		f"`tab{report_filters.order_type} Item`.`item_code`",
-		f"`tab{report_filters.order_type} Item`.`item_name`",
-		f"`tab{report_filters.order_type} Item`.`qty`",
-		f"`tab{report_filters.order_type} Item`.`name`",
-		f"`tab{report_filters.order_type} Item`.`received_qty`",
-		f"`tab{report_filters.order_type}`.`status`",
+		"`tabPurchase Order Item`.`parent` as po_id",
+		"`tabPurchase Order Item`.`item_code`",
+		"`tabPurchase Order Item`.`item_name`",
+		"`tabPurchase Order Item`.`qty`",
+		"`tabPurchase Order Item`.`name`",
+		"`tabPurchase Order Item`.`received_qty`",
+		"`tabPurchase Order`.`status`",
 	]
 
 	filters = get_filters(report_filters)
 
-	return frappe.get_all(report_filters.order_type, fields=fields, filters=filters) or []
+	return frappe.get_all("Purchase Order", fields=fields, filters=filters) or []
 
 
 def get_filters(report_filters):
 	filters = [
-		[report_filters.order_type, "docstatus", "=", 1],
+		["Purchase Order", "docstatus", "=", 1],
+		["Purchase Order", "is_subcontracted", "=", 1],
 		[
-			report_filters.order_type,
+			"Purchase Order",
 			"transaction_date",
 			"between",
 			(report_filters.from_date, report_filters.to_date),
 		],
 	]
 
-	if report_filters.order_type == "Purchase Order":
-		filters.append(["Purchase Order", "is_old_subcontracting_flow", "=", 1])
-
 	for field in ["name", "company"]:
 		if report_filters.get(field):
-			filters.append([report_filters.order_type, field, "=", report_filters.get(field)])
+			filters.append(["Purchase Order", field, "=", report_filters.get(field)])
 
 	return filters
 
@@ -79,15 +77,10 @@ def get_supplied_items(orders, report_filters):
 		"reference_name",
 	]
 
-	filters = {"parent": ("in", [d.order_id for d in orders]), "docstatus": 1}
+	filters = {"parent": ("in", [d.po_id for d in orders]), "docstatus": 1}
 
 	supplied_items = {}
-	supplied_items_table = (
-		"Purchase Order Item Supplied"
-		if report_filters.order_type == "Purchase Order"
-		else "Subcontracting Order Supplied Item"
-	)
-	for row in frappe.get_all(supplied_items_table, fields=fields, filters=filters):
+	for row in frappe.get_all("Purchase Order Item Supplied", fields=fields, filters=filters):
 		new_key = (row.parent, row.reference_name, row.main_item_code)
 
 		supplied_items.setdefault(new_key, []).append(row)
@@ -96,24 +89,24 @@ def get_supplied_items(orders, report_filters):
 
 
 def prepare_subcontracted_data(orders, supplied_items):
-	order_details = {}
+	po_details = {}
 	for row in orders:
-		key = (row.order_id, row.name, row.item_code)
-		if key not in order_details:
-			order_details.setdefault(key, frappe._dict({"order_item": row, "supplied_items": []}))
+		key = (row.po_id, row.name, row.item_code)
+		if key not in po_details:
+			po_details.setdefault(key, frappe._dict({"po_item": row, "supplied_items": []}))
 
-		details = order_details[key]
+		details = po_details[key]
 
 		if supplied_items.get(key):
 			for supplied_item in supplied_items[key]:
 				details["supplied_items"].append(supplied_item)
 
-	return order_details
+	return po_details
 
 
-def get_subcontracted_data(order_details, data):
-	for key, details in order_details.items():
-		res = details.order_item
+def get_subcontracted_data(po_details, data):
+	for key, details in po_details.items():
+		res = details.po_item
 		for index, row in enumerate(details.supplied_items):
 			if index != 0:
 				res = {}
@@ -122,13 +115,13 @@ def get_subcontracted_data(order_details, data):
 			data.append(res)
 
 
-def get_columns(filters):
+def get_columns():
 	return [
 		{
-			"label": _("Subcontract Order"),
-			"fieldname": "order_id",
+			"label": _("Purchase Order"),
+			"fieldname": "po_id",
 			"fieldtype": "Link",
-			"options": filters.order_type,
+			"options": "Purchase Order",
 			"width": 100,
 		},
 		{"label": _("Status"), "fieldname": "status", "fieldtype": "Data", "width": 80},
