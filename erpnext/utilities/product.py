@@ -15,11 +15,11 @@ def get_web_item_qty_in_stock(item_code, item_warehouse_field, warehouse=None):
 	)
 
 	if not warehouse:
-		warehouse = frappe.db.get_value("Website Item", {"item_code": item_code}, item_warehouse_field)
+		warehouse = frappe.db.get_value("Item", {"item_code": item_code}, item_warehouse_field) #////
 
 	if not warehouse and template_item_code and template_item_code != item_code:
 		warehouse = frappe.db.get_value(
-			"Website Item", {"item_code": template_item_code}, item_warehouse_field
+			Item", {"item_code": template_item_code}, item_warehouse_field #////
 		)
 
 	if warehouse:
