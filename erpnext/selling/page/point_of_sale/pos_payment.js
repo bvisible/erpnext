@@ -42,7 +42,7 @@ erpnext.PointOfSale.Payment = class {
 	}
 
 	make_invoice_fields_control() {
-		frappe.db.get_doc("POS Settings", undefined).then((doc) => {
+		frappe.db.get_doc("POS Settings", "POS Settings").then((doc) => { ////
 			const fields = doc.invoice_fields;
 			if (!fields.length) return;
 

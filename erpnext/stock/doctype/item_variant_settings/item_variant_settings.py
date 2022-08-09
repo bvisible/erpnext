@@ -28,6 +28,7 @@ class ItemVariantSettings(Document):
 			"barcodes",
 			"has_variants",
 			"attributes",
+			"is_stock_item", #////
 		}
 
 		for d in fields:
