@@ -74,7 +74,6 @@
    "fieldname": "expense_account",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "columns": 2,
    "label": "Default Expense Account",
    "options": "Account"
   },
@@ -99,8 +98,6 @@
    "in_list_view": 1,
    "label": "Default Income Account",
    "options": "Account"
-   "in_list_view": 1,
-   "columns": 2
   },
   {
    "fieldname": "default_discount_account",
