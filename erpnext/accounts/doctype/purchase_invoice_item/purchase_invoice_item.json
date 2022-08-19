@@ -113,10 +113,10 @@
  "fields": [
   {
    "bold": 1,
-   "columns": 3,
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_list_view": 1,
+   "columns": 2,
    "label": "Item",
    "oldfieldname": "item_code",
    "oldfieldtype": "Link",
@@ -140,7 +140,7 @@
    "reqd": 1
   },
   {
-   "collapsible": 1,
+   "collapsible": 0,
    "fieldname": "description_section",
    "fieldtype": "Section Break",
    "label": "Description"
@@ -148,6 +148,8 @@
   {
    "fieldname": "description",
    "fieldtype": "Text Editor",
+   "in_list_view": 1,
+   "columns": 2,
    "label": "Description",
    "oldfieldname": "description",
    "oldfieldtype": "Text",
@@ -180,10 +182,10 @@
   },
   {
    "bold": 1,
-   "columns": 2,
    "fieldname": "qty",
    "fieldtype": "Float",
    "in_list_view": 1,
+   "columns": 1,
    "label": "Accepted Qty",
    "oldfieldname": "qty",
    "oldfieldtype": "Currency",
@@ -274,10 +276,10 @@
   },
   {
    "bold": 1,
-   "columns": 3,
    "fieldname": "rate",
    "fieldtype": "Currency",
    "in_list_view": 1,
+   "columns": 1,
    "label": "Rate",
    "oldfieldname": "import_rate",
    "oldfieldtype": "Currency",
@@ -285,10 +287,10 @@
    "reqd": 1
   },
   {
-   "columns": 2,
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
+   "columns": 1,
    "label": "Amount",
    "oldfieldname": "import_amount",
    "oldfieldtype": "Currency",
@@ -466,6 +468,8 @@
   {
    "fieldname": "expense_account",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "columns": 1,
    "label": "Expense Head",
    "oldfieldname": "expense_head",
    "oldfieldtype": "Link",
@@ -477,6 +481,8 @@
   {
    "fieldname": "item_tax_template",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "columns": 2,
    "label": "Item Tax Template",
    "options": "Item Tax Template",
    "print_hide": 1
@@ -877,7 +883,7 @@
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-06-17 05:31:10.520171",
+ "modified": "2022-08-18 05:31:10.520171",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice Item",
