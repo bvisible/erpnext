@@ -32,10 +32,10 @@
  ],
  "fields": [
   {
-   "columns": 2,
    "fieldname": "charge_type",
    "fieldtype": "Select",
    "in_list_view": 1,
+   "columns": 2,
    "label": "Type",
    "oldfieldname": "charge_type",
    "oldfieldtype": "Select",
@@ -90,6 +90,8 @@
    "default": "0",
    "description": "If checked, the tax amount will be considered as already included in the Print Rate / Print Amount",
    "fieldname": "included_in_print_rate",
+   "in_list_view": 1,
+   "columns": 1,
    "fieldtype": "Check",
    "label": "Is this Tax included in Basic Rate?",
    "print_hide": 1,
@@ -102,10 +104,10 @@
    "fieldtype": "Section Break"
   },
   {
-   "columns": 2,
    "fieldname": "rate",
    "fieldtype": "Float",
    "in_list_view": 1,
+   "columns": 1,
    "label": "Rate",
    "oldfieldname": "rate",
    "oldfieldtype": "Currency"
