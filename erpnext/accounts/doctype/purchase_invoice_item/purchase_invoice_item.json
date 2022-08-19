@@ -212,6 +212,8 @@
   {
    "fieldname": "uom",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "columns": 1,
    "label": "UOM",
    "options": "UOM",
    "reqd": 1
