@@ -74,10 +74,9 @@
    "fieldname": "expense_account",
    "fieldtype": "Link",
    "in_list_view": 1,
+   "columns": 2
    "label": "Default Expense Account",
    "options": "Account"
-   "in_list_view": 1,
-   "columns": 2
   },
   {
    "fieldname": "selling_defaults",
