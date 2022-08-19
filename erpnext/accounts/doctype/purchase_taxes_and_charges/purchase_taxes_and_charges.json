@@ -77,6 +77,8 @@
    "default": "0",
    "description": "If checked, the tax amount will be considered as already included in the Print Rate / Print Amount",
    "fieldname": "included_in_print_rate",
+   "in_list_view": 1,
+   "columns": 1,
    "fieldtype": "Check",
    "label": "Is this Tax included in Basic Rate?",
    "report_hide": 1
@@ -120,7 +122,7 @@
    "fieldtype": "Section Break"
   },
   {
-   "columns": 2,
+   "columns": 1,
    "fieldname": "rate",
    "fieldtype": "Float",
    "in_list_view": 1,
