@@ -11,6 +11,14 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 		let template_field = this.dialog.get_field("item_template");
 
 		let html_tabs = `
+		<div class="form-message blue" style=" margin-bottom: 0; ">
+			<div>
+			` + __("To transform a simple product into a bundled product,") + ` 
+			<a href="/app/product-bundle/view/list" onclick="location.reload()">
+			` + __("click here") + `
+			</a>.
+			</div>
+		</div>
 		<div class="form-tabs-list quick-entry">
 			<input id="form-tabs-quick-entry" name="form-tabs-quick-entry" type="hidden" value="">
 			<ul class="nav form-tabs" id="form-tabs-quick-entry" role="tablist">
