@@ -131,12 +131,16 @@ erpnext.PointOfSale.PastOrderSummary = class {
 
 		let taxes_html = doc.taxes.map(t => {
 			const description = /[0-9]+/.test(t.description) ? t.description : `${t.description} @ ${t.rate}%`;
-			return `
-				<div class="tax-row">
-					<div class="tax-label">${description}</div>
-					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, doc.currency)}</div>
-				</div>
-			`;
+			////
+			if(t.tax_amount_after_discount_amount > 0){
+				return `
+					<div class="tax-row">
+						<div class="tax-label">${description}</div>
+						<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, doc.currency)}</div>
+					</div>
+				`;
+			}
+			////
 		}).join('');
 
 		return `<div class="taxes-wrapper">${taxes_html}</div>`;
@@ -410,12 +414,13 @@ erpnext.PointOfSale.PastOrderSummary = class {
 						fieldtype: 'Text',
 					},
 				],
-				primary_action_label: 'Send gift card',
+				primary_action_label: __('Send gift card'),
 				primary_action(val)
 				{
 					if(dsg.fields_dict.send_to.input.value) {
 						frappe.call({
 							method: "neoffice_ecommerce.events.send_email_giftcard",
+							freeze: true,
 							args: {
 								code: dsg.fields_dict.code.input.value,
 								email: dsg.fields_dict.send_to.input.value,
@@ -424,11 +429,16 @@ erpnext.PointOfSale.PastOrderSummary = class {
 							callback: r => {
 								if(r.message && r.message == "error") {
 									frappe.throw(__("Failed to send the gift card email"));
+								} else {
+									frappe.show_alert({
+										message:__('Gift card email sent successfully'),
+										indicator:'green'
+									}, 5);
 								}
 								dsg.clear();
-								dsg.hide();
 							}
 						});
+						dsg.hide();
 					}
 				},
 			});
