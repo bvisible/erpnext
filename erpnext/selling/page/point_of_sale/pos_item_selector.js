@@ -351,7 +351,11 @@ erpnext.PointOfSale.ItemSelector = class {
 				}
 				this.items = items;
 				this.render_item_list(items);
-				this.auto_add_item && this.items.length == 1 && this.add_filtered_item_to_cart();
+				////
+				if(search_term.length > 0){
+					this.auto_add_item && this.items.length == 1 && this.add_filtered_item_to_cart();
+				}
+				////
 			});
 	}
 
