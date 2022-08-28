@@ -478,8 +478,9 @@ erpnext.PointOfSale.ItemCart = class {
 		this.render_total_item_qty(frm.doc.items);
 		const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
 		this.render_grand_total(grand_total);
-
-		this.render_taxes(frm.doc.taxes);
+		////
+		setTimeout(() => { this.render_taxes(frm.doc.taxes); }, 100);
+		////
 	}
 
 	render_net_total(value) {
