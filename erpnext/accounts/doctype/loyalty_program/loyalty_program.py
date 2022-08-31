@@ -52,6 +52,7 @@ def get_loyalty_program_details_with_points(
 	include_expired_entry=False,
 	current_transaction_amount=0,
 ):
+	current_transaction_amount = 0 #////
 	lp_details = get_loyalty_program_details(
 		customer, loyalty_program, company=company, silent=silent
 	)
