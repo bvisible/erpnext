@@ -315,7 +315,7 @@ erpnext.PointOfSale.ItemCart = class {
 					if (this.value) {
 						const frm = me.events.get_frm();
 						frappe.dom.freeze();
-						frappe.model.set_value(frm.doc.doctype, frm.doc.name, 'customer', this.value);
+						frappe.model.set_value(frm.doc.doctype, frm.doc.name, {'customer': this.value, "title": this.value});////
 						frm.script_manager.trigger('customer', frm.doc.doctype, frm.doc.name).then(() => {
 							frappe.run_serially([
 								() => me.fetch_customer_details(this.value),
