@@ -112,7 +112,7 @@
   },
   {
    "bold": 1,
-   "columns": 4,
+   "columns": 1,
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -148,6 +148,8 @@
    "fieldname": "description",
    "fieldtype": "Text Editor",
    "label": "Description",
+   "in_list_view": 1,
+   "columns": 3,
    "oldfieldname": "description",
    "oldfieldtype": "Text",
    "print_width": "200px",
@@ -173,7 +175,7 @@
   },
   {
    "bold": 1,
-   "columns": 2,
+   "columns": 1,
    "fieldname": "qty",
    "fieldtype": "Float",
    "in_list_view": 1,
@@ -234,6 +236,8 @@
   {
    "fieldname": "base_price_list_rate",
    "fieldtype": "Currency",
+   "in_list_view": 1,
+   "columns": 1,
    "label": "Price List Rate (Company Currency)",
    "oldfieldname": "base_ref_rate",
    "oldfieldtype": "Currency",
@@ -280,6 +284,8 @@
    "fieldname": "discount_percentage",
    "fieldtype": "Percent",
    "label": "Discount (%) on Price List Rate with Margin",
+   "in_list_view": 1,
+   "columns": 1,
    "oldfieldname": "adj_rate",
    "oldfieldtype": "Float",
    "print_hide": 1
@@ -289,6 +295,8 @@
    "fieldname": "discount_amount",
    "fieldtype": "Currency",
    "label": "Discount Amount",
+   "in_list_view": 1,
+   "columns": 1,
    "options": "currency"
   },
   {
@@ -306,7 +314,7 @@
   },
   {
    "bold": 1,
-   "columns": 2,
+   "columns": 1,
    "fieldname": "rate",
    "fieldtype": "Currency",
    "in_list_view": 1,
@@ -317,7 +325,7 @@
    "reqd": 1
   },
   {
-   "columns": 2,
+   "columns": 1,
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
