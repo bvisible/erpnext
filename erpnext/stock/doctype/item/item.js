@@ -93,7 +93,7 @@ frappe.ui.form.on("Item", {
 		} else {
 			erpnext.toggle_naming_series();
 		}
-
+		/* ////
 		if (!frm.doc.published_in_website) {
 			frm.add_custom_button(__("Publish in Website"), function() {
 				frappe.call({
@@ -123,6 +123,7 @@ frappe.ui.form.on("Item", {
 				});
 			}, __("View"));
 		}
+		//// */
 
 		erpnext.item.edit_prices_button(frm);
 		erpnext.item.toggle_attributes(frm);
