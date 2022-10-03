@@ -145,7 +145,7 @@
    "width": "150"
   },
   {
-   "collapsible": 1,
+   "collapsible": 0,
    "fieldname": "section_break_5",
    "fieldtype": "Section Break",
    "label": "Description"
