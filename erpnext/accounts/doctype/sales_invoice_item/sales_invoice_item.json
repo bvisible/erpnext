@@ -777,7 +777,7 @@
    "report_hide": 1
   },
   {
-   "collapsible": 1,
+   "collapsible": 0,
    "fieldname": "description_section",
    "fieldtype": "Section Break",
    "label": "Description"
@@ -883,7 +883,7 @@
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-09-06 14:17:43.394309",
+ "modified": "2022-10-03 14:17:43.394309",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice Item",
