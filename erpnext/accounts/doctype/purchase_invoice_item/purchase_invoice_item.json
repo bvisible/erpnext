@@ -112,7 +112,7 @@
  "fields": [
   {
    "bold": 1,
-   "columns": 3,
+   "columns": 1,
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -148,6 +148,8 @@
    "fieldname": "description",
    "fieldtype": "Text Editor",
    "label": "Description",
+   "in_list_view": 1,
+   "columns": 2,
    "oldfieldname": "description",
    "oldfieldtype": "Text",
    "print_width": "300px",
@@ -179,7 +181,7 @@
   },
   {
    "bold": 1,
-   "columns": 2,
+   "columns": 1,
    "fieldname": "qty",
    "fieldtype": "Float",
    "in_list_view": 1,
@@ -273,7 +275,7 @@
   },
   {
    "bold": 1,
-   "columns": 3,
+   "columns": 1,
    "fieldname": "rate",
    "fieldtype": "Currency",
    "in_list_view": 1,
@@ -284,7 +286,7 @@
    "reqd": 1
   },
   {
-   "columns": 2,
+   "columns": 1,
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
@@ -465,6 +467,8 @@
   {
    "fieldname": "expense_account",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "columns": 2,
    "label": "Expense Head",
    "oldfieldname": "expense_head",
    "oldfieldtype": "Link",
@@ -476,6 +480,8 @@
   {
    "fieldname": "item_tax_template",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "columns": 2,
    "label": "Item Tax Template",
    "options": "Item Tax Template",
    "print_hide": 1
@@ -870,7 +876,7 @@
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-09-27 10:54:23.980713",
+ "modified": "2022-10-05 10:54:23.980713",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice Item",
