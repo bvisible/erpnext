@@ -148,7 +148,7 @@
   {
    "allow_on_submit": 1,
    "bold": 1,
-   "columns": 2,
+   "columns": 1,
    "fieldname": "schedule_date",
    "fieldtype": "Date",
    "in_list_view": 1,
@@ -309,7 +309,7 @@
   },
   {
    "bold": 1,
-   "columns": 2,
+   "columns": 1,
    "fieldname": "rate",
    "fieldtype": "Currency",
    "in_list_view": 1,
@@ -319,7 +319,7 @@
    "options": "currency"
   },
   {
-   "columns": 2,
+   "columns": 1,
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
@@ -668,6 +668,8 @@
    "fieldname": "expense_account",
    "fieldtype": "Link",
    "label": "Expense Account",
+   "in_list_view": 1,
+   "columns": 2,
    "options": "Account",
    "print_hide": 1
   },
@@ -693,6 +695,8 @@
    "fieldname": "item_tax_template",
    "fieldtype": "Link",
    "label": "Item Tax Template",
+   "in_list_view": 1,
+   "columns": 2,
    "options": "Item Tax Template"
   },
   {
@@ -894,7 +898,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-09-07 11:12:38.634976",
+ "modified": "2022-10-30 11:12:38.634976",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order Item",
