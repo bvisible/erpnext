@@ -112,7 +112,7 @@
  "fields": [
   {
    "bold": 1,
-   "columns": 3,
+   "columns": 2,
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -179,7 +179,7 @@
   },
   {
    "bold": 1,
-   "columns": 2,
+   "columns": 1,
    "fieldname": "qty",
    "fieldtype": "Float",
    "in_list_view": 1,
@@ -209,6 +209,8 @@
   {
    "fieldname": "uom",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "columns": 1,
    "label": "UOM",
    "options": "UOM",
    "reqd": 1
@@ -273,7 +275,7 @@
   },
   {
    "bold": 1,
-   "columns": 3,
+   "columns": 1,
    "fieldname": "rate",
    "fieldtype": "Currency",
    "in_list_view": 1,
@@ -284,7 +286,7 @@
    "reqd": 1
   },
   {
-   "columns": 2,
+   "columns": 1,
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
@@ -466,6 +468,8 @@
    "fieldname": "expense_account",
    "fieldtype": "Link",
    "label": "Expense Head",
+   "in_list_view": 1,
+   "columns": 2,
    "oldfieldname": "expense_head",
    "oldfieldtype": "Link",
    "options": "Account",
@@ -476,6 +480,8 @@
   {
    "fieldname": "item_tax_template",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "columns": 2,
    "label": "Item Tax Template",
    "options": "Item Tax Template",
    "print_hide": 1
