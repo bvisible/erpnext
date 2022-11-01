@@ -95,12 +95,13 @@
    "fieldname": "party_type",
    "fieldtype": "Link",
    "in_list_view": 1,
+   "columns": 2,
    "label": "Party Type",
    "options": "DocType",
    "search_index": 1
   },
   {
-   "columns": 1,
+   "columns": 2,
    "fieldname": "party",
    "fieldtype": "Dynamic Link",
    "in_list_view": 1,
@@ -208,7 +209,6 @@
   {
    "fieldname": "reference_name",
    "fieldtype": "Dynamic Link",
-   "in_list_view": 1,
    "label": "Reference Name",
    "no_copy": 1,
    "options": "reference_type"
