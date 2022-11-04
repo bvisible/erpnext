@@ -10,6 +10,13 @@ frappe.ui.form.on("Journal Entry", {
 		frm.add_fetch("bank_account", "account", "account");
 		frm.ignore_doctypes_on_cancel_all = ['Sales Invoice', 'Purchase Invoice'];
 	},
+	////
+	onload: function(frm) {
+		if (frm.doc.__islocal) {
+			erpnext.journal_entry.quick_entry(frm);
+		}
+	},
+	////
 
 	refresh: function(frm) {
 		erpnext.toggle_naming_series();
@@ -35,7 +42,7 @@ frappe.ui.form.on("Journal Entry", {
 			}, __('Actions'));
 		}
 
-		if (frm.doc.__islocal) {
+		if (frm.doc.__islocal || frm.doc.docstatus == 0) {
 			frm.add_custom_button(__('Quick Entry'), function() {
 				return erpnext.journal_entry.quick_entry(frm);
 			});
@@ -312,7 +319,8 @@ erpnext.accounts.JournalEntry = class JournalEntry extends frappe.ui.form.Contro
 		}
 	}
 
-	get_outstanding(doctype, docname, company, child) {
+	get_outstanding(doctype, docname, company, child, due_date) {
+		var me = this;
 		var args = {
 			"doctype": doctype,
 			"docname": docname,
@@ -512,6 +520,10 @@ $.extend(erpnext.journal_entry, {
 		refresh_field("exchange_rate", cdn, "accounts");
 	},
 
+	accounts: function(frm) {
+		console.log("accounts");
+	},
+
 	quick_entry: function(frm) {
 		var naming_series_options = frm.fields_dict.naming_series.df.options;
 		var naming_series_default = frm.fields_dict.naming_series.df.default || naming_series_options.split("\n")[0];
@@ -519,7 +531,32 @@ $.extend(erpnext.journal_entry, {
 		var dialog = new frappe.ui.Dialog({
 			title: __("Quick Journal Entry"),
 			fields: [
-				{fieldtype: "Currency", fieldname: "debit", label: __("Amount"), reqd: 1},
+				{fieldtype:"Link", label:__("Template"), fieldname:"template", options:"Journal Entry Template",
+					onchange: function() {
+						frappe.call({
+							method: "frappe.client.get",
+							args: {
+								doctype: "Journal Entry Template",
+								name: cur_dialog.get_value("template"),
+							},
+							callback(r) {
+								if(r.message) {
+									var template_doc = r.message;
+									cur_dialog.set_values({
+										"credit_or_debit": template_doc.credit_or_debit,
+										"totalization": template_doc.default_amount,
+										"is_vat_excluded": template_doc.is_vat_excluded,
+									})
+								}
+							}
+						});
+					}
+				},
+				{fieldtype: "Select", fieldname: "credit_or_debit", label: __("Credit / Debit"), options: "Credit\nDebit", reqd: 1},
+				{fieldtype: "Check", fieldname: "is_vat_excluded", label: __("Amount without tax")},
+				{fieldtype: "Currency", fieldname: "totalization", label: __("Amount"), reqd: 1},
+				////{fieldtype: "Currency", fieldname: "debit", label: __("Amount"), reqd: 1},
+				/* ////
 				{fieldtype: "Link", fieldname: "debit_account", label: __("Debit Account"), reqd: 1,
 					options: "Account",
 					get_query: function() {
@@ -532,6 +569,7 @@ $.extend(erpnext.journal_entry, {
 						return erpnext.journal_entry.account_query(frm);
 					}
 				},
+				*/ ////
 				{fieldtype: "Date", fieldname: "posting_date", label: __("Date"), reqd: 1,
 					default: frm.doc.posting_date},
 				{fieldtype: "Small Text", fieldname: "user_remark", label: __("User Remark")},
@@ -539,7 +577,16 @@ $.extend(erpnext.journal_entry, {
 					options: naming_series_options, default: naming_series_default},
 			]
 		});
-
+		////
+		function populate_row(dt, dn, values){
+			setTimeout(function(){
+				var fields = ["account", "party_type", "party", "debit_in_account_currency", "credit_in_account_currency", "user_remark"];
+				for(var l=0; l<fields.length; l++){
+					frappe.model.set_value(dt, dn, fields[l], values[l]);
+				}
+			}, 100);
+		}
+		////
 		dialog.set_primary_action(__("Save"), function() {
 			var btn = this;
 			var values = dialog.get_values();
@@ -550,11 +597,158 @@ $.extend(erpnext.journal_entry, {
 
 			// clear table is used because there might've been an error while adding child
 			// and cleanup didn't happen
-			frm.clear_table("accounts");
+			if(frm.doc.accounts.length == 1) {
+				frm.clear_table("accounts");
+			}
 
 			// using grid.add_new_row() to add a row in UI as well as locals
 			// this is required because triggers try to refresh the grid
 
+			////
+			frm.set_value("is_vat_excluded", values.is_vat_excluded);
+			frappe.call({
+				method: "frappe.client.get",
+				args: {
+					doctype: "Journal Entry Template",
+					name: cur_dialog.get_value("template"),
+				},
+				callback(r) {
+					if(r.message) {
+						var template_doc = r.message;
+						var totalization_doc = template_doc.accounting_entry_totalization[0]
+
+						frappe.db.get_value("Account", template_doc.accounting_entry_totalization[0].account, "taxable_account", (re) => {
+							if(re.taxable_account) var tax_account_name = re.taxable_account;
+							else tax_account_name ="Sans TVA - pri"
+
+							frappe.call({
+								method: "frappe.client.get",
+								args: {
+									doctype: "Item Tax Template",
+									name: tax_account_name,
+								},
+								callback(result) {
+									if(result.message) {
+										var tax_template = result.message;
+										if(tax_template.taxes) {
+											var has_vat = false;
+											if(values.credit_or_debit == "Debit") {
+												var debit = values.totalization;
+												var credit = 0;
+											} else {
+												var debit = 0;
+												var credit = values.totalization;
+											}
+											var totalization_values = [totalization_doc.account, totalization_doc.party_type, totalization_doc.party, debit, credit, totalization_doc.user_remark];
+											for(var i = 0; i < tax_template.taxes.length; i++) {
+												if(tax_template.taxes[i].tax_rate > 0) {
+													var debit_tax = debit * tax_template.taxes[i].tax_rate / 100;
+													var debit_ht = debit - debit_tax;
+													var credit_tax = credit * tax_template.taxes[i].tax_rate / 100;
+													var credit_ht = credit - credit_tax;
+													var remark = totalization_doc.user_remark
+													totalization_values = [totalization_doc.account, totalization_doc.party_type, totalization_doc.party, debit_ht, credit_ht, totalization_doc.user_remark];
+													var totalization_row = frm.fields_dict.accounts.grid.add_new_row();
+													populate_row(totalization_row.doctype, totalization_row.name, totalization_values);
+
+													/*****   VAT   *****/
+													var totalization_row_vat = frm.fields_dict.accounts.grid.add_new_row()
+													var totalization_vat_values = [tax_template.taxes[i].tax_type, null, null, debit_tax, credit_tax, totalization_doc.user_remark ? __("VAT for") + " " + totalization_doc.user_remark : __("VAT for") + " " + totalization_doc.account]
+													populate_row(totalization_row_vat.doctype, totalization_row_vat.name, totalization_vat_values);
+													has_vat = true;
+													break;
+												}
+											}
+											if(!has_vat) {
+												var totalization_row = frm.fields_dict.accounts.grid.add_new_row();
+												populate_row(totalization_row.doctype, totalization_row.name, totalization_values);
+											}
+										}
+									}
+
+									var counterparty_row = [];
+									var counterparty_vat_row = [];
+									var unique_counterparty = template_doc.accounting_entry_counterparty.length == 1 ? true : false;
+									var amount = unique_counterparty ? values.totalization / template_doc.accounting_entry_counterparty.length : null;
+									if(values.credit_or_debit == "Debit") {
+										var debit_counterparty = unique_counterparty ? 0 : null;
+										var credit_counterparty = amount;
+									} else {
+										var debit_counterparty = amount;
+										var credit_counterparty = unique_counterparty ? 0 : null;
+									}
+									template_doc.accounting_entry_counterparty.forEach(function(val,index) {
+										frappe.db.get_value("Account", val.account, "taxable_account", (re) => {
+											var tax_name = "";
+											if(re.taxable_account) tax_name = re.taxable_account;
+											else tax_name = "Sans TVA - pri";
+
+											frappe.call({
+												method: "frappe.client.get",
+												args: {
+													doctype: "Item Tax Template",
+													name: tax_name,
+												},
+												callback(result) {
+													if(result.message) {
+														counterparty_row[index] = frm.fields_dict.accounts.grid.add_new_row();
+														var tax_template = result.message;
+														//if(index > 1) amount = 0;
+														var counterparty_values = [val.account, val.party_type, val.party, debit_counterparty, credit_counterparty, val.user_remark];
+														has_vat = false;
+														if(tax_template.taxes) {
+															for(var j = 0; j < tax_template.taxes.length; j++) {
+																if(tax_template.taxes[j].tax_rate > 0) {
+																	var debit_ht_counterparty = unique_counterparty ? values.is_vat_excluded ? debit_counterparty : debit_counterparty / (1+tax_template.taxes[j].tax_rate / 100) : null;
+																	var debit_tax_counterparty = unique_counterparty ? values.is_vat_excluded ? debit_counterparty * tax_template.taxes[j].tax_rate / 100 : debit_counterparty - debit_ht_counterparty : null;
+
+																	var credit_ht_counterparty = unique_counterparty ? values.is_vat_excluded ? credit_counterparty : credit_counterparty / (1+tax_template.taxes[j].tax_rate / 100) : null;
+																	var credit_tax_counterparty = unique_counterparty ? values.is_vat_excluded ? credit_counterparty * tax_template.taxes[j].tax_rate / 100 : credit_counterparty - credit_ht_counterparty : null;
+
+																	counterparty_values = [val.account, val.party_type, val.party, debit_ht_counterparty, credit_ht_counterparty, val.user_remark];
+																	frappe.model.set_value(totalization_row.doctype, totalization_row.name, "debit_in_account_currency", credit_ht_counterparty + credit_tax_counterparty);
+																	frappe.model.set_value(totalization_row.doctype, totalization_row.name, "credit_in_account_currency", debit_ht_counterparty + debit_tax_counterparty);
+																	populate_row(counterparty_row[index].doctype, counterparty_row[index].name, counterparty_values);
+																	/*****   VAT   *****/
+																	var vat_account = tax_template.taxes[j].tax_type
+																	if(unique_counterparty && index == template_doc.accounting_entry_counterparty.length - 1 && values.totalization % template_doc.accounting_entry_counterparty.length != 0) {
+																		var rest = (values.totalization % template_doc.accounting_entry_counterparty.length).toFixed(2);
+																		debit_tax > 0? debit_tax += rest : credit_tax += rest;
+																	}
+																	counterparty_vat_row[index] = frm.fields_dict.accounts.grid.add_new_row();
+																	var counterparty_vat_values = [vat_account, null, null, debit_tax_counterparty, credit_tax_counterparty, val.user_remark? __("VAT for") + " " + val.user_remark : __("VAT for") + " "  + val.account];
+																	populate_row(counterparty_vat_row[index].doctype, counterparty_vat_row[index].name, counterparty_vat_values);
+																	has_vat = true;
+																	break;
+																}
+															}
+														}
+														if(!has_vat) {
+															if( unique_counterparty && index == template_doc.accounting_entry_counterparty.length - 1 && values.totalization % template_doc.accounting_entry_counterparty.length != 0) {
+																rest = (values.totalization % template_doc.accounting_entry_counterparty.length).toFixed(2);
+																debit_counterparty > 0? debit_counterparty += rest : credit_counterparty += rest;
+																counterparty_values = [val.account, val.party_type, val.party, debit_counterparty, credit_counterparty, val.user_remark];
+															}
+															populate_row(counterparty_row[index].doctype, counterparty_row[index].name, counterparty_values);
+														}
+													}
+													if(i == template_doc.accounting_entry_counterparty.length - 1) {
+														refresh_field("accounts");
+															//frm.save();
+													}
+												}
+											});
+										});
+										//setTimeout(function() {}, 200);
+									});
+								}
+							});
+						});
+					}
+				}
+			});
+			
+			/* base code:
 			var debit_row = frm.fields_dict.accounts.grid.add_new_row();
 			frappe.model.set_value(debit_row.doctype, debit_row.name, "account", values.debit_account);
 			frappe.model.set_value(debit_row.doctype, debit_row.name, "debit_in_account_currency", values.debit);
@@ -564,7 +758,8 @@ $.extend(erpnext.journal_entry, {
 			frappe.model.set_value(credit_row.doctype, credit_row.name, "credit_in_account_currency", values.debit);
 
 			frm.save();
-
+			*/
+			////
 			dialog.hide();
 		});
 
@@ -619,5 +814,197 @@ $.extend(erpnext.journal_entry, {
 				}
 			});
 		}
+	},
+});
+
+
+function excludingVatPrice(price, vat){
+	if ( price == null ) {
+		return -1;
+	} else {
+		return +(price - (price / (vat + 100)) * vat).toFixed(2);
+	}
+}
+frappe.ui.form.on('Journal Entry Account', {
+	debit_in_account_currency(frm, cdt, cdm, cdn) {
+		var local_rows = locals[cdt];
+		var rows_processed = 0;
+
+		if(frm.selected_doc.debit_in_account_currency != null) {
+			Object.values(locals["Journal Entry"]).forEach(function(result) {
+				if(result.name == frm.selected_doc.parent) {
+					if(!result.disable_calculation) {
+						Object.values(local_rows).forEach(function(val) {
+							if(val.idx == frm.selected_doc.idx+1 && val.parent == frm.selected_doc.parent) {
+								if(val.account) {
+									frappe.db.get_value("Account", val.account, ["account_type", "tax_rate"], (res) => {
+										if(res.account_type && res.account_type == "Tax") {
+											var base_debit = val.debit_in_account_currency ? Number(frm.selected_doc.debit_in_account_currency + Number(val.debit_in_account_currency)).toFixed(2) : Number(frm.selected_doc.debit_in_account_currency).toFixed(2);
+											var original_tax = (base_debit - (base_debit / (1 + res.tax_rate / 100))).toFixed(2);
+
+											var debit_value = result.is_vat_excluded ? frm.selected_doc.debit_in_account_currency : (frm.selected_doc.debit_in_account_currency / (1 + res.tax_rate / 100)).toFixed(2)
+											var debit_tax = result.is_vat_excluded ? (debit_value * (res.tax_rate / 100)).toFixed(2) : frm.selected_doc.debit_in_account_currency - debit_value
+											if(original_tax != Number(val.debit_in_account_currency).toFixed(2)) {
+												frappe.model.set_value('Journal Entry Account', val.name , "debit_in_account_currency", debit_tax)
+												frappe.model.set_value('Journal Entry Account', val.name , "debit", debit_tax)
+												if(!result.is_vat_excluded) {
+													frm.selected_doc.debit_in_account_currency = debit_value
+													frm.selected_doc.debit = debit_value
+													refresh_field("accounts");
+													refresh_field("total_credit");
+													refresh_field("total_debit");
+												}
+											}
+										}
+									});
+								}
+							}
+							rows_processed++;
+							if(rows_processed == Object.values(local_rows).length) {
+								var new_credit = 0;
+								rows_processed = 0;
+								setTimeout(function() {
+									Object.values(local_rows).forEach(function(val) {
+										if(val.idx != 1 && val.parent == frm.selected_doc.parent ) {
+											new_credit += val.debit_in_account_currency ? parseFloat(val.debit_in_account_currency) : 0;
+										}
+										rows_processed++;
+										if(rows_processed == Object.values(local_rows).length) {
+											frappe.model.set_value('Journal Entry Account', Object.values(local_rows)[0].name , "credit_in_account_currency", parseFloat(new_credit.toFixed(2)))
+											refresh_field("accounts");
+											refresh_field("total_credit");
+											refresh_field("total_debit");
+										}
+									});
+								}, 200);
+							}
+						});
+					}
+				}
+			});
+		}
+	},
+
+	////
+	credit_in_account_currency(frm, cdt, cdm, cdn) {
+		var local_rows = locals[cdt];
+		var rows_processed = 0;
+		if(frm.selected_doc.credit_in_account_currency != null) {
+			Object.values(locals["Journal Entry"]).forEach(function(result) {
+				if(result.name == frm.selected_doc.parent) {
+					if(!result.disable_calculation) {
+						Object.values(local_rows).forEach(function(val) {
+							if(val.idx == frm.selected_doc.idx+1 && val.parent == frm.selected_doc.parent) {
+								if(val.account) {
+									frappe.db.get_value("Account", val.account, ["account_type", "tax_rate"], (res) => {
+										//total_credit += frm.selected_doc.credit_in_account_currency;
+										if(res.account_type && res.account_type == "Tax") {
+											var base_credit = val.debit_in_account_currency ? Number(frm.selected_doc.credit_in_account_currency + Number(val.credit_in_account_currency)).toFixed(2) : Number(frm.selected_doc.credit_in_account_currency).toFixed(2);
+											var original_tax = base_credit - ((base_credit / (1 + res.tax_rate / 100))).toFixed(2);
+
+											var credit_value = result.is_vat_excluded ? frm.selected_doc.credit_in_account_currency : (frm.selected_doc.credit_in_account_currency / (1 + res.tax_rate / 100)).toFixed(2)
+											var credit_tax = result.is_vat_excluded ? (credit_value * (res.tax_rate / 100)).toFixed(2) : frm.selected_doc.credit_in_account_currency - credit_value
+											if(original_tax != Number(val.credit_in_account_currency).toFixed(2)) {
+												frappe.model.set_value('Journal Entry Account', val.name , "credit_in_account_currency", parseFloat(credit_tax))
+												frappe.model.set_value('Journal Entry Account', val.name , "credit", parseFloat(credit_tax))
+												if(!result.is_vat_excluded) {
+													frm.selected_doc.credit_in_account_currency = credit_value
+													frm.selected_doc.credit = credit_value
+													refresh_field("accounts");
+													refresh_field("total_credit");
+													refresh_field("total_debit");
+												}
+											}
+										}
+									});
+								}
+							}
+							rows_processed++;
+							if(rows_processed == Object.values(local_rows).length) {
+								var new_debit = 0;
+								rows_processed = 0;
+								setTimeout(function() {
+									Object.values(local_rows).forEach(function(val) {
+										if(val.idx != 1 && val.parent == frm.selected_doc.parent ) {
+											new_debit += val.credit_in_account_currency ? parseFloat(val.credit_in_account_currency) : 0;
+										}
+										rows_processed++;
+										if(rows_processed == Object.values(local_rows).length) {
+											frappe.model.set_value('Journal Entry Account', Object.values(local_rows)[0].name , "debit_in_account_currency", parseFloat(new_debit.toFixed(2)))
+											//frappe.model.set_value('Journal Entry Account', Object.values(local_rows)[0].name , "credit_in_account_currency", parseFloat(credit_tax))
+											refresh_field("accounts");
+											refresh_field("total_credit");
+											refresh_field("total_debit");
+										}
+									});
+								}, 200);
+							}
+						});
+					}
+				}
+			});
+		}
+	},
+	////
+
+	account(frm, cdt, cdm, cdn) {
+		var local_rows = locals[cdt];
+		//setTimeout(function() {
+			Object.values(locals["Journal Entry"]).forEach(function(result) {
+				if(result.name == frm.selected_doc.parent) {
+					if(!result.disable_calculation) {
+						//setTimeout(function() {
+							var last_item = local_rows[Object.keys(local_rows)[Object.keys(local_rows).length - 1]]
+							if(last_item.idx == frm.selected_doc.idx && last_item.account) {
+								frappe.db.get_value("Account", last_item.account, ["taxable_account"], (r) => {
+									if(r.taxable_account) {
+										frappe.call({
+											method: "frappe.client.get",
+											args: {
+												doctype: "Item Tax Template",
+												name: r.taxable_account,
+											},
+											callback(res) {
+												if(res.message) {
+													var tax_template = res.message;
+													if(tax_template.taxes) {
+														for(var j = 0; j < tax_template.taxes.length; j++) {
+															if(tax_template.taxes[j].tax_rate > 0) {
+																var account = tax_template.taxes[j].tax_type
+																var remark = frm.selected_doc.user_remark ? __("VAT for") + " " + totalization_doc.user_remark : __("VAT for") + " " + frm.selected_doc.account
+																var last_account_vat = frm.fields_dict.accounts.grid.add_new_row()
+																frappe.model.set_value(last_account_vat.doctype, last_account_vat.name, "account", account);
+																frappe.model.set_value(last_account_vat.doctype, last_account_vat.name, "user_remark", remark);
+
+																var debit = last_item.debit_in_account_currency ? excludingVatPrice(last_item.debit_in_account_currency, tax_template.taxes[j].tax_rate) : 0;
+																var debit_tax = last_item.debit_in_account_currency - debit
+
+																var credit = last_item.credit_in_account_currency ? excludingVatPrice(last_item.credit_in_account_currency, tax_template.taxes[j].tax_rate) : 0;
+																var credit_tax = last_item.credit_in_account_currency - credit
+
+																frm.selected_doc.debit_in_account_currency = debit_tax;
+																frm.selected_doc.credit_in_account_currency = credit_tax;
+																setTimeout(function() {
+																	frappe.model.set_value(last_item.doctype, last_item.name, "debit_in_account_currency", parseFloat(debit));
+																	frappe.model.set_value(last_item.doctype, last_item.name, "credit_in_account_currency", parseFloat(credit));
+																}, 100)
+																refresh_field("accounts");
+																refresh_field("total_credit");
+																refresh_field("total_debit");
+																break;
+															}
+														}
+													}
+												}
+											}
+										});
+									}
+								});
+							}
+						//}, 2000);
+					}
+				}
+			});
+		//}, 200);
 	},
 });
