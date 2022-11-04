@@ -597,9 +597,12 @@ $.extend(erpnext.journal_entry, {
 
 			// clear table is used because there might've been an error while adding child
 			// and cleanup didn't happen
+			////frm.clear_table("accounts");
+			////
 			if(frm.doc.accounts.length == 1) {
 				frm.clear_table("accounts");
 			}
+			////
 
 			// using grid.add_new_row() to add a row in UI as well as locals
 			// this is required because triggers try to refresh the grid
@@ -817,7 +820,7 @@ $.extend(erpnext.journal_entry, {
 	},
 });
 
-
+////
 function excludingVatPrice(price, vat){
 	if ( price == null ) {
 		return -1;
@@ -1008,3 +1011,4 @@ frappe.ui.form.on('Journal Entry Account', {
 		//}, 200);
 	},
 });
+////
