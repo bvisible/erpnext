@@ -416,7 +416,14 @@ erpnext.PointOfSale.Payment = class {
 			const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
 			if (p.default) {
 				setTimeout(() => {
-					this.$payment_modes.find(`.${mode}.mode-of-payment-control`).parent().click();
+					////this.$payment_modes.find(`.${mode}.mode-of-payment-control`).parent().click();
+					frappe.db.get_value("POS Profile",{"name":cur_pos.pos_profile},"disable_auto_price").then((disable_auto_price) => {
+						if(disable_auto_price.message.disable_auto_price == 1){
+							this.$payment_modes.find(`.${mode}.mode-of-payment-control input`).val("");
+							$(".submit-order-btn").prop("disabled",true).css("background","grey");
+						}
+						this.$payment_modes.find(`.${mode}.mode-of-payment-control`).parent().click();
+					})
 				}, 500);
 			}
 		});
