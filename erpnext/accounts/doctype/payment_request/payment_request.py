@@ -43,8 +43,8 @@ class PaymentRequest(Document):
 			ref_doc = frappe.get_doc(self.reference_doctype, self.reference_name)
 			if hasattr(ref_doc, "order_type") and getattr(ref_doc, "order_type") != "Shopping Cart":
 				ref_amount = get_amount(ref_doc, self.payment_account)
-
-				if existing_payment_request_amount + flt(self.grand_total) > ref_amount:
+				#////
+				if existing_payment_request_amount + flt(self.grand_total) > ref_amount and self.reference_doctype != "Sales Order":
 					frappe.throw(
 						_("Total Payment Request amount cannot be greater than {0} amount").format(
 							self.reference_doctype
@@ -417,10 +417,14 @@ def make_payment_request(**args):
 		pr = frappe.get_doc("Payment Request", existing_payment_request)
 	else:
 		if args.order_type != "Shopping Cart":
-			existing_payment_request_amount = get_existing_payment_request_amount(args.dt, args.dn)
+			#////
+			if args.dt == "Sales Order":
+				existing_payment_request_amount = grand_total
+			else :
+				existing_payment_request_amount = get_existing_payment_request_amount(args.dt, args.dn)
 
-			if existing_payment_request_amount:
-				grand_total -= existing_payment_request_amount
+				if existing_payment_request_amount:
+					grand_total -= existing_payment_request_amount
 
 		pr = frappe.new_doc("Payment Request")
 		pr.update(
