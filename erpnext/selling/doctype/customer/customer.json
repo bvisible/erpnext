@@ -656,7 +656,7 @@
  "sort_order": "ASC",
  "states": [],
  "title_field": "customer_name",
- "track_changes": 1
+ "track_changes": 1,
  "modified_doctype": [
   "mobile_no",
   "email_id"
