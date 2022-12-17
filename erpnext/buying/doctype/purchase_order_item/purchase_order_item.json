@@ -168,7 +168,7 @@
    "search_index": 1
   },
   {
-   "collapsible": 1,
+   "collapsible": 0,
    "fieldname": "section_break_5",
    "fieldtype": "Section Break",
    "label": "Description"
@@ -660,7 +660,7 @@
    "report_hide": 1
   },
   {
-   "collapsible": 1,
+   "collapsible": 0,
    "fieldname": "accounting_details",
    "fieldtype": "Section Break",
    "label": "Accounting Details"
