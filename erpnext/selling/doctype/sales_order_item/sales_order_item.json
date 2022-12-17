@@ -104,7 +104,7 @@
  "fields": [
   {
    "bold": 1,
-   "columns": 3,
+   "columns": 1,
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_global_search": 1,
@@ -148,7 +148,7 @@
    "width": "150"
   },
   {
-   "collapsible": 1,
+   "collapsible": 0,
    "fieldname": "section_break_5",
    "fieldtype": "Section Break",
    "label": "Description"
@@ -156,6 +156,8 @@
   {
    "fieldname": "description",
    "fieldtype": "Text Editor",
+   "in_list_view": 1,
+   "columns": 2,
    "label": "Description",
    "oldfieldname": "description",
    "oldfieldtype": "Small Text",
@@ -165,7 +167,7 @@
   },
   {
    "allow_on_submit": 1,
-   "columns": 2,
+   "columns": 1,
    "depends_on": "eval: !parent.skip_delivery_note",
    "fieldname": "delivery_date",
    "fieldtype": "Date",
@@ -264,6 +266,8 @@
   {
    "fieldname": "base_price_list_rate",
    "fieldtype": "Currency",
+   "in_list_view": 1,
+   "columns": 1,
    "label": "Price List Rate (Company Currency)",
    "oldfieldname": "base_ref_rate",
    "oldfieldtype": "Currency",
@@ -312,6 +316,8 @@
    "depends_on": "price_list_rate",
    "fieldname": "discount_percentage",
    "fieldtype": "Percent",
+   "in_list_view": 1,
+   "columns": 1,
    "label": "Discount (%) on Price List Rate with Margin",
    "oldfieldname": "adj_rate",
    "oldfieldtype": "Float",
@@ -322,6 +328,8 @@
   {
    "depends_on": "price_list_rate",
    "fieldname": "discount_amount",
+   "in_list_view": 1,
+   "columns": 1,
    "fieldtype": "Currency",
    "label": "Discount Amount",
    "options": "currency"
@@ -341,7 +349,7 @@
    "precision": "2"
   },
   {
-   "columns": 2,
+   "columns": 1,
    "depends_on": "eval: doc.type != \"\"",
    "fieldname": "rate",
    "fieldtype": "Currency",
@@ -354,7 +362,7 @@
    "width": "100px"
   },
   {
-   "columns": 2,
+   "columns": 1,
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
