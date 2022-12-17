@@ -153,7 +153,7 @@
    "fieldname": "description",
    "fieldtype": "Text Editor",
    "in_list_view": 1,
-   "columns": 3,
+   "columns": 2,
    "label": "Description",
    "oldfieldname": "description",
    "oldfieldtype": "Text",
@@ -203,6 +203,8 @@
   {
    "fieldname": "uom",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "columns": 1,
    "label": "UOM",
    "options": "UOM",
    "reqd": 1
@@ -440,7 +442,7 @@
    "read_only": 1
   },
   {
-   "collapsible": 1,
+   "collapsible": 0,
    "fieldname": "accounting",
    "fieldtype": "Section Break",
    "label": "Accounting Details"
