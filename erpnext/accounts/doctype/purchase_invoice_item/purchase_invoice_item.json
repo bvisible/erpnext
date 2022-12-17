@@ -140,7 +140,7 @@
    "reqd": 1
   },
   {
-   "collapsible": 1,
+   "collapsible": 0,
    "fieldname": "description_section",
    "fieldtype": "Section Break",
    "label": "Description"
