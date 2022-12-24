@@ -385,7 +385,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 						})
 						$('.print-giftcard-btn').click(function() {
 							let code = $(this).attr('value');
-							let url = "/web?pwgc_number="+code+"&pdf=1"
+							let url = "/web/fr?pwgc_number="+code+"&pdf=1"
 							window.open(url, '_blank').focus();
 						})
 					}
