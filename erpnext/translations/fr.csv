@@ -10640,7 +10640,7 @@ Postal Account,Compte PostFinance
 QR Postal Account,Compte PostFinance QR
 Supplier create !,Fournisseur créé !
 Manage Stock,Gerer le Stock
-Base Price,Prix de pase
+Base Price,Prix de base
 Product default,Article par défaut
 Sales Partner Target Variance Based On Item Group,Écart cible du commercial basé sur le groupe d'articles
 Employee Lifecycle Dashboard,Tableau de bord des employés
@@ -10712,3 +10712,6 @@ Automatically Add Filtered Item To Cart,Ajouter automatiquement l'article filtr�
 Write Off Limit,Limite de radiation
 Auto write off precision loss while consolidation,Amortissement automatique de la perte de précision pendant la consolidation
 "Hello {0},<br><br>Thank you for your purchase.<br><br>Please find attached the receipt.","Bonjour {0},<br><br>Merci pour votre achat.<br><br>Veuillez trouver ci-joint le reçu."
+New Order,Nouvelle Commande
+Website Translate,Traduction du Site Web
+Payment Terms Status for Sales Order,Statut des conditions de paiement pour la commande client
