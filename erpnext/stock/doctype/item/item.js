@@ -589,6 +589,18 @@ $.extend(erpnext.item, {
 			me.multiple_variant_dialog.$wrapper.find('.form-column').each((i, col) => {
 				if(i===0) return;
 				let attribute_name = $(col).find('.control-label').html().trim();
+				////
+				const elements = cur_frm.$wrapper[0].querySelectorAll('[data-fieldname="attributes"] a[data-value]');
+				const values = Array.from(elements).map(element => ({
+					original: element.getAttribute('data-value'),
+					trad: element.textContent.trim()
+				}));
+				values.forEach(value => {
+					if(value.trad === attribute_name) {
+						attribute_name = value.original;
+					}
+				});
+				////
 				selected_attributes[attribute_name] = [];
 				let checked_opts = $(col).find('.checkbox input');
 				checked_opts.each((i, opt) => {
