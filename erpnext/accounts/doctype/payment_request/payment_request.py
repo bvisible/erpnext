@@ -95,9 +95,11 @@ class PaymentRequest(Document):
 
 		send_mail = self.payment_gateway_validation() if self.payment_gateway else None
 		ref_doc = frappe.get_doc(self.reference_doctype, self.reference_name)
+		if ref_doc.woocommerce_id: #////
+			send_mail = True #////
 
 		if (
-			hasattr(ref_doc, "order_type") and getattr(ref_doc, "order_type") == "Shopping Cart"
+			hasattr(ref_doc, "order_type") and getattr(ref_doc, "order_type") == "Shopping Cart" and not ref_doc.woocommerce_id #////
 		) or self.flags.mute_email:
 			send_mail = False
 
@@ -168,6 +170,13 @@ class PaymentRequest(Document):
 			return False
 
 	def set_payment_request_url(self):
+		#////
+		ecommerce = False
+		ref_doc = frappe.get_doc(self.reference_doctype, self.reference_name)
+		if ref_doc.woocommerce_id:
+			ecommerce = True
+		#////
+
 		if self.payment_account and self.payment_channel != "Phone":
 			self.payment_url = self.get_payment_url()
 
@@ -176,7 +185,7 @@ class PaymentRequest(Document):
 
 		if (
 			self.payment_url
-			or not self.payment_gateway_account
+			or (not self.payment_gateway_account and not ecommerce) #////
 			or (self.payment_gateway_account and self.payment_channel == "Phone")
 		):
 			self.db_set("status", "Initiated")
@@ -447,17 +456,17 @@ def make_payment_request(**args):
 		pr = frappe.new_doc("Payment Request")
 		pr.update(
 			{
-				"payment_gateway_account": gateway_account.get("name"),
-				"payment_gateway": gateway_account.get("payment_gateway"),
-				"payment_account": gateway_account.get("payment_account"),
-				"payment_channel": gateway_account.get("payment_channel"),
+				"payment_gateway_account": None if args.get("ecommerce") else gateway_account.get("name"),#////
+				"payment_gateway": None if args.get("ecommerce") else gateway_account.get("payment_gateway"),#////
+				"payment_account": None if args.get("ecommerce") else gateway_account.get("payment_account"),#////
+				"payment_channel": None if args.get("ecommerce") else gateway_account.get("payment_channel"),#////
 				"payment_request_type": args.get("payment_request_type"),
 				"currency": ref_doc.currency,
 				"grand_total": grand_total,
 				"mode_of_payment": args.mode_of_payment,
 				"email_to": args.recipient_id or ref_doc.owner,
 				"subject": _("Payment Request for {0}").format(args.dn),
-				"message": gateway_account.get("message") or get_dummy_message(ref_doc),
+				"message": gateway_account.get("message") or get_dummy_message(ref_doc,ecommerce=args.get("ecommerce")), #////
 				"reference_doctype": args.dt,
 				"reference_name": args.dn,
 				"party_type": args.get("party_type") or "Customer",
@@ -477,7 +486,7 @@ def make_payment_request(**args):
 		for dimension in get_accounting_dimensions():
 			pr.update({dimension: ref_doc.get(dimension)})
 
-		if args.order_type == "Shopping Cart" or args.mute_email:
+		if (args.order_type == "Shopping Cart" and not args.get("ecommerce")) or args.mute_email: #////
 			pr.flags.mute_email = True
 
 		pr.insert(ignore_permissions=True)
@@ -486,8 +495,9 @@ def make_payment_request(**args):
 
 	if args.order_type == "Shopping Cart":
 		frappe.db.commit()
-		frappe.local.response["type"] = "redirect"
-		frappe.local.response["location"] = pr.get_payment_url()
+		if not args.get("ecommerce"): #////
+			frappe.local.response["type"] = "redirect"
+			frappe.local.response["location"] = pr.get_payment_url()
 
 	if args.return_doc:
 		return pr
@@ -551,6 +561,10 @@ def get_gateway_details(args):  # nosemgrep
 		return get_payment_gateway_account(args.get("payment_gateway_account"))
 
 	if args.order_type == "Shopping Cart":
+		#////
+		if args.get("ecommerce"):
+			return None
+		#////
 		payment_gateway_account = frappe.get_doc("E Commerce Settings").payment_gateway_account
 		return get_payment_gateway_account(payment_gateway_account)
 
@@ -622,24 +636,32 @@ def update_payment_req_status(doc, method):
 
 			pay_req_doc.db_set("status", status)
 
+#////
+def get_dummy_message(doc, ecommerce=False):
+	if not ecommerce:
+		return frappe.render_template(
+			"""<p>{{ _("Hello") }} {{ doc.customer }},</p>
 
-def get_dummy_message(doc):
+			<p>{{ _("Please find enclosed the request for a deposit for your {0} {1} of a total of {2}").format(doc.doctype,
+				doc.name, doc.get_formatted("grand_total")) }}</p>
+
+			<p>{{ _("We remain at your disposal, Sincerely") }}</p>
+
+			""",
+			dict(doc=doc),
+		)
 	return frappe.render_template(
-		"""{% if doc.contact_person -%}
-<p>Dear {{ doc.contact_person }},</p>
-{%- else %}<p>Hello,</p>{% endif %}
+		"""<p>{{ _("Hello") }} {{ doc.customer }},</p>
 
-<p>{{ _("Requesting payment against {0} {1} for amount {2}").format(doc.doctype,
-	doc.name, doc.get_formatted("grand_total")) }}</p>
+		<p>{{ _("Please find enclosed the invoice for your ecommerce order {0} {1} of a total of {2}").format(doc.doctype,
+			doc.name, doc.get_formatted("grand_total")) }}</p>
 
-<a href="{{ payment_url }}">{{ _("Make Payment") }}</a>
+		<p>{{ _("We remain at your disposal, Sincerely") }}</p>
 
-<p>{{ _("If you have any questions, please get back to us.") }}</p>
-
-<p>{{ _("Thank you for your business!") }}</p>
-""",
-		dict(doc=doc, payment_url="{{ payment_url }}"),
-	)
+		""",
+			dict(doc=doc),
+		)
+#////
 
 
 @frappe.whitelist()
