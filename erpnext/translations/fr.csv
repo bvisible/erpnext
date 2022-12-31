@@ -10698,6 +10698,7 @@ Income Tax Computation,Calcul de l'impôt sur le revenu
 Payroll Reports,Rapports de salaires
 Actived mode is,Le mode activé est
 Enable or disable full screen mode,Activer ou désactiver le mode plein écran
+Enable or disable dark and light.,Activez ou désactivez le mode sombre ou clair.
 Name of the payment method,Nom de la méthode de paiement
 Activate Stripe on ERP,Activer Stripe sur ERP
 Activate Stripe on Ecommerce,Activez Stripe sur Ecommerce
@@ -10715,5 +10716,12 @@ Auto write off precision loss while consolidation,Amortissement automatique de l
 New Order,Nouvelle Commande
 Website Translate,Traduction du Site Web
 Payment Terms Status for Sales Order,Statut des conditions de paiement pour la commande client
+View email box,Afficher la boîte mail
+The company you are working on.,L'entreprise pour laquelle vous travaillez.
 Switzerland,Suisse
-Centimeter,Centimètre
+Get Customer Group Details,Obtenir les détails du groupe de clients
+Product stock alert,Alerte stock produit
+Payment by bank transfer,Paiement par virement bancaire
+Thank you for ordering on our website! You can find the information for the bank transfer below or you can use the QR invoice below. Bank transfer,Merci de commander sur notre site web ! Vous pouvez trouver les informations pour le virement bancaire ci-dessous ou vous pouvez utiliser la facture QR ci-dessous. Virement bancaire
+Banking information,Information bancaire
+Or by QR invoice,Ou par facture QR
