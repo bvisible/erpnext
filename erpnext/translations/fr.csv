@@ -10726,3 +10726,5 @@ Thank you for ordering on our website! You can find the information for the bank
 Banking information,Information bancaire
 Or by QR invoice,Ou par facture QR
 Ecommerce order,Commande Ecommerce
+"To The Attention of (only for print and if it has a value in a delivery address, it will replace the customer's namet)","A l'attention de (uniquement pour impression et si elle a une valeur dans une adresse de livraison, elle remplacera le nom du client)"
+Company (only for print and is displayed instead of the customer's name),Entreprise (uniquement pour impression et s'affiche à la place du nom du client)
