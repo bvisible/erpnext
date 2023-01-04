@@ -10735,3 +10735,6 @@ Disable Price Entry In The Default Payment Method,Désactiver la saisie de prix 
 This ecommerce order is "<b>on hold</b>". You can change it back to "<b>To Deliver</b>" by clicking {0} (make sure you have received payment before validation).,Cette commande ecommerce est en "<b>En attente</b>". Vous pouvez la repasser à "<b>À Livrer</b>" en cliquant {0} (assurez-vous d'avoir reçu le paiement avant la validation).
 This ecommerce order is "<b>on hold</b>". You can change it back to "<b>To Deliver</b>" by clicking {0}.,Cette commande est en "<b>En attente</b>". Vous pouvez la repasser à "<b>À Livrer</b>" en cliquant {0}.
 here,ici
+Is Cash or Non Trade Discount,S'agit-il d'une remise en espèces ou non commerciale
+Discount Account,Compte de réduction
+Loyalty amount,Montant de fidélité
