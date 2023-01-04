@@ -10728,3 +10728,10 @@ Or by QR invoice,Ou par facture QR
 Ecommerce order,Commande Ecommerce
 "To The Attention of (only for print and if it has a value in a delivery address, it will replace the customer's namet)","A l'attention de (uniquement pour impression et si elle a une valeur dans une adresse de livraison, elle remplacera le nom du client)"
 Company (only for print and is displayed instead of the customer's name),Entreprise (uniquement pour impression et s'affiche à la place du nom du client)
+From Opportunity,De l'opportunité
+Internal Customer,Client interne
+Primary Address and Contact,Adresse principale et coordonnées du contact
+Disable Price Entry In The Default Payment Method,Désactiver la saisie de prix dans le mode de paiement par défaut
+This ecommerce order is "<b>on hold</b>". You can change it back to "<b>To Deliver</b>" by clicking {0} (make sure you have received payment before validation).,Cette commande ecommerce est en "<b>En attente</b>". Vous pouvez la repasser à "<b>À Livrer</b>" en cliquant {0} (assurez-vous d'avoir reçu le paiement avant la validation).
+This ecommerce order is "<b>on hold</b>". You can change it back to "<b>To Deliver</b>" by clicking {0}.,Cette commande est en "<b>En attente</b>". Vous pouvez la repasser à "<b>À Livrer</b>" en cliquant {0}.
+here,ici
