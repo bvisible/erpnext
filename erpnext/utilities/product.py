@@ -137,6 +137,22 @@ def get_price(item_code, price_list, customer_group, company, qty=1):
 						price_obj.formatted_discount_rate = fmt_money(rate_discount, currency=price_obj["currency"])
 					price_obj.price_list_rate = pricing_rule.price_list_rate or 0
 
+				#////
+				if pricing_rule.pricing_rule_for == "Discount Amount":
+					price_obj.price_list_rate = flt(price_obj.price_list_rate - pricing_rule.discount_amount)
+
+				if pricing_rule.pricing_rules:
+					valid_from = frappe.db.get_value("Pricing Rule", json.loads(pricing_rule.pricing_rules)[0], "valid_from")
+					valid_upto = frappe.db.get_value("Pricing Rule", json.loads(pricing_rule.pricing_rules)[0], "valid_upto")
+					synchronized_rule = frappe.db.get_value("Pricing Rule", json.loads(pricing_rule.pricing_rules)[0], "synchronized_rule")
+					if valid_from:
+						price[0].valid_from = str(valid_from) + " 00:00:00"
+
+					if valid_upto:
+						price[0].valid_upto = str(valid_upto) + " 23:59:59"
+					price[0].synchronized_rule = synchronized_rule
+				#////
+
 			if price_obj:
 				price_obj["formatted_price"] = fmt_money(
 					price_obj["price_list_rate"], currency=price_obj["currency"]

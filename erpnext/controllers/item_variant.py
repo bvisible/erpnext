@@ -321,6 +321,7 @@ def copy_attributes_to_variant(item, variant):
 		exclude_fields += ["manufacturer", "manufacturer_part_no"]
 
 	allow_fields = [d.field_name for d in frappe.get_all("Variant Field", fields=["field_name"])]
+	allow_fields += ["sync_with_woocommerce"]#////
 	if "variant_based_on" not in allow_fields:
 		allow_fields.append("variant_based_on")
 	for field in item.meta.fields:
