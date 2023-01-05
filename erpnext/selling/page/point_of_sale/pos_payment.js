@@ -423,7 +423,11 @@ erpnext.PointOfSale.Payment = class {
 								$(cur_pos.payment.$numpad).find('div[data-button-value="delete"]').click();
 							}, 100);
 							this.$payment_modes.find(`.${mode}.mode-of-payment-control input`).val("");
-							$(".submit-order-btn").prop("disabled",true).css("background","grey");
+							if(cur_frm.doc.outstanding_amount == 0) {
+								$(".submit-order-btn").prop("disabled",false).css("background","var(--blue-500)");
+							} else {
+								$(".submit-order-btn").prop("disabled",true).css("background","red");
+							}
 						}
 						this.$payment_modes.find(`.${mode}.mode-of-payment-control`).parent().click();
 					})
