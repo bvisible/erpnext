@@ -419,6 +419,9 @@ erpnext.PointOfSale.Payment = class {
 					////this.$payment_modes.find(`.${mode}.mode-of-payment-control`).parent().click();
 					frappe.db.get_value("POS Profile",{"name":cur_pos.pos_profile},"disable_auto_price").then((disable_auto_price) => {
 						if(disable_auto_price.message.disable_auto_price == 1){
+							setTimeout(() => {
+								$(cur_pos.payment.$numpad).find('div[data-button-value="delete"]').click();
+							}, 100);
 							this.$payment_modes.find(`.${mode}.mode-of-payment-control input`).val("");
 							$(".submit-order-btn").prop("disabled",true).css("background","grey");
 						}
