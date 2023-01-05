@@ -130,12 +130,19 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 		)
 
 		item_prices = {}
+		item_promos = {} #////
 		for d in item_prices_data:
 			item_prices[d.item_code] = d
+			#////
+			promo = get_price(d.item_code, price_list,	'', company)
+			if promo:
+				item_promos[d.item_code] = float(promo.get('price_list_rate')) if promo.get('formatted_mrp') else '-1'
+			#////
 
 		for item in items_data:
 			item_code = item.item_code
 			item_price = item_prices.get(item_code) or {}
+			item_promo = item_promos.get(item_code) or {} #////
 			item_stock_qty, is_stock_item = get_stock_availability(item_code, warehouse)
 
 			row = {}
@@ -145,6 +152,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 					"price_list_rate": item_price.get("price_list_rate"),
 					"currency": item_price.get("currency"),
 					"actual_qty": item_stock_qty,
+					"promo_price": item_promo, #////
 				}
 			)
 			result.append(row)
