@@ -10752,3 +10752,6 @@ File not supported.,Fichier non pris en charge.
 Using negative stock disables FIFO/Moving average valuation when inventory is negative.,L'utilisation d'un stock négatif désactive la valorisation FIFO/Moyenne mobile lorsque le stock est négatif.
 This is considered dangerous from accounting point of view.,Ceci est considéré comme dangereux du point de vue comptable.
 Do you still want to enable negative inventory?,Voulez-vous toujours activer l'inventaire négatif ?
+Do you want to create a pricing / promotion rule?,Voulez-vous créer une règle de tarification / promotion ?
+Click here,Cliquez ici
+Add Discount,Ajouter une remise
