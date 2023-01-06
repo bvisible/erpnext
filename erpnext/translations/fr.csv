@@ -10755,3 +10755,16 @@ Do you still want to enable negative inventory?,Voulez-vous toujours activer l'i
 Do you want to create a pricing / promotion rule?,Voulez-vous créer une règle de tarification / promotion ?
 Click here,Cliquez ici
 Add Discount,Ajouter une remise
+Do you want to create a price rule for <b>ecommerce</b> ?,Voulez-vous créer une règle de prix pour <b>ecommerce</b> ?
+The ecommerce rules will also apply to the ERP but are more limited.,Les règles ecommerce s'appliqueront également à l'ERP mais sont plus limitées.
+Title of your price rule,Titre de votre règle de prix
+Rate : Force the price to the chosen value,Prix : Forcer le prix à la valeur choisie.
+Discount Percentage : Percentage discount that will be deducted from the price,Pourcentage de remise : Pourcentage de remise qui sera déduit du prix.
+Discount Amount : Amount to be deducted from the price,Montant de la remise : Montant à déduire du prix
+Type of pricing rule,Type de règle de prix
+Forced price,Prix forcé
+Percentage reduction,Pourcentage de réduction
+Reduction amount,Montant de la réduction
+Start date,Date de début
+End date,Date de fin
+Deactivate the price rule,Désactiver la règle de prix
