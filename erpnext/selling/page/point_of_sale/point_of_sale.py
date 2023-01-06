@@ -12,6 +12,7 @@ from frappe.utils.nestedset import get_root_of
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availability
 from erpnext.accounts.doctype.pos_profile.pos_profile import get_child_nodes, get_item_groups
 from erpnext.stock.utils import scan_barcode
+from erpnext.utilities.product import get_price #////
 
 
 def search_by_term(search_term, warehouse, price_list):
@@ -60,8 +61,8 @@ def search_by_term(search_term, warehouse, price_list):
 
 @frappe.whitelist()
 def get_items(start, page_length, price_list, item_group, pos_profile, search_term=""):
-	warehouse, hide_unavailable_items = frappe.db.get_value(
-		"POS Profile", pos_profile, ["warehouse", "hide_unavailable_items"]
+	warehouse, hide_unavailable_items, company = frappe.db.get_value( #////
+		"POS Profile", pos_profile, ["warehouse", "hide_unavailable_items", "company"] #////
 	)
 
 	result = []
