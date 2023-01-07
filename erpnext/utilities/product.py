@@ -6,6 +6,7 @@ from frappe.utils import cint, flt, fmt_money, getdate, nowdate
 
 from erpnext.accounts.doctype.pricing_rule.pricing_rule import get_pricing_rule_for_item
 from erpnext.stock.doctype.batch.batch import get_batch_qty
+import json #////
 
 
 def get_web_item_qty_in_stock(item_code, item_warehouse_field, warehouse=None):
