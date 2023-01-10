@@ -244,16 +244,21 @@ def get_other_conditions(conditions, values, args):
 			and ifnull(`tabPricing Rule`.valid_upto, '2500-12-31')"""
 		values["transaction_date"] = args.get("transaction_date")
 
-	#////if args.get("doctype") in [
-	#////	"Quotation",
-	#////	"Sales Order",
-	#////	"Delivery Note",
-	#////	"Sales Invoice",
-	#////	"POS Invoice",
-	#////]:
-	#////	conditions += """ and ifnull(`tabPricing Rule`.selling, 0) = 1"""
-	#////else:
-	#////	conditions += """ and ifnull(`tabPricing Rule`.buying, 0) = 1"""
+	if args.get("doctype") in [
+		"Quotation",
+		"Quotation Item",
+		"Sales Order",
+		"Sales Order Item",
+		"Delivery Note",
+		"Delivery Note Item",
+		"Sales Invoice",
+		"Sales Invoice Item",
+		"POS Invoice",
+		"POS Invoice Item",
+	]:
+		conditions += """ and ifnull(`tabPricing Rule`.selling, 0) = 1"""
+	else:
+		conditions += """ and ifnull(`tabPricing Rule`.buying, 0) = 1"""
 
 	return conditions
 
