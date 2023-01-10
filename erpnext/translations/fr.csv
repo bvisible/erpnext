@@ -10741,6 +10741,8 @@ Discount Account,Compte de réduction
 Loyalty amount,Montant de fidélité
 Enable Website (if unchecked website will not be visible by customers and visitors),Activer le site Web (si le site Web non coché ne sera pas visible par les clients et les visiteurs)
 Enable Ecommerce (if unchecked ecommerce will not be visible by customers and visitors),Activer l'Ecommerce (si l'Ecommerce non coché ne sera pas visible par les clients et les visiteurs)
+Change Sync Warehouse,Modifier l'entrepôt de synchronisation
+Stock to be synchronised,Stock à synchroniser
 Gallery 1, Galerie 1
 Gallery 2, Galerie 2
 Gallery 3, Galerie 3
@@ -10768,3 +10770,8 @@ Reduction amount,Montant de la réduction
 Start date,Date de début
 End date,Date de fin
 Deactivate the price rule,Désactiver la règle de prix
+Change Amount,Montant rendu
+Generate code,Générer le code
+No address,Pas d'adresse
+No address in the QR,Pas d'adresse dans le QR
+The supplier has been created but without an address. Go to the supplier to correct the address.,Le fournisseur a été créé mais sans adresse. Allez sur le fournisseur pour corriger l'adresse.
