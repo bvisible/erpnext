@@ -10743,11 +10743,16 @@ Enable Website (if unchecked website will not be visible by customers and visito
 Enable Ecommerce (if unchecked ecommerce will not be visible by customers and visitors),Activer l'Ecommerce (si l'Ecommerce non coché ne sera pas visible par les clients et les visiteurs)
 Change Sync Warehouse,Modifier l'entrepôt de synchronisation
 Stock to be synchronised,Stock à synchroniser
-Gallery 1, Galerie 1
-Gallery 2, Galerie 2
-Gallery 3, Galerie 3
-Gallery 4, Galerie 4
-Gallery 5, Galerie 5
+Gallery 1,Galerie 1
+Gallery 2,Galerie 2
+Gallery 3,Galerie 3
+Gallery 4,Galerie 4
+Gallery 5,Galerie 5
+Gallery 6,Galerie 6
+Gallery 7,Galerie 7
+Gallery 8,Galerie 8
+Gallery 9,Galerie 9
+Gallery 10,Galerie 10
 "Your Company Logo (only <b>png</b>, <b>jpg</b> or <b>jpeg</b>)","Logo de votre entreprise (seulement <b>png</b>, <b>jpg</b> ou <b>jpeg</b>)"
 "<span style='font-weight: 500;'>We are pleased to welcome you to Neoffice and thank you for your confidence in our solution!</span><br> To help you configure your instance quickly, we invite you to fill in our quick configurator. This will allow us to gather all the important information and configure your instance automatically. If you have any questions or specific needs, please feel free to contact us using the chat at the bottom left of your screen. We will be happy to answer all your questions and assist you in using our solution.","<span style='font-weight: 500;'>Nous sommes heureux de vous accueillir sur Neoffice et de vous remercier pour votre confiance en notre solution !</span><br> Pour vous aider à configurer rapidement votre instance, nous vous invitons à remplir notre configurateur rapide. Cela nous permettra de réunir toutes les informations importantes et de configurer votre instance de manière automatique. Si vous avez des questions ou des besoins spécifiques, n'hésitez pas à nous contacter en utilisant le chat en bas à gauche de votre écran. Nous sommes à votre disposition pour répondre à toutes vos questions et vous assister dans votre utilisation de notre solution."
 File not supported.,Fichier non pris en charge.
@@ -10775,3 +10780,11 @@ Generate code,Générer le code
 No address,Pas d'adresse
 No address in the QR,Pas d'adresse dans le QR
 The supplier has been created but without an address. Go to the supplier to correct the address.,Le fournisseur a été créé mais sans adresse. Allez sur le fournisseur pour corriger l'adresse.
+Sales Invoice,Facture,
+"If the following values are empty, they will be synchronized with the same values as the parent product. ===> If the following values are {0}, they will be synchronized with the same values as the parent product.","
+Product Length (in cm),Longueur du produit (en cm)
+Product Width (in cm),Largeur du produit (en cm)
+Product Height (in cm),Hauteur du produit (en cm)
+Product Weight (in Kg),Poids du produit (en Kg)
+Dimensions and Weigth,Dimensions et poids
+Values saved as {0} are not synchro,Les valeurs enregistrées sous {0} ne sont pas synchro
