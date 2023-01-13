@@ -10781,10 +10781,10 @@ No address,Pas d'adresse
 No address in the QR,Pas d'adresse dans le QR
 The supplier has been created but without an address. Go to the supplier to correct the address.,Le fournisseur a été créé mais sans adresse. Allez sur le fournisseur pour corriger l'adresse.
 Sales Invoice,Facture,
-"If the following values are empty, they will be synchronized with the same values as the parent product. ===> If the following values are {0}, they will be synchronized with the same values as the parent product.","
+"If the following values are empty, they will be synchronized with the same values as the parent product. ===> If the following values are 0, they will be synchronized with the same values as the parent product.","Si les valeurs suivantes sont vides, elles seront synchronisées avec les mêmes valeurs que le produit parent. ===> Si les valeurs suivantes sont 0, elles seront synchronisées avec les mêmes valeurs que le produit parent."
 Product Length (in cm),Longueur du produit (en cm)
 Product Width (in cm),Largeur du produit (en cm)
 Product Height (in cm),Hauteur du produit (en cm)
 Product Weight (in Kg),Poids du produit (en Kg)
 Dimensions and Weigth,Dimensions et poids
-Values saved as {0} are not synchro,Les valeurs enregistrées sous {0} ne sont pas synchro
+Values saved as 0 are not synchro,Les valeurs enregistrées sous 0 ne sont pas synchro
