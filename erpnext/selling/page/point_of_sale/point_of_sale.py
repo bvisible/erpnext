@@ -157,8 +157,6 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 					fields=["attribute", "attribute_value"],
 					filters={"parent": item.item_code},
 				)
-				frappe.log_error('item.variant_of', str(item.variant_of))
-				frappe.log_error('attributes',attributes)
 				row.update({
 					"attributes": attributes,
 					"variant_of": item.variant_of
