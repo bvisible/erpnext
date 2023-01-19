@@ -125,18 +125,32 @@ erpnext.PointOfSale.ItemSelector = class {
 			}
 		}
 
+		function get_attribute_html(item) {
+			if(item.attributes) {
+				let spans = "";
+				spans += "<div class='content-attribute'>";
+				item.attributes.forEach(function(attribute) {
+					spans += "<span><i>" + attribute.attribute + "</i> : <strong>" + attribute.attribute_value + "</strong></span><br>";
+				  });
+				spans += "</div>";
+				return spans;
+			} else {
+				return '';
+			}
+		}
+
 		return (
 			`<div class="item-wrapper"
 				data-item-code="${escape(item.item_code)}" data-serial-no="${escape(serial_no)}"
 				data-batch-no="${escape(batch_no)}" data-uom="${escape(stock_uom)}"
 				data-rate="${escape(price_list_rate || 0)}"
 				title="${item.item_name}">
-
+				<div class="item-attribute">${get_attribute_html(item)}</div>
 				${get_item_image_html()}
 
 				<div class="item-detail">
 					<div class="item-name">
-						${frappe.ellipsis(item.item_name, 18)}
+						${item.item_name}
 					</div>
 					${get_promo_price_html()}
 				</div>
