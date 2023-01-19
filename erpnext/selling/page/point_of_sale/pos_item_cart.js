@@ -575,6 +575,17 @@ erpnext.PointOfSale.ItemCart = class {
 			$item_to_update = this.get_cart_item(item_data);
 		}
 
+		//// get item data from item master
+		frappe.db.get_doc('Item', item_data.item_code).then(itemInfo => {
+			if (itemInfo.attributes && itemInfo.variant_of) {
+			  let spans = "";
+			  itemInfo.attributes.forEach(function(attribute) {
+				spans += "  <span><i>" + attribute.attribute + "</i> : <strong>" + attribute.attribute_value + "</strong></span>";
+			  });
+			  $("#varInfo_" + item_data.idx).html(spans);
+			}
+		});
+	
 		$item_to_update.html(
 			`${get_item_image_html()}
 			<div class="item-name-desc">
@@ -582,10 +593,11 @@ erpnext.PointOfSale.ItemCart = class {
 					${item_data.item_name}
 				</div>
 				${get_description_html()}
+				<div id="varInfo_${item_data.idx}" class="item-desc" style="display:block;height:18px;"></div>
 			</div>
 			${get_rate_discount_html()}`
 		)
-
+		////
 		set_dynamic_rate_header_width();
 
 		function set_dynamic_rate_header_width() {
