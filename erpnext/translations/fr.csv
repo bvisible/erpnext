@@ -10798,3 +10798,16 @@ VAT Calculation in eShop,Calcul de la TVA dans Ecommerce
 Based on company address,Adresse de base de la Boutique
 Based on customer's billing address,Adresse de livraison du client
 Based on customer's shipping address,Adresse de livraison du client
+Fetch Timesheet,Récupérer les temps saisis
+Allow Price List Rate Modification,Autoriser la modification du tarif de la liste de prix
+Unreconciled Entries,Entrées non rapprochées
+"If you need to reconcile particular transactions against each other, then please select accordingly. If not, all the transactions will be allocated in FIFO order.","Si vous avez besoin de rapprocher des transactions particulières les unes par rapport aux autres, veuillez sélectionner en conséquence. Sinon, toutes les transactions seront allouées dans l'ordre FIFO."
+Minimum Payment Amount,Montant du Paiement Minimal
+Maximum Payment Amount,Montant du Paiement Maximal
+From Payment Date,À partir de la date de paiement
+To Payment Date,Jusqu'à la date de paiement
+This filter will be applied to Journal Entry.,Ce filtre sera appliqué à l'entrée de journal.
+Invoice Limit,Limite de facturation
+Payment Limit,Limite de payement
+Ecommerce Shipping Method Title,Titre de la méthode d'expédition du Ecommerce
+"Hello {0},<br><br>Thank you for your purchase.<br><br>Please find attached the receipt","Bonjour {0},Merci pour votre achat.<br><br>Veuillez trouver ci-joint le reçu."
