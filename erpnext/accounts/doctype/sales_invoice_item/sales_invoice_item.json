@@ -233,6 +233,8 @@
   {
    "fieldname": "price_list_rate",
    "fieldtype": "Currency",
+   "in_list_view": 1,
+   "columns": 1,
    "label": "Price List Rate",
    "oldfieldname": "ref_rate",
    "oldfieldtype": "Currency",
@@ -243,8 +245,6 @@
   {
    "fieldname": "base_price_list_rate",
    "fieldtype": "Currency",
-   "in_list_view": 1,
-   "columns": 1,
    "label": "Price List Rate (Company Currency)",
    "oldfieldname": "base_ref_rate",
    "oldfieldtype": "Currency",
