@@ -301,6 +301,7 @@
    "fieldname": "barcodes",
    "fieldtype": "Table",
    "label": "Barcodes",
+   "in_standard_filter": 1,
    "options": "Item Barcode"
   },
   {
