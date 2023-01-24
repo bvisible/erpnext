@@ -10733,7 +10733,7 @@ From Opportunity,De l'opportunité
 Internal Customer,Client interne
 Primary Address and Contact,Adresse principale et coordonnées du contact
 Disable Price Entry In The Default Payment Method,Désactiver la saisie de prix dans le mode de paiement par défaut
-This ecommerce order is "<b>on hold</b>". You can change it back to "<b>To Deliver</b>" by clicking {0} (make sure you have received payment before validation).,Cette commande ecommerce est en "<b>En attente</b>". Vous pouvez la repasser à "<b>À Livrer</b>" en cliquant {0} (assurez-vous d'avoir reçu le paiement avant la validation).
+This ecommerce order is "<b>on hold</b>". You can change it back to "<b>To Deliver</b>" and create invoice by clicking {0} (make sure you have received payment before validation).,Cette commande ecommerce est en "<b>En attente</b>". Vous pouvez la repasser à "<b>À Livrer</b>" et créer la facture en cliquant {0} (assurez-vous d'avoir reçu le paiement avant la validation).
 This ecommerce order is "<b>on hold</b>". You can change it back to "<b>To Deliver</b>" by clicking {0}.,Cette commande est en "<b>En attente</b>". Vous pouvez la repasser à "<b>À Livrer</b>" en cliquant {0}.
 here,ici
 Is Cash or Non Trade Discount,S'agit-il d'une remise en espèces ou non commerciale
@@ -10823,3 +10823,5 @@ Printed,Imprimé
 Posting date,Date de Paiement
 Import payment entries,Importer les écritures de paiement
 Price entry in,Saisie des prix en
+Payment Files,Compte de paiement
+Taxable account,Compte de Taxe
