@@ -10796,7 +10796,7 @@ VAT included,TVA Incluse TTC
 VAT excluded,TVA Exclue HT
 VAT Calculation in eShop,Calcul de la TVA dans Ecommerce
 Based on company address,Adresse de base de la Boutique
-Based on customer's billing address,Adresse de livraison du client
+Based on customer's billing address,Adresse de facturation du client
 Based on customer's shipping address,Adresse de livraison du client
 Fetch Timesheet,Récupérer les temps saisis
 Allow Price List Rate Modification,Autoriser la modification du tarif de la liste de prix
@@ -10822,3 +10822,4 @@ Do you want to consider the document as printed ?,Voulez-vous considérer le doc
 Printed,Imprimé
 Posting date,Date de Paiement
 Import payment entries,Importer les écritures de paiement
+Price entry in,Saisie des prix en
