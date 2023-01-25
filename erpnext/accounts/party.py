@@ -773,7 +773,7 @@ def get_dashboard_info(party_type, party, loyalty_program=None):
 				"Loyalty Point Entry",
 				filters={
 					"customer": party,
-					"expiry_date": (">=", getdate()),
+					#//// "expiry_date": (">=", getdate()),
 				},
 				group_by="company",
 				fields=["company", "sum(loyalty_points) as loyalty_points"],

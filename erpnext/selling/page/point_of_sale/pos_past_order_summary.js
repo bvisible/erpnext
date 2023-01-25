@@ -249,39 +249,42 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		const doc = this.doc || frm.doc;
 		const print_format = frm.pos_print_format;
 
-		frappe.call({
-			method: "frappe.core.doctype.communication.email.make",
-			args: {
-				recipients: recipients,
-				subject: __(frm.meta.name) + ': ' + doc.name,
-				doctype: doc.doctype,
-				name: doc.name,
-				send_email: 1,
-				print_format,
-				sender_full_name: frappe.user.full_name(),
-				_lang: doc.language,
-				content: __("Hello {0},<br><br>Thank you for your purchase.<br><br>Please find attached the receipt.{0}", [doc.customer_name]),
-			},
-			callback: r => {
-				if (!r.exc) {
-					frappe.utils.play_sound("email");
-					if (r.message["emails_not_sent_to"]) {
-						frappe.msgprint(__(
-							"Email not sent to {0} (unsubscribed / disabled)",
-							[ frappe.utils.escape_html(r.message["emails_not_sent_to"]) ]
-						));
+		frappe.db.get_value('Company', doc.company, 'email', (r) => {////
+			frappe.call({
+				method: "frappe.core.doctype.communication.email.make",
+				args: {
+					recipients: recipients,
+					subject: __(frm.meta.name) + ': ' + doc.name,
+					doctype: doc.doctype,
+					name: doc.name,
+					send_email: 1,
+					print_format,
+					sender_full_name: frm.doc.company, ////
+					sender: r.email, ////
+					_lang: doc.language,
+					content: __("Hello {0},<br><br>Thank you for your purchase.<br><br>Please find attached the receipt.", [doc.customer_name]),
+				},
+				callback: r => {
+					if (!r.exc) {
+						frappe.utils.play_sound("email");
+						if (r.message["emails_not_sent_to"]) {
+							frappe.msgprint(__(
+								"Email not sent to {0} (unsubscribed / disabled)",
+								[ frappe.utils.escape_html(r.message["emails_not_sent_to"]) ]
+							));
+						} else {
+							frappe.show_alert({
+								message: __('Email sent successfully.'),
+								indicator: 'green'
+							});
+						}
+						this.email_dialog.hide();
 					} else {
-						frappe.show_alert({
-							message: __('Email sent successfully.'),
-							indicator: 'green'
-						});
+						frappe.msgprint(__("There were errors while sending email. Please try again."));
 					}
-					this.email_dialog.hide();
-				} else {
-					frappe.msgprint(__("There were errors while sending email. Please try again."));
 				}
-			}
-		});
+			});
+		});////
 	}
 
 	add_summary_btns(map) {
