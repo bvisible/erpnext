@@ -10825,3 +10825,8 @@ Import payment entries,Importer les écritures de paiement
 Price entry in,Saisie des prix en
 Payment Files,Compte de paiement
 Taxable account,Compte de Taxe
+Item Price Settings,Paramètres de prix de l'article
+Customer Defaults,Valeurs par défaut du client
+Enable Discount Accounting for Selling,Activer la comptabilisation des remises pour la vente
+Considered In Paid Amount,Considéré dans le montant payé
+"If checked, the tax amount will be considered as already included in the Paid Amount in Payment Entry","Si coché, le montant de la taxe sera considéré comme déjà inclus dans le montant payé dans l'entrée de paiement"
