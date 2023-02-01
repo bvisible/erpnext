@@ -10820,6 +10820,7 @@ Deliver and Bill,Livrer et facturer
 Unpaid,Non payé
 Do you want to consider the document as printed ?,Voulez-vous considérer le document comme imprimé ?
 Printed,Imprimé
+Printed document,Imprimé
 Posting date,Date de Paiement
 Import payment entries,Importer les écritures de paiement
 Price entry in,Saisie des prix en
@@ -10830,3 +10831,16 @@ Customer Defaults,Valeurs par défaut du client
 Enable Discount Accounting for Selling,Activer la comptabilisation des remises pour la vente
 Considered In Paid Amount,Considéré dans le montant payé
 "If checked, the tax amount will be considered as already included in the Paid Amount in Payment Entry","Si coché, le montant de la taxe sera considéré comme déjà inclus dans le montant payé dans l'entrée de paiement"
+Price List Defaults,Valeurs par défaut des listes de prix
+Naming Series and Price Defaults,Noms de séries et prix par défaut
+Disable Last Purchase Rate,Désactiver le taux du dernier achat
+Outstanding amount,Solde à payer
+Due Date Bank Transfer (in days),Date d'échéance Virement bancaire (en jours)
+Due Date Invoice (in days),Date d'échéance de la facture (en jours)
+Ecommerce Shipping Methods,Méthodes d'expédition Ecommerce
+Ecommerce Default Payment Method,Mode de paiement par défaut dans le Ecommerce
+Ecommerce Payment Methods,Méthodes de paiement Ecommerce
+Rounding Charge,Frais d'arrondi
+Fee Account,Compte de frais
+Giftcard Account,Compte carte-cadeau
+Stripe Gateway,Passerelle Stripe
