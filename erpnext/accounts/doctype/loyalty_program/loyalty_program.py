@@ -87,7 +87,6 @@ def get_loyalty_program_details_with_points(
 			lp_details.collection_factor = d.collection_factor
 		else:
 			break
-	#return array
 	return lp_details
 
 
