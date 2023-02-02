@@ -10641,7 +10641,7 @@ Postal Account,Compte PostFinance
 QR Postal Account,Compte PostFinance QR
 Supplier create !,Fournisseur créé !
 Manage Stock,Gerer le Stock
-Base Price,Prix de base
+Base Price,Prix de vente de base
 Product default,Article par défaut
 Sales Partner Target Variance Based On Item Group,Écart cible du commercial basé sur le groupe d'articles
 Employee Lifecycle Dashboard,Tableau de bord des employés
@@ -10845,3 +10845,4 @@ Fee Account,Compte de frais
 Giftcard Account,Compte carte-cadeau
 Stripe Gateway,Passerelle Stripe
 Ecommerce Shipping Method Title,Méthode d'expédition Ecommerce
+Base Buy Price,Prix ​​d'achat de base
