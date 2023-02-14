@@ -353,6 +353,9 @@ class Subscription(Document):
 			)
 
 		invoice.company = company
+		#////
+		invoice.customer_reference = self.customer_reference
+		#////
 		invoice.set_posting_time = 1
 		invoice.posting_date = (
 			self.current_invoice_start
