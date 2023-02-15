@@ -762,8 +762,8 @@ $.extend(erpnext.journal_entry, {
 			////
 			dialog.hide();
 		});
-
-		dialog.show();
+		setTimeout(function() { dialog.show(); }, 400); ////
+		////dialog.show();
 	},
 
 	account_query: function(frm) {

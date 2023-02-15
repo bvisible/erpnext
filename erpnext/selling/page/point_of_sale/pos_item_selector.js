@@ -134,7 +134,7 @@ erpnext.PointOfSale.ItemSelector = class {
 			});
 			div_attr += "</div></div>";
 		}
-			
+
 		return (
 			`<div class="item-wrapper"
 				data-item-code="${escape(item.item_code)}" data-serial-no="${escape(serial_no)}"

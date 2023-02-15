@@ -1,7 +1,7 @@
 {
  "actions": [],
  "autoname": "ACC-SUB-.YYYY.-.#####",
- "creation": "2017-07-18 17:50:43.967266",
+ "creation": "2022-03-07 17:17:58.316052",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -88,12 +88,14 @@
   {
    "fieldname": "current_invoice_start",
    "fieldtype": "Date",
+   "in_list_view": 1,
    "label": "Current Invoice Start Date",
    "read_only": 1
   },
   {
    "fieldname": "current_invoice_end",
    "fieldtype": "Date",
+   "in_list_view": 1,
    "label": "Current Invoice End Date",
    "read_only": 1
   },
@@ -188,6 +190,7 @@
   {
    "fieldname": "party_type",
    "fieldtype": "Link",
+   "in_standard_filter": 1,
    "label": "Party Type",
    "options": "DocType",
    "reqd": 1,
@@ -264,10 +267,11 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-04-19 15:24:27.550797",
+ "modified": "2023-02-09 13:59:39.640260",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Subscription",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
@@ -309,5 +313,6 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "track_changes": 1
 }
