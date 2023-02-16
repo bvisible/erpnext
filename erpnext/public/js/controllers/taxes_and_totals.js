@@ -61,7 +61,9 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 			&& this.frm.doc.is_pos
 			&& this.frm.doc.is_return
 		) {
-			this.set_total_amount_to_default_mop();
+			if (this.frm.doc.paid_amount != this.frm.doc.grand_total ) { ////
+				this.set_total_amount_to_default_mop();
+			} ////
 			this.calculate_paid_amount();
 		}
 

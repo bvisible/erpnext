@@ -271,7 +271,7 @@ erpnext.PointOfSale.Payment = class {
 		const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? doc.grand_total : doc.rounded_total;
 		const remaining_amount = grand_total - doc.paid_amount;
 		const current_value = this.selected_mode ? this.selected_mode.get_value() : undefined;
-		if (!current_value && remaining_amount > 0 && this.selected_mode) {
+		if (!current_value && remaining_amount != 0 && this.selected_mode) { ////
 			this.selected_mode.set_value(remaining_amount);
 		}
 	}
@@ -363,7 +363,7 @@ erpnext.PointOfSale.Payment = class {
 				const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
 				const payment_type = p.type;
 				const margin = i % 2 === 0 ? 'pr-2' : 'pl-2';
-				const amount = p.amount > 0 ? format_currency(p.amount, currency) : '';
+				const amount = p.amount != 0 ? format_currency(p.amount, currency) : ''; ////
 				////<div class="payment-mode-wrapper">
 				return (`
 					<div class="payment-mode-wrapper ${mode}">
