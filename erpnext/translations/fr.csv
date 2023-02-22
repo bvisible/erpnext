@@ -10853,3 +10853,10 @@ Impossible to return this invoice because at least one giftcard has been used,Im
 giftcard in position,carte cadeau en position
 "Attention, your sale has an amount of 0","Attention, votre vente à un montant de 0"
 Deductions or loss,Déductions ou perte
+Generated From Loyalty Program,Généré à partir du programme de fidélité
+"As your product is synchronized with your Ecommerce, it will synchronize the stock from the product's default warehouse.","Comme votre produit est synchronisé avec votre Ecommerce, le stock de l'entrepôt par défaut du produit sera synchronisé"
+Use Limit,Limite d'utilisation
+rate,prix
+percentage,pourcentage,
+used,utilisé
+Delivery date,Date de livraison
