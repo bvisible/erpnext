@@ -10871,3 +10871,5 @@ Mode of payment,Moyen de paiement
 Confirm all payments,Valider les paiements
 Download the file,Télécharger le fichier
 No errors,Pas d'erreurs
+Do you want to create a pricing rule compatible with <b>ecommerce</b> ?,Voulez-vous créer une règle de prix compatible avec le <b>ecommerce</b> ?
+"Selecting 'No' provides access to additional settings, but the pricing rule won't synchronize with your ecommerce.","Sélectionner 'Non' donne accès à des réglages supplémentaires, mais la règle de prix ne se synchronisera pas avec votre ecommerce."
