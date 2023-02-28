@@ -133,17 +133,8 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 					item.net_amount = item.amount = flt(item.rate * item.qty, precision("amount", item));
 				}
 				else {
-					////
-					////let qty = 0;
-					////if(me.frm.doctype == "POS Invoice") {
-					////	qty = item.qty;
-					////} else {
-					////	qty = item.qty || 1;
-					////	qty = me.frm.doc.is_return ? ( item.qty == 0 ? -1 * qty : qty ) : qty;
-					////}
-					////
-					let qty = item.qty || 1;
-					qty = me.frm.doc.is_return ? ( item.qty == 0 ? -1 * qty : qty ) : qty; ////
+					// allow for '0' qty on Credit/Debit notes
+					let qty = item.qty || -1
 					item.net_amount = item.amount = flt(item.rate * qty, precision("amount", item));
 				}
 
