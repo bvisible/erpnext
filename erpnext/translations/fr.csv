@@ -10868,7 +10868,8 @@ Export payments,Exportation du fichier de payement
 This page allows you to generate a payment file for the bank. The file will be generated in XML format. The file will be generated based on the selected payments. The payment date will be the date of the file generation. The payment date can be changed by selecting a date in the field below.,Cette page permet de générer un fichier de paiement pour la banque. Le fichier sera généré au format XML. Le fichier sera généré en fonction des paiements sélectionnés. La date de paiement sera la date de génération du fichier. La date de paiement peut être modifiée en sélectionnant une date dans le champ ci-dessous.
 You have selected purchase invoices that are not valid. Please select only purchase invoices with status "Submitted".,Vous avez sélectionné des factures d'achat qui ne sont pas valides. Veuillez sélectionner uniquement les factures d'achat avec le statut "Valider".
 Mode of payment,Moyen de paiement
-Confirm all payments,Valider les paiements
+Confirm the file transfer and validate the payments,Confirmer le transfert du fichier et valider les paiements
+Are you sure you want to validate the payments ?,Êtes-vous sûr de vouloir valider les paiements ?
 Download the file,Télécharger le fichier
 No errors,Pas d'erreurs
 Do you want to create a pricing rule compatible with <b>ecommerce</b> ?,Voulez-vous créer une règle de prix compatible avec le <b>ecommerce</b> ?
