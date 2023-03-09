@@ -10874,3 +10874,17 @@ Download the file,Télécharger le fichier
 No errors,Pas d'erreurs
 Do you want to create a pricing rule compatible with <b>ecommerce</b> ?,Voulez-vous créer une règle de prix compatible avec le <b>ecommerce</b> ?
 "Selecting 'No' provides access to additional settings, but the pricing rule won't synchronize with your ecommerce.","Sélectionner 'Non' donne accès à des réglages supplémentaires, mais la règle de prix ne se synchronisera pas avec votre ecommerce."
+Imported payment,Paiements importés
+Successfully imported ,Paiements ont été importés avec succès&nbsp;
+ payments and ,&nbsp;et&nbsp; 
+ not imported.,&nbsp;n'ont pas été importés.
+Transaction reference,Référence de transaction
+ID reference,Référence d'identification
+Payment account,Compte de réception des paiement
+Bank import,Importation bancaire
+The iban of the selected bank and the iban of the XML file are not identical,L'iban de la banque sélectionnée et l'iban du fichier XML ne sont pas identiques
+Are you sure you want to proceed?,Êtes-vous sur de vouloir continuer?
+Please wait while the file is being processed...,Veuillez patienter pendant le traitement du fichier...
+Refecency of payment already exists.,La référence de paiement existe déjà.
+Payment not imported,Paiement non importé
+View Payment Entry,Afficher les écritures de paiement
