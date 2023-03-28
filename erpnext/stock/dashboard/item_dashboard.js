@@ -141,7 +141,9 @@ erpnext.stock.ItemDashboard = class ItemDashboard {
 		// If not any stock in any warehouses provide a message to end user
 		if (context.data.length > 0) {
 			this.content.find('.result').css('text-align', 'unset');
-			$(frappe.render_template(this.template, context)).appendTo(this.result);
+			setTimeout(() => { //// added
+				$(frappe.render_template(this.template, context)).appendTo(this.result);
+			}, 400); //// added
 		} else {
 			var message = __("No Stock Available Currently");
 			this.content.find('.result').css('text-align', 'center');
@@ -156,15 +158,21 @@ erpnext.stock.ItemDashboard = class ItemDashboard {
 		if(!data) data = [];
 
 		data.forEach(function (d) {
-			d.actual_or_pending = d.projected_qty + d.reserved_qty + d.reserved_qty_for_production + d.reserved_qty_for_sub_contract;
-			d.pending_qty = 0;
-			d.total_reserved = d.reserved_qty + d.reserved_qty_for_production + d.reserved_qty_for_sub_contract;
-			if (d.actual_or_pending > d.actual_qty) {
-				d.pending_qty = d.actual_or_pending - d.actual_qty;
-			}
+			frappe.call({ //// added
+				method: "neoffice_theme.events.get_stock_on_hand", //// added
+				args: {item_code: "produit en stock", warehouse: "Magasins - pri"} //// added
+			}).then(r => { //// added
+				d.sold_to_be_validated = parseInt(parseFloat(r.message)); //// added
+				d.actual_or_pending = d.projected_qty + d.reserved_qty + d.reserved_qty_for_production + d.reserved_qty_for_sub_contract;
+				d.pending_qty = 0;
+				d.total_reserved = d.reserved_qty + d.reserved_qty_for_production + d.reserved_qty_for_sub_contract;
+				if (d.actual_or_pending > d.actual_qty) {
+					d.pending_qty = d.actual_or_pending - d.actual_qty;
+				}
 
-			max_count = Math.max(d.actual_or_pending, d.actual_qty,
-				d.total_reserved, max_count);
+				max_count = Math.max(d.actual_or_pending, d.actual_qty,
+					d.total_reserved, max_count);
+			}); //// added
 		});
 
 		let can_write = 0;
