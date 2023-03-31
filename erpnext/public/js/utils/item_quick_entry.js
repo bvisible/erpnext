@@ -63,93 +63,76 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 			}
 		});
 
-		// Trigger the correct function based on the current selected tab
-		if ($("#product-simple").hasClass("active")) {
-			hide_for_product_simple();
-		} else if ($("#product-var").hasClass("active")) {
-			hide_for_product_var();
-		} else if ($("#var").hasClass("active")) {
-			hide_for_var();
+		function setFieldVisibility(fieldNames, hidden) {
+			fieldNames.forEach((fieldName) => {
+				let field = self.dialog.get_field(fieldName);
+				field.df.hidden = hidden;
+				field.refresh();
+			});
+		}
+
+		function setFieldRequired(fieldNames, reqd) {
+			fieldNames.forEach((fieldName) => {
+				let field = self.dialog.get_field(fieldName);
+				field.df.reqd = reqd;
+				field.refresh();
+			});
+		}
+
+		function toggleCheckbox(checkbox, checked) {
+			if ($(checkbox).is(':checked') !== checked) {
+				$(checkbox).click();
+			}
 		}
 
 		function hide_for_product_simple() {
+			toggleCheckbox(is_stock_item_input, true);
+			toggleCheckbox(create_variant_input, false);
 
-			if (!$(is_stock_item_input).is(':checked')) {
-				$(is_stock_item_input).click();
-			}
-			if ($(create_variant_input).is(':checked')) {
-				setTimeout(() => {
-					self.dialog.get_field("item_template").set_value('');
-					self.dialog.get_field("item_template").refresh();
-				}, 200);
-			}
+			setFieldVisibility([
+				'is_stock_item', 'standard_rate', 'buying_standard_rate', 'stock_uom',
+				'opening_stock', 'item_code', 'item_name', 'item_group'
+			], false);
 
-			['is_stock_item', 'standard_rate', 'buying_standard_rate', 'stock_uom', 'opening_stock', 'item_code', 'item_name', 'item_group'].forEach((d) => {
-				let f = self.dialog.get_field(d);
-				f.df.hidden = 0;
-				f.refresh();
-			});
-			['attributes_quick_entry_1', 'attributes_quick_entry_2', 'attributes_quick_entry_3', 'item_template'].forEach((d) => {
-				let f = self.dialog.get_field(d);
-				f.df.hidden = 1;
-				f.df.reqd = 0;
-				f.refresh();
-			});
+			setFieldVisibility([
+				'attributes_quick_entry_1', 'attributes_quick_entry_2', 'attributes_quick_entry_3', 'item_template'
+			], true);
+
+			setFieldRequired([
+				'attributes_quick_entry_1', 'attributes_quick_entry_2', 'attributes_quick_entry_3'
+			], false);
 		}
 
 		function hide_for_product_var() {
-			self.dialog.get_field("stock_uom").df.hidden = 0;
+			toggleCheckbox(is_stock_item_input, false);
+			toggleCheckbox(create_variant_input, false);
+			self.dialog.get_field("stock_uom").df.hidden = false;
 			self.dialog.get_field("stock_uom").refresh();
 
-			if ($(is_stock_item_input).is(':checked')) {
-				$(is_stock_item_input).click();
+			setFieldVisibility([
+				'is_stock_item', 'standard_rate', 'buying_standard_rate', 'opening_stock'
+			], true);
 
-			}
-			if ($(create_variant_input).is(':checked')) {
-				$(create_variant_input).click();
-				setTimeout(() => {
-					self.dialog.get_field("item_template").set_value('');
-					self.dialog.get_field("item_template").refresh();
-				}, 200);
-			}
-			['is_stock_item', 'standard_rate', 'buying_standard_rate', 'opening_stock'].forEach((d) => {
-				let f = self.dialog.get_field(d);
-				f.df.hidden = 1;
-				f.refresh();
-			});
+			setFieldVisibility([
+				'attributes_quick_entry_1'
+			], false);
 
-			self.dialog.get_field("attributes_quick_entry_1").df.hidden = 0;
-			self.dialog.get_field("attributes_quick_entry_1").df.reqd = 1;
-			self.dialog.get_field("attributes_quick_entry_1").refresh();
+			setFieldRequired([
+				'attributes_quick_entry_1'
+			], true);
 
 			function change_val_attribute_1() {
-				console.log($(this).val());
-				if ($(this).val() == '' || $(this).val() == undefined) {
-					self.dialog.get_field("attributes_quick_entry_2").df.hidden = 0;
-					self.dialog.get_field("attributes_quick_entry_2").refresh();
-				} else {
-					self.dialog.get_field("attributes_quick_entry_2").df.hidden = 1;
-					self.dialog.get_field("attributes_quick_entry_2").refresh();
-				}
-
-				$('[data-fieldname="attributes_quick_entry_2"]').on("change paste keyup", function () {
-					change_val_attribute_2();
-				});
-				$('[data-fieldname="attributes_quick_entry_2"] [role="listbox"]').on("click", function () {
-					change_val_attribute_2();
-				});
-
+				let val = $('[data-fieldname="attributes_quick_entry_1"]').find("input").val();
+				console.log(val);
+				setFieldVisibility(['attributes_quick_entry_2'], val === '' || val === undefined);
+				setFieldRequired(['attributes_quick_entry_2'], val !== '' && val !== undefined);
 			}
 
 			function change_val_attribute_2() {
-				console.log($(this).val());
-				if ($(this).val() == '' || $(this).val() == undefined) {
-					self.dialog.get_field("attributes_quick_entry_3").df.hidden = 0;
-					self.dialog.get_field("attributes_quick_entry_3").refresh();
-				} else {
-					self.dialog.get_field("attributes_quick_entry_3").df.hidden = 1;
-					self.dialog.get_field("attributes_quick_entry_3").refresh();
-				}
+				let val = $('[data-fieldname="attributes_quick_entry_2"]').find("input").val();
+				console.log(val);
+				setFieldVisibility(['attributes_quick_entry_3'], val === '' || val === undefined);
+				setFieldRequired(['attributes_quick_entry_3'], val !== '' && val !== undefined);
 			}
 
 			setTimeout(() => {
@@ -163,31 +146,26 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 		}
 
 		function hide_for_var() {
-			if (!$(is_stock_item_input).is(':checked')) {
-				$(is_stock_item_input).click();
-			}
-			if (!$(create_variant_input).is(':checked')) {
-				$(create_variant_input).click();
-			}
-			['is_stock_item', 'standard_rate', 'buying_standard_rate', 'opening_stock'].forEach((d) => {
-				let f = self.dialog.get_field(d);
-				f.df.hidden = 0;
-				f.refresh();
-			});
-			['attributes_quick_entry_1', 'attributes_quick_entry_2', 'attributes_quick_entry_3'].forEach((d) => {
-				let f = self.dialog.get_field(d);
-				f.df.hidden = 1;
-				f.df.reqd = 0;
-				f.refresh();
-			});
+			toggleCheckbox(is_stock_item_input, true);
+			toggleCheckbox(create_variant_input, true);
+			setFieldVisibility([
+				'is_stock_item', 'standard_rate', 'buying_standard_rate', 'opening_stock'
+			], false);
+
+			setFieldVisibility([
+				'attributes_quick_entry_1', 'attributes_quick_entry_2', 'attributes_quick_entry_3'
+			], true);
+
+			setFieldRequired([
+				'attributes_quick_entry_1', 'attributes_quick_entry_2', 'attributes_quick_entry_3'
+			], false);
 		}
 
 		hide_for_product_simple();
 		$(create_variant).hide();
 		$("#form-tabs-quick-entry").val("product-simple");
-
-
 	};
+
 	waitForUIReady() {
 		return new Promise((resolve) => {
 			let checkUI = () => {
