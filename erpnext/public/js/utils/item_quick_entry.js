@@ -45,20 +45,20 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 		$(dialog.$body).prepend(html_tabs);
 		await this.waitForUIReady();
 
-		let is_stock_item_input = 'div[data-fieldname="is_stock_item"] .input-area input[type="checkbox"]';
-		let create_variant_input = 'div[data-fieldname="create_variant"] .input-area input[type="checkbox"]';
-		let create_variant = 'div[data-fieldname="create_variant"]';
+		let is_stock_item_input = self.dialog.$wrapper.find('div[data-fieldname="is_stock_item"] .input-area input[type="checkbox"]');
+		let create_variant_input = self.dialog.$wrapper.find('div[data-fieldname="create_variant"] .input-area input[type="checkbox"]');
+		let create_variant = self.dialog.$wrapper.find('div[data-fieldname="create_variant"]');
 
-		$("#form-tabs-quick-entry .nav-link").on("click", function () {
+		self.dialog.$wrapper.find("#form-tabs-quick-entry .nav-link").off("click").on("click", function () {
 			let tab_selected = $(this).attr("id");
 			if (tab_selected == "product-simple") {
-				$("#form-tabs-quick-entry").val("product-simple");
+				self.dialog.$wrapper.find("#form-tabs-quick-entry").val("product-simple");
 				hide_for_product_simple();
 			} else if (tab_selected == "product-var") {
-				$("#form-tabs-quick-entry").val("product-var");
+				self.dialog.$wrapper.find("#form-tabs-quick-entry").val("product-var");
 				hide_for_product_var();
 			} else if (tab_selected == "var") {
-				$("#form-tabs-quick-entry").val("var");
+				self.dialog.$wrapper.find("#form-tabs-quick-entry").val("var");
 				hide_for_var();
 			}
 		});
@@ -122,24 +122,22 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 			], true);
 
 			function change_val_attribute_1() {
-				let val = $('[data-fieldname="attributes_quick_entry_1"]').find("input").val();
-				console.log(val);
+				let val = self.dialog.$wrapper.find('[data-fieldname="attributes_quick_entry_1"]').find("input").val();
 				setFieldVisibility(['attributes_quick_entry_2'], val === '' || val === undefined);
 				setFieldRequired(['attributes_quick_entry_2'], val !== '' && val !== undefined);
 			}
 
 			function change_val_attribute_2() {
-				let val = $('[data-fieldname="attributes_quick_entry_2"]').find("input").val();
-				console.log(val);
+				let val = self.dialog.$wrapper.find('[data-fieldname="attributes_quick_entry_2"]').find("input").val();
 				setFieldVisibility(['attributes_quick_entry_3'], val === '' || val === undefined);
 				setFieldRequired(['attributes_quick_entry_3'], val !== '' && val !== undefined);
 			}
 
 			setTimeout(() => {
-				$('[data-fieldname="attributes_quick_entry_1"]').on("change paste keyup", function () {
+				self.dialog.$wrapper.find('[data-fieldname="attributes_quick_entry_1"]').off("change paste keyup").on("change paste keyup", function () {
 					change_val_attribute_1.call(self);
 				});
-				$('[data-fieldname="attributes_quick_entry_1"] [role="listbox"]').on("click", function () {
+				self.dialog.$wrapper.find('[data-fieldname="attributes_quick_entry_1"] [role="listbox"]').off("click").on("click", function () {
 					change_val_attribute_1.call(self);
 				});
 			}, 200);
@@ -163,7 +161,7 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 
 		hide_for_product_simple();
 		$(create_variant).hide();
-		$("#form-tabs-quick-entry").val("product-simple");
+		self.dialog.$wrapper.find("#form-tabs-quick-entry").val("product-simple");
 	};
 
 	waitForUIReady() {
