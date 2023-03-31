@@ -1,13 +1,14 @@
 frappe.provide('frappe.ui.form');
-
+////
 frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.form.QuickEntryForm {
 	constructor(doctype, after_insert) {
 		super(doctype, after_insert);
+		this.neocustom = this.neocustom.bind(this);
 	}
 
-	////
-	neocustom(dialog) {
-		var me = this;
+	async neocustom(dialog) {
+		const self = this; // add this line to store the reference to the current instance
+
 		let template_field = this.dialog.get_field("item_template");
 
 		let html_tabs = `
@@ -23,17 +24,17 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 			<input id="form-tabs-quick-entry" name="form-tabs-quick-entry" type="hidden" value="">
 			<ul class="nav form-tabs" id="form-tabs-quick-entry" role="tablist">
 				<li class="nav-item show">
-					<a class="nav-link active" id="product-simple" data-toggle="tab" role="tab" aria-controls="Details" aria-selected="false">
+					<a class="nav-link active" id="product-simple" data-toggle="tab" role="tab" aria-selected="false">
 					` + __("Simple product") + `
 					</a>
 				</li>
 				<li class="nav-item show">
-					<a class="nav-link " id="product-var" data-toggle="tab" role="tab" aria-controls="Dashboard">
+					<a class="nav-link " id="product-var" data-toggle="tab" role="tab">
 					` + __("Variable product") + `
 					</a>
 				</li>
 				<li class="nav-item show">
-					<a class="nav-link " id="var" data-toggle="tab" role="tab" aria-controls="Inventory">
+					<a class="nav-link " id="var" data-toggle="tab" role="tab" >
 					` + __("Variable") + `
 					</a>
 				</li>
@@ -42,140 +43,163 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 		`;
 
 		$(dialog.$body).prepend(html_tabs);
-		setTimeout(() => {
-			let is_stock_item_input = 'div[data-fieldname="is_stock_item"] .input-area input[type="checkbox"]';
-			let create_variant_input = 'div[data-fieldname="create_variant"] .input-area input[type="checkbox"]';
-			let create_variant = 'div[data-fieldname="create_variant"]';
+		await this.waitForUIReady();
 
-			$("#form-tabs-quick-entry .nav-link").on("click", function() {
-				let tab_selected = $(this).attr("id");
-				if(tab_selected == "product-simple"){
-					$("#form-tabs-quick-entry").val("product-simple");
-					hide_for_product_simple();
-				} else if (tab_selected == "product-var"){
-					$("#form-tabs-quick-entry").val("product-var");
-					hide_for_product_var();
-				} else if (tab_selected == "var"){
-					$("#form-tabs-quick-entry").val("var");
-					hide_for_var();
-				}
-			});
-			
-			function hide_for_product_simple(){
+		let is_stock_item_input = 'div[data-fieldname="is_stock_item"] .input-area input[type="checkbox"]';
+		let create_variant_input = 'div[data-fieldname="create_variant"] .input-area input[type="checkbox"]';
+		let create_variant = 'div[data-fieldname="create_variant"]';
 
-				if(!$(is_stock_item_input).is(':checked')){
-					$(is_stock_item_input).click();
-				}
-				if($(create_variant_input).is(':checked')){
-					setTimeout(() => {
-						me.dialog.get_field("item_template").set_value('');
-						me.dialog.get_field("item_template").refresh();
-					}, 200);
-				}
-
-				['is_stock_item', 'standard_rate', 'stock_uom', 'opening_stock'].forEach((d) => {
-					let f = me.dialog.get_field(d);
-					f.df.hidden = 0;
-					f.refresh();
-				});
-				['attributes_quick_entry_1', 'attributes_quick_entry_2', 'attributes_quick_entry_3'].forEach((d) => {
-					let f = me.dialog.get_field(d);
-					f.df.hidden = 1;
-					f.df.reqd = 0;
-					f.refresh();
-				});
+		$("#form-tabs-quick-entry .nav-link").on("click", function () {
+			let tab_selected = $(this).attr("id");
+			if (tab_selected == "product-simple") {
+				$("#form-tabs-quick-entry").val("product-simple");
+				hide_for_product_simple();
+			} else if (tab_selected == "product-var") {
+				$("#form-tabs-quick-entry").val("product-var");
+				hide_for_product_var();
+			} else if (tab_selected == "var") {
+				$("#form-tabs-quick-entry").val("var");
+				hide_for_var();
 			}
+		});
 
-			function hide_for_product_var(){
-				me.dialog.get_field("stock_uom").df.hidden = 0;
-				me.dialog.get_field("stock_uom").refresh();
+		// Trigger the correct function based on the current selected tab
+		if ($("#product-simple").hasClass("active")) {
+			hide_for_product_simple();
+		} else if ($("#product-var").hasClass("active")) {
+			hide_for_product_var();
+		} else if ($("#var").hasClass("active")) {
+			hide_for_var();
+		}
 
-				if($(is_stock_item_input).is(':checked')){
-					$(is_stock_item_input).click();
-					
-				}
-				if($(create_variant_input).is(':checked')){
-					$(create_variant_input).click();
-					setTimeout(() => {
-						me.dialog.get_field("item_template").set_value('');
-						me.dialog.get_field("item_template").refresh();
-					}, 200);
-				}
-				['is_stock_item', 'standard_rate', 'opening_stock'].forEach((d) => {
-					let f = me.dialog.get_field(d);
-					f.df.hidden = 1;
-					f.refresh();
-				});
+		function hide_for_product_simple() {
 
-				me.dialog.get_field("attributes_quick_entry_1").df.hidden = 0;
-				me.dialog.get_field("attributes_quick_entry_1").df.reqd = 1;
-				me.dialog.get_field("attributes_quick_entry_1").refresh();
-
-				function change_val_attribute_1(){
-					console.log($(this).val());
-					if($(this).val() == '' || $(this).val() == undefined){
-						me.dialog.get_field("attributes_quick_entry_2").df.hidden = 0;
-						me.dialog.get_field("attributes_quick_entry_2").refresh();
-					} else{
-						me.dialog.get_field("attributes_quick_entry_2").df.hidden = 1;
-						me.dialog.get_field("attributes_quick_entry_2").refresh();
-					}
-
-					$('[data-fieldname="attributes_quick_entry_2"]').on("change paste keyup", function() {
-						change_val_attribute_2();
-					});
-					$('[data-fieldname="attributes_quick_entry_2"] [role="listbox"]').on("click", function() {
-						change_val_attribute_2();
-					});
-
-				}
-
-				function change_val_attribute_2(){
-					console.log($(this).val());
-					if($(this).val() == '' || $(this).val() == undefined){
-						me.dialog.get_field("attributes_quick_entry_3").df.hidden = 0;
-						me.dialog.get_field("attributes_quick_entry_3").refresh();
-					} else{
-						me.dialog.get_field("attributes_quick_entry_3").df.hidden = 1;
-						me.dialog.get_field("attributes_quick_entry_3").refresh();
-					}
-				}
+			if (!$(is_stock_item_input).is(':checked')) {
+				$(is_stock_item_input).click();
+			}
+			if ($(create_variant_input).is(':checked')) {
 				setTimeout(() => {
-					$('[data-fieldname="attributes_quick_entry_1"]').on("change paste keyup", function() {
-						change_val_attribute_1();
-					});
-					$('[data-fieldname="attributes_quick_entry_1"] [role="listbox"]').on("click", function() {
-						change_val_attribute_1();
-					});
+					self.dialog.get_field("item_template").set_value('');
+					self.dialog.get_field("item_template").refresh();
 				}, 200);
 			}
 
-			function hide_for_var(){
-				if(!$(is_stock_item_input).is(':checked')){
-					$(is_stock_item_input).click();
+			['is_stock_item', 'standard_rate', 'buying_standard_rate', 'stock_uom', 'opening_stock', 'item_code', 'item_name', 'item_group'].forEach((d) => {
+				let f = self.dialog.get_field(d);
+				f.df.hidden = 0;
+				f.refresh();
+			});
+			['attributes_quick_entry_1', 'attributes_quick_entry_2', 'attributes_quick_entry_3', 'item_template'].forEach((d) => {
+				let f = self.dialog.get_field(d);
+				f.df.hidden = 1;
+				f.df.reqd = 0;
+				f.refresh();
+			});
+		}
+
+		function hide_for_product_var() {
+			self.dialog.get_field("stock_uom").df.hidden = 0;
+			self.dialog.get_field("stock_uom").refresh();
+
+			if ($(is_stock_item_input).is(':checked')) {
+				$(is_stock_item_input).click();
+
+			}
+			if ($(create_variant_input).is(':checked')) {
+				$(create_variant_input).click();
+				setTimeout(() => {
+					self.dialog.get_field("item_template").set_value('');
+					self.dialog.get_field("item_template").refresh();
+				}, 200);
+			}
+			['is_stock_item', 'standard_rate', 'buying_standard_rate', 'opening_stock'].forEach((d) => {
+				let f = self.dialog.get_field(d);
+				f.df.hidden = 1;
+				f.refresh();
+			});
+
+			self.dialog.get_field("attributes_quick_entry_1").df.hidden = 0;
+			self.dialog.get_field("attributes_quick_entry_1").df.reqd = 1;
+			self.dialog.get_field("attributes_quick_entry_1").refresh();
+
+			function change_val_attribute_1() {
+				console.log($(this).val());
+				if ($(this).val() == '' || $(this).val() == undefined) {
+					self.dialog.get_field("attributes_quick_entry_2").df.hidden = 0;
+					self.dialog.get_field("attributes_quick_entry_2").refresh();
+				} else {
+					self.dialog.get_field("attributes_quick_entry_2").df.hidden = 1;
+					self.dialog.get_field("attributes_quick_entry_2").refresh();
 				}
-				if(!$(create_variant_input).is(':checked')){
-					$(create_variant_input).click();
-				}
-				['is_stock_item','standard_rate','opening_stock'].forEach((d) => {
-					let f = me.dialog.get_field(d);
-					f.df.hidden = 0;
-					f.refresh();
+
+				$('[data-fieldname="attributes_quick_entry_2"]').on("change paste keyup", function () {
+					change_val_attribute_2();
 				});
-				['attributes_quick_entry_1', 'attributes_quick_entry_2', 'attributes_quick_entry_3'].forEach((d) => {
-					let f = me.dialog.get_field(d);
-					f.df.hidden = 1;
-					f.df.reqd = 0;
-					f.refresh();
+				$('[data-fieldname="attributes_quick_entry_2"] [role="listbox"]').on("click", function () {
+					change_val_attribute_2();
 				});
+
 			}
 
-			hide_for_product_simple();
-			$(create_variant).hide();
-			$("#form-tabs-quick-entry").val("product-simple");
-		}, 200);
-	
+			function change_val_attribute_2() {
+				console.log($(this).val());
+				if ($(this).val() == '' || $(this).val() == undefined) {
+					self.dialog.get_field("attributes_quick_entry_3").df.hidden = 0;
+					self.dialog.get_field("attributes_quick_entry_3").refresh();
+				} else {
+					self.dialog.get_field("attributes_quick_entry_3").df.hidden = 1;
+					self.dialog.get_field("attributes_quick_entry_3").refresh();
+				}
+			}
+
+			setTimeout(() => {
+				$('[data-fieldname="attributes_quick_entry_1"]').on("change paste keyup", function () {
+					change_val_attribute_1.call(self);
+				});
+				$('[data-fieldname="attributes_quick_entry_1"] [role="listbox"]').on("click", function () {
+					change_val_attribute_1.call(self);
+				});
+			}, 200);
+		}
+
+		function hide_for_var() {
+			if (!$(is_stock_item_input).is(':checked')) {
+				$(is_stock_item_input).click();
+			}
+			if (!$(create_variant_input).is(':checked')) {
+				$(create_variant_input).click();
+			}
+			['is_stock_item', 'standard_rate', 'buying_standard_rate', 'opening_stock'].forEach((d) => {
+				let f = self.dialog.get_field(d);
+				f.df.hidden = 0;
+				f.refresh();
+			});
+			['attributes_quick_entry_1', 'attributes_quick_entry_2', 'attributes_quick_entry_3'].forEach((d) => {
+				let f = self.dialog.get_field(d);
+				f.df.hidden = 1;
+				f.df.reqd = 0;
+				f.refresh();
+			});
+		}
+
+		hide_for_product_simple();
+		$(create_variant).hide();
+		$("#form-tabs-quick-entry").val("product-simple");
+
+
 	};
+	waitForUIReady() {
+		return new Promise((resolve) => {
+			let checkUI = () => {
+				if ($('div[data-fieldname="is_stock_item"] .input-area input[type="checkbox"]').length > 0) {
+					resolve();
+				} else {
+					requestAnimationFrame(checkUI);
+				}
+			};
+			checkUI();
+		});
+	}
 	////
 
 	render_dialog() {
