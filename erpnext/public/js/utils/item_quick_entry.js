@@ -43,6 +43,7 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 		`;
 
 		$(dialog.$body).prepend(html_tabs);
+		self.dialog.$wrapper.find('div[data-fieldname="buying_standard_rate"]').insertAfter(self.dialog.$wrapper.find('div[data-fieldname="standard_rate"]'));
 		await this.waitForUIReady();
 
 		let is_stock_item_input = self.dialog.$wrapper.find('div[data-fieldname="is_stock_item"] .input-area input[type="checkbox"]');
