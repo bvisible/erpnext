@@ -160,7 +160,7 @@ erpnext.stock.ItemDashboard = class ItemDashboard {
 		data.forEach(function (d) {
 			frappe.call({ //// added
 				method: "neoffice_theme.events.get_stock_on_hand", //// added
-				args: {item_code: "produit en stock", warehouse: "Magasins - pri"} //// added
+				args: {item_code: d.item_code, warehouse: d.warehouse} //// added
 			}).then(r => { //// added
 				d.sold_to_be_validated = parseInt(parseFloat(r.message)); //// added
 				d.actual_or_pending = d.projected_qty + d.reserved_qty + d.reserved_qty_for_production + d.reserved_qty_for_sub_contract;

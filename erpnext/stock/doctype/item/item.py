@@ -76,6 +76,14 @@ class Item(Document):
 			for default in self.item_defaults or [frappe._dict()]:
 				self.add_price(default.default_price_list)
 
+		#////
+		if self.buying_standard_rate:
+			price_list = frappe.db.get_single_value(
+				"Buying Settings", "buying_price_list"
+			) or frappe.db.get_value("Price List", _("Standard Buying"))
+			self.add_price(price_list, buying=True)
+		#////
+
 		if self.opening_stock:
 			self.set_opening_stock()
 
@@ -139,7 +147,7 @@ class Item(Document):
 				frappe.throw(_('"Customer Provided Item" cannot have Valuation Rate'))
 			self.default_material_request_type = "Customer Provided"
 
-	def add_price(self, price_list=None):
+	def add_price(self, price_list=None, buying=False): #////
 		"""Add a new price"""
 		if not price_list:
 			price_list = frappe.db.get_single_value(
@@ -154,7 +162,7 @@ class Item(Document):
 					"uom": self.stock_uom,
 					"brand": self.brand,
 					"currency": erpnext.get_default_currency(),
-					"price_list_rate": self.standard_rate,
+					"price_list_rate": self.standard_rate if not buying else self.buying_standard_rate, #////
 				}
 			)
 			item_price.insert()
