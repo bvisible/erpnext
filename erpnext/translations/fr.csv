@@ -10905,6 +10905,7 @@ Only one Email ID can be set as primary.,Un seul ID de messagerie peut être dé
 No contact was found with the same email as the customer<br>Please link a primary contact or change the customer's email to match the email of a contact or vice versa.,Aucun contact n'a été trouvé avec le même email que le client<br>Veuillez lier un contact principal ou modifier l'email du client pour qu'il corresponde à l'email d'un contact ou inversement.
 No contact was found for the client. Please create a contact and link it as a primary contact.,Aucun contact n'a été trouvé pour le client. Veuillez créer un contact et le lier en tant que contact principal.
 "As no address was found with the same email as the client, no email was changed on the addresses related to the client.","Comme aucune adresse n'a été trouvée avec le même email que le client, aucun email n’a été changé sur les addresses liées au client."
+Amount Excluding Tax,Montant Hors Taxes
 Amount without tax,Montant hors taxe
 Total Incoming Value (Receipt),Valeur entrante totale (réception)
 Total Value Difference (Incoming - Outgoing),Différence de valeur totale (entrant - sortant)
