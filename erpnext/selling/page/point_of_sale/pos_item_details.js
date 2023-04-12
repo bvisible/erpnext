@@ -25,6 +25,7 @@ erpnext.PointOfSale.ItemDetails = class {
 		this.$component = this.wrapper.find('.item-details-container');
 	}
 
+	//// added last 3 lines of this.html
 	init_child_components() {
 		this.$component.html(
 			`<div class="item-details-header">
@@ -44,7 +45,10 @@ erpnext.PointOfSale.ItemDetails = class {
 				<div class="item-image"></div>
 			</div>
 			<div class="discount-section"></div>
-			<div class="form-container"></div>`
+			<div class="form-container"></div>
+			<div>
+				<div class="btn" id="sendData" style="display: none;">Get Weight</div>
+			</div>`
 		)
 
 		this.$item_name = this.$component.find('.item-name');
@@ -53,6 +57,36 @@ erpnext.PointOfSale.ItemDetails = class {
 		this.$item_image = this.$component.find('.item-image');
 		this.$form_container = this.$component.find('.form-container');
 		this.$dicount_section = this.$component.find('.discount-section');
+		////
+		//Initialize connection with serial device
+		if(window.enable_weigh_scale == 1){
+			//Check if the browser supports serial device connection
+			window.checkPort(false);
+			if(typeof(window.mettlerWorker) == "undefined"){
+				var me = this;
+				window.mettlerWorker = new Worker("/assets/js/pos-mettler-toledo.min.js");
+				window.mettlerWorker.onmessage = function(e){
+					if(e.data.message == "No Port"){
+						window.checkPort(true);
+					}
+					else if(e.data.message == "weight" && window.is_item_details_open){
+						window.weight = e.data.weight;
+						//Wait for 300ms before changing value as a hack to circumvent a bug(?)
+						//where the device sends incorrect weight
+						setTimeout(function(){
+							me.qty_control.set_value(window.weight);
+						}, 300);
+					}
+				}
+				window.mettlerWorker.postMessage({"command": "connect"});
+			}
+
+			this.$component.on('click', '#sendData', () => {
+				//window.sendData();
+			});
+			//$('#sendData').show();
+		}
+		////
 	}
 
 	compare_with_current_item(item) {
@@ -61,6 +95,7 @@ erpnext.PointOfSale.ItemDetails = class {
 	}
 
 	async toggle_item_details_section(item) {
+		window.is_item_details_open = true; ////
 		const current_item_changed = !this.compare_with_current_item(item);
 
 		// if item is null or highlighted cart item is clicked twice
@@ -88,9 +123,18 @@ erpnext.PointOfSale.ItemDetails = class {
 			this.render_discount_dom(item);
 			this.render_form(item);
 			this.events.highlight_cart_item(item);
+			////
+			//Set initial weight for weigh scale
+			window.old_weight = 0;
+			////
 		} else {
 			this.current_item = {};
 		}
+		////
+		if(window.enable_weigh_scale == 1){
+			window.mettlerWorker.postMessage({"command": "start"});
+		}
+		////
 	}
 
 	validate_serial_batch_item() {

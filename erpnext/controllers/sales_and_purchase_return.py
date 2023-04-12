@@ -367,10 +367,25 @@ def make_return_doc(doctype: str, source_name: str, target_doc=None):
 						{
 							"mode_of_payment": data.mode_of_payment,
 							"type": data.type,
-							"amount": -1 * paid_amount,
-							"base_amount": -1 * base_paid_amount,
+							"amount": -1 * paid_amount if doc.doctype == "Sales Invoice" else 0, #////
+							"base_amount": -1 * base_paid_amount if doc.doctype == "Sales Invoice" else 0, #////
 							"account": data.account,
 							"default": data.default,
+							#////
+							'card_brand': data.card_brand,
+							'card_last4': data.card_last4,
+							'card_account_type': data.card_account_type,
+							'card_application_preferred_name': data.card_application_preferred_name,
+							'card_dedicated_file_name': data.card_dedicated_file_name,
+							'card_authorization_response_code': data.card_authorization_response_code,
+							'card_application_cryptogram': data.card_application_cryptogram,
+							'card_terminal_verification_results': data.card_terminal_verification_results,
+							'card_transaction_status_information': data.card_transaction_status_information,
+							'card_authorization_code': data.card_authorization_code,
+							'card_charge_id': data.card_charge_id,
+							'card_payment_intent': data.card_payment_intent,
+							'amount_authorized': data.amount_authorized
+							#////
 						},
 					)
 				if doc.is_pos:

@@ -13,6 +13,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		this.attach_shortcuts();
 	}
 
+	//// added <div class="raw-btns summary-container"></div>
 	prepare_dom() {
 		this.wrapper.append(
 			`<section class="past-order-summary">
@@ -29,6 +30,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 						<div class="label">${__('Payments')}</div>
 						<div class="payments-container summary-container"></div>
 						<div class="summary-btns"></div>
+						<div class="raw-btns summary-container"></div>
 					</div>
 				</div>
 			</section>`
@@ -42,6 +44,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		this.$totals_container = this.$summary_container.find('.totals-container');
 		this.$payment_container = this.$summary_container.find('.payments-container');
 		this.$summary_btns = this.$summary_container.find('.summary-btns');
+		this.$raw_btns = this.$summary_container.find('.raw-btns'); ////
 	}
 
 	init_email_print_dialog() {
@@ -203,6 +206,17 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		this.$summary_container.on('click', '.print-btn', () => {
 			this.print_receipt();
 		});
+		
+		////
+		//For raw print
+		this.$summary_container.on('click', '.direct-print-btn', () => {
+			this.events.raw_print();
+		});
+
+		this.$summary_container.on('click', '.cash-drawer-btn', () => {
+			this.events.open_cash_drawer();
+		});
+		////
 	}
 
 	print_receipt() {
@@ -344,8 +358,22 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		const condition_btns_map = this.get_condition_btn_map(after_submission);
 
 		this.add_summary_btns(condition_btns_map);
+		this.add_raw_btns(); ////
 	}
 
+	////
+	add_raw_btns(){
+		this.$raw_btns.html('');
+		if(window.enable_raw_print == 1 && window.raw_printer){
+			this.$raw_btns.append(
+			`<div class="summary-btn btn btn-default direct-print-btn">Direct Print</div>
+			<div style="margin-top: 10px;" class="summary-btn btn btn-default cash-drawer-btn">Open Cash Drawer</div>`
+			);
+		}
+		this.$raw_btns.children().last().removeClass('mr-4');
+	}
+	////
+	
 	attach_document_info(doc) {
 		frappe.db.get_value('Customer', this.doc.customer, 'email_id').then(({ message }) => {
 			this.customer_email = message.email_id || '';
