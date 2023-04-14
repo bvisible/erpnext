@@ -10912,3 +10912,11 @@ Total Value Difference (Incoming - Outgoing),Différence de valeur totale (entra
 Total Outgoing Value (Consumption),Valeur sortante totale (consommation)
 Other Info,Autre info
 Standard Buying Rate,Prix d'achat standard
+Stripe Terminal Location,Lieu du Terminal Stripe
+Stripe Terminal Reader,Lecteur Terminal Stripe
+Registration code,Code de d'enregistrement
+Device Type,Type d'appareil
+Reader Id,Identifiant du lecteur
+Serial Number,Numéro de série
+Location Id,Identifiant de l'emplacement
+Stripe Public Key Linked,Clé publique Stripe liée
