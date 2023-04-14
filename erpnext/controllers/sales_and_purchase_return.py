@@ -367,8 +367,8 @@ def make_return_doc(doctype: str, source_name: str, target_doc=None):
 						{
 							"mode_of_payment": data.mode_of_payment,
 							"type": data.type,
-							"amount": -1 * paid_amount if doc.doctype == "Sales Invoice" else 0, #////
-							"base_amount": -1 * base_paid_amount if doc.doctype == "Sales Invoice" else 0, #////
+							"amount": -1 * paid_amount,
+							"base_amount": -1 * base_paid_amount,
 							"account": data.account,
 							"default": data.default,
 							#////

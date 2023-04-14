@@ -807,11 +807,20 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 			);
 		}
 
+		////
+		let left_to_pay = total_amount_to_pay;
 		this.frm.doc.payments.find(pay => {
-			if (pay.default) {
-				pay.amount = total_amount_to_pay;
-			}
+			left_to_pay -= pay.amount;
 		});
+		////
+
+		if (left_to_pay != 0) { ////
+			this.frm.doc.payments.find(pay => {
+				if (pay.default) {
+					pay.amount = left_to_pay;////
+				}
+			});
+		}////
 
 		this.frm.refresh_fields();
 	}

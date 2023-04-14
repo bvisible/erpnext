@@ -136,8 +136,8 @@ erpnext.PointOfSale.StripeTerminal = function(){
 			}
 		});
 	}
-	
-	
+
+
 	this.display_details = async function(payment){
 		var items = [];
 		/*var frm = payment.frm.doc;
@@ -195,8 +195,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 				if (row.mode_of_payment == window.stripe_mode_of_payment) {
 					console.log(row.amount_authorized/100, row.amount*-1)
 					if (row.amount_authorized/100 < row.amount*-1) {
-						frappe.msgprint(__('Cannot refund more than paid with Stripe payment.'));
-						return;
+						frappe.throw(__('Cannot refund more than paid with Stripe payment.'));
 					}
 					to_refund += row.amount;
 				}
@@ -210,8 +209,8 @@ erpnext.PointOfSale.StripeTerminal = function(){
 			create_payment(payment, is_online);
 		}
 	}
-	
-	
+
+
 	function refund_payment(payment, is_online){
 		show_loading_modal('Refunding Payments', 'Please Wait<br>Refunding Payments');
 		frappe.dom.freeze();
@@ -254,8 +253,8 @@ erpnext.PointOfSale.StripeTerminal = function(){
 			}
 		});
 	}
-	
-	
+
+
 	function create_payment(payment, is_online){
 		show_loading_modal('Collecting Payments', 'Please Wait<br>Collecting Payments');
 		frappe.dom.freeze();
@@ -311,11 +310,11 @@ erpnext.PointOfSale.StripeTerminal = function(){
 			}
 		})
 	}
-	
-	
+
+
 	function cancel_payment(payment, is_online, payment_intent){
 		confirm_dialog.hide();
-		
+
 		var canceling_dialog = new frappe.ui.Dialog({
 			title: 'Canceling Stripe Terminal',
 			fields: [{
@@ -347,8 +346,8 @@ erpnext.PointOfSale.StripeTerminal = function(){
 			}
 		})
 	}
-	
-	
+
+
 	function capture_payment(payment, is_online, payment_intent){
 		confirm_dialog.hide();
 		show_loading_modal('COllecting Payments', 'Please Wait<br>Collecting Payments');
@@ -394,11 +393,11 @@ erpnext.PointOfSale.StripeTerminal = function(){
 							if(window.open_cash_drawer_automatically == 1){
 								payment.payment.events.open_cash_drawer();
 							}
-							
+
 							if(window.automatically_print == 1){
-								payment.payment.events.raw_print(this.frm);							
+								payment.payment.events.raw_print(this.frm);
 							}
-							
+
 							if (sales_invoice && sales_invoice.doc) {
 								payment.frm.doc.docstatus = sales_invoice.doc.docstatus;
 								frappe.show_alert({
@@ -430,7 +429,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 			}
 		})
 	}
-	
+
 	function retry_stripe_terminal(me, payment_object, is_online)
 	{
 		message_dilaog.hide();
@@ -442,9 +441,9 @@ erpnext.PointOfSale.StripeTerminal = function(){
 	{
 		message_dilaog.hide();
 		$(".num-col.brand-primary").click();
-		
+
 	}
-	
+
 	function show_error_dialog(message) {
 		message_dilaog = new frappe.ui.Dialog({
 			title: 'Message',
@@ -464,7 +463,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 		message_dilaog.fields_dict.show_dialog.$wrapper.html(html);
 		message_dilaog.show();
 	}
-	
+
 	function show_payment_error_dialog(message) {
 		message_dilaog = new frappe.ui.Dialog({
 			title: 'Message',
