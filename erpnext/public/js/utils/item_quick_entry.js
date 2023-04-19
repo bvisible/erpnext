@@ -14,7 +14,7 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 		let html_tabs = `
 		<div class="form-message blue" style=" margin-bottom: 0; ">
 			<div>
-			` + __("To transform a simple product into a bundled product,") + ` 
+			` + __("To transform a simple product into a bundled product,") + `
 			<a href="/app/product-bundle/view/list" onclick="location.reload()">
 			` + __("click here") + `
 			</a>.
@@ -124,22 +124,50 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 
 			function change_val_attribute_1() {
 				let val = self.dialog.$wrapper.find('[data-fieldname="attributes_quick_entry_1"]').find("input").val();
+				if(val === '' || val === undefined) {
+					let aqe2 = self.dialog.get_field("attributes_quick_entry_2")
+					aqe2.set_value('')
+					aqe2.refresh()
+					let aqe3 = self.dialog.get_field("attributes_quick_entry_3")
+					aqe3.set_value('')
+					aqe3.df.hidden = true;
+					aqe3.refresh()
+				}
 				setFieldVisibility(['attributes_quick_entry_2'], val === '' || val === undefined);
-				setFieldRequired(['attributes_quick_entry_2'], val !== '' && val !== undefined);
+				//setFieldRequired(['attributes_quick_entry_2'], 0);
 			}
 
 			function change_val_attribute_2() {
 				let val = self.dialog.$wrapper.find('[data-fieldname="attributes_quick_entry_2"]').find("input").val();
+				if(val === '' || val === undefined) {
+					let aqe3 = self.dialog.get_field("attributes_quick_entry_3")
+					aqe3.set_value('')
+					aqe3.refresh()
+				}
 				setFieldVisibility(['attributes_quick_entry_3'], val === '' || val === undefined);
-				setFieldRequired(['attributes_quick_entry_3'], val !== '' && val !== undefined);
+				//setFieldRequired(['attributes_quick_entry_3'], 0);
 			}
 
 			setTimeout(() => {
 				self.dialog.$wrapper.find('[data-fieldname="attributes_quick_entry_1"]').off("change paste keyup").on("change paste keyup", function () {
 					change_val_attribute_1.call(self);
+
+					self.dialog.$wrapper.find('[data-fieldname="attributes_quick_entry_2"] [role="listbox"]').off("click").on("click", function () {
+						change_val_attribute_2.call(self);
+					});
+					self.dialog.$wrapper.find('[data-fieldname="attributes_quick_entry_2"]').off("change paste keyup").on("change paste keyup", function () {
+						change_val_attribute_2.call(self);
+					});
 				});
 				self.dialog.$wrapper.find('[data-fieldname="attributes_quick_entry_1"] [role="listbox"]').off("click").on("click", function () {
 					change_val_attribute_1.call(self);
+
+					self.dialog.$wrapper.find('[data-fieldname="attributes_quick_entry_2"] [role="listbox"]').off("click").on("click", function () {
+						change_val_attribute_2.call(self);
+					});
+					self.dialog.$wrapper.find('[data-fieldname="attributes_quick_entry_2"]').off("change paste keyup").on("change paste keyup", function () {
+						change_val_attribute_2.call(self);
+					});
 				});
 			}, 200);
 		}
@@ -302,25 +330,27 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 	}
 
 	get_variant_fields() {
-		var variant_fields = [{
-			fieldname: "create_variant",
-			fieldtype: "Check",
-			label: __("Create Variant")
-		},
-		{
-			fieldname: 'item_template',
-			label: __('Item Template'),
-			reqd: 0,
-			fieldtype: 'Link',
-			options: "Item",
-			get_query: function() {
-				return {
-					filters: {
-						"has_variants": 1
-					}
-				};
+		var variant_fields = [
+			{
+				fieldname: "create_variant",
+				fieldtype: "Check",
+				label: __("Create Variant")
+			},
+			{
+				fieldname: 'item_template',
+				label: __('Item Template'),
+				reqd: 0,
+				fieldtype: 'Link',
+				options: "Item",
+				get_query: function() {
+					return {
+						filters: {
+							"has_variants": 1
+						}
+					};
+				}
 			}
-		}];
+		];
 
 		return variant_fields;
 	}
@@ -557,8 +587,8 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 					} else {
 						var msgprint_dialog = frappe.msgprint(__("Item Variant {0} already exists with same attributes", [repl('<a class="strong variant-click" data-item-code="%(item)s" \
 								>%(item)s</a>', {
-								item: r.message
-							})]));
+							item: r.message
+						})]));
 
 						msgprint_dialog.$wrapper.find(".variant-click").on("click", function() {
 							msgprint_dialog.hide();
