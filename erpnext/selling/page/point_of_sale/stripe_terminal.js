@@ -191,9 +191,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 			var payments = payment.frm.doc.payments;
 			to_refund = 0;
 			payments.forEach(function(row) {
-				console.log(row.mode_of_payment, window.stripe_mode_of_payment)
 				if (row.mode_of_payment == window.stripe_mode_of_payment) {
-					console.log(row.amount_authorized/100, row.amount*-1)
 					if (row.amount_authorized/100 < row.amount*-1) {
 						frappe.throw(__('Cannot refund more than paid with Stripe payment.'));
 					}
@@ -210,6 +208,11 @@ erpnext.PointOfSale.StripeTerminal = function(){
 		}
 	}
 
+	////
+	this.clear_display = function(){
+		if(terminal)  terminal.clearReaderDisplay();
+	}
+	////
 
 	function refund_payment(payment, is_online){
 		show_loading_modal('Refunding Payments', 'Please Wait<br>Refunding Payments');
@@ -362,27 +365,29 @@ erpnext.PointOfSale.StripeTerminal = function(){
 				"X-Requested-With": "XMLHttpRequest"
 			},
 			callback: function (intent_result) {
-				console.log(intent_result)
 				frappe.dom.unfreeze();
 				loading_dialog.hide();
 				var payments = payment.frm.doc.payments;
 				payments.forEach(function(row){
 					if(row.mode_of_payment == window.stripe_mode_of_payment){
-						var card_info = intent_result.message.charges.data[0].payment_method_details.card_present;
-						console.log(card_info, card_info.amount_authorized, parseInt(card_info.amount_authorized))
-						row.card_brand = card_info.brand;
-						row.card_last4 = card_info.last4;
-						row.card_account_type = card_info.receipt.account_type;
-						row.card_application_preferred_name = card_info.receipt.application_preferred_name;
-						row.card_dedicated_file_name = card_info.receipt.dedicated_file_name;
-						row.card_authorization_response_code = card_info.receipt.authorization_response_code;
-						row.card_application_cryptogram = card_info.receipt.application_cryptogram;
-						row.card_terminal_verification_results = card_info.receipt.terminal_verification_results;
-						row.card_transaction_status_information = card_info.receipt.transaction_status_information;
-						row.card_authorization_code = card_info.receipt.authorization_code;
-						row.card_charge_id = intent_result.message.charges.data[0].id;
-						row.card_payment_intent = intent_result.message.charges.data[0].payment_intent;
-						row.amount_authorized = parseInt(card_info.amount_authorized);
+						if('charges' in intent_result.message) {
+							var card_info = intent_result.message.charges.data[0].payment_method_details.card_present;
+							row.card_brand = card_info.brand;
+							row.card_last4 = card_info.last4;
+							row.card_account_type = card_info.receipt.account_type;
+							row.card_application_preferred_name = card_info.receipt.application_preferred_name;
+							row.card_dedicated_file_name = card_info.receipt.dedicated_file_name;
+							row.card_authorization_response_code = card_info.receipt.authorization_response_code;
+							row.card_application_cryptogram = card_info.receipt.application_cryptogram;
+							row.card_terminal_verification_results = card_info.receipt.terminal_verification_results;
+							row.card_transaction_status_information = card_info.receipt.transaction_status_information;
+							row.card_authorization_code = card_info.receipt.authorization_code;
+							row.card_charge_id = intent_result.message.charges.data[0].id;
+							row.card_payment_intent = intent_result.message.charges.data[0].payment_intent;
+							row.amount_authorized = parseInt(card_info.amount_authorized);
+						} else {
+							row.card_charge_id = intent_result.message.id;
+						}
 					}
 				});
 
