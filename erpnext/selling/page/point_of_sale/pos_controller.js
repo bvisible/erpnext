@@ -450,7 +450,7 @@ erpnext.PointOfSale.Controller = class {
 						this.frm.savesubmit()
 							.then((r) => {
 								////
-								this.stripe.clear_display(); //// custom add
+								if(this.stripe) this.stripe.clear_display(); //// custom add
 								//For raw printing
 								if(window.open_cash_drawer_automatically == 1){
 									this.open_cash_drawer();
