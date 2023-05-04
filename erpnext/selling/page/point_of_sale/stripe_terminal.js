@@ -202,6 +202,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 			html += to_refund + ' through stripe.</div>';
 			confirm_dialog.fields_dict.show_dialog.$wrapper.html(html);
 			confirm_dialog.show();
+			frappe.dom.unfreeze();////
 		}
 		else{
 			create_payment(payment, is_online);
@@ -305,6 +306,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 								html += result.paymentIntent.amount/100 + ' through stripe.</div>';
 								confirm_dialog.fields_dict.show_dialog.$wrapper.html(html);
 								confirm_dialog.show();
+								frappe.dom.unfreeze();////
 							}
 						});
 					}
