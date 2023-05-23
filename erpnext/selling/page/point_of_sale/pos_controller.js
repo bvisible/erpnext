@@ -181,6 +181,8 @@ erpnext.PointOfSale.Controller = class {
 				window.open_cash_drawer_automatically = profile.open_cash_drawer_automatically;
 				//For weigh scale
 				window.enable_weigh_scale = profile.enable_weigh_scale;
+				window.enable_twint = profile.enable_twint; //// custom add
+				window.twint_mode_of_payment = profile.twint_mode_of_payment; //// custom add
 				////
 				Object.assign(this.settings, profile);
 				this.settings.customer_groups = profile.customer_groups.map(group => group.name);
@@ -419,6 +421,36 @@ erpnext.PointOfSale.Controller = class {
 					////
 					//Support for stripe payments
 					var allowSubmit = 1;
+					//// custom add for twint payment
+					var from_stripe = 0;
+					var from_twint = 0;
+					var twint_amount = 0;
+					var refund_request = "";
+					if(window.enable_twint == 1) {
+						if (this.frm.doc.payments.length > 0) {
+							for (var i = 0; i <= this.frm.doc.payments.length; i++) {
+								if (this.frm.doc.payments[i] != undefined) {
+									if (this.frm.doc.payments[i].mode_of_payment == window.twint_mode_of_payment && this.frm.doc.payments[i].base_amount != 0) {
+										if (this.frm.doc.payments[i].amount > 0) {
+											allowSubmit = 0;
+											from_twint = 1;
+											twint_amount = this.frm.doc.payments[i].amount;
+										} else if (this.frm.doc.is_return == 1 && this.frm.doc.payments[i].twint_payment_request) {
+											allowSubmit = 0;
+											from_twint = 1;
+											twint_amount = this.frm.doc.payments[i].amount;
+											refund_request = this.frm.doc.payments[i].twint_payment_request;
+										} else if (this.frm.doc.is_return == 1 && !this.frm.doc.payments[i].twint_payment_request) {
+											frappe.throw("This transaction was not paid using a Twint Payment. Please change the return payment method.");
+										} else if (his.frm.doc.is_return == 1 && this.frm.doc.payments[i].base_amount < this.frm.doc.payments[i].amount_authorized*-1/100)
+											frappe.throw("You can't refund more than what was originally paid.");
+									}
+								}
+							}
+						}
+					}
+					//// end custom add for twint payment
+
 					if(window.enable_stripe_terminal == 1)
 					{
 
@@ -432,9 +464,11 @@ erpnext.PointOfSale.Controller = class {
 										if(this.frm.doc.payments[i].amount > 0)
 										{
 											allowSubmit = 0;
+											from_stripe = 1; //// custom add
 										}
 										else if(this.frm.doc.is_return == 1 && this.frm.doc.payments[i].card_payment_intent){
 											allowSubmit = 0;
+											from_stripe = 1; //// custom add
 										}
 										else if(this.frm.doc.is_return == 1 && !this.frm.doc.payments[i].card_payment_intent){
 											frappe.throw("This transaction was not paid using a Stripe Payment. Please change the return payment method.");
@@ -473,7 +507,205 @@ erpnext.PointOfSale.Controller = class {
 					else{
 						//var stripe = new erpnext.PointOfSale.StripeTerminal();
 						//this.stripe.assign_stripe_connection_token(this,true);
-						this.stripe.collecting_payments(this, true);
+						if(from_stripe == 1) { //// custom add
+							this.stripe.collecting_payments(this, true);
+						} //// custom add
+
+						if(from_twint == 1) { //// custom add for twint payment
+							var cancel = false;
+							console.log("is_return: "+this.frm.doc.is_return);
+							if(this.frm.doc.is_return == 1){
+								console.log('in return')
+								let loading_dialog = new frappe.ui.Dialog({
+									title: 'Twint Refund',
+									fields: [{
+										label: '',
+										fieldname: 'show_dialog',
+										fieldtype: 'HTML'
+									},
+									],
+								});
+								var html = '<div style="min-height:200px;position: relative;text-align: center;padding-top: 75px;line-height: 25px;font-size: 15px;">';
+								html += '<div style="">' + 'Waiting for Twint refund' + '</div>';
+								html += '</div>';
+								loading_dialog.fields_dict.show_dialog.$wrapper.html(html);
+								loading_dialog.show();
+								loading_dialog.$wrapper.attr('id', 'myUniqueModalId');
+
+								$(document).on('shown.bs.modal', '#myUniqueModalId', function() {
+									$(this).data('bs.modal')._config.backdrop = 'static';
+									$(this).data('bs.modal')._config.keyboard = false;
+								});
+								$(document).on('hidden.bs.modal', '#myUniqueModalId', function() {
+									$(this).removeAttr('id');
+								});
+								var me = this;
+								frappe.call({
+									method: "neoffice_theme.events.twint_pos_payment",
+									args: {
+										"docname": this.frm.doc.return_against,
+										"doctype": "POS Invoice",
+										"amount": twint_amount,
+										"customer": this.frm.doc.customer,
+										"pos_profile": this.frm.doc.pos_profile,
+										"is_return": 1,
+										"request_id": refund_request,
+									},
+									callback: function (res) {
+										const checkRefund = () => {
+											console.log("checkRefund")
+											console.log(res.message)
+											frappe.db.get_list("TWINT Transaction", {filters:{"parent": res.message}, fields:["operation"]}).then(result => {
+												console.log(result)
+												let refund = false;
+												if (result.length > 0) {
+													for(var i = 0; i < result.length; i++) {
+														console.log(result[i])
+														if (result[i].operation == "REVERSAL") {
+															refund = true;
+															break;
+														}
+													}
+												}
+												if (!refund) {
+													setTimeout(checkRefund, 2000);
+												} else {
+													loading_dialog.hide();
+													frappe.db.set_value("TWINT Payment Request", res.message, {"refund_against": me.frm.doc.name, "refund_amount": twint_amount}).then(r => {
+														me.frm.savesubmit().then((sales_invoice) => {
+															if (sales_invoice && sales_invoice.doc) {
+																me.frm.doc.docstatus = sales_invoice.doc.docstatus;
+																me.toggle_components(false);
+																me.order_summary.toggle_component(true);
+																me.order_summary.load_summary_of(me.frm.doc, true);
+															}
+														});
+													});
+												}
+											});
+										};
+										checkRefund();
+									}
+								})
+							} else {
+								console.log('not in return')
+								let loading_dialog = new frappe.ui.Dialog({
+									title: __('Twint Payment'),
+									fields: [
+										{
+											label: '',
+											fieldname: 'show_dialog',
+											fieldtype: 'HTML'
+										},
+										{
+											label: __('Payment Link'),
+											fieldname: 'payment_link',
+											fieldtype: 'Text',
+											hidden: true
+										}
+									],
+									primary_action_label: __('Waiting Payment Link'),
+									primary_action(values) {
+										if(values.payment_link)
+											window.open(values.payment_link, "_blank");
+									},
+									secondary_action_label: __('Cancel'),
+									secondary_action(values) {
+										cancel = true;
+									}
+								});
+
+								var html = '<div style="min-height:200px;position: relative;text-align: center;padding-top: 75px;line-height: 25px;font-size: 15px;">';
+								html += '<div style="">' + __('Waiting for Twint payment') + '</div>';
+								html += '</div>';
+								loading_dialog.fields_dict.show_dialog.$wrapper.html(html);
+								loading_dialog.show();
+								loading_dialog.$wrapper.attr('id', 'myUniqueModalId');
+
+								$(document).on('shown.bs.modal', '#myUniqueModalId', function() {
+									$(this).data('bs.modal')._config.backdrop = 'static';
+									$(this).data('bs.modal')._config.keyboard = false;
+								});
+								$(document).on('hidden.bs.modal', '#myUniqueModalId', function() {
+									$(this).removeAttr('id');
+								});
+								//frappe.dom.freeze();
+								var me = this;
+								frappe.call({
+									method: "neoffice_theme.events.twint_pos_payment",
+									args: {
+										"docname": this.frm.doc.name,
+										"doctype": "POS Invoice",
+										"amount": twint_amount,
+										"customer": this.frm.doc.customer,
+										"pos_profile": this.frm.doc.pos_profile,
+										"is_return": 0,
+										"request_id": "",
+									},
+									callback: function (res) {
+										const checkPaymentStatus = () => {
+											console.log("checkPaymentStatus")
+											console.log(res.message)
+											frappe.db.get_value("TWINT Payment Request", res.message, ["payment_status", "url", "payment_initiated", "status_reason", "status"]).then(r => {
+												console.log(r.message.payment_status)
+												console.log(r.message.url)
+												if(!loading_dialog.fields_dict['payment_link'].value) {
+													loading_dialog.fields_dict['payment_link'].set_value(r.message.url);
+													$(loading_dialog.$wrapper).find('.modal-footer .btn-primary').html(__('Open Payment Link'));
+												}
+												console.log("before payment_status")
+												if (r.message.payment_status != "SUCCESS") {
+													if(cancel) {
+														console.log("cancel")
+														loading_dialog.hide();
+														return;
+													}
+													/*console.log("before time")
+													time = parseInt(Date.now()/1000);
+													console.log(time)
+													if (r.message.payment_initiated + 200 <= time) {
+														console.log("timeout")
+														frappe.db.set_value("TWINT Payment Request", res.message, {"payment_status": "TIMEOUT", "status": "TIMEOUT"}).then(r => {
+															loading_dialog.hide();
+															return;
+														});
+													}*/
+													if(r.message.payment_status == "FAILURE" || r.message.status == "FAILURE") {
+														loading_dialog.hide();
+														frappe.throw(__("Payment Failed"));
+													}
+
+													if(r.message.status_reason != "ORDER_RECEIVED" && r.message.status_reason != "ORDER_CONFIRMATION_PENDING" && r.message.status_reason != "ORDER_OK") {
+														loading_dialog.hide();
+														frappe.throw(__("Impossible to process the payment. Please try again."));
+													}
+
+													setTimeout(checkPaymentStatus, 2000);
+												} else {
+													console.log("success")
+													for (var i = 0; i <= me.frm.doc.payments.length; i++) {
+														if (me.frm.doc.payments[i] != undefined && me.frm.doc.payments[i].mode_of_payment == window.twint_mode_of_payment) {
+															me.frm.doc.payments[i].twint_payment_request = res.message;
+															me.frm.doc.payments[i].amount_authorized = parseInt(me.frm.doc.payments[i].base_amount*100);
+														}
+													}
+													loading_dialog.hide();
+													me.frm.savesubmit().then((sales_invoice) => {
+														if (sales_invoice && sales_invoice.doc) {
+															me.frm.doc.docstatus = sales_invoice.doc.docstatus;
+															me.toggle_components(false);
+															me.order_summary.toggle_component(true);
+															me.order_summary.load_summary_of(me.frm.doc, true);
+														}
+													});
+												}
+											});
+										};
+										checkPaymentStatus();
+									}
+								})
+							}
+						} //// end custom add for twint payment
 					}
 				},
 

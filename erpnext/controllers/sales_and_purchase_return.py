@@ -384,7 +384,8 @@ def make_return_doc(doctype: str, source_name: str, target_doc=None):
 							'card_authorization_code': data.card_authorization_code,
 							'card_charge_id': data.card_charge_id,
 							'card_payment_intent': data.card_payment_intent,
-							'amount_authorized': data.amount_authorized
+							'amount_authorized': data.amount_authorized,
+							'twint_payment_request': data.twint_payment_request #//// custom add
 							#////
 						},
 					)
