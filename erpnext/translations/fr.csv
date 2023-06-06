@@ -10929,3 +10929,66 @@ Twint Payment,Paiement Twint
 Waiting for Twint payment,En attente de paiement Twint
 Open Payement Link,Ouvrir le lien de paiement
 Payment Failed or Cancelled,Paiement échoué ou annulé
+App and connected object access,Accès app et objet connecté
+Generate new thirdparty API password,Générer un mot de passe API tiers
+Save Password,Enregistrer le mot de passe
+Please enter password,Veuillez entrer le mot de passe
+TWINT Payment Request,Demande de paiement TWINT
+TWINT Settings,Paramètres TWINT
+Is Template,Est un modèle
+Actual Time (in Hours via Time Sheet),Temps réel (en heures via la feuille de temps)
+Object,Objet
+Object Type,Type d'objet
+Object Name,Nom de l'objet
+Plate Number,Numéro de la plaque
+Chassis Number,Numéro de châssis
+Vehicle Code,Code du véhicule
+Bodywork,Carrosserie
+External Colour,Couleur externe
+Internal Colour,Couleur interne
+Registration Number,Numéro de matricule
+Seats,Sièges
+Tare Weight,Poids à vide
+Displacement,Cylindrée
+First Circulation,Première mise en circulation
+Last expertise,Dernière expertise
+Date and insurance,Date et assurance
+Tachometer,Tachymètre
+Insurance,Assurance
+Policy Number,Numéro de police
+Engine Number,Numéro du moteur
+Finishing,Finition
+Engine,Moteur
+Engine type,Type de moteur
+Fuel,Carburant
+Gearbox Type,Type de boîte de vitesses
+Gearbox Number,Numéro de la boîte de vitesses
+Km or Hours,Km ou heures
+Last Anti-pollution Control,Dernier contrôle anti-pollution
+Next Anti-pollution Control (in years),Prochain contrôle anti-pollution (en années)
+Optional Anti-pollution,Anti-pollution optionnelle
+Key Indenfication,Indenfication de la clé
+Radio Code,Code radio
+Key Code 1,Code clé 1
+Key Code 2,Code clé 2
+Order Number,Numéro de commande
+Order Date,Date de la commande
+Sale date,Date de vente
+Sale Price,Prix de vente
+Financing Company,Société de financement
+Cabin Type,Type de cabine
+Cabin number,Numéro de cabines
+Tire Brand,Marque du pneu
+Tire Type,Type de pneu
+Front Wheel,Roue avant
+Rear Wheel,Roue arrière
+axles number,Nombre d'essieux
+Worksheet,Feuille de travail
+Start Work
+Service Template,Modèle de service
+Show in Invoice,Afficher sur la facture
+Total Items,Total des Articles
+Total Worked Hours,Total des heures travaillées
+Total Billable Price,Total du prix facturable
+Grand Total (indicative),Total général (indicatif)
+"Prices are indicative, with no promotions taken in account",Les prix sont indicatifs et ne tiennent pas compte des promotions.
