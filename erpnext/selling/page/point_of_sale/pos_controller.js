@@ -347,7 +347,7 @@ erpnext.PointOfSale.Controller = class {
 							value,
 							item: this.item_details.current_item
 						};
-						return this.on_cart_update(args);
+						return this.on_cart_update(args, true);
 					}
 
 					return Promise.resolve();
@@ -513,9 +513,7 @@ erpnext.PointOfSale.Controller = class {
 
 						if(from_twint == 1) { //// custom add for twint payment
 							var cancel = false;
-							console.log("is_return: "+this.frm.doc.is_return);
 							if(this.frm.doc.is_return == 1){
-								console.log('in return')
 								let loading_dialog = new frappe.ui.Dialog({
 									title: 'Twint Refund',
 									fields: [{
@@ -553,14 +551,10 @@ erpnext.PointOfSale.Controller = class {
 									},
 									callback: function (res) {
 										const checkRefund = () => {
-											console.log("checkRefund")
-											console.log(res.message)
 											frappe.db.get_list("TWINT Transaction", {filters:{"parent": res.message}, fields:["operation"]}).then(result => {
-												console.log(result)
 												let refund = false;
 												if (result.length > 0) {
 													for(var i = 0; i < result.length; i++) {
-														console.log(result[i])
 														if (result[i].operation == "REVERSAL") {
 															refund = true;
 															break;
@@ -588,7 +582,6 @@ erpnext.PointOfSale.Controller = class {
 									}
 								})
 							} else {
-								console.log('not in return')
 								let loading_dialog = new frappe.ui.Dialog({
 									title: __('Twint Payment'),
 									fields: [
@@ -644,45 +637,48 @@ erpnext.PointOfSale.Controller = class {
 									},
 									callback: function (res) {
 										const checkPaymentStatus = () => {
-											console.log("checkPaymentStatus")
-											console.log(res.message)
+											try {
 											frappe.db.get_value("TWINT Payment Request", res.message, ["payment_status", "url", "payment_initiated", "status_reason", "status"]).then(r => {
-												console.log(r.message.payment_status)
-												console.log(r.message.url)
+												let status = r.message.status;
 												if(!loading_dialog.fields_dict['payment_link'].value) {
 													loading_dialog.fields_dict['payment_link'].set_value(r.message.url);
 													$(loading_dialog.$wrapper).find('.modal-footer .btn-primary').html(__('Open Payment Link'));
 												}
-												console.log("before payment_status")
 												if (r.message.payment_status != "SUCCESS") {
+													let reason_fail = false;
 													if(cancel) {
-														console.log("cancel")
-														loading_dialog.hide();
-														return;
-													}
-													/*console.log("before time")
-													time = parseInt(Date.now()/1000);
-													console.log(time)
-													if (r.message.payment_initiated + 200 <= time) {
-														console.log("timeout")
-														frappe.db.set_value("TWINT Payment Request", res.message, {"payment_status": "TIMEOUT", "status": "TIMEOUT"}).then(r => {
-															loading_dialog.hide();
-															return;
+														frappe.call({
+															method: "neoffice_theme.events.cancel_twint_transaction",
+															args: {request_id: res.message},
 														});
-													}*/
-													if(r.message.payment_status == "FAILURE" || r.message.status == "FAILURE") {
-														loading_dialog.hide();
-														frappe.throw(__("Payment Failed"));
 													}
 
 													if(r.message.status_reason != "ORDER_RECEIVED" && r.message.status_reason != "ORDER_CONFIRMATION_PENDING" && r.message.status_reason != "ORDER_OK") {
-														loading_dialog.hide();
-														frappe.throw(__("Impossible to process the payment. Please try again."));
+														reason_fail = true;
 													}
 
-													setTimeout(checkPaymentStatus, 2000);
+													let time = parseInt(Date.now()/1000);
+													if (parseInt(r.message.payment_initiated) + 200 <= time) {
+														frappe.db.set_value("TWINT Payment Request", res.message, {"payment_status": "TIMEOUT", "status": "TIMEOUT"});
+													}
+													switch (status) {
+														case "FAILURE":
+															loading_dialog.hide();
+															frappe.throw(__("Payment Failed or Cancelled"));
+															break;
+														case "TIMEOUT":
+															loading_dialog.hide();
+															frappe.throw(__("Payment Timeout"));
+															break;
+														default:
+															if(!reason_fail) {
+																setTimeout(checkPaymentStatus, 2000);
+															} else {
+																loading_dialog.hide();
+																frappe.throw(__("Impossible to process the payment. Please try again."));
+															}
+													}
 												} else {
-													console.log("success")
 													for (var i = 0; i <= me.frm.doc.payments.length; i++) {
 														if (me.frm.doc.payments[i] != undefined && me.frm.doc.payments[i].mode_of_payment == window.twint_mode_of_payment) {
 															me.frm.doc.payments[i].twint_payment_request = res.message;
@@ -700,6 +696,9 @@ erpnext.PointOfSale.Controller = class {
 													});
 												}
 											});
+											} catch (e) {
+												console.log(e)
+											}
 										};
 										checkPaymentStatus();
 									}
@@ -874,7 +873,7 @@ erpnext.PointOfSale.Controller = class {
 		this.page.set_indicator(this.pos_profile, "blue");
 	}
 
-	async on_cart_update(args) {
+	async on_cart_update(args, updated=false) {
 		frappe.dom.freeze();
 		let item_row = undefined;
 		try {
@@ -941,6 +940,49 @@ erpnext.PointOfSale.Controller = class {
 			console.log(error);
 		} finally {
 			////
+			let items = this.frm.doc.items
+			let data = {};
+
+			if(items.length > 0) {
+				if (updated) items = items.reverse();
+				const desiredKeys = ['item_name', 'qty', 'amount', 'rate', "description", "net_amout", "net_rate", "discount_amount", "discount_percentage", "item_tax_template", "image"];
+				const result = items.map(obj => {
+					const newObj = {};
+					desiredKeys.forEach(key => {
+						if (obj.hasOwnProperty(key)) {
+							newObj[key] = obj[key];
+						}
+					});
+					return newObj;
+				});
+				let taxes = this.frm.doc.taxes;
+				let taxes_data = {};
+				taxes.forEach(tax => {
+					taxes_data[tax.description] = tax.tax_amount
+				})
+				data = {
+					"items": result,
+					"grand_total": this.frm.doc.grand_total,
+					"rounded_total": this.frm.doc.rounded_total,
+					"net_total": this.frm.doc.net_total,
+					"taxes": taxes_data,
+					"discount_amout": this.frm.doc.discount_amount,
+					"additional_discount_percentage": this.frm.doc.additional_discount_percentage,
+				}
+			}
+			const currentDate = new Date();
+			const timestamp = currentDate.getTime();
+			data["timestamp"] = timestamp;
+			let json = JSON.stringify(data);
+
+			const filename = this.frm.doc.pos_profile+'.json';
+			frappe.call({
+				method: 'neoffice_theme.events.pos_screen',
+				args: { json_content: json, filename: filename },
+				callback: function(response) {
+					//console.log(response.message); // File written successfully.
+				}
+			});
 			if(window.enable_stripe_terminal == 1){
 				this.stripe.display_details(this);
 			}
@@ -1093,6 +1135,49 @@ erpnext.PointOfSale.Controller = class {
 				this.update_cart_html(current_item, true);
 				this.item_details.toggle_item_details_section(null);
 				////
+				let items = this.frm.doc.items;
+				let data = {};
+
+				if(items.length > 0) {
+					items = items.reverse();
+					const desiredKeys = ['item_name', 'qty', 'amount', 'rate', "description", "net_amout", "net_rate", "discount_amount", "discount_percentage", "item_tax_template", "image"];
+					const result = items.map(obj => {
+						const newObj = {};
+						desiredKeys.forEach(key => {
+							if (obj.hasOwnProperty(key)) {
+								newObj[key] = obj[key];
+							}
+						});
+						return newObj;
+					});
+					let taxes = this.frm.doc.taxes;
+					let taxes_data = {};
+					taxes.forEach(tax => {
+						taxes_data[tax.description] = tax.tax_amount
+					})
+					data = {
+						"items": result,
+						"grand_total": this.frm.doc.grand_total,
+						"rounded_total": this.frm.doc.rounded_total,
+						"net_total": this.frm.doc.net_total,
+						"taxes": taxes_data,
+						"discount_amout": this.frm.doc.discount_amount,
+						"additional_discount_percentage": this.frm.doc.additional_discount_percentage,
+					}
+				}
+				const currentDate = new Date();
+				const timestamp = currentDate.getTime();
+				data["timestamp"] = timestamp;
+				let json = JSON.stringify(data);
+
+				const filename = this.frm.doc.pos_profile+'.json';
+				frappe.call({
+					method: 'neoffice_theme.events.pos_screen',
+					args: { json_content: json, filename: filename },
+					callback: function(response) {
+						//console.log(response.message); // File written successfully.
+					}
+				});
 				if(window.enable_stripe_terminal == 1){
 					this.stripe.display_details(this);
 				}

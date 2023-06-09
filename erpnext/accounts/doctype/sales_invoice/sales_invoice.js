@@ -664,6 +664,14 @@ frappe.ui.form.on('Sales Invoice', {
 			'Payment Entry': 'Payment'
 		},
 		frm.fields_dict["timesheets"].grid.get_field("time_sheet").get_query = function(doc, cdt, cdn){
+			////			
+			if(doc.worksheet) {
+				return{
+					query: "erpnext.projects.doctype.timesheet.timesheet.get_timesheet",
+					filters: {'worksheet': doc.worksheet}
+				}
+			}
+			////
 			return{
 				query: "erpnext.projects.doctype.timesheet.timesheet.get_timesheet",
 				filters: {'project': doc.project}
@@ -860,13 +868,26 @@ frappe.ui.form.on('Sales Invoice', {
 			});
 		}
 	},
+	////
+	worksheet: function(frm) {
+		if (frm.doc.worksheet) {
+			frm.events.add_timesheet_data(frm, {
+				worksheet: frm.doc.worksheet
+			});
+		}
+	},
+	////
 
 	async add_timesheet_data(frm, kwargs) {
 		if (kwargs === "Sales Invoice") {
 			// called via frm.trigger()
 			kwargs = Object();
 		}
-
+		////
+		if(!kwargs.hasOwnProperty("worksheet") && frm.doc.worksheet) {
+			kwargs.worksheet = frm.doc.worksheet;
+		}
+		////
 		if (!kwargs.hasOwnProperty("project") && frm.doc.project) {
 			kwargs.project = frm.doc.project;
 		}
@@ -930,6 +951,7 @@ frappe.ui.form.on('Sales Invoice', {
 
 	append_time_log: function(frm, time_log, exchange_rate) {
 		const row = frm.add_child("timesheets");
+		row.rate = time_log.billing_rate; ////
 		row.activity_type = time_log.activity_type;
 		row.description = time_log.description;
 		row.time_sheet = time_log.time_sheet;
@@ -973,6 +995,12 @@ frappe.ui.form.on('Sales Invoice', {
 							"fieldtype": "Date",
 							"reqd": 1,
 						},
+						////
+						{
+							fieldtype: "Section Break",
+							fieldname: "section_break_1",
+						},
+						////
 						{
 							"label" : __("Project"),
 							"fieldname": "project",
@@ -980,14 +1008,78 @@ frappe.ui.form.on('Sales Invoice', {
 							"options": "Project",
 							"default": frm.doc.project
 						},
+						////
+						{
+							fieldtype: "Column Break",
+							fieldname: "col_break_2",
+						},
+						////
+						{
+							"label" : __("Worksheet"),
+							"fieldname": "worksheet",
+							"fieldtype": "Link",
+							"options": "Worksheet",
+							"default": frm.doc.worksheet
+						},
+						{
+							fieldtype: "Section Break",
+							fieldname: "section_break_2",
+						},
+						{
+							"label" : __("Timesheet billing Item"),
+							"fieldname": "item",
+							"fieldtype": "Link",
+							"options": "Item",
+							"reqd": 1,
+							"default": "MO"
+						}
+						////
 					],
 					primary_action: function() {
 						const data = d.get_values();
-						frm.events.add_timesheet_data(frm, {
-							from_time: data.from_time,
-							to_time: data.to_time,
-							project: data.project
-						});
+						////
+						if(data.worksheet) {
+							frm.events.add_timesheet_data(frm, {
+								from_time: data.from_time,
+								to_time: data.to_time,
+								worksheet: data.worksheet
+							});
+						} else {
+						////
+							frm.events.add_timesheet_data(frm, {
+								from_time: data.from_time,
+								to_time: data.to_time,
+								project: data.project
+							});
+						////
+						}
+						let timesheet_rates = {};
+						setTimeout(function() {
+							frm.doc.timesheets.forEach(function (timesheet) {
+								if (timesheet.rate in timesheet_rates) {
+									timesheet_rates[timesheet.rate] += timesheet.billing_hours;
+								} else {
+									timesheet_rates[timesheet.rate] = timesheet.billing_hours;
+								}
+							});
+							Object.entries(timesheet_rates).forEach(([rate, hours]) => {
+								/*let child = frm.add_child("items");
+								let timesheet_item_data = {
+									"item_code": data.item,
+									"qty": hours,
+									"rate": rate,
+								}
+								frappe.model.set_value(child.doctype, child.name, timesheet_item_data);*/
+								var childRow = frappe.model.get_new_doc("Item");
+								childRow.item_code = data.item;
+								childRow.qty = hours;
+								childRow.rate = rate;
+
+								frm.add_child("items", childRow);
+								frm.save();
+							});
+						}, 200);
+						////
 						d.hide();
 					},
 					primary_action_label: __("Get Timesheets")

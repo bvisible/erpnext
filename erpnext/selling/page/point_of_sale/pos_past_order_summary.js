@@ -359,6 +359,16 @@ erpnext.PointOfSale.PastOrderSummary = class {
 
 		this.add_summary_btns(condition_btns_map);
 		this.add_raw_btns(); ////
+		////
+		const filename = this.doc.pos_profile+'.json';
+		frappe.call({
+			method: 'neoffice_theme.events.pos_screen',
+			args: { json_content: {}, filename: filename },
+			callback: function(response) {
+				console.log(response.message); // File written successfully.
+			}
+		});
+		////
 	}
 
 	////
