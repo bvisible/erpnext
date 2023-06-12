@@ -10786,7 +10786,7 @@ Product Width (in cm),Largeur du produit (en cm)
 Product Height (in cm),Hauteur du produit (en cm)
 Product Weight (in Kg),Poids du produit (en Kg)
 Dimensions and Weigth,Dimensions et poids
-Values saved as 0 are not synchro,Les valeurs enregistrées sous 0 ne sont pas synchro
+<div class="form-message blue"><div>Values saved as 0 are not synchronized.</div></div>,<div class="form-message blue"><div>Les valeurs enregistrées à 0 ne sont pas synchronisées.</div></div>
 Earnings & Deductions,Bénéfices et Déductions
 Net Pay Info,Informations sur le paiement net
 Payroll Payable Account,Compte de paie à payer
@@ -10813,7 +10813,7 @@ Ecommerce Shipping Method Title,Titre de la méthode d'expédition du Ecommerce
 % Cashiered,% Encaissé
 Submit Invoice Automatically,Valider la facture automatiquement
 Shipping address,Adresse de livraison
-Advanced product list,Liste de produits avancée
+Advanced product list,Liste des produits avancées
 Coupon Code,Code promo
 Deliver and Bill,Livrer et facturer
 Unpaid,Non payé
@@ -10898,6 +10898,10 @@ Alcohol Item,Article d'alcool
 Quantity (in litres),Quantité (en litres)
 Degree of alcohol,Degré d'alcool
 Alcohol,Alcool
+Alcohol selling,Vente d'alcool
+Operating number,Numéro d'exploitation
+Cellaring number,Numéro Encavage
+Winemaker number,Numéro d'encaveur
 Change Emails,Modifier les emails
 Validate emails change,Valider le changement des emails
 This value is fetched from Contact principal du client's Identifiant Email field,Cette valeur est extraite du champ Identifiant Email du Contact principal du client
@@ -10984,7 +10988,9 @@ Front Wheel,Roue avant
 Rear Wheel,Roue arrière
 axles number,Nombre d'essieux
 Worksheet,Feuille de travail
-Start Work
+See all Worksheet, Voir toutes les Feuilles de travail
+Scan Worksheet,Scan Feuille de travail
+Start Work,Démarrer Travail
 Service Template,Modèle de service
 Show in Invoice,Afficher sur la facture
 Total Items,Total des Articles
