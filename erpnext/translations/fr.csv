@@ -10988,6 +10988,7 @@ Front Wheel,Roue avant
 Rear Wheel,Roue arrière
 axles number,Nombre d'essieux
 Worksheet,Feuille de travail
+Worksheet Settings,Paramètres de la Feuille de travail
 See all Worksheet, Voir toutes les Feuilles de travail
 Scan Worksheet,Scan Feuille de travail
 Start Work,Démarrer Travail
@@ -11022,3 +11023,6 @@ _("Timesheet {} could not be submitted\n{}",_("La feuille de temps {} n'a pas pu
 "Error deleting timesheet from employee {} starting at {} and ending at {} in timesheet {}","Erreur de suppression de la feuille de temps de l'employé {} commençant à {} et se terminant à {} dans la feuille de temps {}"
 "Please delete the entrie(s) manually.","Veuillez supprimer les entrées manuellement."
 There is an open worksheet for this object. Do you want to continue ?,Il existe une feuille de calcul ouverte pour cet objet. Voulez-vous continuer ?
+This option will automatically close any ongoing timesheet linked to worksheets for the selectionned employee,Cette option fermera automatiquement toute feuille de temps en cours liée aux feuilles de travail de l'employé sélectionné
+Allow Automatic Ending Timesheet,Autoriser la fin automatique de la feuille de temps
+Default Employee Filling Method,Méthode de remplissage par défaut des employés
