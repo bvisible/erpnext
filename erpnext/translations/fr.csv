@@ -10992,3 +10992,27 @@ Total Worked Hours,Total des heures travaillées
 Total Billable Price,Total du prix facturable
 Grand Total (indicative),Total général (indicatif)
 "Prices are indicative, with no promotions taken in account",Les prix sont indicatifs et ne tiennent pas compte des promotions.
+Gasoline,Essence
+Diesel,Diesel
+Hybrid (non-plug in),Hybride (non rechargeable)
+Plug-in Hybrid,Hybride rechargeable
+Electric,Électrique
+CNG / Propane,GNC / Propane
+LPG / Autogas,GPL / Autogaz
+Hydrogen ICE,Hydrogène ICE
+Hydrogen fuel cell,Pile à hydrogène
+Solar,Solaire
+Other methods,Autres méthodes
+Manual transmission,Transmission manuelle
+Automatic transmission,Transmission automatique
+Dual-clutch transmissions (DCT),Boîtes de vitesses à double embrayage (DCT)
+Continuously variable transmission (CVT),Transmission à variation continue (CVT)
+Work Progress,Avancement des travaux
+is not finished,n'est pas fini
+Works,Travaux
+"Service {} is not finished All the services added have to be marked as finished to allow submit","Service {} n'est pas terminé Tous les services ajoutés doivent être marqués comme terminés pour permettre la soumission".
+"Timesheet {} is not finished\nAll the timesheets added have to be completed to allow submit","La feuille de temps {} n'est pas terminée. Toutes les feuilles de temps ajoutées doivent être complétées pour permettre la soumission.
+_("Timesheet {} could not be submitted\n{}",_("La feuille de temps {} n'a pas pu être soumise\n{}"
+"Error deleting timesheet from employee {} starting at {} and ending at {} in timesheet {}","Erreur de suppression de la feuille de temps de l'employé {} commençant à {} et se terminant à {} dans la feuille de temps {}"
+"Please delete the entrie(s) manually.","Veuillez supprimer les entrées manuellement."
+There is an open worksheet for this object. Do you want to continue ?,Il existe une feuille de calcul ouverte pour cet objet. Voulez-vous continuer ?
