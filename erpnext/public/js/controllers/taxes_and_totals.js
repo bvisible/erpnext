@@ -806,7 +806,16 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 				precision("base_grand_total")
 			);
 		}
-
+		//// commented
+		/* 
+		if(!this.frm.doc.is_return){
+			this.frm.doc.payments.find(payment => {
+				if (payment.default) {
+					payment.amount = total_amount_to_pay;
+				}
+			});
+		}
+		*/
 		////
 		let left_to_pay = total_amount_to_pay;
 		this.frm.doc.payments.find(pay => {
