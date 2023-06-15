@@ -940,49 +940,51 @@ erpnext.PointOfSale.Controller = class {
 			console.log(error);
 		} finally {
 			////
-			let items = this.frm.doc.items
-			let data = {};
+			setTimeout(() => {
+				let items = this.frm.doc.items;
+				let data = {};
 
-			if(items.length > 0) {
-				if (updated) items = items.reverse();
-				const desiredKeys = ['item_name', 'qty', 'amount', 'rate', "description", "net_amout", "net_rate", "discount_amount", "discount_percentage", "item_tax_template", "image"];
-				const result = items.map(obj => {
-					const newObj = {};
-					desiredKeys.forEach(key => {
-						if (obj.hasOwnProperty(key)) {
-							newObj[key] = obj[key];
-						}
+				if(items.length > 0) {
+					if (updated) items = items.reverse();
+					const desiredKeys = ['item_name', 'qty', 'amount', 'rate', "description", "net_amount", "net_rate", "discount_amount", "discount_percentage", "item_tax_template", "image"];
+					const result = items.map(obj => {
+						const newObj = {};
+						desiredKeys.forEach(key => {
+							if (obj.hasOwnProperty(key)) {
+								newObj[key] = obj[key];
+							}
+						});
+						return newObj;
 					});
-					return newObj;
-				});
-				let taxes = this.frm.doc.taxes;
-				let taxes_data = {};
-				taxes.forEach(tax => {
-					taxes_data[tax.description] = tax.tax_amount
-				})
-				data = {
-					"items": result,
-					"grand_total": this.frm.doc.grand_total,
-					"rounded_total": this.frm.doc.rounded_total,
-					"net_total": this.frm.doc.net_total,
-					"taxes": taxes_data,
-					"discount_amout": this.frm.doc.discount_amount,
-					"additional_discount_percentage": this.frm.doc.additional_discount_percentage,
+					let taxes = this.frm.doc.taxes;
+					let taxes_data = {};
+					taxes.forEach(tax => {
+						taxes_data[tax.description] = tax.tax_amount
+					})
+					data = {
+						"items": result,
+						"grand_total": this.frm.doc.grand_total,
+						"rounded_total": this.frm.doc.rounded_total,
+						"net_total": this.frm.doc.net_total,
+						"taxes": taxes_data,
+						"discount_amount": this.frm.doc.discount_amount,
+						"additional_discount_percentage": this.frm.doc.additional_discount_percentage,
+					}
 				}
-			}
-			const currentDate = new Date();
-			const timestamp = currentDate.getTime();
-			data["timestamp"] = timestamp;
-			let json = JSON.stringify(data);
+				const currentDate = new Date();
+				const timestamp = currentDate.getTime();
+				data["timestamp"] = timestamp;
+				let json = JSON.stringify(data);
 
-			const filename = this.frm.doc.pos_profile+'.json';
-			frappe.call({
-				method: 'neoffice_theme.events.pos_screen',
-				args: { json_content: json, filename: filename },
-				callback: function(response) {
-					//console.log(response.message); // File written successfully.
-				}
-			});
+				const filename = this.frm.doc.pos_profile+'.json';
+				frappe.call({
+					method: 'neoffice_theme.events.pos_screen',
+					args: { json_content: json, filename: filename },
+					callback: function(response) {
+						//console.log(response.message); // File written successfully.
+					}
+				});
+			}, 200);
 			if(window.enable_stripe_terminal == 1){
 				this.stripe.display_details(this);
 			}
@@ -1135,49 +1137,51 @@ erpnext.PointOfSale.Controller = class {
 				this.update_cart_html(current_item, true);
 				this.item_details.toggle_item_details_section(null);
 				////
-				let items = this.frm.doc.items;
-				let data = {};
+				setTimeout(() => {
+					let items = this.frm.doc.items;
+					let data = {};
 
-				if(items.length > 0) {
-					items = items.reverse();
-					const desiredKeys = ['item_name', 'qty', 'amount', 'rate', "description", "net_amout", "net_rate", "discount_amount", "discount_percentage", "item_tax_template", "image"];
-					const result = items.map(obj => {
-						const newObj = {};
-						desiredKeys.forEach(key => {
-							if (obj.hasOwnProperty(key)) {
-								newObj[key] = obj[key];
-							}
+					if(items.length > 0) {
+						items = items.reverse();
+						const desiredKeys = ['item_name', 'qty', 'amount', 'rate', "description", "net_amount", "net_rate", "discount_amount", "discount_percentage", "item_tax_template", "image"];
+						const result = items.map(obj => {
+							const newObj = {};
+							desiredKeys.forEach(key => {
+								if (obj.hasOwnProperty(key)) {
+									newObj[key] = obj[key];
+								}
+							});
+							return newObj;
 						});
-						return newObj;
-					});
-					let taxes = this.frm.doc.taxes;
-					let taxes_data = {};
-					taxes.forEach(tax => {
-						taxes_data[tax.description] = tax.tax_amount
-					})
-					data = {
-						"items": result,
-						"grand_total": this.frm.doc.grand_total,
-						"rounded_total": this.frm.doc.rounded_total,
-						"net_total": this.frm.doc.net_total,
-						"taxes": taxes_data,
-						"discount_amout": this.frm.doc.discount_amount,
-						"additional_discount_percentage": this.frm.doc.additional_discount_percentage,
+						let taxes = this.frm.doc.taxes;
+						let taxes_data = {};
+						taxes.forEach(tax => {
+							taxes_data[tax.description] = tax.tax_amount
+						})
+						data = {
+							"items": result,
+							"grand_total": this.frm.doc.grand_total,
+							"rounded_total": this.frm.doc.rounded_total,
+							"net_total": this.frm.doc.net_total,
+							"taxes": taxes_data,
+							"discount_amount": this.frm.doc.discount_amount,
+							"additional_discount_percentage": this.frm.doc.additional_discount_percentage,
+						}
 					}
-				}
-				const currentDate = new Date();
-				const timestamp = currentDate.getTime();
-				data["timestamp"] = timestamp;
-				let json = JSON.stringify(data);
+					const currentDate = new Date();
+					const timestamp = currentDate.getTime();
+					data["timestamp"] = timestamp;
+					let json = JSON.stringify(data);
 
-				const filename = this.frm.doc.pos_profile+'.json';
-				frappe.call({
-					method: 'neoffice_theme.events.pos_screen',
-					args: { json_content: json, filename: filename },
-					callback: function(response) {
-						//console.log(response.message); // File written successfully.
-					}
-				});
+					const filename = this.frm.doc.pos_profile+'.json';
+					frappe.call({
+						method: 'neoffice_theme.events.pos_screen',
+						args: { json_content: json, filename: filename },
+						callback: function(response) {
+							//console.log(response.message); // File written successfully.
+						}
+					});
+				}, 200);
 				if(window.enable_stripe_terminal == 1){
 					this.stripe.display_details(this);
 				}
