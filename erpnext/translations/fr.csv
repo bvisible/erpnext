@@ -9984,7 +9984,7 @@ Customize Website,Personnaliser le Site web
 Website Template,Modèle de Site web
 Website Popup,Popup Site web
 Website menu,Menu Site web
-B2B Item,Aticle B2B
+B2B Item,Article B2B
 Product designer,Design page produits
 Shop designer,Design du Shop
 Checkout &amp; CGV,Validation de commande & CGV
@@ -10584,6 +10584,7 @@ Create quotation,Créer un Devis
 See all sales Order,Voir les Commandes
 Create sales Order,Créer une Commande
 See open sales Invoice,Voir les Factures Ouvertes
+See all sales Invoice,Voir toutes les Factures
 Create sales Invoice,Créer une Facture
 Open Point Of Sale,Ouvrir le PDV
 Open POS,Ouvrir PDV
@@ -10807,7 +10808,7 @@ From Payment Date,À partir de la date de paiement
 To Payment Date,Jusqu'à la date de paiement
 This filter will be applied to Journal Entry.,Ce filtre sera appliqué à l'entrée de journal.
 Invoice Limit,Limite de facturation
-Payment Limit,Limite de payement
+Payment Limit,Limite de paiement
 Ecommerce Shipping Method Title,Titre de la méthode d'expédition du Ecommerce
 "Hello {0},<br><br>Thank you for your purchase.<br><br>Please find attached the receipt","Bonjour {0},Merci pour votre achat.<br><br>Veuillez trouver ci-joint le reçu."
 % Cashiered,% Encaissé
@@ -10863,7 +10864,7 @@ Reverse,Inverser
 Total amount selected : ,Montant total sélectionné : 
 Easy payments,Générations des paiements
 payment(s) will be created,paiement(s) sera(ont) créé(s)
-Export payments,Exportation du fichier de payement
+Export payments,Exportation du fichier de paiement
 This page allows you to generate a payment file for the bank. The file will be generated in XML format. The file will be generated based on the selected payments. The payment date will be the date of the file generation. The payment date can be changed by selecting a date in the field below.,Cette page permet de générer un fichier de paiement pour la banque. Le fichier sera généré au format XML. Le fichier sera généré en fonction des paiements sélectionnés. La date de paiement sera la date de génération du fichier. La date de paiement peut être modifiée en sélectionnant une date dans le champ ci-dessous.
 You have selected purchase invoices that are not valid. Please select only purchase invoices with status "Submitted".,Vous avez sélectionné des factures d'achat qui ne sont pas valides. Veuillez sélectionner uniquement les factures d'achat avec le statut "Valider".
 Mode of payment,Moyen de paiement
@@ -11027,3 +11028,36 @@ This option will automatically close any ongoing timesheet linked to worksheets 
 Allow Automatic Ending Timesheet,Autoriser la fin automatique de la feuille de temps
 Default Employee Filling Method,Méthode de remplissage par défaut des employés
 Add finished timesheet,Ajouter feuille de temps terminée
+There is an open worksheet for this object. Do you want to continue?,Il existe une feuille de travail ouverte pour cet objet. Voulez-vous continuer?
+Shipment,Livraison,
+Pickup from,Ramassage chez
+Delivery to,Livraison à
+Pickup Contact Person,Personne à contacter pour le ramassage
+Parcels,Colis
+Shipment Parcel,Colis d'expédition
+Shipment Delivery Note,Bon de livraison
+Parcel Template,Modèle de colis
+Add Template,Ajouter un modèle
+Shipment details,Détails de l'envoi
+Pallets,Palettes
+Value of Goods,La valeur des biens
+Pickup Date,Date de ramassage
+Pickup from,Ramassage de
+Pickup to,Ramasser à
+Shipment Type,Type d'expédition
+Pickup Type,Type de ramassage
+Description of Content,Description du contenu
+Shipment Information,Informations d'expédition
+Service Provider,Fournisseur de services
+ID d'expédition,ID d'expédition
+Shipment Amount,Montant de l'expédition
+Carrier,Transporteur
+Carrier Service,Service de transporteur
+AWB Number,Numéro AWB
+Tracking Status,Statut de suivi
+Length (cm),Longueur (cm)
+Width (cm),Largeur (cm)
+Height (cm),Hauteur (cm)
+Weight (kg),poids (kg)
+Compter,Compteur
+Competitors,Concurrent
