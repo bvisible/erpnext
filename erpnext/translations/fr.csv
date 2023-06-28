@@ -11066,3 +11066,8 @@ Total Billing Hours,Total des heures de facturation
 Use Company default Cost Center for Round off,Utiliser le centre de coûts par défaut de la société pour l'arrondi
 Custom Amount Loyalty,Montant des points de Fidélité
 for an amount of,pour un montant de
+Enable TWINT,Activer TWINT
+TWINT Mode Of Payment,Mode de paiement TWINT
+Stripe Terminal Settings,Paramètres du terminal Stripe
+Enable Stripe Terminal,Activer le terminal Stripes
+Default Activity Type,Type d'activité par défaut
