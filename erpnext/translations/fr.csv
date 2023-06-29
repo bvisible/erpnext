@@ -11077,3 +11077,16 @@ Item Name,Nom de l'article
 ID type and number,Type et numéro de pièce d'identité
 Date of Sale,Date de la vente
 Contract Term Text,Texte de la clause contractuelle
+Concerned Objects (only for print),Objets concernés (uniquement pour l'impression)
+Categories Generating Contracts,Catégories Générant des contrats
+Categories Ignored for Contracts,Catégories ignorées pour les contrats
+Additional Data,Donnée supplémentaire
+Data Name,Nom de la donnée
+Data Value,Valeur de la donnée
+Product concerned by the contract,Produit concerné par le contrat
+Concerned Objects,Objets concernés
+Seller,Vendeur
+Buyer,Acheteur
+the,le
+Seller's signature,Signature du vendeur
+Buyer's signature,Signature de l'acheteur
