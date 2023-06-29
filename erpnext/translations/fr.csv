@@ -11071,3 +11071,9 @@ TWINT Mode Of Payment,Mode de paiement TWINT
 Stripe Terminal Settings,Paramètres du terminal Stripe
 Enable Stripe Terminal,Activer le terminal Stripes
 Default Activity Type,Type d'activité par défaut
+Customer Signature,Signature du client
+Seller Signature,Signature du vendeur
+Item Name,Nom de l'article
+ID type and number,Type et numéro de pièce d'identité
+Date of Sale,Date de la vente
+Contract Term Text,Texte de la clause contractuelle
