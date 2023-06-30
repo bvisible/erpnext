@@ -11066,3 +11066,27 @@ Total Billing Hours,Total des heures de facturation
 Use Company default Cost Center for Round off,Utiliser le centre de coûts par défaut de la société pour l'arrondi
 Custom Amount Loyalty,Montant des points de Fidélité
 for an amount of,pour un montant de
+Enable TWINT,Activer TWINT
+TWINT Mode Of Payment,Mode de paiement TWINT
+Stripe Terminal Settings,Paramètres du terminal Stripe
+Enable Stripe Terminal,Activer le terminal Stripes
+Default Activity Type,Type d'activité par défaut
+Customer Signature,Signature du client
+Seller Signature,Signature du vendeur
+Item Name,Nom de l'article
+ID type and number,Type et numéro de pièce d'identité
+Date of Sale,Date de la vente
+Contract Term Text,Texte de la clause contractuelle
+Concerned Objects (only for print),Objets concernés (uniquement pour l'impression)
+Categories Generating Contracts,Catégories Générant des contrats
+Categories Ignored for Contracts,Catégories ignorées pour les contrats
+Additional Data,Donnée supplémentaire
+Data Name,Nom de la donnée
+Data Value,Valeur de la donnée
+Product concerned by the contract,Produit concerné par le contrat
+Concerned Objects,Objets concernés
+Seller,Vendeur
+Buyer,Acheteur
+the,le
+Seller's signature,Signature du vendeur
+Buyer's signature,Signature de l'acheteur
