@@ -37,6 +37,23 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 	async calculate_taxes_and_totals(update_paid_amount) {
 		this.discount_amount_applied = false;
 		this._calculate_taxes_and_totals();
+		////
+		if (this.frm.doc.doctype == "POS Invoice" && this.frm.doc.is_return) {
+			let res = null;
+			res = await frappe.call({
+				method: "frappe.client.get_value",
+				args: {
+					doctype: "POS Invoice",
+					filters: { name: this.frm.doc.return_against },
+					fieldname: ["discount_amount", "additional_discount_percentage"]
+				}
+			})
+			if (res.message) {
+				this.frm.doc.discount_amount = flt(res.message.discount_amount);
+				this.frm.doc.additional_discount_percentage = flt(res.message.additional_discount_percentage);
+			}
+		}
+		////
 		this.calculate_discount_amount();
 
 		// # Update grand total as per cash and non trade discount

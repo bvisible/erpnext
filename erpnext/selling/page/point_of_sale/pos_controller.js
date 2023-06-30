@@ -969,6 +969,7 @@ erpnext.PointOfSale.Controller = class {
 						"taxes": taxes_data,
 						"discount_amount": this.frm.doc.discount_amount,
 						"additional_discount_percentage": this.frm.doc.additional_discount_percentage,
+						"cash": 0,
 					}
 				}
 				const currentDate = new Date();
@@ -1166,6 +1167,7 @@ erpnext.PointOfSale.Controller = class {
 							"taxes": taxes_data,
 							"discount_amount": this.frm.doc.discount_amount,
 							"additional_discount_percentage": this.frm.doc.additional_discount_percentage,
+							"cash": 0,
 						}
 					}
 					const currentDate = new Date();
