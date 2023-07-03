@@ -10996,8 +10996,8 @@ Start Work,Démarrer Travail
 Service Template,Modèle de service
 Show in Invoice,Afficher sur la facture
 Total Items,Total des Articles
-Total Worked Hours,Total des heures travaillées
-Total Billable Price,Total du prix facturable
+Total Worked Hours,Total des Heures Travaillées
+Total Billable Price,Total des heures Prix Facturable
 Grand Total (indicative),Total général (indicatif)
 "Prices are indicative, with no promotions taken in account",Les prix sont indicatifs et ne tiennent pas compte des promotions.
 Gasoline,Essence
@@ -11062,7 +11062,7 @@ Weight (kg),poids (kg)
 Compter,Compteur
 Competitors,Concurrent
 Tasks Executed,Tâches exécutées
-Total Billing Hours,Total des heures de facturation
+Total Billing Hours,Total des Heures de Facturation
 Use Company default Cost Center for Round off,Utiliser le centre de coûts par défaut de la société pour l'arrondi
 Custom Amount Loyalty,Montant des points de Fidélité
 for an amount of,pour un montant de
@@ -11077,6 +11077,9 @@ Item Name,Nom de l'article
 ID type and number,Type et numéro de pièce d'identité
 Date of Sale,Date de la vente
 Contract Term Text,Texte de la clause contractuelle
+Sales Contract Settings,Paramètres des contrats de ventes
+Neoffice Contract,Contrat de vente
+Sales Contract,Contrat de vente
 Concerned Objects (only for print),Objets concernés (uniquement pour l'impression)
 Categories Generating Contracts,Catégories Générant des contrats
 Categories Ignored for Contracts,Catégories ignorées pour les contrats
@@ -11090,3 +11093,25 @@ Buyer,Acheteur
 the,le
 Seller's signature,Signature du vendeur
 Buyer's signature,Signature de l'acheteur
+Expenses Receipt,Reçu de dépenses
+Expenses Receipt Settings,Paramètres de reçu de dépenses
+Receipt name,Nom du reçu
+Receipt category,Catégorie de reçu
+Receipt Date,Receipt Date
+Receipt Total,Total du reçu
+Receipt Payment,Paiement du reçu
+Receipt Currency,Devise du reçu
+Reminder Settings,Paramètres des rappels
+Sector,Secteur
+Aisle,Allée
+Content top for QR invoice in several instalments,Haut de page pour la facture QR en plusieurs versements
+Hide the full QR invoice for instalment payments,Masquer la facture QR complète pour les paiements échelonnés
+Net invoice in {} instalments over {} days,Facture nette en {} versements sur {} jours
+Payment due on date,Paiement dû à la date
+Full invoice,Facture complète
+Concerns,Concernes
+Appraisal Cycle,Cycle d'évaluation
+Appraisal Overview,Aperçu de l'évaluation
+Employee Performance Feedback,Commentaires sur le rendement des employés
+Employee Feedback Criteria,Critères de rétroaction des employés
+Employee Hours Utilization Based On Timesheet,Utilisation des heures des employés basée sur la feuille de temps
