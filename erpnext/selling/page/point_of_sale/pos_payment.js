@@ -182,60 +182,65 @@ erpnext.PointOfSale.Payment = class {
 				me.selected_mode && me.selected_mode.$input.get(0).focus();
 				me.auto_set_remaining_amount();
 			}
-
-			////
-			setTimeout(() => {
-				let cash_amount = 0;
-				if($('.mode-of-payment[data-payment-type="Cash"] .pay-amount').length > 0){
-					let cash_string = $('.mode-of-payment[data-payment-type="Cash"] .pay-amount').html();
-					if(cash_string != "" && cash_string != undefined && cash_string != null) {
-						cash_amount = parseFloat($('.mode-of-payment[data-payment-type="Cash"] .pay-amount').html());
-					}
-				}
-				let items = cur_frm.doc.items;
-				let data = {};
-				if(items.length > 0) {
-					const desiredKeys = ['item_name', 'qty', 'amount', 'rate', "description", "net_amount", "net_rate", "discount_amount", "discount_percentage", "item_tax_template", "image"];
-					const result = items.map(obj => {
-						const newObj = {};
-						desiredKeys.forEach(key => {
-							if (obj.hasOwnProperty(key)) {
-								newObj[key] = obj[key];
-							}
-						});
-						return newObj;
-					});
-					let taxes = cur_frm.doc.taxes;
-					let taxes_data = {};
-					taxes.forEach(tax => {
-						taxes_data[tax.description] = tax.tax_amount
-					})
-					data = {
-						"items": result,
-						"grand_total": cur_frm.doc.grand_total,
-						"rounded_total": cur_frm.doc.rounded_total,
-						"net_total": cur_frm.doc.net_total,
-						"taxes": taxes_data,
-						"discount_amount": cur_frm.doc.discount_amount,
-						"additional_discount_percentage": cur_frm.doc.additional_discount_percentage,
-						"cash": cash_amount,
-					}
-				}
-				const currentDate = new Date();
-				const timestamp = currentDate.getTime();
-				data["timestamp"] = timestamp;
-				let json = JSON.stringify(data);
-				const filename = cur_frm.doc.pos_profile+'.json';
-				frappe.call({
-					method: 'neoffice_theme.events.pos_screen',
-					args: { json_content: json, filename: filename },
-					callback: function(response) {
-						//console.log(response.message); // File written successfully.
-					}
-				});
-			}, 200);
-			////
 		});
+
+		////
+		this.$payment_modes.on('DOMSubtreeModified', '[data-payment-type="Cash"] .pay-amount', function(e) {
+			if($('.mode-of-payment[data-payment-type="Cash"] .pay-amount').length > 0){
+				////
+				setTimeout(() => {
+					let cash_amount = 0;
+					if($('.mode-of-payment[data-payment-type="Cash"] .pay-amount').length > 0){
+						let cash_string = $('.mode-of-payment[data-payment-type="Cash"] .pay-amount').html();
+						if(cash_string != "" && cash_string != undefined && cash_string != null) {
+							cash_amount = parseFloat($('.mode-of-payment[data-payment-type="Cash"] .pay-amount').html());
+						}
+					}
+					let items = cur_frm.doc.items;
+					let data = {};
+					if(items.length > 0) {
+						const desiredKeys = ['item_name', 'qty', 'amount', 'rate', "description", "net_amount", "net_rate", "discount_amount", "discount_percentage", "item_tax_template", "image"];
+						const result = items.map(obj => {
+							const newObj = {};
+							desiredKeys.forEach(key => {
+								if (obj.hasOwnProperty(key)) {
+									newObj[key] = obj[key];
+								}
+							});
+							return newObj;
+						});
+						let taxes = cur_frm.doc.taxes;
+						let taxes_data = {};
+						taxes.forEach(tax => {
+							taxes_data[tax.description] = tax.tax_amount
+						})
+						data = {
+							"items": result,
+							"grand_total": cur_frm.doc.grand_total,
+							"rounded_total": cur_frm.doc.rounded_total,
+							"net_total": cur_frm.doc.net_total,
+							"taxes": taxes_data,
+							"discount_amount": cur_frm.doc.discount_amount,
+							"additional_discount_percentage": cur_frm.doc.additional_discount_percentage,
+							"cash": cash_amount,
+						}
+					}
+					const currentDate = new Date();
+					const timestamp = currentDate.getTime();
+					data["timestamp"] = timestamp;
+					let json = JSON.stringify(data);
+					const filename = cur_frm.doc.pos_profile+'.json';
+					frappe.call({
+						method: 'neoffice_theme.events.pos_screen',
+						args: { json_content: json, filename: filename },
+						callback: function(response) {
+							//console.log(response.message); // File written successfully.
+						}
+					});
+				}, 200);
+			}
+		});
+		////
 
 		frappe.ui.form.on('POS Invoice', 'contact_mobile', (frm) => {
 			const contact = frm.doc.contact_mobile;
