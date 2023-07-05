@@ -193,7 +193,7 @@ erpnext.PointOfSale.Payment = class {
 					if($('.mode-of-payment[data-payment-type="Cash"] .pay-amount').length > 0){
 						let cash_string = $('.mode-of-payment[data-payment-type="Cash"] .pay-amount').html();
 						if(cash_string != "" && cash_string != undefined && cash_string != null) {
-							cash_amount = parseFloat($('.mode-of-payment[data-payment-type="Cash"] .pay-amount').html());
+							cash_amount = parseFloat($('.mode-of-payment[data-payment-type="Cash"] .pay-amount').html().replace(/[,\'\s]/g, ''));
 						}
 					}
 					let items = cur_frm.doc.items;
