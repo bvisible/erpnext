@@ -11119,3 +11119,11 @@ Company Settings,Paramètres de l'entreprise
 Activate statistics for alcohol-based products,Activer les statistiques pour les produits à base d'alcool
 "Congratulations, you have completed the configuration of your Neoffice instance. You can now take full advantage of the functionalities of your ERP. If you have any questions or suggestions, please do not hesitate to contact us. We'll be delighted to help.","Félicitations, vous avez terminé la configuration de votre instance Neoffice. Vous pouvez désormais profiter pleinement des fonctionnalités de votre ERP. Si vous avez des questions ou des suggestions, n'hésitez pas à nous contacter. Nous serons ravis de vous aider."
 Active Banks,Banques actives
+Data Save In Process... Please Wait,Enregistrement des données en cours... Veuillez patienter
+Sync the parent to sync the children the first time,Synchroniser le parent pour synchroniser les enfants la première fois
+Invalid value for maximum User Allowed limit. it can be a whole number only.,Valeur non valide pour la limite maximale d'utilisateurs autorisés. il ne peut s'agir que d'un nombre entier.
+Only {} active {} users allowed and you have {} active users. Please disable users or to increase the limit please contact sales,Seuls {} utilisateurs actifs {} sont autorisés et vous avez {} utilisateurs actifs. Veuillez désactiver les utilisateurs ou pour augmenter la limite. Veuillez contacter le service commercial
+Your product does not have stock management activated. Do you want to activate it?,Votre produit n'a pas la gestion des stocks activée. Voulez-vous l'activer ?
+Are you sure you want to proceed?,Êtes-vous sur de vouloir continuer ?
+Change price,Changement de prix
+Additional Informations,Informations supplémentaires
