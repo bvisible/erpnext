@@ -11129,3 +11129,9 @@ Change price,Changement de prix
 Additional Informations,Informations supplémentaires
 Get Outstanding Orders,Obtenez les Commandes en Cours
 Match Payments,Rapprocher les Paiements
+No address found with the same email as the customer Please link a primary address or change the customer's email to match an existing customer address email,Aucune adresse trouvée avec le même e-mail que le client Veuillez lier une adresse principale ou modifier l'e-mail du client pour qu'il corresponde à l'adresse e-mail d'un client existant
+Your email to {} has been successfully sent.,Votre courriel à {} a été envoyé avec succès.
+Email Delivery Failed,Échec de l'envoi de l'e-mail
+Your email to {} has not been sent because the email {} does not exist.,Votre e-mail à {} n'a pas été envoyé car l'e-mail {} n'existe pas.
+Your email to {} has not been sent because the server has rejected your email as spam.,Votre email à {} n'a pas été envoyé car le serveur a rejeté votre email comme spam.
+Your email to {} generated this message : {}.,Votre courriel à {} a généré ce message : {}.
