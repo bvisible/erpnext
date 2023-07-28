@@ -96,7 +96,7 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 			], false);
 
 			setFieldVisibility([
-				'attributes_quick_entry_1', 'attributes_quick_entry_2', 'attributes_quick_entry_3', 'item_template'
+				'attributes_quick_entry_1', 'attributes_quick_entry_2', 'attributes_quick_entry_3', 'item_template', 'variant_selling_price', 'variant_buying_price'
 			], true);
 
 			setFieldRequired([
@@ -115,7 +115,7 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 			], true);
 
 			setFieldVisibility([
-				'attributes_quick_entry_1'
+				'attributes_quick_entry_1', 'variant_selling_price', 'variant_buying_price'
 			], false);
 
 			setFieldRequired([
@@ -180,7 +180,7 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 			], false);
 
 			setFieldVisibility([
-				'attributes_quick_entry_1', 'attributes_quick_entry_2', 'attributes_quick_entry_3'
+				'attributes_quick_entry_1', 'attributes_quick_entry_2', 'attributes_quick_entry_3', 'variant_selling_price', 'variant_buying_price'
 			], true);
 
 			setFieldRequired([
@@ -444,6 +444,10 @@ frappe.ui.form.ItemQuickEntryForm = class ItemQuickEntryForm extends frappe.ui.f
 							me.init_post_template_trigger_operations(false, me.template_doc.attributes, false);
 							me.render_attributes(me.template_doc.attributes);
 						}
+						////
+						me.dialog.get_field("standard_rate").set_value(me.template_doc.variant_selling_price);
+						me.dialog.get_field("buying_standard_rate").set_value(me.template_doc.variant_buying_price);
+						////
 					}
 				});
 			} else {

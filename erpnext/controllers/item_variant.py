@@ -198,6 +198,12 @@ def create_variant(item, args):
 
 	template = frappe.get_doc("Item", item)
 	variant = frappe.new_doc("Item")
+	#////
+	if template.variant_selling_price and not variant.standard_rate:
+		variant.standard_rate = template.variant_selling_price
+	if template.variant_buying_price and not variant.buying_standard_rate:
+		variant.buying_standard_rate = template.variant_buying_price
+	#/////
 	variant.variant_based_on = "Item Attribute"
 	variant_attributes = []
 
