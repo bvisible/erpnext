@@ -11135,3 +11135,18 @@ Email Delivery Failed,Échec de l'envoi de l'e-mail
 Your email to {} has not been sent because the email {} does not exist.,Votre e-mail à {} n'a pas été envoyé car l'e-mail {} n'existe pas.
 Your email to {} has not been sent because the server has rejected your email as spam.,Votre email à {} n'a pas été envoyé car le serveur a rejeté votre email comme spam.
 Your email to {} generated this message : {}.,Votre courriel à {} a généré ce message : {}.
+Payment Terms from orders will be fetched into the invoices as is,Les conditions de paiement des commandes seront récupérées sur les factures telles quelles
+Merge Similar Account Heads,Fusionner des intitulés de compte similaires
+Book Tax Loss on Early Payment Discount,Réserver la perte fiscale sur l'escompte pour paiement anticipé
+Split Early Payment Discount Loss into Income and Tax Loss,Ventiler la perte d'escompte pour paiement anticipé en revenu et en perte fiscale
+Auto Reconcile Payments,Rapprochement automatique des paiements
+Payment Reconciliations,Rapprochement des paiements
+Enable Automatic Party Matching,Activer la correspondance automatique des parties
+Auto match and set the Party in Bank Transactions,Correspondance automatique et définition de la partie dans les transactions bancaires
+Over Order Allowance (%),Allocation de dépassement de commande (%)
+Percentage you are allowed to order more against the Blanket Order Quantity. For example: If you have a Blanket Order of Quantity 100 units. and your Allowance is 10% then you are allowed to order 110 units.,"Pourcentage que vous êtes autorisé à commander en plus par rapport à la quantité de commande globale. Par exemple : si vous avez une commande ouverte d'une quantité de 100 unités. et votre allocation est de 10 %, vous êtes autorisé à commander 110 unités."
+Allow Sales Order Creation For Expired Quotation,Autoriser la création de commandes client pour un devis expiré
+Show Taxes as Table in Print,Afficher les taxes sous forme de tableau dans l'impression
+Journals,Journaux
+Rows with Same Account heads will be merged on Ledger,Les lignes ayant les mêmes intitulés de compte seront fusionnées dans le grand livre.
+Show Pay Button in Purchase Order Portal,Afficher le bouton de paiement dans le portail des bons de commande
