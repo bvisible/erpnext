@@ -2801,7 +2801,7 @@ Stock Ledger Entries and GL Entries are reposted for the selected Purchase Recei
 Stock Levels,Niveaux du Stocks,
 Stock Liabilities,Passif du Stock,
 Stock Options,Options du Stock,
-Stock Qty,Qté en unité de stock,
+Stock Qty,Qté en Stock,
 Stock Received But Not Billed,Stock Reçus Mais Non Facturés,
 Stock Reports,Rapports de stock,
 Stock Summary,Résumé du Stock,
@@ -3505,6 +3505,7 @@ Recipient,Destinataire,
 Reviews,Avis,
 Sender,Expéditeur,
 Shop,Magasin,
+Sign Up,S'inscrire,
 Subsidiary,Filiale,
 There is some problem with the file url: {0},Il y a un problème avec l'url du fichier : {0},
 There were errors while sending email. Please try again.,Il y a eu des erreurs lors de l'envoi d’emails. Veuillez essayer à nouveau.,
@@ -8728,7 +8729,7 @@ Set Posting Date,Définir la date de publication,
 Opening Balance Details,Détails du solde d'ouverture,
 POS Opening Entry Detail,Détail de l'entrée d'ouverture du PDV,
 POS Payment Method,Mode de paiement POS,
-Payment Methods,méthodes de payement,
+Payment Methods,méthodes de paiement,
 Process Statement Of Accounts,Traiter l'état des comptes,
 General Ledger Filters,Filtres du grand livre,
 Customers,Les clients,
@@ -9895,7 +9896,7 @@ Supplier Address Details,Adresse Fournisseur (détails)
 Retail,Commerce
 Users,Utilisateurs
 Permission Manager,Gestion des permissions
-Fetch Timesheet,Récuprer les temps saisis
+Fetch Timesheet,Récupérer les temps saisis
 Get Supplier Group Details,Appliquer les informations depuis le Groupe de fournisseur
 Quality Inspection(s),Inspection(s) Qualité
 Set Advances and Allocate (FIFO),Affecter les encours au réglement
