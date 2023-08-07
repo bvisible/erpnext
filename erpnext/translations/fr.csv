@@ -11155,3 +11155,5 @@ Exchange Rate Revaluation Settings,Paramètres de réévaluation du taux de chan
 Auto Create Exchange Rate Revaluation,Créer automatiquement une réévaluation du taux de change
 Submit ERR Journals?,Soumettre les journaux ERR ?
 IBAN check mandatory,Vérification IBAN obligatoire
+No outstanding {0} found for the {1} {2} which qualify the filters you have specified.,Aucun {0} en attente trouvé pour les {1} {2} qui qualifient les filtres que vous avez spécifiés.
+Activate calculation of collection fees per payment entry,Activer le calcul des frais de recouvrement par écriture de paiement
