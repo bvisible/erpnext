@@ -11151,3 +11151,7 @@ Show Taxes as Table in Print,Afficher les taxes sous forme de tableau dans l'imp
 Journals,Journaux
 Rows with Same Account heads will be merged on Ledger,Les lignes ayant les mêmes intitulés de compte seront fusionnées dans le grand livre.
 Show Pay Button in Purchase Order Portal,Afficher le bouton de paiement dans le portail des bons de commande
+Exchange Rate Revaluation Settings,Paramètres de réévaluation du taux de change
+Auto Create Exchange Rate Revaluation,Créer automatiquement une réévaluation du taux de change
+Submit ERR Journals?,Soumettre les journaux ERR ?
+IBAN check mandatory,Vérification IBAN obligatoire
