@@ -11157,3 +11157,5 @@ Submit ERR Journals?,Soumettre les journaux ERR ?
 IBAN check mandatory,Vérification IBAN obligatoire
 No outstanding {0} found for the {1} {2} which qualify the filters you have specified.,Aucun {0} en attente trouvé pour les {1} {2} qui qualifient les filtres que vous avez spécifiés.
 Activate calculation of collection fees per payment entry,Activer le calcul des frais d’encaissement par entrée de paiement
+Variant Selling Price,Prix de vente de la variante
+Variant Buying Price,Prix ​​d'achat de la variantes
