@@ -10927,10 +10927,10 @@ Serial Number,Numéro de série
 Location Id,Identifiant de l'emplacement
 Stripe Public Key Linked,Clé publique Stripe liée
 Quick add Stock can only be used for Stock Items without serial number or batch number,L'ajout rapide de stock ne peut être utilisé que pour les articles en stock sans numéro de série ou numéro de lot
-effective - agreed counterclaims,effective - contre-prestations convenues  
-effective - counterclaims received,effective - contre-prestations reçues 
-flat rate - agreed counterclaims,forfait - contre-prestations convenues  
-flat rate - counterclaims received,forfait - contre-prestations reçues
+effective - agreed counterclaims,effective - contre-prestations convenues (sur la facturation)
+effective - counterclaims received,effective - contre-prestations reçues (sur les encaissements)
+flat rate - agreed counterclaims,forfait - contre-prestations convenues (sur la facturation)
+flat rate - counterclaims received,forfait - contre-prestations reçues (sur les encaissements)
 Twint Payment,Paiement Twint
 Waiting for Twint payment,En attente de paiement Twint
 Open Payement Link,Ouvrir le lien de paiement
