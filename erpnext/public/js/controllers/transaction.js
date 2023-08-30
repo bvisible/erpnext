@@ -180,6 +180,16 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 
 		if (this.frm.fields_dict["items"].grid.get_field("expense_account")) {
 			this.frm.set_query("expense_account", "items", function(doc) {
+				////
+				if (doc.doctype == "Purchase Invoice" || doc.doctype == "Purchase Order") {
+					return {
+						filters: {
+							"company": doc.company,
+							"is_group": 0
+						}
+					};
+				}
+				////
 				return {
 					filters: {
 						"company": doc.company,
