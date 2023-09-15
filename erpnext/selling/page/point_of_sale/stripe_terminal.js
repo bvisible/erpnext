@@ -39,7 +39,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 
 	function show_loading_modal(title, message) {
 		loading_dialog = new frappe.ui.Dialog({
-			title: title,
+			title: __(title),
 			fields: [{
 					label: '',
 					fieldname: 'show_dialog',
@@ -52,6 +52,12 @@ erpnext.PointOfSale.StripeTerminal = function(){
 		html += '</div>';
 		loading_dialog.fields_dict.show_dialog.$wrapper.html(html);
 		loading_dialog.show();
+		if(title == 'Collecting Payments') {
+			loading_dialog.set_primary_action(__('Cancel'), function () {
+				loading_dialog.hide();
+				terminal.clearReaderDisplay();
+			});
+		}
 	}
 
 	function unexpectedDisconnect() {
@@ -261,7 +267,17 @@ erpnext.PointOfSale.StripeTerminal = function(){
 
 	function create_payment(payment, is_online){
 		show_loading_modal('Collecting Payments', 'Please Wait<br>Collecting Payments');
-		frappe.dom.freeze();
+		loading_dialog.$wrapper.attr('id', 'myUniqueModalId');
+		loading_dialog.$wrapper.find('.btn-modal-close').hide()
+
+		$(document).on('shown.bs.modal', '#myUniqueModalId', function() {
+			$(this).data('bs.modal')._config.backdrop = 'static';
+			$(this).data('bs.modal')._config.keyboard = false;
+		});
+		$(document).on('hidden.bs.modal', '#myUniqueModalId', function() {
+			$(this).removeAttr('id');
+		});
+		//frappe.dom.freeze();
 		frappe.call({
 			method: "pasigono.pasigono.api.payment_intent_creation",
 			freeze: true,

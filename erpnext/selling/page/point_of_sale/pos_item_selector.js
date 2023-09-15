@@ -9,18 +9,22 @@ erpnext.PointOfSale.ItemSelector = class {
 		this.hide_images = settings.hide_images;
 		this.auto_add_item = settings.auto_add_item_to_cart;
 
-		this.inti_component();
+		this.init_component();
 	}
 
-	inti_component() {
+	init_component() {
 		this.prepare_dom();
 		this.make_search_bar();
 		this.load_items_data();
+		this.load_item_groups_data();  //// Ajoutez ceci après avoir chargé les articles
 		this.bind_events();
+		this.bind_item_group_events();  //// Ajoutez ceci après avoir lié les événements
 		this.attach_shortcuts();
 	}
 
 	prepare_dom() {
+		//// added <div class="parent-item-group-container"></div> 
+		//// added <div class="item-group-container"></div>
 		this.wrapper.append(
 			`<section class="items-selector">
 				<div class="filter-section">
@@ -28,12 +32,16 @@ erpnext.PointOfSale.ItemSelector = class {
 					<div class="search-field"></div>
 					<div class="item-group-field"></div>
 				</div>
+				<div class="parent-item-group-container"></div> 
+				<div class="item-group-container"></div>
 				<div class="items-container"></div>
 			</section>`
 		);
 
 		this.$component = this.wrapper.find('.items-selector');
 		this.$items_container = this.$component.find('.items-container');
+		this.$item_group_container = this.$component.find('.item-group-container'); ////
+		this.$parent_item_group_container = this.$component.find('.parent-item-group-container'); ////
 	}
 
 	async load_items_data() {
@@ -406,5 +414,110 @@ erpnext.PointOfSale.ItemSelector = class {
 	toggle_component(show) {
 		this.set_search_value('');
 		this.$component.css('display', show ? 'flex': 'none');
+	}
+
+	////
+	async load_item_groups_data() {
+		let res = [];
+		let res_all = [];
+		let res_childs = [];
+		let res_parent = [];
+		let res_all_parents = [];
+		if(!this.item_group) {
+			res_childs = await frappe.db.get_list("Item Group", {filters: {'parent_item_group': 'Tous les Groupes d\'Articles'},  fields: ["name", "parent_item_group", "pos_color"]});
+			let pos_profile_doc = await frappe.db.get_doc("POS Profile", this.pos_profile);
+			if (pos_profile_doc && pos_profile_doc.item_groups) {
+				let itemGroupNames = pos_profile_doc.item_groups.map(entry => entry.item_group);
+
+				res_childs = res_childs.filter(itemGroupName => !itemGroupNames.includes(itemGroupName));
+			}
+		} else {
+			let group_data = await frappe.db.get_value("Item Group", this.item_group, "group_tree")
+			if(group_data.message.group_tree) {
+				let split_group = group_data.message.group_tree.split(">");
+				for (let group of split_group) {
+					let parent = await frappe.db.get_list("Item Group", {
+						filters: {'item_group_name': group},
+						fields: ["name", "parent_item_group", "pos_color"]
+					});
+					res_all_parents = res_all_parents.concat(parent);
+				}
+			}
+			res_childs = await frappe.db.get_list("Item Group", {filters: {'parent_item_group': this.item_group},  fields: ["name", "parent_item_group", "pos_color"]});
+		}
+		this.item_groups = res_all_parents;
+		await this.render_parent_item_group_list(this.item_groups);
+		this.item_groups = res_childs;
+		await this.render_item_group_list(this.item_groups);
+	}
+
+	async render_item_group_list(item_groups) {
+		const item_group_container = this.$component.find('.item-group-container');
+		item_group_container.html('');
+
+		for (let item_group of item_groups) {
+			let r = await frappe.call({
+				method: "erpnext.selling.page.point_of_sale.point_of_sale.has_items",
+				args: { item_group: item_group.name, pos_profile: this.pos_profile },
+			})
+
+			if(r.message && r.message.count > 0) {
+				const item_group_html = this.get_item_group_html(item_group);
+				item_group_container.append(item_group_html);
+			}
+		}
+	}
+
+	async render_parent_item_group_list(item_groups) {
+		const item_group_container = this.$component.find('.parent-item-group-container');
+		item_group_container.html('');
+
+		for (let item_group of item_groups) {
+			let r = await frappe.call({
+				method: "erpnext.selling.page.point_of_sale.point_of_sale.has_items",
+				args: { item_group: item_group.name, pos_profile: this.pos_profile },
+			})
+
+			if(r.message && r.message.count > 0) {
+				const item_group_html = this.get_item_group_html(item_group);
+				item_group_container.append(item_group_html);
+			}
+		}
+	}
+
+	get_item_group_html(item_group) {
+		let bgColor = item_group.pos_color ? `background-color: ${item_group.pos_color};` : '';
+		return (
+			`<div class="item-group-wrapper" data-item-group-name="${escape(item_group.name)}" style="${bgColor}">
+            ${item_group.name}
+        </div>`
+		);
+	}
+
+	bind_item_group_events() {
+		const me = this;
+		this.$item_group_container.on("click", ".item-group-wrapper", function(){
+			const $item_group = $(this);
+			const item_group_name = unescape($item_group.attr('data-item-group-name'));
+
+			// Vous pouvez filtrer les articles par catégorie ici
+			// Par exemple :
+			me.filter_items_by_item_group(item_group_name, me);
+		});
+		this.$parent_item_group_container.on("click", ".item-group-wrapper", function(){
+			const $item_group = $(this);
+			const item_group_name = unescape($item_group.attr('data-item-group-name'));
+
+			// Vous pouvez filtrer les articles par catégorie ici
+			// Par exemple :
+			me.filter_items_by_item_group(item_group_name);
+		});
+	}
+
+	filter_items_by_item_group(item_group_name) {
+		this.item_group = item_group_name;
+		!this.item_group && (this.item_group = this.parent_item_group);
+		this.filter_items();
+		this.load_item_groups_data();
 	}
 };

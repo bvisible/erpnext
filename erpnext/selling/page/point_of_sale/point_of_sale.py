@@ -369,3 +369,50 @@ def get_pos_profile_data(pos_profile):
 
 	pos_profile.customer_groups = _customer_groups_with_children
 	return pos_profile
+
+#////
+@frappe.whitelist()
+def has_items(item_group, pos_profile):
+	warehouse, hide_unavailable_items, company = frappe.db.get_value( #////
+		"POS Profile", pos_profile, ["warehouse", "hide_unavailable_items", "company"] #////
+	)
+
+	if not frappe.db.exists("Item Group", item_group):
+		item_group = get_root_of("Item Group")
+
+	condition = get_item_group_condition(pos_profile)
+
+	lft, rgt = frappe.db.get_value("Item Group", item_group, ["lft", "rgt"])
+
+	bin_join_selection, bin_join_condition = "", ""
+	if hide_unavailable_items:
+		bin_join_selection = ", `tabBin` bin"
+		bin_join_condition = (
+			"AND bin.warehouse = %(warehouse)s AND bin.item_code = item.name AND bin.actual_qty > 0"
+		)
+
+	item_count = frappe.db.sql(
+		"""
+        SELECT COUNT(item.name)
+        FROM
+            `tabItem` item {bin_join_selection}
+        WHERE
+            item.disabled = 0
+            AND item.has_variants = 0
+            AND item.is_sales_item = 1
+            AND item.is_fixed_asset = 0
+            AND item.item_group in (SELECT name FROM `tabItem Group` WHERE lft >= {lft} AND rgt <= {rgt})
+            {condition}
+            {bin_join_condition}
+        """.format(
+			lft=cint(lft),
+			rgt=cint(rgt),
+			condition=condition,
+			bin_join_selection=bin_join_selection,
+			bin_join_condition=bin_join_condition,
+		),
+		{"warehouse": warehouse}
+	)
+
+	return {'count': item_count[0][0]}
+#////
