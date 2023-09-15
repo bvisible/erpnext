@@ -23,7 +23,7 @@ erpnext.PointOfSale.ItemSelector = class {
 	}
 
 	prepare_dom() {
-		//// added <div class="parent-item-group-container"></div> 
+		//// added <div class="parent-item-group-container"></div>
 		//// added <div class="item-group-container"></div>
 		this.wrapper.append(
 			`<section class="items-selector">
@@ -32,7 +32,7 @@ erpnext.PointOfSale.ItemSelector = class {
 					<div class="search-field"></div>
 					<div class="item-group-field"></div>
 				</div>
-				<div class="parent-item-group-container"></div> 
+				<div class="parent-item-group-container"></div>
 				<div class="item-group-container"></div>
 				<div class="items-container"></div>
 			</section>`
@@ -449,6 +449,9 @@ erpnext.PointOfSale.ItemSelector = class {
 		await this.render_parent_item_group_list(this.item_groups);
 		this.item_groups = res_childs;
 		await this.render_item_group_list(this.item_groups);
+		document.querySelectorAll('.item-group-wrapper').forEach(element => {
+			this.setTextColor(element);
+		});
 	}
 
 	async render_item_group_list(item_groups) {
@@ -499,9 +502,6 @@ erpnext.PointOfSale.ItemSelector = class {
 		this.$item_group_container.on("click", ".item-group-wrapper", function(){
 			const $item_group = $(this);
 			const item_group_name = unescape($item_group.attr('data-item-group-name'));
-
-			// Vous pouvez filtrer les articles par catégorie ici
-			// Par exemple :
 			me.filter_items_by_item_group(item_group_name, me);
 		});
 		this.$parent_item_group_container.on("click", ".item-group-wrapper", function(){
@@ -519,5 +519,28 @@ erpnext.PointOfSale.ItemSelector = class {
 		!this.item_group && (this.item_group = this.parent_item_group);
 		this.filter_items();
 		this.load_item_groups_data();
+	}
+
+	getLuminance(r, g, b) {
+		let a = [r, g, b].map(function (v) {
+			v /= 255;
+			return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+		});
+		return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+	}
+
+	setTextColor(element) {
+		let bgColor = window.getComputedStyle(element).backgroundColor;
+		let matches = bgColor.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+
+		// Vérifiez si des correspondances ont été trouvées
+		if (matches && matches.length >= 4) {
+			let luminance = this.getLuminance(parseInt(matches[1]), parseInt(matches[2]), parseInt(matches[3]));
+			if (luminance > 0.5) {
+				element.style.color = 'black';
+			} else {
+				element.style.color = 'white';
+			}
+		}
 	}
 };
