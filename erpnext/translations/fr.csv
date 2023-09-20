@@ -11019,11 +11019,6 @@ Continuously variable transmission (CVT),Transmission à variation continue (CVT
 Work Progress,Avancement des travaux
 is not finished,n'est pas fini
 Works,Travaux
-"Service {} is not finished All the services added have to be marked as finished to allow submit","Service {} n'est pas terminé Tous les services ajoutés doivent être marqués comme terminés pour permettre la soumission".
-"Timesheet {} is not finished\nAll the timesheets added have to be completed to allow submit","La feuille de temps {} n'est pas terminée. Toutes les feuilles de temps ajoutées doivent être complétées pour permettre la soumission.
-_("Timesheet {} could not be submitted\n{}",_("La feuille de temps {} n'a pas pu être soumise\n{}"
-"Error deleting timesheet from employee {} starting at {} and ending at {} in timesheet {}","Erreur de suppression de la feuille de temps de l'employé {} commençant à {} et se terminant à {} dans la feuille de temps {}"
-"Please delete the entrie(s) manually.","Veuillez supprimer les entrées manuellement."
 There is an open worksheet for this object. Do you want to continue ?,Il existe une feuille de calcul ouverte pour cet objet. Voulez-vous continuer ?
 This option will automatically close any ongoing timesheet linked to worksheets for the selectionned employee,Cette option fermera automatiquement toute feuille de temps en cours liée aux feuilles de travail de l'employé sélectionné
 Allow Automatic Ending Timesheet,Autoriser la fin automatique de la feuille de temps
