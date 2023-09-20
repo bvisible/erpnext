@@ -11211,3 +11211,57 @@ AI,IA
 Find out about the various options available to you below.,Découvrez ci-dessous les différentes options qui s'offrent à vous.
 See the knowledge base :,Voir la base de connaissances :
 Search for articles...,Rechercher des articles...
+Basic configuration,Configuration de base
+Franking License,Licence d'affranchissement
+Client Identifier ,Identifiant du client 
+Secret Client,Client secret
+Delivery methods,Modes de livraison
+<p>Please tick the Delivery methods that you would like to be able to choose on the orders page when generating a barcode.</p>,<p>Veuillez cocher les modes de livraison que vous souhaitez pouvoir choisir sur la page des commandes lors de la génération d'un code-barres.</p>
+Handling options,Options de traitement
+<p>Please tick the Handling options that you would like to be able to choose on the orders page when generating a barcode.</p>,<p>Veuillez cocher les options de traitement que vous souhaitez pouvoir choisir sur la page des commandes lors de la génération d'un code-barres.</p>
+Direct delivery to an upper floor,Livraison directe à un étage supérieur
+Do not place in letterbox; deliver manually or notify,Ne pas déposer dans la boîte aux lettres ; distribuer manuellement ou notifier
+Notify delivery by telephone,Informer de la livraison par téléphone
+Place in letterbox or at front door,Déposer dans la boîte aux lettres ou à la porte d'entrée
+Deliver contents; take back box,Remettre le contenu ; reprendre la boîte
+Failed delivery; return item as priority on the same day,Échec de la livraison ; renvoyer l'article en priorité le jour même
+Follow delivery information in document pouch,Suivre les informations de livraison dans la pochette de documents
+Collect empty containers or materials for recycling,Collecter les conteneurs vides ou les matériaux pour le recyclage
+Do not deliver to mailbox or neighbour: do not leave anywhere,Ne pas déposer dans la boîte aux lettres ou chez le voisin : ne pas laisser n'importe où
+Delivery options,Options de livraison
+<p>Please tick the Delivery options that you would like to be able to choose on the orders page when generating a barcode.</p>,<p>Veuillez cocher les options de livraison que vous souhaitez pouvoir choisir sur la page des commandes lors de la génération d'un code-barres.</p>
+Manual processing,Traitement manuel
+Hide your address ,Cachez votre adresse 
+<p>This will hide the sender address on the labels (does not apply to GAS methods)</p>,<p>Cela masquera l'adresse de l'expéditeur sur les étiquettes (ne s'applique pas aux méthodes GAS)</p>
+PDF Size,Taille du PDF
+<p>Please choose what format the label should be generated as.</p>,<p>Veuillez choisir le format dans lequel l'étiquette doit être générée.</p>
+"Congratulations, the barcode has been successfully generated. Here are the details:","Félicitation, le barcode a bien été généré. Voici les informations :"
+Tracking number,Numéro de tracking
+Print the label,Imprimer l'étiquette
+Customer Template,Modèle client
+Template name,Nom du modèle
+Selling Price,Prix ​​de vente
+Buying Quantity,Quantité d'achat
+Buying Price,Prix ​​d'achat
+Display the number,Afficher le numéro
+Value to use,Valeur à utiliser
+"Item barcode (if empty, use Item code)","Code-barres de l'article (s'il est vide, utilisez le code de l'article)"
+Item code,Code de l'article
+Display the number,Afficher le numéro
+Creating labels,Création d'étiquettes
+Create employee card.,Créer une carte d'employé
+Width (mm),Largeur (mm)
+Height (mm),Hauteur (mm)
+Is default,Est Défaut
+End Work,Fin des travaux
+Employee {0} has ended work,L'employé {0} a terminé son travail
+No open timesheet for {0},Pas de feuille de temps ouverte pour {0}
+Error ending work for {0},Erreur de fin de travail pour {0}
+Timesheet added successfully.,Feuille de temps ajoutée avec succès.
+Open Worksheet,Ouvrir la feuille de travail
+Worksheet Management,Gestion des feuilles de travail
+Scan And Open Worksheet,Scanner et ouvrir la feuille de travail
+End Work,Finir le travail
+Worksheet Department,Département des Feuille de Travail
+Scan Workseet,Scan la feuille de travail
+Scan Employee,Scan Employé
