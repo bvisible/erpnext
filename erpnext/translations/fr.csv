@@ -11260,3 +11260,5 @@ End Work,Finir le travail
 Worksheet Department,Département des Travaux
 Scan Workseet,Scan la feuille de travail
 Scan Employee,Scan Employé
+Set all private,Uniquement disponible dans ERP
+Change file visibility: Private => only visible by Neoffice user system. Public => visible by anyone (can be indexed by Google),Changer la visibilité du fichier: Privé => visible uniquement par les utilisateurs système de Neoffice. Public => visible par tout le monde (peut être indexé par Google)
