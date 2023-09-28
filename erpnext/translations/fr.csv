@@ -11262,3 +11262,6 @@ Scan Workseet,Scan la feuille de travail
 Scan Employee,Scan Employé
 Set all private,Uniquement disponible dans ERP
 Change file visibility: Private => only visible by Neoffice user system. Public => visible by anyone (can be indexed by Google),Changer la visibilité du fichier: Privé => visible uniquement par les utilisateurs système de Neoffice. Public => visible par tout le monde (peut être indexé par Google)
+Is Under Warranty,Est sous garantie
+Switch to draft,Passer à brouillon
+Hide company and customer address in printout,Masquer l'adresse de l'entreprise et du client sur l'impression
