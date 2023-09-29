@@ -156,6 +156,7 @@ def update_stock(args, out):
 		(
 			args.get("doctype") == "Delivery Note"
 			or (args.get("doctype") == "Sales Invoice" and args.get("update_stock"))
+			or (args.get("doctype") == "Worksheet" and args.get("update_stock") and args.get("is_warranty")) #////
 		)
 		and out.warehouse
 		and out.stock_qty > 0
