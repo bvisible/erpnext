@@ -11265,3 +11265,7 @@ Change file visibility: Private => only visible by Neoffice user system. Public 
 Is Under Warranty,Est sous garantie
 Switch to draft,Passer à brouillon
 Hide company and customer address in printout,Masquer l'adresse de l'entreprise et du client sur l'impression
+Disable email sending using the mailgun api,Désactiver l'envoi d'e-mails à l'aide de l'API Mailgun
+Email error notification,Email de notification d'erreur
+Due Date First Installment (in days),Date d'échéance du premier versement (en jours)
+Default Item For Timesheet Invoicing,Article par défaut pour la facturation des feuilles de travail
