@@ -11023,7 +11023,7 @@ There is an open worksheet for this object. Do you want to continue ?,Il existe 
 This option will automatically close any ongoing timesheet linked to worksheets for the selectionned employee,Cette option fermera automatiquement toute feuille de temps en cours liée aux feuilles de travail de l'employé sélectionné
 Allow Automatic Ending Timesheet,Autoriser la fin automatique de la feuille de temps
 Default Employee Filling Method,Méthode de remplissage par défaut des employés
-Add finished timesheet,Ajouter feuille de temps terminée
+Add finished timesheet,Ajouter du temps
 There is an open worksheet for this object. Do you want to continue?,Il existe une feuille de travail ouverte pour cet objet. Voulez-vous continuer?
 Shipment,Livraison,
 Pickup from,Ramassage chez
@@ -11269,3 +11269,4 @@ Disable email sending using the mailgun api,Désactiver l'envoi d'e-mails à l'a
 Email error notification,Email de notification d'erreur
 Due Date First Installment (in days),Date d'échéance du premier versement (en jours)
 Default Item For Timesheet Invoicing,Article par défaut pour la facturation des feuilles de travail
+This timesheet is linked to a worksheet. You shouldn't modify it manually unless a message in the worksheet told you to.,"Cette feuille de temps est liée à une feuille de travail. Vous ne devez pas le modifier manuellement, sauf si un message dans la feuille de calcul vous le demande."
