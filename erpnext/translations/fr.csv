@@ -11270,3 +11270,8 @@ Email error notification,Email de notification d'erreur
 Due Date First Installment (in days),Date d'échéance du premier versement (en jours)
 Default Item For Timesheet Invoicing,Article par défaut pour la facturation des feuilles de travail
 This timesheet is linked to a worksheet. You shouldn't modify it manually unless a message in the worksheet told you to.,"Cette feuille de temps est liée à une feuille de travail. Vous ne devez pas le modifier manuellement, sauf si un message dans la feuille de calcul vous le demande."
+Row {0}: Both Debit and Credit values cannot be zero,Ligne {0}: les valeurs de débit et de crédit ne peuvent pas être nulles.
+The column has been added successfully!,La colonne a été ajoutée avec succès!
+The '{}' column already exists!,La colonne '{}' existe déjà!
+There are cards with the column '{}'. - please unmark them before deleting this column.,Il y a des cartes avec la colonne '{}' - veuillez les dépalcer avant de supprimer cette colonne
+The '{}' collone successfully deleted!,La collone '{}' supprimée avec succès!
