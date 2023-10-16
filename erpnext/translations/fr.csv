@@ -11275,3 +11275,8 @@ The column has been added successfully!,La colonne a été ajoutée avec succès
 The '{}' column already exists!,La colonne '{}' existe déjà!
 There are cards with the column '{}'. - please unmark them before deleting this column.,Il y a des cartes avec la colonne '{}' - veuillez les dépalcer avant de supprimer cette colonne
 The '{}' collone successfully deleted!,La collone '{}' supprimée avec succès!
+Promotional Price,Prix promotionnel
+Promotional Price Starts,Début du prix promotionnel
+Promotional Price Ends,Fin du prix promotionnel
+Access Refused,Accès Refusé
+Your subscription does not give you access to this page. You can change your Neoffice subscription in the <a href='https://app.neoffice.io/clientarea.php?action=services' target='_blank'>My products & services</a> section of your account.,Votre abonnement ne vous permet pas d'accéder à cette page. Vous pouvez modifier votre abonnement Neoffice dans la section <a href='https://app.neoffice.io/clientarea.php?action=services' target='_blank'>Mes produits & services</a> de votre compte.
