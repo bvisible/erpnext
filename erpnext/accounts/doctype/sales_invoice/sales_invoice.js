@@ -99,6 +99,13 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends e
 				__('Create')
 			);
 			this.frm.page.set_inner_btn_group_as_primary(__('Create'));
+			////
+			/*this.frm.add_custom_button(
+				__('POS Payment'),
+				() => this.custom_make_payment_entry(),
+				__('Create')
+			);*/
+			////
 		}
 
 		if(doc.docstatus==1 && !doc.is_return) {

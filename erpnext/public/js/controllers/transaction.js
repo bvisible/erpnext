@@ -1973,6 +1973,193 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		);
 	}
 
+	////
+	custom_make_payment_entry() {
+		this.stripe = new erpnext.StripeTerminal();
+		frappe.dom.freeze();
+		//this.stripe.connect_to_stripe_terminal(this, true);
+		this.stripe.assign_stripe_connection_token(this, true);
+		frappe.dom.unfreeze();
+		let me = this;
+		frappe.db.get_list("POS Opening Entry", {filters:{status: "Open", user: frappe.session.user, company: cur_frm.doc.company}}).then(function(res){
+			if(res.length > 0) {
+				let dialog = new frappe.ui.Dialog({
+					title: __("New Sales Invoice"),
+					fields: [
+						{
+							label: __('POS Opening Entry'),
+							fieldname: 'pos_opening_entry',
+							fieldtype: 'Link',
+							options: 'POS Opening Entry',
+							onchange: function () {
+								console.log(dialog.get_value("pos_opening_entry"))
+								frappe.db.get_value("POS Opening Entry", dialog.get_value("pos_opening_entry"), "pos_profile").then(function (res) {
+									dialog.fields_dict.pos_profile.set_value(res.message.pos_profile);
+									console.log(res.message.pos_profile)
+									frappe.db.get_list("POS Payment Method", {
+										filters: {"parent": res.message.pos_profile},
+										fields: ['mode_of_payment']
+									}).then(function (res) {
+										let options = res.map(entry => entry.mode_of_payment);
+										dialog.fields_dict['mode_of_payment'].df.options = options;
+										dialog.fields_dict['mode_of_payment'].refresh();
+									})
+								});
+							}
+						},
+						{
+							label: __('Reference No'),
+							fieldname: 'reference_no',
+							fieldtype: 'Data',
+							options: '',
+							reqd: 1
+						},
+						{
+							label: __('Reference Date'),
+							fieldname: 'reference_date',
+							fieldtype: 'Date',
+							default: 'Today',
+							reqd: 1
+						},
+						{
+							label: __('POS Profile'),
+							fieldname: 'pos_profile',
+							fieldtype: 'Link',
+							options: 'POS Profile',
+						},
+						{
+							label: __('Payment Method'),
+							fieldname: 'mode_of_payment',
+							fieldtype: 'Select',
+							onchange: function () {
+								frappe.call({
+									method: "neoffice_theme.events.get_mode_of_payment_accounts",
+									args: {
+										filters: JSON.stringify({
+											"parent": this.get_value(),
+											"company": cur_frm.doc.company
+										}),
+										fields: JSON.stringify(['default_account'])
+									},
+									callback: function (res) {
+										console.log(res, res.message)
+										if (res.message) {
+											dialog.fields_dict.paid_to.set_value(res.message);
+										}
+									}
+								})
+							}
+						},
+						{
+							label: __('Paid To Account'),
+							fieldname: 'paid_to',
+							fieldtype: 'Link',
+							options: 'Account',
+							hidden: 1,
+						},
+						{
+							label: __('Amount'),
+							fieldname: 'amount',
+							fieldtype: 'Currency',
+							onchange: function () {
+								if (this.get_value() > cur_frm.doc.outstanding_amount) {
+									this.set_value(cur_frm.doc.outstanding_amount);
+								}
+							}
+						},
+					],
+					primary_action_label: __('Create Payment'),
+					primary_action(values) {
+						console.log(values)
+						let args = {
+							"dt": cur_frm.doc.doctype,
+							"dn": cur_frm.doc.name,
+							"payment_type": "Receive",
+							"reference_date": values.reference_date,
+							"reference_no": values.reference_no,
+							"mode_of_payment": values.mode_of_payment,
+							"party_amount": values.amount,
+							"paid_to": values.paid_to,
+						}
+						me.custom_make_mapped_payment_entry(args);
+						dialog.hide();
+					}
+				});
+				if (res.length == 1) {
+					dialog.fields_dict.pos_opening_entry.set_value(res[0].name);
+					dialog.fields_dict.pos_opening_entry.$input.trigger("change");
+					dialog.show();
+				} else {
+					let names = res.map(entry => entry.name).join("\\n");
+					let select_dialog = new frappe.ui.Dialog({
+						title: __("Select POS Opening Entry"),
+						fields: [
+							{
+								label: __('POS Opening Entry'),
+								fieldname: 'pos_opening_entry',
+								fieldtype: 'Select',
+								options: names,
+							}
+						],
+						primary_action_label: __('Select'),
+						primary_action(values) {
+							dialog.fields_dict.pos_opening_entry.set_value(values.pos_opening_entry);
+							dialog.fields_dict.pos_opening_entry.$input.trigger("change");
+							dialog.show();
+							select_dialog.hide();
+						}
+					});
+					select_dialog.show();
+				}
+			}
+		});
+	}
+
+	custom_make_mapped_payment_entry(args) {
+		var me = this;
+		args = args || { "dt": this.frm.doc.doctype, "dn": this.frm.doc.name };
+		return frappe.call({
+			method: me.get_method_for_payment(),
+			args: args,
+			callback: function(r) {
+				var doclist = frappe.model.sync(r.message);
+				frappe.call({
+					method: "frappe.client.insert",
+					args: {
+						doc: doclist[0]
+					},
+					callback: function(response) {
+						if(response && !response.exc) {
+							frappe.msgprint(__("Payment Entry {0} created", [response.message.name]));
+						}
+					}
+				});
+				//frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
+			}
+		});
+	}
+
+	custom_prompt_user_for_reference_date(){
+		let me = this;
+		frappe.prompt({
+				label: __("Cheque/Reference Date"),
+				fieldname: "reference_date",
+				fieldtype: "Date",
+				reqd: 1,
+			}, (values) => {
+				let args = {
+					"dt": me.frm.doc.doctype,
+					"dn": me.frm.doc.name,
+					"reference_date": values.reference_date
+				}
+				me.custom_make_mapped_payment_entry(args);
+			},
+			__("Reference Date for Early Payment Discount"),
+			__("Continue")
+		);
+	}
+	////
+
 	has_discount_in_schedule() {
 		let is_eligible = in_list(
 			["Sales Order", "Sales Invoice", "Purchase Order", "Purchase Invoice"],
