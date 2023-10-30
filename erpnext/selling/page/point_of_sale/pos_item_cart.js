@@ -569,7 +569,8 @@ erpnext.PointOfSale.ItemCart = class {
 		const me = this;
 
 		if (!$item_to_update.length) {
-			this.$cart_items_wrapper.append(
+			////this.$cart_items_wrapper.append(
+			this.$cart_items_wrapper.prepend(
 				`<div class="cart-item-wrapper" data-row-name="${escape(item_data.name)}"></div>
 				<div class="seperator"></div>`
 			)
