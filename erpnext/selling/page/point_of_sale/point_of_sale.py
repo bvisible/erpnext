@@ -203,7 +203,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 					"currency": price.get("currency"),
 					"uom": price.uom or item.uom,
 					"batch_no": price.batch_no,
-					"item_price": item_prices.get(item_code) or {} #//// added from v14 maybe conflict
+					"item_price": item_prices.get(item_code) or {}, #//// added from v14 maybe conflict
 					"item_promo": item_promos.get(item_code) or {} #//// added from v14 maybe conflict
 				}
 			)
