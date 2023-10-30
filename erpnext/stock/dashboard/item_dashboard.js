@@ -144,7 +144,7 @@ erpnext.stock.ItemDashboard = class ItemDashboard {
 			this.content.find('.result').css('text-align', 'unset');
 			setTimeout(() => { //// added surrounding settimeout
 				$(frappe.render_template(this.template, context)).appendTo(this.result);
-			} ////
+			}, 400); ////
 		} else {
 			var message = __("No Stock Available Currently");
 			this.content.find('.result').css('text-align', 'center');
