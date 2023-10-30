@@ -348,7 +348,7 @@ erpnext.PointOfSale.Controller = class {
 							value,
 							item: this.item_details.current_item
 						};
-						return this.on_cart_update(args);
+						return this.on_cart_update(args, true); //// added true
 					}
 
 					return Promise.resolve();
@@ -872,7 +872,7 @@ erpnext.PointOfSale.Controller = class {
 		this.page.set_indicator(this.pos_profile, "blue");
 	}
 
-	async on_cart_update(args) {
+	async on_cart_update(args, updated=false) { //// added , updated=false
 		frappe.dom.freeze();
 		let item_row = undefined;
 		try {
