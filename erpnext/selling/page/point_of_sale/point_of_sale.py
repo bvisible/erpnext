@@ -187,7 +187,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 		for price in item_price:
 			#//// added from v14 maybe conflict
 			item_prices[price.item_code] = price 
-			promo = get_price(dprice.item_code, price_list, '', company, from_pos=True)
+			promo = get_price(price.item_code, price_list, '', company, from_pos=True)
 			if promo:
 				item_promos[price.item_code] = float(promo.get('price_list_rate')) if promo.get('formatted_mrp') else '-1'
 			#////
