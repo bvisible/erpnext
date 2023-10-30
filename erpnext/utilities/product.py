@@ -7,41 +7,6 @@ from frappe.utils import cint, flt, fmt_money
 from erpnext.accounts.doctype.pricing_rule.pricing_rule import get_pricing_rule_for_item
 import json #//// added
 
-#//// added from v14 removed function in v15
-def get_web_item_qty_in_stock(item_code, item_warehouse_field, warehouse=None):
-	in_stock, stock_qty = 0, ""
-	template_item_code, is_stock_item = frappe.db.get_value(
-		"Item", item_code, ["variant_of", "is_stock_item"]
-	)
-
-	if not warehouse:
-		warehouse = frappe.db.get_value("Item", {"item_code": item_code}, item_warehouse_field) #////
-
-	if not warehouse and template_item_code and template_item_code != item_code:
-		warehouse = frappe.db.get_value(
-			"Item", {"item_code": template_item_code}, item_warehouse_field #////
-		)
-
-	if warehouse:
-		stock_qty = frappe.db.sql(
-			"""
-			select GREATEST(S.actual_qty - S.reserved_qty - S.reserved_qty_for_production - S.reserved_qty_for_sub_contract, 0) / IFNULL(C.conversion_factor, 1)
-			from tabBin S
-			inner join `tabItem` I on S.item_code = I.Item_code
-			left join `tabUOM Conversion Detail` C on I.sales_uom = C.uom and C.parent = I.Item_code
-			where S.item_code=%s and S.warehouse=%s""",
-			(item_code, warehouse),
-		)
-
-		if stock_qty:
-			stock_qty = adjust_qty_for_expired_items(item_code, stock_qty, warehouse)
-			in_stock = stock_qty[0][0] > 0 and 1 or 0
-
-	return frappe._dict(
-		{"in_stock": in_stock, "stock_qty": stock_qty, "is_stock_item": is_stock_item}
-	)
-#////
-
 def get_price(item_code, price_list, customer_group, company, qty=1, party=None, from_pos=False): #//// added , from_pos=False
 	template_item_code = frappe.db.get_value("Item", item_code, "variant_of")
 
