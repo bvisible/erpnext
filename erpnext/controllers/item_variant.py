@@ -191,6 +191,12 @@ def create_variant(item, args):
 
 	template = frappe.get_doc("Item", item)
 	variant = frappe.new_doc("Item")
+	#//// added 2 if
+	if template.variant_selling_price and not variant.standard_rate:
+		variant.standard_rate = template.variant_selling_price
+	if template.variant_buying_price and not variant.buying_standard_rate:
+		variant.buying_standard_rate = template.variant_buying_price
+	#/////
 	variant.variant_based_on = "Item Attribute"
 	variant_attributes = []
 
@@ -306,6 +312,7 @@ def copy_attributes_to_variant(item, variant):
 		"opening_stock",
 		"variant_of",
 		"valuation_rate",
+		"is_stock_item", #//// added 
 	]
 
 	if item.variant_based_on == "Manufacturer":
@@ -313,6 +320,7 @@ def copy_attributes_to_variant(item, variant):
 		exclude_fields += ["manufacturer", "manufacturer_part_no"]
 
 	allow_fields = [d.field_name for d in frappe.get_all("Variant Field", fields=["field_name"])]
+	allow_fields += ["sync_with_woocommerce"] #//// added
 	if "variant_based_on" not in allow_fields:
 		allow_fields.append("variant_based_on")
 	for field in item.meta.fields:

@@ -339,6 +339,7 @@ class Subscription(Document):
 
 		invoice = frappe.new_doc(self.invoice_document_type)
 		invoice.company = company
+		invoice.customer_reference = self.customer_reference #//// added
 		invoice.set_posting_time = 1
 		invoice.posting_date = (
 			self.current_invoice_start

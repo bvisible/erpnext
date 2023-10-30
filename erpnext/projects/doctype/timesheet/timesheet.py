@@ -143,6 +143,10 @@ class Timesheet(Document):
 		if not (data.from_time and data.hours):
 			return
 
+		#//// added if
+		if self.worksheet:
+			return
+
 		_to_time = get_datetime(add_to_date(data.from_time, hours=data.hours, as_datetime=True))
 		if data.to_time != _to_time:
 			data.to_time = _to_time
@@ -261,6 +265,7 @@ def get_projectwise_timesheet_data(project=None, parent=None, from_time=None, to
 	if from_time and to_time:
 		condition += "AND CAST(tsd.from_time as DATE) BETWEEN %(from_time)s AND %(to_time)s"
 
+	#//// added tsd.billing_rate as billing_rate
 	query = f"""
 		SELECT
 			tsd.name as name,
@@ -272,7 +277,8 @@ def get_projectwise_timesheet_data(project=None, parent=None, from_time=None, to
 			tsd.activity_type as activity_type,
 			tsd.description as description,
 			ts.currency as currency,
-			tsd.project_name as project_name
+			tsd.project_name as project_name,
+			tsd.billing_rate as billing_rate
 		FROM `tabTimesheet Detail` tsd
 			INNER JOIN `tabTimesheet` ts
 			ON ts.name = tsd.parent
@@ -318,6 +324,11 @@ def get_timesheet(doctype, txt, searchfield, start, page_len, filters):
 	condition = ""
 	if filters.get("project"):
 		condition = "and tsd.project = %(project)s"
+
+	#//// added if
+	if filters.get("worksheet"):
+		condition += " and tsd.worksheet = %(worksheet)s"
+	#////
 
 	return frappe.db.sql(
 		"""select distinct tsd.parent from `tabTimesheet Detail` tsd,

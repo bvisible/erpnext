@@ -13,6 +13,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		this.attach_shortcuts();
 	}
 
+	//// added <div class="raw-btns summary-container"></div>
 	prepare_dom() {
 		this.wrapper.append(
 			`<section class="past-order-summary">
@@ -29,6 +30,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 						<div class="label">${__('Payments')}</div>
 						<div class="payments-container summary-container"></div>
 						<div class="summary-btns"></div>
+						<div class="raw-btns summary-container"></div>
 					</div>
 				</div>
 			</section>`
@@ -42,6 +44,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		this.$totals_container = this.$summary_container.find('.totals-container');
 		this.$payment_container = this.$summary_container.find('.payments-container');
 		this.$summary_btns = this.$summary_container.find('.summary-btns');
+		this.$raw_btns = this.$summary_container.find('.raw-btns'); //// added line
 	}
 
 	init_email_print_dialog() {
@@ -132,12 +135,14 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		let taxes_html = doc.taxes.map(t => {
 			// if tax rate is 0, don't print it.
 			const description = /[0-9]+/.test(t.description) ? t.description : ((t.rate != 0) ? `${t.description} @ ${t.rate}%`: t.description);
-			return `
-				<div class="tax-row">
-					<div class="tax-label">${description}</div>
-					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, doc.currency)}</div>
-				</div>
-			`;
+			if(t.tax_amount_after_discount_amount > 0) { //// added if condition
+				return `
+					<div class="tax-row">
+						<div class="tax-label">${description}</div>
+						<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, doc.currency)}</div>
+					</div>
+				`;
+			} ////
 		}).join('');
 
 		return `<div class="taxes-wrapper">${taxes_html}</div>`;
@@ -200,6 +205,17 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		this.$summary_container.on('click', '.print-btn', () => {
 			this.print_receipt();
 		});
+
+		//// added for printing
+		//For raw print
+		this.$summary_container.on('click', '.direct-print-btn', () => {
+			this.events.raw_print();
+		});
+
+		this.$summary_container.on('click', '.cash-drawer-btn', () => {
+			this.events.open_cash_drawer();
+		});
+		////
 	}
 
 	print_receipt() {
@@ -243,43 +259,47 @@ erpnext.PointOfSale.PastOrderSummary = class {
 	send_email() {
 		const frm = this.events.get_frm();
 		const recipients = this.email_dialog.get_values().email_id;
+		//// maybe conflict v14: __("Hello {0},<br><br>Thank you for your purchase.<br><br>Please find attached the receipt.", [doc.customer_name])
 		const content = this.email_dialog.get_values().content;
 		const doc = this.doc || frm.doc;
 		const print_format = frm.pos_print_format;
-
-		frappe.call({
-			method: "frappe.core.doctype.communication.email.make",
-			args: {
-				recipients: recipients,
-				subject: __(frm.meta.name) + ': ' + doc.name,
-				content: content ? content : __(frm.meta.name) + ': ' + doc.name,
-				doctype: doc.doctype,
-				name: doc.name,
-				send_email: 1,
-				print_format,
-				sender_full_name: frappe.user.full_name(),
-				_lang: doc.language
-			},
-			callback: r => {
-				if (!r.exc) {
-					frappe.utils.play_sound("email");
-					if (r.message["emails_not_sent_to"]) {
-						frappe.msgprint(__(
-							"Email not sent to {0} (unsubscribed / disabled)",
-							[ frappe.utils.escape_html(r.message["emails_not_sent_to"]) ]
-						));
+		
+		frappe.db.get_value('Company', doc.company, 'email', (r) => { //// added to get company email
+			frappe.call({
+				method: "frappe.core.doctype.communication.email.make",
+				args: {
+					recipients: recipients,
+					subject: __(frm.meta.name) + ': ' + doc.name,
+					content: content ? content : __(frm.meta.name) + ': ' + doc.name,
+					doctype: doc.doctype,
+					name: doc.name,
+					send_email: 1,
+					print_format,
+					sender_full_name: frm.doc.company, //// sender_full_name: frappe.user.full_name(),
+					sender: r.email, ////
+					_lang: doc.language
+				},
+				callback: r => {
+					if (!r.exc) {
+						frappe.utils.play_sound("email");
+						if (r.message["emails_not_sent_to"]) {
+							frappe.msgprint(__(
+								"Email not sent to {0} (unsubscribed / disabled)",
+								[ frappe.utils.escape_html(r.message["emails_not_sent_to"]) ]
+							));
+						} else {
+							frappe.show_alert({
+								message: __('Email sent successfully.'),
+								indicator: 'green'
+							});
+						}
+						this.email_dialog.hide();
 					} else {
-						frappe.show_alert({
-							message: __('Email sent successfully.'),
-							indicator: 'green'
-						});
+						frappe.msgprint(__("There were errors while sending email. Please try again."));
 					}
-					this.email_dialog.hide();
-				} else {
-					frappe.msgprint(__("There were errors while sending email. Please try again."));
 				}
-			}
-		});
+			});
+		}); ////
 	}
 
 	add_summary_btns(map) {
@@ -339,7 +359,31 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		const condition_btns_map = this.get_condition_btn_map(after_submission);
 
 		this.add_summary_btns(condition_btns_map);
+		//// added code block
+		this.add_raw_btns();
+		const filename = this.doc.pos_profile+'.json';
+		frappe.call({
+			method: 'neoffice_theme.events.pos_screen',
+			args: { json_content: {}, filename: filename },
+			callback: function(response) {
+				console.log(response.message); // File written successfully.
+			}
+		});
+		////
 	}
+
+	//// added function
+	add_raw_btns(){
+		this.$raw_btns.html('');
+		if(window.enable_raw_print == 1 && window.raw_printer){
+			this.$raw_btns.append(
+			`<div class="summary-btn btn btn-default direct-print-btn">Direct Print</div>
+			<div style="margin-top: 10px;" class="summary-btn btn btn-default cash-drawer-btn">Open Cash Drawer</div>`
+			);
+		}
+		this.$raw_btns.children().last().removeClass('mr-4');
+	}
+	////
 
 	attach_document_info(doc) {
 		frappe.db.get_value('Customer', this.doc.customer, 'email_id').then(({ message }) => {
@@ -355,7 +399,95 @@ erpnext.PointOfSale.PastOrderSummary = class {
 			const item_dom = this.get_item_html(doc, item);
 			this.$items_container.append(item_dom);
 			this.set_dynamic_rate_header_width();
+			//// added for giftcard
+			frappe.call({
+				method: "neoffice_ecommerce.events.custom_get_all",
+				args: {
+					doctype: "Neoffice Giftcard",
+					filters: {
+						"pos_invoice": doc.name
+					}
+				},
+				callback: r => {
+					let data = r.message;
+					if($(".giftcards_block").length == 0){
+						let giftcard_html = '<div class="giftcards_block">';
+						data.forEach(item => {
+							giftcard_html += '<div class="giftcard-line"><span giftcard-code>'+item.code+'</span><div class="giftcard-btns"><button type="button" class="send-giftcard-btn btn btn-primary btn-sm btn-modal-primary" value="'+item.code+'">'+__("Send Email")+'</button><button class="print-giftcard-btn text-muted btn btn-default icon-btn" title="" data-original-title="Print" value="'+item.code+'"> <svg class="icon  icon-sm" style=""> <use class="" href="#icon-printer"></use> </svg> </button></div></div>';
+						});
+						giftcard_html += '</div>';
+						this.$items_container.append(giftcard_html);
+						$('.send-giftcard-btn').click(function() {
+							let code = $(this).attr('value');
+							dsg.fields_dict.code.input.value = code;
+							dsg.show();
+							setTimeout(() => {
+								$("[data-fieldname=code] input").prop('readonly', true);
+							}, 200);
+						})
+						$('.print-giftcard-btn').click(function() {
+							let code = $(this).attr('value');
+							let url = "/web/fr?pwgc_number="+code+"&pdf=1"
+							window.open(url, '_blank').focus();
+						})
+					}
+				}
+			});
+			////
 		});
+		//// added for sending giftcard
+		let dsg = new frappe.ui.Dialog
+			({
+				title: __('Send Gift card'),
+				fields: [
+					{
+						label: 'Code',
+						fieldname: 'code',
+						fieldtype: 'Data',
+						readonly: 1,
+					},
+					{
+						label: 'Send to',
+						fieldname: 'send_to',
+						fieldtype: 'Data',
+					},
+					{
+						label: 'Message',
+						fieldname: 'message',
+						fieldtype: 'Text',
+					},
+				],
+				primary_action_label: __('Send gift card'),
+				primary_action(val)
+				{
+					if(dsg.fields_dict.send_to.input.value) {
+						frappe.call({
+							method: "neoffice_ecommerce.events.send_email_giftcard",
+							freeze: true,
+							args: {
+								code: dsg.fields_dict.code.input.value,
+								email: dsg.fields_dict.send_to.input.value,
+								message: dsg.fields_dict.message.input.value
+							},
+							callback: r => {
+								if(r.message && r.message == "error") {
+									frappe.throw(__("Failed to send the gift card email"));
+								} else {
+									frappe.show_alert({
+										message:__('Gift card email sent successfully'),
+										indicator:'green'
+									}, 5);
+								}
+								dsg.clear();
+							}
+						});
+						dsg.hide();
+					}
+				},
+			});
+		$('.send-giftcard-btn').on('click', function() {
+		});
+		////
 	}
 
 	set_dynamic_rate_header_width() {

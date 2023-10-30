@@ -355,7 +355,8 @@ def get_basic_details(args, item, overwrite_warehouse=True):
 			"discount_amount": flt(args.discount_amount) or 0.0,
 			"supplier": get_default_supplier(args, item_defaults, item_group_defaults, brand_defaults),
 			"update_stock": args.get("update_stock")
-			if args.get("doctype") in ["Sales Invoice", "Purchase Invoice"]
+			#//// added (...) or (args.get("doctype") == "Worksheet" and args.get("update_stock") and args.get("is_warranty")) maybe conflict => suppressed func from v14
+			if (args.get("doctype") in ["Sales Invoice", "Purchase Invoice"]) or (args.get("doctype") == "Worksheet" and args.get("update_stock") and args.get("is_warranty")) 
 			else 0,
 			"delivered_by_supplier": item.delivered_by_supplier
 			if args.get("doctype") in ["Sales Order", "Sales Invoice"]

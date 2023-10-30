@@ -80,6 +80,16 @@ erpnext.PointOfSale.Payment = class {
 				this[`${df.fieldname}_field`].set_value(frm.doc[df.fieldname]);
 			});
 		});
+		//// added for printing
+		//For raw printing buttons
+		if(window.enable_raw_print == 1){
+			this.$invoice_fields_section.find('.invoice-fields').append(
+				`<div style="position: absolute; bottom: 0; width: 100%; margin-bottom: 10px;" class="summary-btn btn btn-default cash-drawer-btn">
+					Open Cash Drawer
+				</div>`
+			);
+		}
+		////
 	}
 
 	initialize_numpad() {
@@ -103,6 +113,7 @@ erpnext.PointOfSale.Payment = class {
 		this.numpad_value = '';
 	}
 
+	//// changes from v14 not applied. Maybe conflict
 	on_numpad_clicked($btn) {
 		const button_value = $btn.attr('data-button-value');
 
@@ -159,6 +170,64 @@ erpnext.PointOfSale.Payment = class {
 			}
 		});
 
+		//// added code block. maybe conflict
+		this.$payment_modes.on('DOMSubtreeModified', '[data-payment-type="Cash"] .pay-amount', function(e) {
+			if($('.mode-of-payment[data-payment-type="Cash"] .pay-amount').length > 0){
+				////
+				setTimeout(() => {
+					let cash_amount = 0;
+					if($('.mode-of-payment[data-payment-type="Cash"] .pay-amount').length > 0){
+						let cash_string = $('.mode-of-payment[data-payment-type="Cash"] .pay-amount').html();
+						if(cash_string != "" && cash_string != undefined && cash_string != null) {
+							cash_amount = parseFloat($('.mode-of-payment[data-payment-type="Cash"] .pay-amount').html().replace(/[,\'\s]/g, ''));
+						}
+					}
+					let items = cur_frm.doc.items;
+					let data = {};
+					if(items.length > 0) {
+						const desiredKeys = ['item_name', 'qty', 'amount', 'rate', "description", "net_amount", "net_rate", "discount_amount", "discount_percentage", "item_tax_template", "image"];
+						const result = items.map(obj => {
+							const newObj = {};
+							desiredKeys.forEach(key => {
+								if (obj.hasOwnProperty(key)) {
+									newObj[key] = obj[key];
+								}
+							});
+							return newObj;
+						});
+						let taxes = cur_frm.doc.taxes;
+						let taxes_data = {};
+						taxes.forEach(tax => {
+							taxes_data[tax.description] = tax.tax_amount
+						})
+						data = {
+							"items": result,
+							"grand_total": cur_frm.doc.grand_total,
+							"rounded_total": cur_frm.doc.rounded_total,
+							"net_total": cur_frm.doc.net_total,
+							"taxes": taxes_data,
+							"discount_amount": cur_frm.doc.discount_amount,
+							"additional_discount_percentage": cur_frm.doc.additional_discount_percentage,
+							"cash": cash_amount,
+						}
+					}
+					const currentDate = new Date();
+					const timestamp = currentDate.getTime();
+					data["timestamp"] = timestamp;
+					let json = JSON.stringify(data);
+					const filename = cur_frm.doc.pos_profile+'.json';
+					frappe.call({
+						method: 'neoffice_theme.events.pos_screen',
+						args: { json_content: json, filename: filename },
+						callback: function(response) {
+							//console.log(response.message); // File written successfully.
+						}
+					});
+				}, 200);
+			}
+		});
+		////
+
 		frappe.ui.form.on('POS Invoice', 'contact_mobile', (frm) => {
 			const contact = frm.doc.contact_mobile;
 			const request_button = $(this.request_for_payment_field?.$input[0]);
@@ -203,7 +272,7 @@ erpnext.PointOfSale.Payment = class {
 			const paid_amount = doc.paid_amount;
 			const items = doc.items;
 
-			if (paid_amount == 0 || !items.length) {
+			if (!items.length) { ////if (paid_amount == 0 || !items.length) {
 				const message = items.length ? __("You cannot submit the order without payment.") : __("You cannot submit empty order.");
 				frappe.show_alert({ message, indicator: "orange" });
 				frappe.utils.play_sound("error");
@@ -235,6 +304,11 @@ erpnext.PointOfSale.Payment = class {
 			if (this[`${mode}_control`] && this[`${mode}_control`].get_value() != default_mop.amount) {
 				this[`${mode}_control`].set_value(default_mop.amount);
 			}
+		});
+		//// added for printing
+		//For raw printing buttons
+		this.$component.on('click', '.cash-drawer-btn', () => {
+			this.events.open_cash_drawer();
 		});
 	}
 
@@ -270,7 +344,7 @@ erpnext.PointOfSale.Payment = class {
 		const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? doc.grand_total : doc.rounded_total;
 		const remaining_amount = grand_total - doc.paid_amount;
 		const current_value = this.selected_mode ? this.selected_mode.get_value() : undefined;
-		if (!current_value && remaining_amount > 0 && this.selected_mode) {
+		if (!current_value && remaining_amount != 0 && this.selected_mode) { //// modified remaining_amount > 0 by remaining_amount != 0
 			this.selected_mode.set_value(remaining_amount);
 		}
 	}
@@ -338,6 +412,14 @@ erpnext.PointOfSale.Payment = class {
 
 		this.render_payment_section();
 		this.after_render();
+		//// for weight machine
+		//For weigh scale
+		if(window.enable_weigh_scale == 1){
+			if(typeof(window.mettlerWorker) != "undefined"){
+				window.mettlerWorker.postMessage({"command": "stop"});
+			}
+		}
+		////
 	}
 
 	toggle_remarks_control() {
@@ -368,10 +450,10 @@ erpnext.PointOfSale.Payment = class {
 				const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
 				const payment_type = p.type;
 				const margin = i % 2 === 0 ? 'pr-2' : 'pl-2';
-				const amount = p.amount > 0 ? format_currency(p.amount, currency) : '';
+				const amount = p.amount != 0 ? format_currency(p.amount, currency) : ''; //// replaced p.amount > 0 with p.amount != 0
 
+				//// removed first line <div class="payment-mode-wrapper"> of return
 				return (`
-					<div class="payment-mode-wrapper">
 						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}">
 							${p.mode_of_payment}
 							<div class="${mode}-amount pay-amount">${amount}</div>
@@ -421,7 +503,23 @@ erpnext.PointOfSale.Payment = class {
 			const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
 			if (p.default) {
 				setTimeout(() => {
-					this.$payment_modes.find(`.${mode}.mode-of-payment-control`).parent().click();
+					////this.$payment_modes.find(`.${mode}.mode-of-payment-control`).parent().click();
+					//// added code block maybe conflict
+					frappe.db.get_value("POS Profile",{"name":cur_pos.pos_profile},"disable_auto_price").then((disable_auto_price) => {
+						if(disable_auto_price.message.disable_auto_price == 1){
+							setTimeout(() => {
+								$(cur_pos.payment.$numpad).find('div[data-button-value="delete"]').click();
+							}, 100);
+							this.$payment_modes.find(`.${mode}.mode-of-payment-control input`).val("");
+							if(cur_frm.doc.outstanding_amount == 0) {
+								$(".submit-order-btn").prop("disabled",false).css("background","var(--blue-500)");
+							} else {
+								$(".submit-order-btn").prop("disabled",true).css("background","red");
+							}
+						}
+						this.$payment_modes.find(`.${mode}.mode-of-payment-control`).parent().click();
+					})
+					////
 				}, 500);
 			}
 		});

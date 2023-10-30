@@ -126,6 +126,64 @@ erpnext.PointOfSale.Controller = class {
 			args: { "pos_profile": this.pos_profile },
 			callback: (res) => {
 				const profile = res.message;
+				//// added for stripe and drawer
+				window.enable_raw_print = profile.enable_raw_printing;
+				window.enable_stripe_terminal = profile.enable_stripe_terminal;
+				window.stripe_mode_of_payment = profile.stripe_mode_of_payment;
+				//Select raw printer
+				if(window.enable_raw_print == 1){
+					frappe.db.get_doc('QZ Tray Settings', undefined).then((qz_doc) => {
+						if(qz_doc.trusted_certificate != null && qz_doc.trusted_certificate != "" && qz_doc.private_certificate != "" && qz_doc.private_certificate != null){
+							frappe.ui.form.qz_init().then(function(){
+								///// QZ Certificate ///
+								qz.security.setCertificatePromise(function(resolve, reject) {
+									resolve(qz_doc.trusted_certificate);
+								});
+								qz.security.setSignaturePromise(function(toSign) {
+									return function(resolve, reject) {
+										try {
+											var pk = KEYUTIL.getKey(qz_doc.private_certificate);
+											//var sig = new KJUR.crypto.Signature({"alg": "SHA512withRSA"});  // Use "SHA1withRSA" for QZ Tray 2.0 and older
+											var sig = new KJUR.crypto.Signature({"alg": "SHA1withRSA"});  // Use "SHA1withRSA" for QZ Tray 2.0 and older
+											sig.init(pk);
+											sig.updateString(toSign);
+											var hex = sig.sign();
+											resolve(stob64(hextorstr(hex)));
+										} catch (err) {
+											console.error(err);
+											reject(err);
+										}
+									};
+								});
+							});
+						}
+						var d = new frappe.ui.Dialog({
+							'fields': [
+								{'fieldname': 'printer', 'fieldtype': 'Select', 'reqd': 1, 'label': "Printer"}
+							],
+							primary_action: function(){
+								window.raw_printer = d.get_values().printer;
+								d.hide();
+							},
+							secondary_action: function(){
+								d.hide();
+							},
+							secondary_action_label: "Cancel",
+							'title': 'Select printer for Raw Printing'
+						});
+						frappe.ui.form.qz_get_printer_list().then((data) => {
+							d.set_df_property('printer', 'options', data);
+							d.show();
+						});
+					});
+				}
+				window.automatically_print = profile.automatically_print;
+				window.open_cash_drawer_automatically = profile.open_cash_drawer_automatically;
+				//For weigh scale
+				window.enable_weigh_scale = profile.enable_weigh_scale;
+				////
+				window.enable_twint = profile.enable_twint; //// custom add for twint
+				window.twint_mode_of_payment = profile.twint_mode_of_payment; //// custom add for twint
 				Object.assign(this.settings, profile);
 				this.settings.customer_groups = profile.customer_groups.map(group => group.name);
 				this.make_app();
@@ -147,6 +205,7 @@ erpnext.PointOfSale.Controller = class {
 		this.prepare_components();
 		this.prepare_menu();
 		this.make_new_invoice();
+		this.init_stripe_terminal(); ////
 	}
 
 	prepare_dom() {
@@ -329,6 +388,12 @@ erpnext.PointOfSale.Controller = class {
 					this.item_details.toggle_item_details_section(null);
 					this.cart.prev_action = null;
 					this.cart.toggle_item_highlight();
+					//// added For weigh scale
+					if(window.enable_weigh_scale == 1){
+						window.is_item_details_open = false;
+						window.mettlerWorker.postMessage({"command": "stop"});
+					}
+					////
 				},
 				get_available_stock: (item_code, warehouse) => this.get_available_stock(item_code, warehouse)
 			}
@@ -353,17 +418,303 @@ erpnext.PointOfSale.Controller = class {
 				},
 
 				submit_invoice: () => {
-					this.frm.savesubmit()
-						.then((r) => {
-							this.toggle_components(false);
-							this.order_summary.toggle_component(true);
-							this.order_summary.load_summary_of(this.frm.doc, true);
-							frappe.show_alert({
-								indicator: 'green',
-								message: __('POS invoice {0} created succesfully', [r.doc.name])
+					var allowSubmit = 1; //// added for stripe and twint
+					var refund_request = ""; //// added for stripe and twint
+					//// added for twint payment
+					var from_twint = 0;
+					var twint_amount = 0;
+					if(window.enable_twint == 1) {
+						if (this.frm.doc.payments.length > 0) {
+							for (var i = 0; i <= this.frm.doc.payments.length; i++) {
+								if (this.frm.doc.payments[i] != undefined) {
+									if (this.frm.doc.payments[i].mode_of_payment == window.twint_mode_of_payment && this.frm.doc.payments[i].base_amount != 0) {
+										if (this.frm.doc.payments[i].amount > 0) {
+											allowSubmit = 0;
+											from_twint = 1;
+											twint_amount = this.frm.doc.payments[i].amount;
+										} else if (this.frm.doc.is_return == 1 && this.frm.doc.payments[i].twint_payment_request) {
+											allowSubmit = 0;
+											from_twint = 1;
+											twint_amount = this.frm.doc.payments[i].amount;
+											refund_request = this.frm.doc.payments[i].twint_payment_request;
+										} else if (this.frm.doc.is_return == 1 && !this.frm.doc.payments[i].twint_payment_request) {
+											frappe.throw("This transaction was not paid using a Twint Payment. Please change the return payment method.");
+										} else if (his.frm.doc.is_return == 1 && this.frm.doc.payments[i].base_amount < this.frm.doc.payments[i].amount_authorized*-1/100)
+											frappe.throw("You can't refund more than what was originally paid.");
+									}
+								}
+							}
+						}
+					}
+					//// end custom add for twint payment
+					//// added for stripe
+					var from_stripe = 0;
+					if(window.enable_stripe_terminal == 1)
+					{
+
+						if(this.frm.doc.payments.length > 0)
+						{
+							for (var i=0;i<=this.frm.doc.payments.length;i++) {
+								if(this.frm.doc.payments[i] != undefined){
+
+									if(this.frm.doc.payments[i].mode_of_payment == window.stripe_mode_of_payment && this.frm.doc.payments[i].base_amount != 0)
+									{
+										if(this.frm.doc.payments[i].amount > 0)
+										{
+											allowSubmit = 0;
+											from_stripe = 1; //// custom add
+										}
+										else if(this.frm.doc.is_return == 1 && this.frm.doc.payments[i].card_payment_intent){
+											allowSubmit = 0;
+											from_stripe = 1; //// custom add
+										}
+										else if(this.frm.doc.is_return == 1 && !this.frm.doc.payments[i].card_payment_intent){
+											frappe.throw("This transaction was not paid using a Stripe Payment. Please change the return payment method.");
+										}
+									}
+								}
+							}
+						}
+					}
+					////
+					if (allowSubmit == 1){ //// added if condition
+						this.frm.savesubmit()
+							.then((r) => {
+								//// added for stripe/drawer/printer
+								if(this.stripe) this.stripe.clear_display(); //// custom add
+								//For raw printing
+								if(window.open_cash_drawer_automatically == 1){
+									this.open_cash_drawer();
+								}
+
+								if(window.automatically_print == 1){
+									this.raw_print(this.frm);
+								}
+								////
+								this.toggle_components(false);
+								this.order_summary.toggle_component(true);
+								this.order_summary.load_summary_of(this.frm.doc, true);
+								frappe.show_alert({
+									indicator: 'green',
+									message: __('POS invoice {0} created succesfully', [r.doc.name])
+								});
 							});
-						});
+					} else { //// close if and start else
+						//// added for stripe
+						//var stripe = new erpnext.PointOfSale.StripeTerminal();
+						//this.stripe.assign_stripe_connection_token(this,true);
+						if(from_stripe == 1) { //// custom add to handle twint
+							this.stripe.collecting_payments(this, true);
+						} //// custom add to handle twint
+						////
+
+						//// added for twint
+						if(from_twint == 1) { //// custom add for twint payment
+							var cancel = false;
+							if(this.frm.doc.is_return == 1){
+								let loading_dialog = new frappe.ui.Dialog({
+									title: 'Twint Refund',
+									fields: [{
+										label: '',
+										fieldname: 'show_dialog',
+										fieldtype: 'HTML'
+									},
+									],
+								});
+								var html = '<div style="min-height:200px;position: relative;text-align: center;padding-top: 75px;line-height: 25px;font-size: 15px;">';
+								html += '<div style="">' + 'Waiting for Twint refund' + '</div>';
+								html += '</div>';
+								loading_dialog.fields_dict.show_dialog.$wrapper.html(html);
+								loading_dialog.show();
+								loading_dialog.$wrapper.attr('id', 'myUniqueModalId');
+
+								$(document).on('shown.bs.modal', '#myUniqueModalId', function() {
+									$(this).data('bs.modal')._config.backdrop = 'static';
+									$(this).data('bs.modal')._config.keyboard = false;
+								});
+								$(document).on('hidden.bs.modal', '#myUniqueModalId', function() {
+									$(this).removeAttr('id');
+								});
+								var me = this;
+								frappe.call({
+									method: "neoffice_theme.events.twint_pos_payment",
+									args: {
+										"docname": this.frm.doc.return_against,
+										"doctype": "POS Invoice",
+										"amount": twint_amount,
+										"customer": this.frm.doc.customer,
+										"pos_profile": this.frm.doc.pos_profile,
+										"is_return": 1,
+										"request_id": refund_request,
+									},
+									callback: function (res) {
+										const checkRefund = () => {
+											frappe.db.get_list("TWINT Transaction", {filters:{"parent": res.message}, fields:["operation"]}).then(result => {
+												let refund = false;
+												if (result.length > 0) {
+													for(var i = 0; i < result.length; i++) {
+														if (result[i].operation == "REVERSAL") {
+															refund = true;
+															break;
+														}
+													}
+												}
+												if (!refund) {
+													setTimeout(checkRefund, 2000);
+												} else {
+													loading_dialog.hide();
+													frappe.db.set_value("TWINT Payment Request", res.message, {"refund_against": me.frm.doc.name, "refund_amount": twint_amount}).then(r => {
+														me.frm.savesubmit().then((sales_invoice) => {
+															if (sales_invoice && sales_invoice.doc) {
+																me.frm.doc.docstatus = sales_invoice.doc.docstatus;
+																me.toggle_components(false);
+																me.order_summary.toggle_component(true);
+																me.order_summary.load_summary_of(me.frm.doc, true);
+															}
+														});
+													});
+												}
+											});
+										};
+										checkRefund();
+									}
+								})
+							} else {
+								let loading_dialog = new frappe.ui.Dialog({
+									title: __('Twint Payment'),
+									fields: [
+										{
+											label: '',
+											fieldname: 'show_dialog',
+											fieldtype: 'HTML'
+										},
+										{
+											label: __('Payment Link'),
+											fieldname: 'payment_link',
+											fieldtype: 'Text',
+											hidden: true
+										}
+									],
+									primary_action_label: __('Waiting Payment Link'),
+									primary_action(values) {
+										if(values.payment_link)
+											window.open(values.payment_link, "_blank");
+									},
+									secondary_action_label: __('Cancel'),
+									secondary_action(values) {
+										cancel = true;
+									}
+								});
+
+								var html = '<div style="min-height:200px;position: relative;text-align: center;padding-top: 75px;line-height: 25px;font-size: 15px;">';
+								html += '<div style="">' + __('Waiting for Twint payment') + '</div>';
+								html += '</div>';
+								loading_dialog.fields_dict.show_dialog.$wrapper.html(html);
+								loading_dialog.show();
+								loading_dialog.$wrapper.attr('id', 'myUniqueModalId');
+
+								$(document).on('shown.bs.modal', '#myUniqueModalId', function() {
+									$(this).data('bs.modal')._config.backdrop = 'static';
+									$(this).data('bs.modal')._config.keyboard = false;
+								});
+								$(document).on('hidden.bs.modal', '#myUniqueModalId', function() {
+									$(this).removeAttr('id');
+								});
+								//frappe.dom.freeze();
+								var me = this;
+								frappe.call({
+									method: "neoffice_theme.events.twint_pos_payment",
+									args: {
+										"docname": this.frm.doc.name,
+										"doctype": "POS Invoice",
+										"amount": twint_amount,
+										"customer": this.frm.doc.customer,
+										"pos_profile": this.frm.doc.pos_profile,
+										"is_return": 0,
+										"request_id": "",
+									},
+									callback: function (res) {
+										const checkPaymentStatus = () => {
+											try {
+											frappe.db.get_value("TWINT Payment Request", res.message, ["payment_status", "url", "payment_initiated", "status_reason", "status"]).then(r => {
+												let status = r.message.status;
+												if(!loading_dialog.fields_dict['payment_link'].value) {
+													loading_dialog.fields_dict['payment_link'].set_value(r.message.url);
+													$(loading_dialog.$wrapper).find('.modal-footer .btn-primary').html(__('Open Payment Link'));
+												}
+												if (r.message.payment_status != "SUCCESS") {
+													let reason_fail = false;
+													if(cancel) {
+														frappe.call({
+															method: "neoffice_theme.events.cancel_twint_transaction",
+															args: {request_id: res.message},
+														});
+													}
+
+													if(r.message.status_reason != "ORDER_RECEIVED" && r.message.status_reason != "ORDER_CONFIRMATION_PENDING" && r.message.status_reason != "ORDER_OK") {
+														reason_fail = true;
+													}
+
+													let time = parseInt(Date.now()/1000);
+													if (parseInt(r.message.payment_initiated) + 200 <= time) {
+														frappe.db.set_value("TWINT Payment Request", res.message, {"payment_status": "TIMEOUT", "status": "TIMEOUT"});
+													}
+													switch (status) {
+														case "FAILURE":
+															loading_dialog.hide();
+															frappe.throw(__("Payment Failed or Cancelled"));
+															break;
+														case "TIMEOUT":
+															loading_dialog.hide();
+															frappe.throw(__("Payment Timeout"));
+															break;
+														default:
+															if(!reason_fail) {
+																setTimeout(checkPaymentStatus, 2000);
+															} else {
+																loading_dialog.hide();
+																frappe.throw(__("Impossible to process the payment. Please try again."));
+															}
+													}
+												} else {
+													for (var i = 0; i <= me.frm.doc.payments.length; i++) {
+														if (me.frm.doc.payments[i] != undefined && me.frm.doc.payments[i].mode_of_payment == window.twint_mode_of_payment) {
+															me.frm.doc.payments[i].twint_payment_request = res.message;
+															me.frm.doc.payments[i].amount_authorized = parseInt(me.frm.doc.payments[i].base_amount*100);
+														}
+													}
+													loading_dialog.hide();
+													me.frm.savesubmit().then((sales_invoice) => {
+														if (sales_invoice && sales_invoice.doc) {
+															me.frm.doc.docstatus = sales_invoice.doc.docstatus;
+															me.toggle_components(false);
+															me.order_summary.toggle_component(true);
+															me.order_summary.load_summary_of(me.frm.doc, true);
+														}
+													});
+												}
+											});
+											} catch (e) {
+												console.log(e)
+											}
+										};
+										checkPaymentStatus();
+									}
+								})
+							}
+						}
+						////
+					} //// end else
+				},
+				//// added for printer/drawer
+				raw_print: () => {
+					this.raw_print(this.frm);
+				},
+
+				open_cash_drawer: () => {
+					this.open_cash_drawer();
 				}
+				////
 			}
 		});
 	}
@@ -419,7 +770,15 @@ erpnext.PointOfSale.Controller = class {
 						() => this.item_selector.toggle_component(true),
 						() => frappe.dom.unfreeze(),
 					]);
+				},
+				//// added for printer/drawer
+				raw_print: () => {
+					this.raw_print(this.frm);
+				},
+				open_cash_drawer: () => {
+					this.open_cash_drawer();
 				}
+				//// added for printer/drawer
 			}
 		})
 	}
@@ -579,6 +938,57 @@ erpnext.PointOfSale.Controller = class {
 		} catch (error) {
 			console.log(error);
 		} finally {
+			//// added for stripe
+			setTimeout(() => {
+				let items = this.frm.doc.items;
+				let data = {};
+
+				if(items.length > 0) {
+					if (updated) items = items.reverse();
+					const desiredKeys = ['item_name', 'qty', 'amount', 'rate', "description", "net_amount", "net_rate", "discount_amount", "discount_percentage", "item_tax_template", "image"];
+					const result = items.map(obj => {
+						const newObj = {};
+						desiredKeys.forEach(key => {
+							if (obj.hasOwnProperty(key)) {
+								newObj[key] = obj[key];
+							}
+						});
+						return newObj;
+					});
+					let taxes = this.frm.doc.taxes;
+					let taxes_data = {};
+					taxes.forEach(tax => {
+						taxes_data[tax.description] = tax.tax_amount
+					})
+					data = {
+						"items": result,
+						"grand_total": this.frm.doc.grand_total,
+						"rounded_total": this.frm.doc.rounded_total,
+						"net_total": this.frm.doc.net_total,
+						"taxes": taxes_data,
+						"discount_amount": this.frm.doc.discount_amount,
+						"additional_discount_percentage": this.frm.doc.additional_discount_percentage,
+						"cash": 0,
+					}
+				}
+				const currentDate = new Date();
+				const timestamp = currentDate.getTime();
+				data["timestamp"] = timestamp;
+				let json = JSON.stringify(data);
+
+				const filename = this.frm.doc.pos_profile+'.json';
+				frappe.call({
+					method: 'neoffice_theme.events.pos_screen',
+					args: { json_content: json, filename: filename },
+					callback: function(response) {
+						//console.log(response.message); // File written successfully.
+					}
+				});
+			}, 200);
+			if(window.enable_stripe_terminal == 1){
+				this.stripe.display_details(this);
+			}
+			////
 			frappe.dom.unfreeze();
 			return item_row; // eslint-disable-line no-unsafe-finally
 		}
@@ -726,6 +1136,62 @@ erpnext.PointOfSale.Controller = class {
 				frappe.model.clear_doc(doctype, name);
 				this.update_cart_html(current_item, true);
 				this.item_details.toggle_item_details_section(null);
+				//// added for stripe
+				setTimeout(() => {
+					let items = this.frm.doc.items;
+					let data = {};
+
+					if(items.length > 0) {
+						items = items.reverse();
+						const desiredKeys = ['item_name', 'qty', 'amount', 'rate', "description", "net_amount", "net_rate", "discount_amount", "discount_percentage", "item_tax_template", "image"];
+						const result = items.map(obj => {
+							const newObj = {};
+							desiredKeys.forEach(key => {
+								if (obj.hasOwnProperty(key)) {
+									newObj[key] = obj[key];
+								}
+							});
+							return newObj;
+						});
+						let taxes = this.frm.doc.taxes;
+						let taxes_data = {};
+						taxes.forEach(tax => {
+							taxes_data[tax.description] = tax.tax_amount
+						})
+						data = {
+							"items": result,
+							"grand_total": this.frm.doc.grand_total,
+							"rounded_total": this.frm.doc.rounded_total,
+							"net_total": this.frm.doc.net_total,
+							"taxes": taxes_data,
+							"discount_amount": this.frm.doc.discount_amount,
+							"additional_discount_percentage": this.frm.doc.additional_discount_percentage,
+							"cash": 0,
+						}
+					}
+					const currentDate = new Date();
+					const timestamp = currentDate.getTime();
+					data["timestamp"] = timestamp;
+					let json = JSON.stringify(data);
+
+					const filename = this.frm.doc.pos_profile+'.json';
+					frappe.call({
+						method: 'neoffice_theme.events.pos_screen',
+						args: { json_content: json, filename: filename },
+						callback: function(response) {
+							//console.log(response.message); // File written successfully.
+						}
+					});
+				}, 200);
+				if(window.enable_stripe_terminal == 1){
+					this.stripe.display_details(this);
+				}
+
+				//For weigh scale
+				if(window.enable_weigh_scale == 1){
+					window.is_item_details_open = false;
+				}
+				////
 				frappe.dom.unfreeze();
 			})
 			.catch(e => console.log(e));
@@ -745,4 +1211,218 @@ erpnext.PointOfSale.Controller = class {
 			this.payment.checkout();
 		}
 	}
+
+	//// added functions
+	init_stripe_terminal(){
+		if(window.enable_stripe_terminal == 1){
+			this.stripe = new erpnext.PointOfSale.StripeTerminal();
+			frappe.dom.freeze();
+			//this.stripe.connect_to_stripe_terminal(this, true);
+			this.stripe.assign_stripe_connection_token(this, true);
+			frappe.dom.unfreeze();
+		}
+	}
+
+	open_cash_drawer(){
+		if(window.enable_raw_print == 1 && window.raw_printer){
+			var me = this;
+			frappe.ui.form.qz_get_printer_list().then(function(printers){
+				var config;
+				printers.forEach(function(printer){
+					if(printer == window.raw_printer){
+						config = qz.configs.create(printer);
+					}
+				});
+				var data = [
+					'\x10' + '\x14' + '\x01' + '\x00' + '\x05' //Generate Pulse to kick-out cash drawer
+				];
+				qz.print(config, data);
+			});
+		}
+	}
+
+	raw_print(frm){
+		if(window.enable_raw_print == 1 && window.raw_printer){
+			var me = this;
+
+			frappe.ui.form.qz_get_printer_list().then(function(printers){
+				var config;
+				printers.forEach(function(printer){
+					if(printer == window.raw_printer){
+						config = qz.configs.create(printer);
+					}
+				});
+
+				var data = [
+					'\x1B' + '\x40', //init
+					'\x1B' + '\x61' + '\x31', //center align
+					frm.doc.company + '\x0A',
+					'\x1B' + '\x45' + '\x0D', //bold on
+					'Invoice' + '\x0A',
+					'\x1B' + '\x45' + '\x0A', //bold off
+					'Receipt No: ' + frm.doc.name + '\x0A',
+					'Cashier: ' + frm.doc.owner + '\x0A',
+					'Customer: ' + frm.doc.customer_name + '\x0A',
+					'Date: ' + moment(frm.doc.posting_date).format("MM-DD-YYYY") + '\x0A',
+					'Time: ' + frm.doc.posting_time + '\x0A' + '\x0A',
+					'\x1B' + '\x61' + '\x30', // left align
+					'\x1B' + '\x45' + '\x0D', //bold on
+					'Item                                Amount' + '\x0A',
+					'\x1B' + '\x45' + '\x0A' //bold off
+				];
+				frm.doc.items.forEach(function(row){
+					var rdata = me.get_item_print(row.item_name, row.qty, row.rate, row.amount);
+					data.push.apply(data, rdata)
+				});
+				//data.push(
+				//	'\x1B' + '\x61' + '\x32' // right align
+				//);
+				var tprint = me.get_total_print(frm.doc);
+				data.push.apply(data, tprint);
+				var cut = [
+					'\x0A' + '\x0A' + '\x0A' + '\x0A' + '\x0A' + '\x0A' + '\x0A',
+					'\x1B' + '\x69'
+				]
+				data.push.apply(data, cut);   // cut paper (old syntax)
+				qz.print(config, data);
+			});
+		}
+	}
+
+	get_total_print(doc){
+		var ret = [];
+		var length = doc.total.toString().length;
+		var total = 'Total ';
+		for(var i=length; i<=11; i++){
+			total = total + ' ';
+		}
+		total = total + '$' + doc.total.toString();
+		var tlength = total.length;
+		//Add extra spaces to align everything to the right
+		for(var i=0; i<(42-tlength); i++){
+			total = ' ' + total;
+		}
+		ret.push(total  + '\x0A');
+
+		//For taxes
+		if(doc.taxes && doc.taxes.length > 0){
+			doc.taxes.forEach(function(row){
+				length = row.total.toString().length;
+				total = row.description;
+				for(var i=length; i<=11; i++){
+					total = total + ' ';
+				}
+				total = total + '$' + doc.total.toString();
+				var tlength = total.length;
+				//Add extra spaces to align everything to the right
+				for(var i=0; i<(42-tlength); i++){
+					total = ' ' + total;
+				}
+				ret.push(total + '\x0A');
+			});
+		}
+
+
+		//Grand Total
+		ret.push('\x1B' + '\x45' + '\x0D'); //Bold on
+		total = 'Grand Total ';
+		length = doc.grand_total.toString().length;
+		for(var i=length; i<=11; i++){
+			total = total + ' ';
+		}
+		total = total + '$' + doc.grand_total.toString();
+		var tlength = total.length;
+		//Add extra spaces to align everything to the right
+		for(var i=0; i<(42-tlength); i++){
+			total = ' ' + total;
+		}
+		ret.push(total + '\x0A');
+		ret.push('\x1B' + '\x45' + '\x0A'); //Bold off
+
+		//Payments
+		var stripe_info = [];
+		var cash_drawer = [];
+		if(doc.payments && doc.payments.length > 0){
+			doc.payments.forEach(function(row){
+				if(row.base_amount > 0){
+					length = row.base_amount.toString().length;
+					total = row.mode_of_payment + ' ';
+					for(var i=length; i<=11; i++){
+						total = total + ' ';
+					}
+					total = total + '$' + row.base_amount.toString();
+					var tlength = total.length;
+					//Add extra spaces to align everything to the right
+					for(var i=0; i<(42-tlength); i++){
+						total = ' ' + total;
+					}
+					ret.push(total + '\x0A');
+
+					//If it's a stripe payment, add mandatory information at end o receipt
+					if(row.mode_of_payment==window.stripe_mode_of_payment && row.base_amount > 0){
+						stripe_info = [
+							'\x1B' + '\x61' + '\x31', // center align,
+							'\x0A',
+							row.card_brand.toUpperCase() + ' XXXXXXXXXXXX' + row.card_last4 + '\x0A',
+							'Auth CD: ' + row.card_authorization_code + '\x0A',
+							'AID: ' + row.card_dedicated_file_name + '\x0A',
+							row.card_application_preferred_name + '\x0A',
+							'TVR: ' + row.card_terminal_verification_results + '\x0A',
+							'TSI: ' + row.card_transaction_status_information + '\x0A',
+							'IAD: ' + row.card_dedicated_file_name
+						];
+					}
+				}
+			});
+		}
+
+		//Total Payments
+		ret.push('\x1B' + '\x45' + '\x0D'); //Bold on
+		total = 'Paid Amount ';
+		length = doc.grand_total.toString().length;
+		for(var i=length; i<=11; i++){
+			total = total + ' ';
+		}
+		total = total + '$' + doc.paid_amount.toString()
+		var tlength = total.length;
+		//Add extra spaces to align everything to the right
+		for(var i=0; i<(42-tlength); i++){
+			total = ' ' + total;
+		}
+		ret.push(total + '\x0A');
+		ret.push('\x1B' + '\x45' + '\x0A'); //Bold off
+
+		//Add the stripe data
+		if(stripe_info.length > 0){
+			ret.push.apply(ret, stripe_info);
+		}
+
+		return ret;
+	}
+
+	get_item_print(item, qty, rate, amount){
+		var ilength = item.length;
+		var ret = [];
+		//Put in for loop in case item length > 30
+		for(var i=0; i<ilength; i=i+29){
+			ret.push(item.substring(i, i+29) + "\x0A");
+		}
+
+		//For quantity
+		var qty_rate = "$" + rate.toString() + "x " + qty.toString();
+		var qlength = qty_rate.length;
+		for(var i=0; i<(30-qlength); i++){
+			qty_rate = qty_rate + " ";
+		}
+
+		//Add amount at end of qty-rate line
+		var alength = amount.toString().length;
+		for(var i=0; i<(11-alength); i++){
+			qty_rate = qty_rate + " ";
+		}
+		qty_rate = qty_rate + "$" + amount.toString();
+		ret.push(qty_rate + "\x0A");
+		return ret;
+	}
+	////
 };

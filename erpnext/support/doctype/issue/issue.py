@@ -71,7 +71,7 @@ class Issue(Document):
 		)
 		communication.ignore_permissions = True
 		communication.ignore_mandatory = True
-		communication.save()
+		communication.save(ignore_permissions=True) #//// added ignore_permissions=True
 
 	@frappe.whitelist()
 	def split_issue(self, subject, communication_id):

@@ -15,7 +15,9 @@
 			<div class="col-sm-1" style="margin-top: 8px;" title="{{ __("Reserved Stock") }}">
 				<a data-name="{{ d.reserved_stock }}">{{ d.reserved_stock }}</a>
 			</div>
-			<div class="col-sm-3">
+			<!-- //// -->
+			<div class="col-sm-4" style=" text-align: right; "><!--<div class="col-sm-3">-->
+			<!-- //// -->
 				<span class="inline-graph">
 					<span class="inline-graph-half" title="{{ __("Reserved Qty") }}">
 						<span class="inline-graph-count">{{ d.total_reserved }}</span>
@@ -41,6 +43,14 @@
 						</span>
 					</span>
 				</span>
+				<!-- //// -->
+				<span class="label label-info">{{ __("Reserved Stock") }}: {{ (d.total_reserved > 0) ? (d.total_reserved) : 0 }}</span><br>
+				<span class="label label-info">{{ __("Actual Stock") }}: {{ (d.actual_qty > 0) ? (d.actual_qty) : 0 }}</span><br>
+				<span class="label label-info">{{ __("Stock in Purchase") }}: {{ (d.pending_qty > 0) ? (d.pending_qty) : 0 }}</span><br>
+				<span class="label label-info">{{ __("Sold to be Validated") }}: {{ (d.sold_to_be_validated > 0) ? (d.sold_to_be_validated) : 0 }}</span><br>
+				<hr>
+				<span class="label label-info">{{ __("Total Stock") }}: <strong>{{ ((d.actual_qty > 0) ? (d.actual_qty) : 0) - ((d.sold_to_be_validated > 0) ? (d.sold_to_be_validated) : 0) - ((d.total_reserved > 0) ? (d.total_reserved) : 0) }}</strong></span><br>
+				<!-- //// -->
 			</div>
 			{% if can_write %}
 			<div class="col-sm-2 text-right" style="margin: var(--margin-sm) 0;">

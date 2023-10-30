@@ -77,6 +77,14 @@ class Item(Document):
 			for default in self.item_defaults or [frappe._dict()]:
 				self.add_price(default.default_price_list)
 
+		#//// added if
+		if self.buying_standard_rate:
+			price_list = frappe.db.get_single_value(
+				"Buying Settings", "buying_price_list"
+			) or frappe.db.get_value("Price List", _("Standard Buying"))
+			self.add_price(price_list, buying=True)
+		#////
+
 		if self.opening_stock:
 			self.set_opening_stock()
 
@@ -137,7 +145,7 @@ class Item(Document):
 				frappe.throw(_('"Customer Provided Item" cannot have Valuation Rate'))
 			self.default_material_request_type = "Customer Provided"
 
-	def add_price(self, price_list=None):
+	def add_price(self, price_list=None, buying=False): #//// added , buying=False
 		"""Add a new price"""
 		if not price_list:
 			price_list = frappe.db.get_single_value(
@@ -152,7 +160,7 @@ class Item(Document):
 					"uom": self.stock_uom,
 					"brand": self.brand,
 					"currency": erpnext.get_default_currency(),
-					"price_list_rate": self.standard_rate,
+					"price_list_rate": self.standard_rate if not buying else self.buying_standard_rate, #//// added if not buying else self.buying_standard_rate,
 				}
 			)
 			item_price.insert()
@@ -893,6 +901,10 @@ class Item(Document):
 			]
 
 		for doctype in linked_doctypes:
+			#//// added if
+			if doctype == "Material Request Item":
+				return
+			#////
 			filters = {"item_code": self.name, "docstatus": 1}
 
 			if doctype in ("Product Bundle", "BOM"):
@@ -998,7 +1010,7 @@ def validate_end_of_life(item_code, end_of_life=None, disabled=None):
 			_("Item {0} has reached its end of life on {1}").format(item_code, formatdate(end_of_life))
 		)
 
-	if disabled:
+	if disabled and item_code != "Freeline" and item_code != "Subtotal": #//// added and item_code != "Freeline" and item_code != "Subtotal"
 		frappe.throw(_("Item {0} is disabled").format(item_code))
 
 

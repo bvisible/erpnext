@@ -37,6 +37,23 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 	async calculate_taxes_and_totals(update_paid_amount) {
 		this.discount_amount_applied = false;
 		this._calculate_taxes_and_totals();
+		//// added if
+		if (this.frm.doc.doctype == "POS Invoice" && this.frm.doc.is_return) {
+			let res = null;
+			res = await frappe.call({
+				method: "frappe.client.get_value",
+				args: {
+					doctype: "POS Invoice",
+					filters: { name: this.frm.doc.return_against },
+					fieldname: ["discount_amount", "additional_discount_percentage"]
+				}
+			})
+			if (res.message) {
+				this.frm.doc.discount_amount = flt(res.message.discount_amount);
+				this.frm.doc.additional_discount_percentage = flt(res.message.additional_discount_percentage);
+			}
+		}
+		////
 		this.calculate_discount_amount();
 
 		// # Update grand total as per cash and non trade discount
@@ -61,7 +78,9 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 			&& this.frm.doc.is_pos
 			&& this.frm.doc.is_return
 		) {
-			this.set_total_amount_to_default_mop();
+			if (this.frm.doc.paid_amount != this.frm.doc.grand_total ) { //// added condition
+				this.set_total_amount_to_default_mop();
+			} ////
 			this.calculate_paid_amount();
 		}
 
@@ -827,7 +846,8 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 				precision("base_grand_total")
 			);
 		}
-
+		//// commented
+		/* 
 		if(!this.frm.doc.is_return){
 			this.frm.doc.payments.find(payment => {
 				if (payment.default) {
@@ -835,6 +855,22 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 				}
 			});
 		}
+		*/
+		////
+
+		//// added from v14 maybe conflict
+		let left_to_pay = total_amount_to_pay;
+		this.frm.doc.payments.find(pay => {
+			left_to_pay -= pay.amount;
+		});
+
+		if (left_to_pay != 0) {
+			this.frm.doc.payments.find(pay => {
+				if (pay.default) {
+					pay.amount = left_to_pay;/
+				}
+			});
+		}////
 
 		this.frm.refresh_fields();
 	}

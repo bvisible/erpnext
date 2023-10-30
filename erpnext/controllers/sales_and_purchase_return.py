@@ -373,6 +373,22 @@ def make_return_doc(
 							"base_amount": -1 * base_paid_amount,
 							"account": data.account,
 							"default": data.default,
+							#//// added from pasigono (stripe)
+							'card_brand': data.card_brand,
+							'card_last4': data.card_last4,
+							'card_account_type': data.card_account_type,
+							'card_application_preferred_name': data.card_application_preferred_name,
+							'card_dedicated_file_name': data.card_dedicated_file_name,
+							'card_authorization_response_code': data.card_authorization_response_code,
+							'card_application_cryptogram': data.card_application_cryptogram,
+							'card_terminal_verification_results': data.card_terminal_verification_results,
+							'card_transaction_status_information': data.card_transaction_status_information,
+							'card_authorization_code': data.card_authorization_code,
+							'card_charge_id': data.card_charge_id,
+							'card_payment_intent': data.card_payment_intent,
+							'amount_authorized': data.amount_authorized,
+							#////
+							'twint_payment_request': data.twint_payment_request #//// custom add for twint
 						},
 					)
 				if doc.is_pos:
