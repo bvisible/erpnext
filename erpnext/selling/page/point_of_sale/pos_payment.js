@@ -451,9 +451,9 @@ erpnext.PointOfSale.Payment = class {
 				const payment_type = p.type;
 				const margin = i % 2 === 0 ? 'pr-2' : 'pl-2';
 				const amount = p.amount != 0 ? format_currency(p.amount, currency) : ''; //// replaced p.amount > 0 with p.amount != 0
-
-				//// removed first line <div class="payment-mode-wrapper"> of return
+				//// added ${mode} in div.payment-mode-wrapper
 				return (`
+					<div class="payment-mode-wrapper ${mode}">
 						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}">
 							${p.mode_of_payment}
 							<div class="${mode}-amount pay-amount">${amount}</div>
