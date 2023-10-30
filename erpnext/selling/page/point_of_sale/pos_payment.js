@@ -114,12 +114,25 @@ erpnext.PointOfSale.Payment = class {
 	}
 
 	//// changes from v14 not applied. Maybe conflict
-	on_numpad_clicked($btn) {
+	async on_numpad_clicked($btn) { //// async added
 		const button_value = $btn.attr('data-button-value');
+		//// Wait for this.selected_mode to be defined
+		await new Promise(resolve => {
+			const intervalId = setInterval(() => {
+				if (this.selected_mode) {
+					clearInterval(intervalId);
+					resolve();
+				}
+			}, 100);
+		});
+		////
 
 		highlight_numpad_btn($btn);
 		this.numpad_value = button_value === 'delete' ? this.numpad_value.slice(0, -1) : this.numpad_value + button_value;
 		this.selected_mode.$input.get(0).focus();
+		if (this.selected_mode.$input) { //// added if condition
+			this.selected_mode.$input.get(0).focus();
+		} //// end if
 		this.selected_mode.set_value(this.numpad_value);
 
 		function highlight_numpad_btn($btn) {
