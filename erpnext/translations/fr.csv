@@ -8853,3 +8853,1368 @@ Closing,Clôture
 Allow Sales,Autoriser à la vente
 Approve,Approuver,
 Reject,Rejeter,
+///////////////////////////////user data of language,///////////////////////////////donnée personnel de language
+"If you don't have a logo yet, you can create one easily on","Si vous n'avez pas encore de logo, vous pouvez en créer un facilement sur"
+"As the customer has no country or the country isn't Switzerland, QR bill isn't available","Comme le client n'a pas de pays ou que le pays n'est pas la Suisse, la facture QR n'est pas disponible"
+Choose a color,Choisir la couleur
+Default text colour for status,Couleur de texte par défaut pour le statut
+Default background colour for status,Couleur d'arrière-plan par défaut pour le statut
+Forcing the use of the billing address on delivery notes,Forcer l'utilisation de l'adresse de facturation sur les bons de livraison
+Display billing address on delivery notes,Afficher l'adresse de facturation sur les bons de livraison
+Display delivery address on orders,Afficher l'adresse de livraison sur les commandes
+Display delivery address on invoices,Afficher l'adresse de livraison sur les factures
+Display delivery address on quotations,Afficher l'adresse de livraison sur les devis
+in the amount of,d'un montant de
+Request for a deposit,Demande d'acompte
+Show Chats,Afficher les discussions
+"Activate or deactivate the automatic mode. In this mode, the interface will adapt to the mode of your OS.","Activez ou désactivez le mode automatique. Dans ce mode, l'interface s'adaptera au mode de votre OS."
+This switch enables or disables a simplified interface view.,Ce commutateur active ou désactive une vue d'interface simplifiée.
+Edit Cart,Editer Panier
+Promotional code,Code promotionnel
+Promo Code,Code promo
+WARNING ! Promotional codes in percent can not be used with loyalty points,ATTENTION ! Les codes promotionnels en pourcentage ne peuvent pas être utilisés avec des points de fidélité
+use,utiliser
+Amount to use,Montant à utiliser
+Include loyalty program giftcards,Inclure les cartes-cadeaux du programme de fidélité
+Giftcard Code,Code de carte-cadeau
+Giftcard Amount,Montant de la carte-cadeau
+Use maximum possible amount,Utiliser le montant maximal possible
+Use given amount,Utiliser le montant spécifié
+Use Amount,Utiliser le montant
+Points Value,Valeur en points
+Available Points,Points disponibles
+Using maximum amount will consume 1 more point to cover the full invoice's amount,L'utilisation du montant maximum consommera 1 point de plus pour couvrir le montant total de la facture
+WARNING ! Loyalty points can not be used with promotional codes,ATTENTION ! Les points de fidélité ne peuvent pas être utilisés avec des codes promotionnels
+Sync With Ecommerce,Sync avec Ecommerce
+Delete Order,Supprimer commande
+Edit Order,Modifier commande
+News Order,Nouvelle Commande
+Email Receipt,Reçus par email
+Sold by,Fait par
+Complete Order,Valider
+Gift card,Carte cadeau
+Gift cards,Carte cadeau
+Payment reminder level,Niveau de rappel de paiement
+Fixed Asset Defaults,Valeurs par défaut des immobilisations
+HR & Payroll Settings,Paramètres RH et Paie
+"To update this information, please click this information icon to be redirected","Pour mettre à jour cette information, veuillez cliquer sur cette icône d'information pour être redirigé"
+See Closing Entry,Voir inscriptions de clôtures
+See Opening Entry,Voir les entrées d'ouvertures
+Minimum Amount,Montat minimum
+Limit To Email,Limiter aux email
+Customers,Clients
+Purchase Orders,Commande d'achat
+Gift cards,Carte Cadeau
+VAT rate,Taux TVA
+Sync Tags,Synchroniser les balises
+Feature image,Image mise en avant
+View Blog,Voir le blog
+View Ecommerce,Voir le Shop
+Customize Website,Personnaliser le Site web
+Website Template,Modèle de Site web
+Website Popup,Popup Site web
+Website menu,Menu Site web
+B2B Item,Article B2B
+Product designer,Design page produits
+Shop designer,Design du Shop
+Checkout &amp; CGV,Validation de commande & CGV
+Category &amp; brand order,Ordre des catégories et des marques
+Filter in Ecommerce,Filtres Ecommerce
+Ecommerce Settings,Paramètres Ecommmerce
+Payment reminder level,Niveau de rappel de paiement
+Fixed Asset Defaults,Valeurs par défaut des immobilisations
+HR & Payroll Settings,Paramètres RH et Paie
+"To update this information, please click this information icon to be redirected","Pour mettre à jour cette information, veuillez cliquer sur cette icône d'information pour être redirigé"
+See Closing Entry,Voir inscriptions de clôtures
+See Opening Entry,Voir les entrées d'ouvertures
+See all POS Invoice saved,Voir toutes les factures PDV enregistrées
+See all POS Invoice,Voir toutes les factures PDV
+Create subscription,Créer un abonnement
+See all Subscription,Voir tous les abonnements
+See & Create Newsletter,Voir et créer une Newsletter
+See loyalty Program,Voir le programme de fidélité
+See all gift Card,Voir toutes les cartes-cadeaux
+Shifts,Equipe
+Shift & Attendance,Équipe et présence
+Tax & Benefits,Taxes et avantages
+Salary Payout,Paiement des salaires
+CRM Reports & Settings,CRM Rapports & Paramètres
+Projects and Tasks,Projets & Taches
+Projects Reports & Settings,Projets Rapports & Paramètres
+Stock Reports & Settings,Stocks Rapports & Paramètres
+Buying Reports & Settings,Achats Rapports & Paramètres
+Sales Invoices,Factures de ventes
+Selling Reports & Settings,Ventes Rapports & Paramètres
+The address is not valid. The city is replaced by Lausanne.,L'adresse n'est pas valide. La ville est remplacée par Lausanne.
+The address is not valid. The postcode is replaced by 1000.,L'adresse n'est pas valide. Le code postal est remplacé par 1000.
+Reset export flags,Réinitialiser les indicateurs d'exportation
+Exported to Abacus,Exporté vers Abacus
+Export flags reset,Réinitialisation des indicateurs d'exportation
+No general ledger entries found.,Aucune entrée du grand livre n'a été trouvée.
+more records available (not shown),plus d'enregistrements disponibles (non affichés)
+Create File,Créer un fichier
+to,à
+Export General Ledger to an Abacus transfer file,Exporter le grand livre vers un fichier de transfert Abacus
+Abacus Export,Exportation d'Abacus
+ESR / Invoice amount matched,Correspondance entre le montant ESR et la facture
+"Multiple Supplier found, please choose one!","Plusieurs fournisseurs trouvés, veuillez en choisir un!"
+No Supplier found! Fetched default Supplier.,Aucun fournisseur trouvé! Fournisseur par défaut récupéré.
+"Supplier found, but does not match with Invoice Supplier!","Fournisseur trouvé, mais ne correspond pas au fournisseur de la facture!"
+Process,Traiter
+ESR Participant,Participant ESR
+ESR Reference,Référence ESR
+Tax Rate in %,Taux d'imposition en%
+Default Item,Élément par défaut
+Positive Deviation Item,Élément d'écart positif
+Add positive deviation as additional item,Ajouter un écart positif comme élément supplémentaire
+Add negative deviation as discount,Ajouter un écart négatif comme remise
+Amount Deviation,Écart de montant
+ESR Amount,Montant ESR
+Scan Invoice,Scanner la facture
+Invalid ESR Code Line or QR-Code,Ligne de code ERS/QR non valide
+An error occurred while parsing. Please check the log files.,Une erreur s'est produite lors de l'analyse. Veuillez vérifier les fichiers journaux.
+Please set the intermediate bank account in ERPNextSwiss Settings.,Veuillez définir le <b> compte bancaire intermédiaire </b> dans les <a href=\/app/ERPNextSwiss Settings\> ERPNextSwiss Settings </a>.
+Please set the default customer in ERPNextSwiss Settings.,Veuillez définir le <b> client par défaut </b> dans les <a href=\/app/ERPNextSwiss Settings\> ERPNextSwiss Settings </a>.
+Please set the default supplier in ERPNextSwiss Settings.,Veuillez définir le <b> fournisseur par défaut </b> dans les <a href=\/app/ERPNextSwiss Settings\> ERPNextSwiss Settings </a>.
+Please set the default accounts in {0}.,Veuillez définir les <b> comptes par défaut </b> dans <a href=\/app/Company/{0}\> {0} </a> .
+ transactions found,transactions trouvées
+Transaction matched,Transaction appariée
+Bank Wizard,Assistant bancaire
+Please select an account to receive to.,Veuillez sélectionner un compte pour recevoir.
+Please provide a skonto account and cost center.,Veuillez fournir un compte skonto et un centre de coûts.
+Please provide an intermediate account.,Veuillez fournir un compte intermédiaire.
+LSV Date,Date LSV
+LSV Code,Code LSV
+Banking,Bancaire
+Receive to Account,Recevoir sur le compte
+Download bank file,Télécharger le dossier bancaire
+No available sales invoices found.,Aucune facture de vente disponible trouvée.
+Create Direct Debit Proposal,Créer une proposition de prélèvement automatique
+Direct Debit Proposal,Proposition de prélèvement automatique
+Enable LSV,Activer LSV
+Skonto Cost Center,Centre de coûts de Skonto
+Skonto Account,Compte Skonto
+Skonto Days,Journées Skonto
+Skonto Percent,Pourcentage Skonto
+Is proposed,Est proposé
+Are you sure you want to create payment reminders?,Voulez-vous vraiment créer des rappels de paiement?
+Total with Charge,Total avec charge
+Total before Charge,Total avant charge
+Highest Level,Plus haut niveau
+Auto Submit,Soumission automatique
+Payment Reminders created,Rappels de paiement créés
+Create Payment Reminders,Créer des rappels de paiement
+Exclude From Payment Reminder Until,Exclure du rappel de paiement jusqu'au
+Payment Reminder Level,Niveau de rappel de paiement
+15 Remarks,15 remarques
+14 Other salary sides,14 Autres aspects salariaux
+13.3 Education,13.3 Éducation
+13.2.3 Other net expenses,13.2.3 Autres charges nettes
+13.2.2 Car expenses,13.2.2 Frais de voiture
+13.2.1 Representation expenses,13.2.1 Frais de représentation
+13.1.2 Effective other expenses,13.1.2 Autres dépenses effectives
+13.1.1 Effective expenses travel,13.1.1 Frais de déplacement effectifs
+12 Source tax deduction,12 Déduction fiscale à la source
+11 Net salary,11 Salaire net
+10.2 Deduction pension additional,10.2 Déduction pension supplémentaire
+10.1 Deduction pension,10.1 Retenue de la pension
+9 Deductions AHV/IV/EO/ALV/NBUV,9 Déductions AHV / IV / EO / ALV / NBUV
+8 Gross salary,8 Salaire brut
+7 Other description,7 Autre description
+7 Other,7 Autre
+6 Board,6 Conseil
+5 Participation,5 Participation
+4 Capital description,4 Description de la capitale
+3 Irregular description,3 Description irrégulière
+2.3 Other salary description,2.3 Autre description de salaire
+4 Capital,4 Capitale
+3 Irregular,3 Irrégulier
+2.3 Other salary,2.3 Autre salaire
+2.2 Car,2.2 Voiture
+2.1 Catering,2.1 Restauration
+1. Salary,1. Salaire
+Section salary,Salaire de section
+Lunch checks,Chèques déjeuner
+Free transport,Transport gratuit
+Certificate type,Type de certificat
+Benefits,Avantages
+Please select a valid employee.,Veuillez sélectionner un employé valide.
+Totals have been updated,Les totaux ont été mis à jour
+Calculate totals,Calculer les totaux
+Salary slip information collected,Informations sur les fiches de salaire collectées
+Please save the record before populating it with data,Veuillez sauvegarder l'enregistrement avant de le remplir avec des données
+Salary Certificate,Attestation de salaire
+Auto match by ESR,Correspondance automatique par ESR
+Auto match by ID,Correspondance automatique par ID
+No matches found.,Aucun résultat.
+Matched {0} sales invoices.,{0} factures de vente correspondantes.
+Open bank import,Importation bancaire ouverte
+No unallocated payment entries found.,Aucune entrée de paiement non allouée trouvée.
+No unpaid sales invoices found.,Aucune facture de vente impayée trouvée.
+Done,Fait
+Customer not found,Client non trouvé
+Payment entry not found,Entrée de paiement introuvable
+Please select a payment entry.,Veuillez sélectionner une entrée de paiement.
+Please select a sales invoice.,Veuillez sélectionner une facture de vente.
+Match,Correspondre
+Payment entry,Saisie de paiement
+Payment entries,Entrées de paiement
+Due date,Date d'échéance
+Sales invoice,Facture de vente
+Sales invoices,Factures des ventes
+Helps to match unpaid sales invoices against received payments,Aide à faire correspondre les factures de vente impayées avec les paiements reçus
+Match payments,Faire correspondre les paiements
+VAT configuration,Configuration de la TVA
+Configuration,Configuration
+Rate 2 tax template,Modèle de taxe tarifaire 2
+Rate 1 tax template,Modèle de taxe tarifaire 1
+Flat tax,Taxe forfaitaire
+Pretax account,Compte Pretax
+Tax-free tax template,Modèle d'impôt libre d'impôt
+Abroad tax template,Modèle de taxe à l'étranger
+Lodging rate tax template,Modèle de taxe sur le taux d'hébergement
+Reduced rate tax template,Modèle de taxe à taux réduit
+Normal rate tax template,Modèle de taxe au taux normal
+Effective tax,Impôt effectif
+VAT tax mode,Mode de taxe TVA
+Donations (910),Dons (910)
+Grants (900),Subventions (900)
+Other cashflows,Autres flux de trésorerie
+Balance (510),Equilibre (510)
+Payable tax (500),Taxe à payer (500)
+Total pretax reductions (479),Total des réductions avant impôts (479)
+Form 1055 (471),Formulaire 1055 (471)
+Form 1050 (470),Formulaire 1050 (470)
+Pretax correction other (420),Pretax correction autre (420)
+Pretax correction mixed (415),Correction Pretax mixte (415)
+Missing pretax (410),Prétaxe manquant (410)
+Pretax investments (405),Investissements avant impôts (405)
+Pretax material and services (400),Matériel et services avant impôts (400)
+Total tax (399),Taxe totale (399)
+Additional tax (380),Taxe supplémentaire (380)
+Tax 2 (330),Impôt 2 (330)
+Tax 1 (320),Impôt 1 (320)
+Lodging tax (340),Taxe d'hébergement (340)
+Reduced tax (310),Taxe réduite (310)
+Normal tax (300),Taxe normale (300)
+Rate 2 (%),Taux 2 (%)
+Rate 1 (%),Taux 1 (%)
+Lodging rate (%),Taux d'hébergement (%)
+Reduced rate (%),Tarif réduit (%)
+Normal rate (%),Taux normal (%)
+Additional (382),Supplémentaire (382)
+Amount 2 (332),Montant 2 (332)
+Amount 1 (322),Montant 1 (322)
+Lodging (342),Hébergement (342)
+Reduced (312),Réduit (312)
+Normal (302),Normal (302)
+Additional (381),Supplémentaire (381)
+Amount 2 (331),Montant 2 (331)
+Amount 1 (321),Montant 1 (321)
+Lodging (341),Hébergement (341)
+Reduced (311),Réduit (311)
+Normal (301),Normale (301)
+Tax calculation,Calcul de la taxe
+Taxable revenue (299),Recettes imposables (299)
+Total deductions (289),Total des déductions (289)
+Miscellaneous (280),Divers (280)
+Losses (235),Pertes (235)
+Non-taxable services (230),Services non taxables (230)
+Transfers (225),Transferts (225)
+Revenue abroad (221),Chiffre d'affaires à l'étranger (221)
+Tax-free services (220),Services hors taxes (220)
+Non-taxable revenue (205),Recettes non imposables (205)
+Total revenue (200),Chiffre d'affaires total (200)
+Recalculate,Recalculer
+Get values,Obtenez des valeurs
+flat,plat
+VAT type,Type de TVA
+No payment entries to be paid found with status draft,Aucune entrée de paiement à payer trouvée avec le projet de statut
+Please select at least one payment.,Veuillez sélectionner au moins un paiement.
+Unable to read structure. Please make sure that you have selected the correct format.,Impossible de lire la structure. Veuillez vous assurer que vous avez sélectionné le bon format.
+CAMT.053 Bank Statement,CAMT.053 Relevé bancaire
+CAMT.054 Transaction Notification,Notification de transaction CAMT.054
+Successfully imported {0} payments.,{0} paiements importés avec succès.
+Error reading file,Erreur de lecture du fichier
+Please select a file.,Veuillez sélectionner un fichier.
+File,Déposer
+Parse,Analyser
+Automatically submit,Soumettre automatiquement
+Import payment entries from bank account file,Importer les écritures de paiement à partir du fichier de compte bancaire
+Create payment file,Créer un fichier de paiement
+Payment entries,Entrées de paiement
+Exports the selected payment entries for execution by file transfer to a bank,Exporte les écritures de paiement sélectionnées pour exécution par transfert de fichiers vers une banque
+No payment entries to be paid found with status draft,Aucune entrée de paiement à payer trouvée avec le projet de statut
+Invoice details added,Détails de la facture ajoutés
+Supplier data added,Données fournisseur ajoutées
+ESR Reference,Référence ESR
+ESR Participant Number,Numéro de participant ESR
+Transaction Type,Type de transaction
+Payment export,Exportation de paiement
+VAT Declaration,Déclaration de TVA
+Item name,Nom de l'article
+Customer name,Nom du client
+Normal View,Vue normale
+Fullsize View,Vue pleine grandeur
+Fullsize,Taille réelle
+Highest Sale,Vente la plus élevée
+Number of Customers,Nombre de clients
+Average Sales,Ventes moyennes
+Total Sales,Ventes totales
+Statistics,Statistiques
+Daily Closing Statement,Déclaration de clôture quotidienne
+Allow Purchase,Autoriser les achats
+Allow Sales,Autoriser les ventes
+Forecasting,Prévisionnel
+Employees working on a holiday,Employés travaillant un jour férié
+Employees Working on a Holiday,Employés travaillant un jour férié
+Leave Policy Assignment,Attribution de politique de congés
+Interview Feedback,Feedback d'entretien
+Interview Round,Cycle d'entretien
+Interview Type,Type d'entretien
+Full and Final Statement,Déclaration complète et définitive
+Grievance Type,Type de grief
+Employee Grievance,Grief d'un employé
+Pos Invoice,Facture de point de vente
+Opening & Closing,Ouverture & Clôture
+Settings & Configurations,Settings & Configurations
+Work Order Consumed Materials,Matériaux consommés par l'ordre de travail
+Cost Center Allocation,Répartition des centres de coûts
+Less than 12 months.,Moins de 12 mois.
+Is Short Year,Est une année courte
+Sales Pipeline Analytics,Analyse du pipeline des ventes
+Create and Send Quotation,Créer et envoyer un devis
+Create Opportunity,Créer une opportunité
+"Lead, Opportunity, Customer, and more.","Responsable, Opportunité, Client, et plus encore."
+Let's Set Up Your CRM.,Configurons votre CRM.
+Check Stock Projected Qty,Vérifier la quantité projetée du stock
+Update Stock Opening Balance,Mettre à jour le solde d'ouverture des stocks
+Manage Stock Movements,Gérer les mouvements de stocks
+Setup a Warehouse,Configurer un entrepôt
+"Inventory, Warehouses, Analysis, and more.","Inventaire, entrepôts, analyse, et plus encore."
+Let's Set Up the Stock Module.,Configurons le module Stock.
+"If checked, Rejected Quantity will be included while making Purchase Invoice from Purchase Receipt.","Si cette case est cochée, la quantité rejetée sera incluse lors de la création de la facture d'achat à partir du reçu d'achat."
+System will automatically create the serial numbers / batch for the Finished Good on submission of work order,Le système créera automatiquement les numéros de série / lot pour le produit fini lors de la soumission du bon de travail
+Make Serial No / Batch from Work Order,Créer un numéro de série/lot à partir du bon de travail
+Allow transferring raw materials even after the Required Quantity is fulfilled,Autoriser le transfert des matières premières même après que la quantité requise est remplie
+Allow Excess Material Transfer,Autoriser le transfert de matériel excédentaire
+Add Corrective Operation Cost in Finished Good Valuation,Ajouter un coût d'opération corrective dans la valorisation du produit fini
+Allow material consumptions without immediately manufacturing finished goods against a Work Order,Permettre la consommation de matériaux sans fabriquer immédiatement des produits finis dans le cadre d'un bon de travail.
+Allow Continuous Material Consumption,Permettre la consommation continue de matériaux
+Allow Lead Duplication based on Emails,Autoriser la duplication des Prospect sur la base des courriels.
+All the Comments and Emails will be copied from one document to another newly created document(Lead -> Opportunity -> Quotation) throughout the CRM documents.,Tous les commentaires et les courriels seront copiés d'un document à un autre document nouvellement créé (Lead -> Opportunité -> Devis) dans l'ensemble des documents CRM.
+Carry Forward Communication and Comments,Reporter la communication et les commentaires
+Auto close Opportunity Replied after the no. of days mentioned above,Opportunité de fermeture automatique Répliquée après le nombre de jours mentionnés ci-dessus.
+Close Replied Opportunity After Days,Opportunité de réponse après jours
+Create Event on Next Contact Date,Créer un événement à la prochaine date de contact
+Auto Creation of Contact,Création automatique de contact
+Create Event on Next Contact Date,Créer un événement à la prochaine date de contact
+Exit Questionnaire Notification Template,Modèle de notification questionnaire de sortie
+Exit Questionnaire Web Form,Formulaire Web du questionnaire de sortie
+Employee Exit Settings,Paramètres de sortie des employés
+Restrict Backdated Leave Application,Ne pas autoriser les demandes de congés antidatées
+Feedback Reminder Notification Template,Modèle de notification de rappel de commentaires
+Send Interview Feedback Reminder,Envoyer un rappel de feedback d'entretien
+Auto Leave Encashment,Paiement des congés automatique
+Restrict Backdated Leave Application,Ne pas autoriser les demandes de congés antidatées
+Send Leave Notification,Envoyer une notification de congé
+Leave and Expense Claim Settings,Paramètres des congés et des notes de frais
+Set the frequency for holiday reminders,Définir la fréquence des rappels de vacances
+Reminders,Rappels
+Send Interview Reminder,Envoyer un rappel d'entretien
+Work Anniversaries,Anniversaires de travail
+Birthdays,Anniversaires
+Retirement Age (In Years),Âge de la retraite (en années)
+Standard Working Hours,Heures ouvrées par défaut
+Employee records are created using the selected option,Les dossiers des employés sont créés à l'aide de l'option sélectionnée
+Employee Naming By,Nom de l'employé par
+"The percentage you are allowed to transfer more against the quantity ordered. For example, if you have ordered 100 units, and your Allowance is 10%, then you are allowed transfer 110 units.","Le pourcentage que vous êtes autorisé à transférer plus par rapport à la quantité commandée. Par exemple, si vous avez commandé 100 unités et que votre allocation est de 10 %, vous êtes autorisé à transférer 110 unités."
+Stock Validations,Validations de stock
+Serial & Batch Item,Numéro de série et de lot
+Stock Planning,Planification du stock
+Stock Closing,Fermeture du stock
+"If checked, Rejected Quantity will be included while making Purchase Invoice from Purchase Receipt","Si la case est cochée, la quantité rejetée sera incluse dans la facture d'achat à partir du reçu d'achat."
+Bill for Rejected Quantity in Purchase Invoice,Facturer la quantité rejetée dans la facture d'achat
+Role Allowed to Override Stop Action,Rôle autorisé à outrepasser l'action Stop
+Configure the action to stop the transaction or just warn if the same rate is not maintained.,Configurez une action pour stopper la transaction ou alertez simplement su le prix unitaie n'est pas maintenu.
+Action If Same Rate is Not Maintained,Action si le prix unitaire n'est pas maintenu
+Allow Item to be Added Multiple Times in a Transaction,Autoriser l'ajout d'un article plusieurs fois dans une transaction
+Calculate Product Bundle Price based on Child Items' Rates,Calculer le prix du lot de produits en fonction des tarifs des articles enfants
+Enabling ensure each Sales Invoice has a unique value in Supplier Invoice No. field,L'activation garantit que chaque facture de vente a une valeur unique dans le champ N° de facture fournisseur
+Invoice and Billing,Facture et Facturation
+Invoicing Features,Fonctionnalités de facturation
+Invoice Cancellation,Annulation de facture
+"If enabled, additional ledger entries will be made for discounts in a separate Discount Account","Si activé, des écritures comptables supplémentaires seront effectuées pour les remises dans un compte de remise séparé"
+Enable Discount Accounting,Activer la comptabilisation des remises
+Learn about Common Party,En savoir plus sur la comptabilité de partie commune
+Enable Common Party Accounting,Activer la comptabilité de partie commune
+Delete Accounting and Stock Ledger Entries on deletion of Transaction,Supprimer les écritures comptables et de stock lors de la suppression d'une transaction
+Role allowed to bypass Credit Limit,Rôle autorisé à contourner la limite de crédit
+Users with this role are allowed to over bill above the allowance percentage,Les utilisateurs avec ce rôle sont autorisés à sur-facturer au delà du pourcentage de tolérance
+Role Allowed to Over Bill ,Rôle autorisé à sur-facturer
+"If enabled, ledger entries will be posted for change amount in POS transactions","Si activé, les écritures comptables seront enregistrées pour le montant de la modification dans les transactions POS"
+Create Ledger Entries for Change Amount,Créer des écritures comptables pour modifier le montant
+Accounts Closing,Clôture des comptes
+Supplier and Price Defaults,Fournisseur et prix par défaut
+Subcontracting Settings,Paramètres de sous-traitance
+Transaction Settings,Paramètres des transactions
+"If checked, Rejected Quantity will be included while making Purchase Invoice from Purchase Receipt","Si la case est cochée, la quantité rejetée sera incluse dans la facture d'achat à partir du reçu d'achat."
+Bill for Rejected Quantity in Purchase Invoice,Facturer la quantité rejetée dans la facture d'achat
+Role Allowed to Override Stop Action,Rôle autorisé à outrepasser l'action Stop
+Configure the action to stop the transaction or just warn if the same rate is not maintained.,Configurez une action pour stopper la transaction ou alertez simplement su le prix unitaie n'est pas maintenu.
+Action If Same Rate is Not Maintained,Action si le prix unitaire n'est pas maintenu
+Advanced options,Options avancées
+Subscription / ESR,Abonnement / ESR
+Exclude From Payment Reminder Until,Exclure du rappel de paiement jusqu'à
+Payment Reminder Level,Niveau de rappel de paiement
+Accounting and Tax,Comptabilité et Taxe
+Accounting and pricing,Comptabilité et prix
+User name,Nom d'utilisateur
+Enable Zefix,Activer Zefix
+Default Tax Rate,Taux de taxe par défaut
+Add negative deviation as discount,Ajouter un écart négatif comme remise
+Add positive deviation as additional item,Ajouter un écart positif comme élément supplémentaire
+Default Positive Deviation Item,Article d'écart positif par défaut
+Default Item,Article par défaut
+Invoice Code Line Scanning,Numérisation des lignes de code de facture
+Automatically process full matches,Traiter automatiquement les correspondances complètes
+Always use entry transaction type,Toujours utiliser le type de transaction d'entrée
+Intermediate Account,Compte intermédiaire
+Bank Wizard,Assistant bancaire
+Enable salary payment,Activer le paiement du salaire
+Banking Region,Région bancaire
+Participant Number,Numéro du participant
+Number of days the payment proposal will look ahead. Payments with a due date further ahead will not be proposed.,Nombre de jours pour lesquels la proposition de paiement sera examinée. Les paiements dont la date d'échéance est plus éloignée ne seront pas proposés.
+Planning Period (Days),Période de planification (jours)
+Automated Payments,Paiements automatisés
+Reminder Charge,Frais de rappel
+Reminder Level,Niveau de rappel
+Reminder Charges,Frais de rappel
+Payment Reminder,Rappel de paiement
+Auto Submit,Soumission automatique
+Use this to define a default supplier,Utilisez ceci pour définir un fournisseur par défaut
+Use this to define a default customer,Utilisez ceci pour définir un client par défaut
+Has Variants,A des Variantes
+{} Assigned,{} Assigné(s)
+{} Open,{} Ouvert.e(s)
+{} Active,{} Actif.ve(s)
+{} To Receive,{} A recevoir
+{} To Bill,{} à facturer
+{} Pending,{} En attente(s)
+{} Available,{} Disponible(s)
+{} Published,{} Publié
+Match Paiement,Correspondance des paiements
+Payment Reminder Level Blocking Period,Période de blocage du niveau de rappel de paiement
+Uses only the numeric part of a sales invoice number for matching,Utilise uniquement la partie numérique d'un numéro de facture de vente pour la correspondance
+Numeric-only debtor reference matching,Correspondance de référence de débiteur uniquement numérique
+Blocking period in days,Période de blocage en jours
+Bank Statement Import,Importation de relevés bancaires
+Payment Exportation,Exportation des paiements
+Disable Automatic calculation,Désactiver le calcul automatique
+Partly Paid,Partiel
+Free line,Ligne libre
+VAT for,TVA de
+Default Item,Article par défaut
+Supplier matched,Fournisseur trouvé
+No Supplier found! Fetched default Supplier.,Aucun fournisseur trouvé ! Fournisseur par défaut récupéré.
+Update supplier,Mettre à jour le fournisseur
+Do you want to update the supplier?,Voulez-vous mettre à jour le fournisseur ?
+Supplier update !,Mise à jour du fournisseur !
+Accounting Entry Counterparty,Contrepartie d'écriture comptable
+Accounting Entry Totalization,Totalisation des écritures comptables
+Max Qty (As Per Stock UOM),Qté max. (selon la nomenclature du stock)
+Min Qty (As Per Stock UOM),Qté min. (selon la nomenclature du stock)
+Change reference,Change référence
+Attach,Attacher
+Feature image,Image mise en avant
+Brand Ecommerce,Marque Ecommerce
+Additional Ecommerce Categories,Catégories additionnelles Ecommerce
+Subject to VAT,Soumis à la TVA
+Short description,Description courte
+Long description,Description longue
+Publish on ecommerce,Publier sur le ecommerce
+Neoffice Giftcard,Carte cadeau
+All Items,Tous les articles
+"Search by item code, serial number or barcode","Recherche par code article, numéro de série ou code-barres"
+Recent Transactions,Dernières transactions
+Last transacted a day ago,Dernière transaction effectuée
+No items in cart,Pas d'articles dans le panier
+Click to add email / phone,Cliquez pour ajouter un email / téléphone
+Neoffice Loyalty Giftcards,Cartes-cadeaux du programme de fidélité
+Generation Week,Semaine des générations
+Consumed Loyalty Points,Points de fidélité consommés
+ToDo,Tache
+Opening &amp; Closing,Ouverture & Cloture
+Expiracy,Expiration
+Reached Points,Rachat des points
+Giftcard expiry (in days),Expiration de la carte-cadeau (en jours)
+Creation Hour,Heure de création
+Creation Day,Jour de la création
+Create Giftcard,Créer une carte-cadeau
+Default QR Account,Compte de paiement des facture QR par défaut
+Contact & Address,Contact & Adresse
+Choose,Choisir
+Status font and color,Couleur des status
+Content top QR Invoice,Haut de page QR Facture
+My account,Mon compte
+Quick Access,Accès Rapide
+Enable Message Tone,Activer la tonalité des messages
+Enable Notifications,Activer les notifications
+Payment part,Section paiement
+Acceptance point,Point de dépôt
+Payable by,Payable par
+Account / Payable to,Compte / Payable à
+Currency,Monnaie
+Receipt,Récépissé
+VAT,TVA
+N° VAT,N° TVA
+New status,Nouveau status
+For the document,Pour le document
+Text color,Couleur du texte
+Margin Top (px),Marge au dessus (px)
+Background color,Couleur de fond
+Delayed Tasks Summary,Résumé des tâches en retard
+Easy Tax and Accounting,Easy Taxe et Comptabilisation
+Hide the price in the delivery note,Masquer le prix dans le bon de livraison
+Hide product reference,Masquer la référence du produit
+Gift Card setup,Configuration Carte cadeau
+Customer Reference,Référence Client
+Payment received,Paiement reçu
+Remaining to be paid,Restant à payer
+paid on,payé le
+and the remaining amount to be paid is,et le montant restant à payer est de
+Total payments received are,Le total des paiements reçus est de
+Print image size,Taille de l'image à imprimer
+Print image,Imprimer l'image
+Hide product name,Cacher le nom du produit
+Hide number line,Cacher le numéro de ligne
+Print Status,Imprimer le Status
+Additional Ecommerce Categories,Catégories Ecommerce supplémentaires
+Category Ecommerce,Catégorie Ecommerce
+Brand Ecommerce,Marque Ecommerce
+See the product on ecommerce,Voir le produit sur ecommerce
+Add/Change Price,Ajouter/Modifier prix
+Add stock,Ajouter stock
+Create Label,Créer étiquette
+Label Printer,Etiquette d'imprimante
+Codebar height,Hauteur du code-barres
+Barcode type,Type de code-barre
+Barcode Color,Couleur du code-barres
+You're trying to add {0} that isn't synchronized to Ecommerce. Please sync the product first.,Vous essayez d'ajouter des {0} qui ne sont pas synchronisées avec le Ecommerce. Veuillez d'abord synchroniser le produit.
+"To transform a simple product into a bundled product,","Pour transformer un produit simple en un produit groupé,"
+click here,cliquez-ici
+Simple product,Produit simple
+Variable product,Produit variable
+Variable,Variation
+Customer reference,Référence
+Discount amount,Montant de la remise
+Discount Amount,Montant de la remise
+Total product,Total produits
+PLR,PVC
+Deadline,Echéance
+Condition of payment,Condition
+Other Data,Autre Info
+Subject to VAT,Assujetti à la TVA
+Fiscal Year End Date,Date de fin de l'année fiscale
+Fiscal Year Start Date,Date de début de l'année fiscale
+Your Company Logo,Logo de votre société
+Your Company Name,Nom de votre société
+Edit Full Form,Edition pleine page
+Food Shop,Alimentation Shop
+B2B Settings,Paramétrage Shop B2B
+View List,Voir la liste
+Dealer,Revendeur
+Settings,Paramètres
+Calendar,Agenda
+Opening & Closing,Ouverture & Clôture
+Settings & Configurations,Paramètres et configurations
+Let's Set Up Some Masters,Configurons quelques points
+Outgoing Salary,Salaire sortant
+Profit and Loss,Bénéfice et perte
+Territory Wise Sales,Ventes à l'échelle du territoire
+Open Projects,Projets ouverts
+Warehouse wise Stock Value,Valeur des stocks selon l'entrepôt
+Settings & Configurations,Paramètres et configurations
+Advanced options,Options avancées
+Master,Données de base
+Reports,Rapports
+Filter By,Filtrer par
+Retail,Caisse
+Create Workspace,Créer des espaces utilisateurs
+Loan Security,Garantie de prêt
+Disbursement and Repayment,Décaissement et remboursement
+Loan Processes,Processus de prêt
+Video,Vidéo
+Web Site,Site Web
+Logs,Journal
+Users,Utilisateurs
+Workflow,Flux de travail
+Email / Notifications,Email / Notifications
+Data,Données
+Warranty,Garantie
+Serial No and Batch,Numéro de série et lot
+Stock Reports,Rapports de stock
+Stock Transactions,Transactions de stock
+Items and Pricing,Articles et prix
+Point Of Sale,Point de vente
+Opening & Closing,Ouverture & Fermeture
+Settings & Configurations,Settings & Configurations
+Review and Action,Examen et action
+Meeting,Réunion
+Goal and Procedure,Objectifs et procédures
+Compensations,Compensations
+Disbursement and Repayment,Versement et remboursement
+Loan Processes,Processus de prêt
+Fleet Management,Gestion de flotte
+Recruitment,Recrutement
+Loans,Prêts
+Expense Claims,Notes de frais
+Shift Management,Gestion des équipes
+Employee Exit,Sortie des employés
+Employee Lifecycle,Cycle de vie des employés
+Marketplace,Marketplace
+Key Reports,Principaux rapports
+Items & Pricing,Articles et prix
+Diseases & Fertilizers,Maladies et engrais
+Analytics,Analytique
+Crops & Lands,Cultures et terres
+Other,Autre
+Form Customization,Personnalisation du formulaire
+Dashboards,Tableaux de bord
+Accounting Masters,Maîtrise en comptabilité
+Share Management,Gestion des actions
+Multi Currency,Multi-devise
+General Ledger,Grand livre général
+Profitability,Rentabilité
+Opening and Closing,Ouverture et Bouclement
+Cost Center and Budgeting,Centre de coûts et budgétisation
+Share Management,Share Management
+Subscription Management,Gestion des abonnements
+Save,Sauver
+Filter Name,Nom du filtre
+Save Filter,Enregistrer le filtre
+Show Tags,Voir les étiquettes
+Edit Filters,Modifier les filtres
+Accounting,Comptabilité
+Bank Statement,Relevé bancaire
+Bank,Banque
+Shared With,Partagé avec
+Enabled,Activé
+Take a walk through Stock Settings,Parcourez les paramètres des stocks
+Review Stock Settings,Révision des paramètres du stock
+Skip,Passer
+Dismiss,Rejeter
+Create Entry,Créer une entrée
+Reset Chart,Réinitialiser le Tableau
+Sales Order Trends Report,Rapport sur les tendances des commandes de vente
+See all customers,Voir les clients
+Create customer,Créer un Client
+See all quotations,Voir les Devis
+Create quotation,Créer un Devis
+See all sales Order,Voir les Commandes
+Create sales Order,Créer une Commande
+See open sales Invoice,Voir les Factures Ouvertes
+See all sales Invoice,Voir toutes les Factures
+Create sales Invoice,Créer une Facture
+Open Point Of Sale,Ouvrir le PDV
+Open POS,Ouvrir PDV
+See all Supplier,Voir les fournisseurs
+Create Supplier,Créer un Fournisseur
+See all Purchase Order,Voir les Commandes d'Achat
+Create purchase Order,Créer commande d'Achat
+See all purchase Invoice,Voir les Facture d'Achat
+Create purchase Invoice,Créer Facture d'Achat
+Incoming Bills,Factures entrantes
+Top Suppliers,Fournisseurs Principaux
+Outgoing Bills,Factures sortantes
+Top Customers,Meilleurs clients
+See all Item,Voir les Articles
+Create Item,Créer un Article
+See all item Price,Voir les Prix des Articles
+Create item Price, Créer un prix d'Article
+Item-wise Annual Sales,Ventes annuelles par article
+See all delivery Note,Voir les Bon de livraison
+Create delivery Note, Créer un Bon de livraison
+See all purchase Receipt,Voir les reçus d'Achats
+Create purchase Receipt,Créer un Reçus d'Achats
+See all stock Entry,voir les Entrée en stock
+Create stock Entry,Créer Entrée en stock
+See all Task,Voir les Tâches
+Create Task,Créer Tâche
+Calendar Task,Calendrier des Tâches
+See all Project,Voir les Projets
+Create Project,Créer un Projet
+See all Timesheet,Voir les Feuille de Temps
+Department wise Timesheet Hours,Heures de feuille de temps par département
+See all Lead,Voir les Prospect
+See all Opportunity,Voir les Opportunité
+See & Create Newsletter,Voir &Crer les Newsletter
+Newsletter List,Liste des Newsletter
+Newsletter Subscription,Abonnements aux Newsletter
+Newsletter Form,Formulaire des Newsletter
+Newsletter Setting,Configuration des Newsletter
+Gift Card Personalized,Personalisation des Carte Cadeau 
+Gift Card Loyalty,Cartes Cadeaux du programme de fidélité
+See all Issue,Voir les Tickets
+See all maintenance Visit,Voir les Visites d'Entretiens
+Opportunity Summary by Sales Stage,Résumé des opportunités par étape de vente
+See all Bank,Voir les Banque
+See all bank Account,Voir les comptes Bancaires
+Bank Settings,Configuration des Banques
+Bank Informations,Données de la banque
+Bank Configuration,Configuration Bancaire
+Bank Address,Adresse de la Banque
+QR Bank Account,Compte Bancaire QR
+Postal Bank Informations,Informations PostFinance
+Postal Bank Adresse,Adresse PostFinance
+Postal Account,Compte PostFinance
+QR Postal Account,Compte PostFinance QR
+Supplier create !,Fournisseur créé !
+Manage Stock,Gerer le Stock
+Base Price,Prix de vente de base
+Product default,Article par défaut
+Sales Partner Target Variance Based On Item Group,Écart cible du commercial basé sur le groupe d'articles
+Employee Lifecycle Dashboard,Tableau de bord des employés
+Attendance Dashboard,Tableau de bord de présence
+Expense Claims Dashboard,Tableau de bord des notes de frais
+Search or type a command (Ctrl + G),Que cherchez-vous ? (Ctrl + G)
+HR Dashboard,Tableau de bord RH
+Recruitment Dashboard,Tableau de bord de recrutement
+Sales Update Frequency in Company and Project,Fréquence de mise à jour des ventes dans l'entreprise et le projet
+Enabling ensure each Purchase Invoice has a unique value in Supplier Invoice No. field,L'activation garantit que chaque facture d'achat a une valeur unique dans le champ N° de facture fournisseur
+Automatically Fetch Payment Terms from Order,Récupérer automatiquement les conditions de paiement de la commande
+Enable Custom Cash Flow Format,Activer le format de flux de trésorerie personnalisé
+Allow multi-currency invoices against single party account ,Autoriser les factures multidevises sur le compte d'une seule partie
+Enabling this will allow creation of multi-currency invoices against single party account in company currency,L'activation de cette option permettra la création de factures multidevises sur le compte d'une seule partie dans la devise de l'entreprise
+Report Setting,Paramétrage du rapport
+Tax Settings,Paramètres des Taxes
+Default In-Transit Warehouse,Entrepôt de transit par défaut
+"In this process, for each stock transaction, the system posts relevant accounting entries to sync stock balance and accounting balance.<br><br>When you buy and receive items, those items are booked as the company’s assets (stock-in-hand). When you sell and deliver those items, an expense (Cost of Goods Sold) equal to the landed cost of the items is booked. General Ledger entries are created after every stock transaction. As a result, the value as per Stock Ledger always remains the same with the relevant account balance. This improves the accuracy of the Balance Sheet and the Profit and Loss statement.","Dans ce processus, pour chaque transaction de stock, le système enregistre les écritures comptables pertinentes pour synchroniser le stock et la balance comptable.<br><br>Lorsque vous achetez et recevez des articles, ceux-ci sont inscrits à l'actif de l'entreprise (stock disponible). Lorsque vous vendez et livrez ces articles, une dépense (coût des marchandises vendues) égale au coût au débarquement des articles est comptabilisée. Des écritures dans le grand livre sont créées après chaque transaction de stock. Par conséquent, la valeur selon le Grand livre des stocks reste toujours la même avec le solde du compte correspondant. Cela améliore l'exactitude du bilan et du compte de résultat."
+Default Tax,Taxe par défaut
+"If you don't have a logo yet, you can create one easily on","Si vous n'avez pas encore de logo, vous pouvez en créer un facilement sur"
+Website configuration,Configuration du Site Web
+Defaults Configuration,Paramètre par défaut
+Crop,Recadrer,
+To The Attention of (only for print),À l'attention de (seulement pour impression)
+Company (only for print and is displayed instead of the customer's name),Entreprise (uniquement pour impression et s'affiche à la place du nom du client)
+No. of Employees,Nombre d'employés
+Annual Revenue,Revenu annuel
+Prospect Owner,Propriétaire du prospect
+Opportunity Owner,Propriétaire de l'opportunité
+Probability,Probabilité
+Closing,Fermer
+Process Payroll Accounting Entry based on Employee,Traiter la saisie comptable de la paie en fonction de l'employé
+"If checked, Payroll Payable will be booked against each employee","Si cette case est cochée, la paie à payer sera imputée à chaque employé"
+Show Leave Balances in Salary Slip,Afficher les soldes de congés dans le bulletin de salaire
+Journey,Voyage
+Attendance & Leaves,Présence et congés
+Joining,Engagement
+Employment Degrees,Degrés d'emploi
+Worktime Details,Détails du temps de travail
+Carryover and Payouts,Report et paiements
+Employee Exits,Départs des employés
+Exit Interview,Entretien de sortie
+Interview Summary,Résumé de l'entretien
+Interview Details,Détails de l'entretien
+Final Decision,Décision finale
+Interviewers,Intervieweurs
+Full and Final Settlement,Déclaration complète et définitive
+Onboarding Activities,Activités d'intégration
+Onboarding Begins On,L'intégration commence le
+Set the properties that should be updated in the Employee master on promotion submission,Définissez les propriétés qui doivent être mises à jour dans la fiche des employés lors de la soumission d'une promotion
+Energy Point Log,Journal des points d'énergie
+Warehouse Wise Stock Balance,Solde des stocks de l'entrepôt
+Translate Website,Traduire le site web
+Income Tax Computation,Calcul de l'impôt sur le revenu
+Payroll Reports,Rapports de salaires
+Actived mode is,Le mode activé est
+Enable or disable full screen mode,Activer ou désactiver le mode plein écran
+Enable or disable dark and light.,Activez ou désactivez le mode sombre ou clair.
+Name of the payment method,Nom de la méthode de paiement
+Activate Stripe on ERP,Activer Stripe sur ERP
+Activate Stripe on Ecommerce,Activez Stripe sur Ecommerce
+Webhook only ecommerce,Webhook seulement ecommerce
+Add the following "Webhook" endpoint <span id="url_domain"></span>/web/?wc-api=wc_stripe to your Stripe account settings (<a href="https://dashboard.stripe.com/account/webhooks" target="_blank">opens a new tab</a>) (if there is not one already). This will allow you to receive notifications on statuses change.,Ajoutez le point de terminaison "Webhook" suivant <span id="url_domain"></span>/web/?wc-api=wc_stripe aux paramètres de votre compte Stripe (<a href="https://dashboard.stripe.com/account/webhooks" target="_blank">ouvre un nouvel onglet</a>). (s'il n'y en a pas déjà un). Cela vous permettra de recevoir des notifications sur les changements de statuts.
+Hide Images,Cacher les Images
+Allow User to Edit Discount,Autoriser l'utilisateur à modifier la remise
+Allow User to Edit Rate,Permettre à l'utilisateur de modifier le taux
+Validate Stock on Save,Valider le stock lors de l'enregistrement
+Automatically Add Filtered Item To Cart,Ajouter automatiquement l'article filtré au panier
+"If enabled, the consolidated invoices will have rounded total disabled","Si cette option est activée, le total arrondi des factures consolidées sera désactivé."
+Write Off Limit,Limite de radiation
+Auto write off precision loss while consolidation,Amortissement automatique de la perte de précision pendant la consolidation
+"Hello {0},<br><br>Thank you for your purchase.<br><br>Please find attached the receipt.","Bonjour {0},<br><br>Merci pour votre achat.<br><br>Veuillez trouver ci-joint le reçu."
+New Order,Nouvelle Commande
+Website Translate,Traduction du Site Web
+Payment Terms Status for Sales Order,Statut des conditions de paiement pour la commande client
+View email box,Afficher la boîte mail
+The company you are working on.,L'entreprise pour laquelle vous travaillez.
+Switzerland,Suisse
+Get Customer Group Details,Obtenir les détails du groupe de clients
+Product stock alert,Alerte stock produit
+Payment by bank transfer,Paiement par virement bancaire
+Thank you for ordering on our website! You can find the information for the bank transfer below or you can use the QR invoice below. Bank transfer,Merci de commander sur notre site web ! Vous pouvez trouver les informations pour le virement bancaire ci-dessous ou vous pouvez utiliser la facture QR ci-dessous. Virement bancaire
+Banking information,Information bancaire
+Or by QR invoice,Ou par facture QR
+Ecommerce order,Commande Ecommerce
+"To The Attention of (only for print and if it has a value in a delivery address, it will replace the customer's namet)","A l'attention de (uniquement pour impression et si elle a une valeur dans une adresse de livraison, elle remplacera le nom du client)"
+Company (only for print and is displayed instead of the customer's name),Entreprise (uniquement pour impression et s'affiche à la place du nom du client)
+From Opportunity,De l'opportunité
+Internal Customer,Client interne
+Primary Address and Contact,Adresse principale et coordonnées du contact
+Disable Price Entry In The Default Payment Method,Désactiver la saisie de prix dans le mode de paiement par défaut
+This ecommerce order is "<b>on hold</b>". You can change it back to "<b>To Deliver</b>" and create invoice by clicking {0} (make sure you have received payment before validation).,Cette commande ecommerce est en "<b>En attente</b>". Vous pouvez la repasser à "<b>À Livrer</b>" et créer la facture en cliquant {0} (assurez-vous d'avoir reçu le paiement avant la validation).
+This ecommerce order is "<b>on hold</b>". You can change it back to "<b>To Deliver</b>" by clicking {0}.,Cette commande est en "<b>En attente</b>". Vous pouvez la repasser à "<b>À Livrer</b>" en cliquant {0}.
+here,ici
+Is Cash or Non Trade Discount,S'agit-il d'une remise en espèces ou non commerciale
+Discount Account,Compte de réduction
+Loyalty amount,Montant de fidélité
+Enable Website (if unchecked website will not be visible by customers and visitors),Activer le site Web (si le site Web non coché ne sera pas visible par les clients et les visiteurs)
+Enable Ecommerce (if unchecked ecommerce will not be visible by customers and visitors),Activer l'Ecommerce (si l'Ecommerce non coché ne sera pas visible par les clients et les visiteurs)
+Change Sync Warehouse,Modifier l'entrepôt de synchronisation
+Stock to be synchronised,Stock à synchroniser
+Gallery 1,Galerie 1
+Gallery 2,Galerie 2
+Gallery 3,Galerie 3
+Gallery 4,Galerie 4
+Gallery 5,Galerie 5
+Gallery 6,Galerie 6
+Gallery 7,Galerie 7
+Gallery 8,Galerie 8
+Gallery 9,Galerie 9
+Gallery 10,Galerie 10
+"Your Company Logo (only <b>png</b>, <b>jpg</b> or <b>jpeg</b>)","Logo de votre entreprise (seulement <b>png</b>, <b>jpg</b> ou <b>jpeg</b>)"
+"<span style='font-weight: 500;'>We are pleased to welcome you to Neoffice and thank you for your confidence in our solution!</span><br> To help you configure your instance quickly, we invite you to fill in our quick configurator. This will allow us to gather all the important information and configure your instance automatically. If you have any questions or specific needs, please feel free to contact us using the chat at the bottom left of your screen. We will be happy to answer all your questions and assist you in using our solution.","<span style='font-weight: 500;'>Nous sommes heureux de vous accueillir sur Neoffice et de vous remercier pour votre confiance en notre solution !</span><br> Pour vous aider à configurer rapidement votre instance, nous vous invitons à remplir notre configurateur rapide. Cela nous permettra de réunir toutes les informations importantes et de configurer votre instance de manière automatique. Si vous avez des questions ou des besoins spécifiques, n'hésitez pas à nous contacter en utilisant le chat en bas à gauche de votre écran. Nous sommes à votre disposition pour répondre à toutes vos questions et vous assister dans votre utilisation de notre solution."
+File not supported.,Fichier non pris en charge.
+Using negative stock disables FIFO/Moving average valuation when inventory is negative.,L'utilisation d'un stock négatif désactive la valorisation FIFO/Moyenne mobile lorsque le stock est négatif.
+This is considered dangerous from accounting point of view.,Ceci est considéré comme dangereux du point de vue comptable.
+Do you still want to enable negative inventory?,Voulez-vous toujours activer l'inventaire négatif ?
+Do you want to create a pricing / promotion rule?,Voulez-vous créer une règle de tarification / promotion ?
+Click here,Cliquez ici
+Add Discount,Ajouter une remise
+Do you want to create a price rule for <b>ecommerce</b> ?,Voulez-vous créer une règle de prix pour <b>ecommerce</b> ?
+The ecommerce rules will also apply to the ERP but are more limited.,Les règles ecommerce s'appliqueront également à l'ERP mais sont plus limitées.
+Title of your price rule,Titre de votre règle de prix
+Rate : Force the price to the chosen value,Prix : Forcer le prix à la valeur choisie.
+Discount Percentage : Percentage discount that will be deducted from the price,Pourcentage de remise : Pourcentage de remise qui sera déduit du prix.
+Discount Amount : Amount to be deducted from the price,Montant de la remise : Montant à déduire du prix
+Type of pricing rule,Type de règle de prix
+Forced price,Prix forcé
+Percentage reduction,Pourcentage de réduction
+Reduction amount,Montant de la réduction
+Start date,Date de début
+End date,Date de fin
+Deactivate the price rule,Désactiver la règle de prix
+Change Amount,Montant rendu
+Generate code,Générer le code
+No address,Pas d'adresse
+No address in the QR,Pas d'adresse dans le QR
+The supplier has been created but without an address. Go to the supplier to correct the address.,Le fournisseur a été créé mais sans adresse. Allez sur le fournisseur pour corriger l'adresse.
+Sales Invoice,Facture,
+"If the following values are empty, they will be synchronized with the same values as the parent product. ===> If the following values are 0, they will be synchronized with the same values as the parent product.","Si les valeurs suivantes sont vides, elles seront synchronisées avec les mêmes valeurs que le produit parent. ===> Si les valeurs suivantes sont 0, elles seront synchronisées avec les mêmes valeurs que le produit parent."
+Product Length (in cm),Longueur du produit (en cm)
+Product Width (in cm),Largeur du produit (en cm)
+Product Height (in cm),Hauteur du produit (en cm)
+Product Weight (in Kg),Poids du produit (en Kg)
+Dimensions and Weigth,Dimensions et poids
+<div class="form-message blue"><div>Values saved as 0 are not synchronized.</div></div>,<div class="form-message blue"><div>Les valeurs enregistrées à 0 ne sont pas synchronisées.</div></div>
+Earnings & Deductions,Bénéfices et Déductions
+Net Pay Info,Informations sur le paiement net
+Payroll Payable Account,Compte de paie à payer
+Show Prices In eShop,Afficher les prix dans Ecommerce
+VAT included,TVA Incluse TTC
+VAT excluded,TVA Exclue HT
+VAT Calculation in eShop,Calcul de la TVA dans Ecommerce
+Based on company address,Adresse de base de la Boutique
+Based on customer's billing address,Adresse de facturation du client
+Based on customer's shipping address,Adresse de livraison du client
+Fetch Timesheet,Récupérer les temps saisis
+Allow Price List Rate Modification,Autoriser la modification du tarif de la liste de prix
+Unreconciled Entries,Entrées non rapprochées
+"If you need to reconcile particular transactions against each other, then please select accordingly. If not, all the transactions will be allocated in FIFO order.","Si vous avez besoin de rapprocher des transactions particulières les unes par rapport aux autres, veuillez sélectionner en conséquence. Sinon, toutes les transactions seront allouées dans l'ordre FIFO."
+Minimum Payment Amount,Montant du Paiement Minimal
+Maximum Payment Amount,Montant du Paiement Maximal
+From Payment Date,À partir de la date de paiement
+To Payment Date,Jusqu'à la date de paiement
+This filter will be applied to Journal Entry.,Ce filtre sera appliqué à l'entrée de journal.
+Invoice Limit,Limite de facturation
+Payment Limit,Limite de paiement
+Ecommerce Shipping Method Title,Titre de la méthode d'expédition du Ecommerce
+"Hello {0},<br><br>Thank you for your purchase.<br><br>Please find attached the receipt","Bonjour {0},Merci pour votre achat.<br><br>Veuillez trouver ci-joint le reçu."
+% Cashiered,% Encaissé
+Submit Invoice Automatically,Valider la facture automatiquement
+Shipping address,Adresse de livraison
+Advanced product list,Liste des produits avancées
+Coupon Code,Code promo
+Deliver and Bill,Livrer et facturer
+Unpaid,Non payé
+Do you want to consider the document as printed ?,Voulez-vous considérer le document comme imprimé ?
+Printed,Imprimé
+Printed document,Imprimé
+Posting date,Date de Paiement
+Import payment entries,Importer les écritures de paiement
+Price entry in,Saisie des prix en
+Payment Files,Compte de paiement
+Taxable account,Compte de Taxe
+Item Price Settings,Paramètres de prix de l'article
+Customer Defaults,Valeurs par défaut du client
+Enable Discount Accounting for Selling,Activer la comptabilisation des remises pour la vente
+Considered In Paid Amount,Considéré dans le montant payé
+"If checked, the tax amount will be considered as already included in the Paid Amount in Payment Entry","Si coché, le montant de la taxe sera considéré comme déjà inclus dans le montant payé dans l'entrée de paiement"
+Price List Defaults,Valeurs par défaut des listes de prix
+Naming Series and Price Defaults,Noms de séries et prix par défaut
+Disable Last Purchase Rate,Désactiver le taux du dernier achat
+Outstanding amount,Solde à payer
+Due Date Bank Transfer (in days),Date d'échéance Virement bancaire (en jours)
+Due Date Invoice (in days),Date d'échéance de la facture (en jours)
+Ecommerce Shipping Methods,Méthodes d'expédition Ecommerce
+Ecommerce Default Payment Method,Mode de paiement par défaut dans le Ecommerce
+Ecommerce Payment Methods,Méthodes de paiement Ecommerce
+Rounding Charge,Frais d'arrondi
+Fee Account,Compte de frais
+Giftcard Account,Compte carte-cadeau
+Stripe Gateway,Passerelle Stripe
+Ecommerce Shipping Method Title,Méthode d'expédition Ecommerce
+Base Buy Price,Prix d'achat de base
+United Kingdom,Royaume Uni
+Overview,Aperçu
+Return gift card,Remboursé par carte-cadeau
+Impossible to return this invoice because at least one giftcard has been used,Impossible de retourner cette facture car au moins une carte cadeau a été utilisée
+giftcard in position,carte cadeau en position
+"Attention, your sale has an amount of 0","Attention, votre vente à un montant de 0"
+Deductions or loss,Déductions ou perte
+Generated From Loyalty Program,Généré à partir du programme de fidélité
+"As your product is synchronized with your Ecommerce, it will synchronize the stock from the product's default warehouse.","Comme votre produit est synchronisé avec votre Ecommerce, le stock de l'entrepôt par défaut du produit sera synchronisé"
+Use Limit,Limite d'utilisation
+rate,prix
+percentage,pourcentage,
+used,utilisé
+Delivery date,Date de livraison
+Reverse,Inverser
+Total amount selected : ,Montant total sélectionné : 
+Easy payments,Générations des paiements
+payment(s) will be created,paiement(s) sera(ont) créé(s)
+Export payments,Exportation du fichier de paiement
+This page allows you to generate a payment file for the bank. The file will be generated in XML format. The file will be generated based on the selected payments. The payment date will be the date of the file generation. The payment date can be changed by selecting a date in the field below.,Cette page permet de générer un fichier de paiement pour la banque. Le fichier sera généré au format XML. Le fichier sera généré en fonction des paiements sélectionnés. La date de paiement sera la date de génération du fichier. La date de paiement peut être modifiée en sélectionnant une date dans le champ ci-dessous.
+You have selected purchase invoices that are not valid. Please select only purchase invoices with status "Submitted".,Vous avez sélectionné des factures d'achat qui ne sont pas valides. Veuillez sélectionner uniquement les factures d'achat avec le statut "Valider".
+Mode of payment,Moyen de paiement
+Confirm the file transfer and validate the payments,Confirmer le transfert du fichier et valider les paiements
+Are you sure you want to validate the payments ?,Êtes-vous sûr de vouloir valider les paiements ?
+Download the file,Télécharger le fichier
+No errors,Pas d'erreurs
+Do you want to create a pricing rule compatible with <b>ecommerce</b> ?,Voulez-vous créer une règle de prix compatible avec le <b>ecommerce</b> ?
+"Selecting 'No' provides access to additional settings, but the pricing rule won't synchronize with your ecommerce.","Sélectionner 'Non' donne accès à des réglages supplémentaires, mais la règle de prix ne se synchronisera pas avec votre ecommerce."
+Imported payment,Paiements importés
+Successfully imported ,Paiements ont été importés avec succès&nbsp;
+ payments and ,&nbsp;et&nbsp; 
+ not imported.,&nbsp;n'ont pas été importés.
+Transaction reference,Référence de transaction
+ID reference,Référence d'identification
+Payment account,Compte de réception des paiement
+Bank import,Importation bancaire
+The iban of the selected bank and the iban of the XML file are not identical,L'iban de la banque sélectionnée et l'iban du fichier XML ne sont pas identiques
+Are you sure you want to proceed?,Êtes-vous sur de vouloir continuer?
+Please wait while the file is being processed...,Veuillez patienter pendant le traitement du fichier...
+Refecency of payment already exists.,La référence de paiement existe déjà.
+Payment not imported,Paiement non importé
+View Payment Entry,Afficher les écritures de paiement
+Adding invoices,Ajouter les factures
+Reserved Stock,Stock réservé
+Actual Stock,Stock réel
+Stock in Purchase,Stock en achat
+Sold to be Validated,Vendu à Valider
+Total Stock,Stock total
+Website Item,Article du site internet
+Alcohol Item,Article d'alcool
+Quantity (in litres),Quantité (en litres)
+Degree of alcohol,Degré d'alcool
+Alcohol,Alcool
+Alcohol selling,Vente d'alcool
+Operating number,Numéro d'exploitation
+Cellaring number,Numéro Encavage
+Winemaker number,Numéro d'encaveur
+Change Emails,Modifier les emails
+Validate emails change,Valider le changement des emails
+This value is fetched from Contact principal du client's Identifiant Email field,Cette valeur est extraite du champ Identifiant Email du Contact principal du client
+Only one Email ID can be set as primary.,Un seul ID de messagerie peut être défini comme principal.
+No contact was found with the same email as the customer<br>Please link a primary contact or change the customer's email to match the email of a contact or vice versa.,Aucun contact n'a été trouvé avec le même email que le client<br>Veuillez lier un contact principal ou modifier l'email du client pour qu'il corresponde à l'email d'un contact ou inversement.
+No contact was found for the client. Please create a contact and link it as a primary contact.,Aucun contact n'a été trouvé pour le client. Veuillez créer un contact et le lier en tant que contact principal.
+"As no address was found with the same email as the client, no email was changed on the addresses related to the client.","Comme aucune adresse n'a été trouvée avec le même email que le client, aucun email n’a été changé sur les addresses liées au client."
+Amount Excluding Tax,Montant Hors Taxes
+Amount without tax,Montant hors taxe
+Total Incoming Value (Receipt),Valeur entrante totale (réception)
+Total Value Difference (Incoming - Outgoing),Différence de valeur totale (entrant - sortant)
+Total Outgoing Value (Consumption),Valeur sortante totale (consommation)
+Other Info,Autre info
+Standard Buying Rate,Prix d'achat standard
+Stripe Terminal Location,Lieu du Terminal Stripe
+Stripe Terminal Reader,Lecteur Terminal Stripe
+Registration code,Code de d'enregistrement
+Device Type,Type d'appareil
+Reader Id,Identifiant du lecteur
+Serial Number,Numéro de série
+Location Id,Identifiant de l'emplacement
+Stripe Public Key Linked,Clé publique Stripe liée
+Quick add Stock can only be used for Stock Items without serial number or batch number,L'ajout rapide de stock ne peut être utilisé que pour les articles en stock sans numéro de série ou numéro de lot
+effective - agreed counterclaims,effective - contre-prestations convenues  
+effective - counterclaims received,effective - contre-prestations reçues 
+flat rate - agreed counterclaims,forfait - contre-prestations convenues  
+flat rate - counterclaims received,forfait - contre-prestations reçues
+Twint Payment,Paiement Twint
+Waiting for Twint payment,En attente de paiement Twint
+Open Payement Link,Ouvrir le lien de paiement
+Payment Failed or Cancelled,Paiement échoué ou annulé
+App and connected object access,Accès app et objet connecté
+Generate new thirdparty API password,Générer un mot de passe API tiers
+Save Password,Enregistrer le mot de passe
+Please enter password,Veuillez entrer le mot de passe
+TWINT Payment Request,Demande de paiement TWINT
+TWINT Settings,Paramètres TWINT
+Is Template,Est un modèle
+Actual Time (in Hours via Time Sheet),Temps réel (en heures via la feuille de temps)
+Object,Objet
+Object Type,Type d'objet
+Object Name,Nom de l'objet
+Plate Number,Numéro de la plaque
+Chassis Number,Numéro de châssis
+Vehicle Code,Code du véhicule
+Bodywork,Carrosserie
+External Colour,Couleur externe
+Internal Colour,Couleur interne
+Registration Number,Numéro de matricule
+Seats,Sièges
+Tare Weight,Poids à vide
+Displacement,Cylindrée
+First Circulation,Première mise en circulation
+Last expertise,Dernière expertise
+Date and insurance,Date et assurance
+Tachometer,Tachymètre
+Insurance,Assurance
+Policy Number,Numéro de police
+Engine Number,Numéro du moteur
+Finishing,Finition
+Engine,Moteur
+Engine type,Type de moteur
+Fuel,Carburant
+Gearbox Type,Type de boîte de vitesses
+Gearbox Number,Numéro de la boîte de vitesses
+Km or Hours,Km ou heures
+Last Anti-pollution Control,Dernier contrôle anti-pollution
+Next Anti-pollution Control (in years),Prochain contrôle anti-pollution (en années)
+Optional Anti-pollution,Anti-pollution optionnelle
+Key Indenfication,Indenfication de la clé
+Radio Code,Code radio
+Key Code 1,Code clé 1
+Key Code 2,Code clé 2
+Order Number,Numéro de commande
+Order Date,Date de la commande
+Sale date,Date de vente
+Sale Price,Prix de vente
+Financing Company,Société de financement
+Cabin Type,Type de cabine
+Cabin number,Numéro de cabines
+Tire Brand,Marque du pneu
+Tire Type,Type de pneu
+Front Wheel,Roue avant
+Rear Wheel,Roue arrière
+axles number,Nombre d'essieux
+Worksheet,Feuille de travail
+Worksheet Settings,Paramètres de la Feuille de travail
+See all Worksheet, Voir toutes les Feuilles de travail
+Scan Worksheet,Scan Feuille de travail
+Start Work,Démarrer Travail
+Service Template,Modèle de service
+Show in Invoice,Afficher sur la facture
+Total Items,Total des Articles
+Total Worked Hours,Total des Heures Travaillées
+Total Billable Price,Total des heures Prix Facturable
+Grand Total (indicative),Total général (indicatif)
+"Prices are indicative, with no promotions taken in account",Les prix sont indicatifs et ne tiennent pas compte des promotions.
+Gasoline,Essence
+Diesel,Diesel
+Hybrid (non-plug in),Hybride (non rechargeable)
+Plug-in Hybrid,Hybride rechargeable
+Electric,Électrique
+CNG / Propane,GNC / Propane
+LPG / Autogas,GPL / Autogaz
+Hydrogen ICE,Hydrogène ICE
+Hydrogen fuel cell,Pile à hydrogène
+Solar,Solaire
+Other methods,Autres méthodes
+Manual transmission,Transmission manuelle
+Automatic transmission,Transmission automatique
+Dual-clutch transmissions (DCT),Boîtes de vitesses à double embrayage (DCT)
+Continuously variable transmission (CVT),Transmission à variation continue (CVT)
+Work Progress,Avancement des travaux
+is not finished,n'est pas fini
+Works,Travaux
+There is an open worksheet for this object. Do you want to continue ?,Il existe une feuille de calcul ouverte pour cet objet. Voulez-vous continuer ?
+This option will automatically close any ongoing timesheet linked to worksheets for the selectionned employee,Cette option fermera automatiquement toute feuille de temps en cours liée aux feuilles de travail de l'employé sélectionné
+Allow Automatic Ending Timesheet,Autoriser la fin automatique de la feuille de temps
+Default Employee Filling Method,Méthode de remplissage par défaut des employés
+Add finished timesheet,Ajouter du temps
+There is an open worksheet for this object. Do you want to continue?,Il existe une feuille de travail ouverte pour cet objet. Voulez-vous continuer?
+Shipment,Livraison,
+Pickup from,Ramassage chez
+Delivery to,Livraison à
+Pickup Contact Person,Personne à contacter pour le ramassage
+Parcels,Colis
+Shipment Parcel,Colis d'expédition
+Shipment Delivery Note,Bon de livraison
+Parcel Template,Modèle de colis
+Add Template,Ajouter un modèle
+Shipment details,Détails de l'envoi
+Pallets,Palettes
+Value of Goods,La valeur des biens
+Pickup Date,Date de ramassage
+Pickup from,Ramassage de
+Pickup to,Ramasser à
+Shipment Type,Type d'expédition
+Pickup Type,Type de ramassage
+Description of Content,Description du contenu
+Shipment Information,Informations d'expédition
+Service Provider,Fournisseur de services
+ID d'expédition,ID d'expédition
+Shipment Amount,Montant de l'expédition
+Carrier,Transporteur
+Carrier Service,Service de transporteur
+AWB Number,Numéro AWB
+Tracking Status,Statut de suivi
+Length (cm),Longueur (cm)
+Width (cm),Largeur (cm)
+Height (cm),Hauteur (cm)
+Weight (kg),poids (kg)
+Compter,Compteur
+Competitors,Concurrent
+Tasks Executed,Tâches exécutées
+Total Billing Hours,Total des Heures de Facturation
+Use Company default Cost Center for Round off,Utiliser le centre de coûts par défaut de la société pour l'arrondi
+Custom Amount Loyalty,Montant des points de Fidélité
+for an amount of,pour un montant de
+Enable TWINT,Activer TWINT
+TWINT Mode Of Payment,Mode de paiement TWINT
+Stripe Terminal Settings,Paramètres du terminal Stripe
+Enable Stripe Terminal,Activer le terminal Stripes
+Default Activity Type,Type d'activité par défaut
+Customer Signature,Signature du client
+Seller Signature,Signature du vendeur
+Item Name,Nom de l'article
+ID type and number,Type et numéro de pièce d'identité
+Date of Sale,Date de la vente
+Contract Term Text,Texte de la clause contractuelle
+Sales Contract Settings,Paramètres des contrats de ventes
+Neoffice Contract,Contrat de vente
+Sales Contract,Contrat de vente
+Concerned Objects (only for print),Objets concernés (uniquement pour l'impression)
+Categories Generating Contracts,Catégories Générant des contrats
+Categories Ignored for Contracts,Catégories ignorées pour les contrats
+Additional Data,Donnée supplémentaire
+Data Name,Nom de la donnée
+Data Value,Valeur de la donnée
+Product concerned by the contract,Produit concerné par le contrat
+Concerned Objects,Objets concernés
+Seller,Vendeur
+Buyer,Acheteur
+the,le
+Seller's signature,Signature du vendeur
+Buyer's signature,Signature de l'acheteur
+Expenses Receipt,Reçu de dépenses
+Expenses Receipt Settings,Paramètres de reçu de dépenses
+Receipt name,Nom du reçu
+Receipt category,Catégorie de reçu
+Receipt Date,Receipt Date
+Receipt Total,Total du reçu
+Receipt Payment,Paiement du reçu
+Receipt Currency,Devise du reçu
+Reminder Settings,Paramètres des rappels
+Sector,Secteur
+Aisle,Allée
+Content top for QR invoice in several instalments,Haut de page pour la facture QR en plusieurs versements
+Hide the full QR invoice for instalment payments,Masquer la facture QR complète pour les paiements échelonnés
+Net invoice in {} instalments over {} days,Facture nette en {} versements sur {} jours
+Payment due on date,Paiement dû à la date
+Full invoice,Facture complète
+Concerns,Concernes
+Appraisal Cycle,Cycle d'évaluation
+Appraisal Overview,Aperçu de l'évaluation
+Employee Performance Feedback,Commentaires sur le rendement des employés
+Employee Feedback Criteria,Critères de rétroaction des employés
+Employee Hours Utilization Based On Timesheet,Utilisation des heures des employés basée sur la feuille de temps
+Company Settings,Paramètres de l'entreprise
+Activate statistics for alcohol-based products,Activer les statistiques pour les produits à base d'alcool
+"Congratulations, you have completed the configuration of your Neoffice instance. You can now take full advantage of the functionalities of your ERP. If you have any questions or suggestions, please do not hesitate to contact us. We'll be delighted to help.","Félicitations, vous avez terminé la configuration de votre instance Neoffice. Vous pouvez désormais profiter pleinement des fonctionnalités de votre ERP. Si vous avez des questions ou des suggestions, n'hésitez pas à nous contacter. Nous serons ravis de vous aider."
+Active Banks,Banques actives
+Data Save In Process... Please Wait,Enregistrement des données en cours... Veuillez patienter
+Sync the parent to sync the children the first time,Synchroniser le parent pour synchroniser les enfants la première fois
+Invalid value for maximum User Allowed limit. it can be a whole number only.,Valeur non valide pour la limite maximale d'utilisateurs autorisés. il ne peut s'agir que d'un nombre entier.
+Only {} active {} users allowed and you have {} active users. Please disable users or to increase the limit please contact sales,Seuls {} utilisateurs actifs {} sont autorisés et vous avez {} utilisateurs actifs. Veuillez désactiver les utilisateurs ou pour augmenter la limite. Veuillez contacter le service commercial
+Your product does not have stock management activated. Do you want to activate it?,Votre produit n'a pas la gestion des stocks activée. Voulez-vous l'activer ?
+Are you sure you want to proceed?,Êtes-vous sur de vouloir continuer ?
+Change price,Changement de prix
+Additional Informations,Informations supplémentaires
+Get Outstanding Orders,Obtenez les Commandes en Cours
+Match Payments,Rapprocher les Paiements
+No address found with the same email as the customer Please link a primary address or change the customer's email to match an existing customer address email,Aucune adresse trouvée avec le même e-mail que le client Veuillez lier une adresse principale ou modifier l'e-mail du client pour qu'il corresponde à l'adresse e-mail d'un client existant
+Your email to {} has been successfully sent.,Votre courriel à {} a été envoyé avec succès.
+Email Delivery Failed,Échec de l'envoi de l'e-mail
+Your email to {} has not been sent because the email {} does not exist.,Votre e-mail à {} n'a pas été envoyé car l'e-mail {} n'existe pas.
+Your email to {} has not been sent because the server has rejected your email as spam.,Votre email à {} n'a pas été envoyé car le serveur a rejeté votre email comme spam.
+Your email to {} generated this message : {}.,Votre courriel à {} a généré ce message : {}.
+Payment Terms from orders will be fetched into the invoices as is,Les conditions de paiement des commandes seront récupérées sur les factures telles quelles
+Merge Similar Account Heads,Fusionner des intitulés de compte similaires
+Book Tax Loss on Early Payment Discount,Réserver la perte fiscale sur l'escompte pour paiement anticipé
+Split Early Payment Discount Loss into Income and Tax Loss,Ventiler la perte d'escompte pour paiement anticipé en revenu et en perte fiscale
+Auto Reconcile Payments,Rapprochement automatique des paiements
+Payment Reconciliations,Rapprochement des paiements
+Enable Automatic Party Matching,Activer la correspondance automatique des parties
+Auto match and set the Party in Bank Transactions,Correspondance automatique et définition de la partie dans les transactions bancaires
+Over Order Allowance (%),Allocation de dépassement de commande (%)
+Percentage you are allowed to order more against the Blanket Order Quantity. For example: If you have a Blanket Order of Quantity 100 units. and your Allowance is 10% then you are allowed to order 110 units.,"Pourcentage que vous êtes autorisé à commander en plus par rapport à la quantité de commande globale. Par exemple : si vous avez une commande ouverte d'une quantité de 100 unités. et votre allocation est de 10 %, vous êtes autorisé à commander 110 unités."
+Allow Sales Order Creation For Expired Quotation,Autoriser la création de commandes client pour un devis expiré
+Show Taxes as Table in Print,Afficher les taxes sous forme de tableau dans l'impression
+Journals,Journaux
+Rows with Same Account heads will be merged on Ledger,Les lignes ayant les mêmes intitulés de compte seront fusionnées dans le grand livre.
+Show Pay Button in Purchase Order Portal,Afficher le bouton de paiement dans le portail des bons de commande
+Exchange Rate Revaluation Settings,Paramètres de réévaluation du taux de change
+Auto Create Exchange Rate Revaluation,Créer automatiquement une réévaluation du taux de change
+Submit ERR Journals?,Soumettre les journaux ERR ?
+IBAN check mandatory,Vérification IBAN obligatoire
+No outstanding {0} found for the {1} {2} which qualify the filters you have specified.,Aucun {0} en attente trouvé pour les {1} {2} qui qualifient les filtres que vous avez spécifiés.
+Activate calculation of collection fees per payment entry,Activer le calcul des frais d’encaissement par entrée de paiement
+Variant Selling Price,Prix de vente de la variante
+Variant Buying Price,Prix ​​d'achat de la variantes
+Worksheet Department,Département des feuilles de travail
+Department Name,Nom du département
+Parent Worksheet Department,Département de feuille de travail parent
+Progress Name,Nom de la progression
+Website Item Name,Nom de l'élément du site Web
+Website display name,Nom d'affichage du site Web
+Display Images,Images d'affichage
+Image Alternative Text,Texte alternatif de l'image
+Show Stock availability based on this warehouse.,Afficher la disponibilité des stocks en fonction de cet entrepôt.
+On Backorder,En rupture de stock
+Indicate that Item is available on backorder and not usually pre-stocked,Indiquez que l'article est disponible en rupture de stock et n'est généralement pas pré-stocké
+Show Stock availability based on this warehouse.,Afficher la disponibilité des stocks en fonction de cet entrepôt.
+Display Information,Afficher les informations
+Short Website Description,Brève description du site Web
+Display Additional Information,Display Additional Information
+Add Section with Tabs,Ajouter une section avec des onglets
+Recommended Items,Articles recommandés
+Offers to Display,Offres à afficher
+Offer Title,Titre de l'offre
+Offer Subtitle,Sous-titre de l'offre
+Search and SEO,Recherche et référencement
+Ranking,Classement
+Items with higher ranking will be shown higher,Les éléments avec un classement plus élevé seront affichés plus haut
+Advanced Display Content,Contenu d'affichage avancé
+Recommended/Similar Items,Articles recommandés/similaires
+Sales Invoice Journal,Journal des factures de vente
+Purchase Invoice Journal,Journal des factures d'achat
+Journal Entry Journal,Journal des entrées de journal
+No VAT Journal,Journal sans TVA
+Journal Entries,Entrées de journal
+No VAT Sale,Vente sans TVA
+No VAT Purchase,Achat sans TVA
+No VAT,Sans TVA
+Net Sale,Vente nette
+Net Purchase,Achat net
+VAT 302,TVA 302
+VAT 312,TVA 312
+VAT 342,TVA 342
+VAT 400,TVA 400
+VAT 405,TVA 405
+VAT 410,TVA 410
+VAT 415,TVA 415
+VAT 420,TVA 420
+Start Tour,Démarrer la Visite
+A tour of this page :,Découvrer la visite de cette page :
+Welcome to the Help Centre.,Bienvenue dans le centre d'aide.
+How can I help you?,Comment pouvons nous vous aider ?
+Do you have a question? Ask our AI :,As-tu une question ? Demandez à notre IA :
+AI,IA
+Find out about the various options available to you below.,Découvrez ci-dessous les différentes options qui s'offrent à vous.
+See the knowledge base : ,Voir la base de connaissances : 
+Search for articles...,Rechercher des articles...
+Basic configuration,Configuration de base
+Franking License,Licence d'affranchissement
+Client Identifier ,Identifiant du client 
+Secret Client,Client secret
+Delivery methods,Modes de livraison
+<p>Please tick the Delivery methods that you would like to be able to choose on the orders page when generating a barcode.</p>,<p>Veuillez cocher les modes de livraison que vous souhaitez pouvoir choisir sur la page des commandes lors de la génération d'un code-barres.</p>
+Handling options,Options de traitement
+<p>Please tick the Handling options that you would like to be able to choose on the orders page when generating a barcode.</p>,<p>Veuillez cocher les options de traitement que vous souhaitez pouvoir choisir sur la page des commandes lors de la génération d'un code-barres.</p>
+Direct delivery to an upper floor,Livraison directe à un étage supérieur
+Do not place in letterbox; deliver manually or notify,Ne pas déposer dans la boîte aux lettres ; distribuer manuellement ou notifier
+Notify delivery by telephone,Informer de la livraison par téléphone
+Place in letterbox or at front door,Déposer dans la boîte aux lettres ou à la porte d'entrée
+Deliver contents; take back box,Remettre le contenu ; reprendre la boîte
+Failed delivery; return item as priority on the same day,Échec de la livraison ; renvoyer l'article en priorité le jour même
+Follow delivery information in document pouch,Suivre les informations de livraison dans la pochette de documents
+Collect empty containers or materials for recycling,Collecter les conteneurs vides ou les matériaux pour le recyclage
+Do not deliver to mailbox or neighbour: do not leave anywhere,Ne pas déposer dans la boîte aux lettres ou chez le voisin : ne pas laisser n'importe où
+Delivery options,Options de livraison
+<p>Please tick the Delivery options that you would like to be able to choose on the orders page when generating a barcode.</p>,<p>Veuillez cocher les options de livraison que vous souhaitez pouvoir choisir sur la page des commandes lors de la génération d'un code-barres.</p>
+Manual processing,Traitement manuel
+Hide your address ,Cachez votre adresse 
+<p>This will hide the sender address on the labels (does not apply to GAS methods)</p>,<p>Cela masquera l'adresse de l'expéditeur sur les étiquettes (ne s'applique pas aux méthodes GAS)</p>
+PDF Size,Taille du PDF
+<p>Please choose what format the label should be generated as.</p>,<p>Veuillez choisir le format dans lequel l'étiquette doit être générée.</p>
+"Congratulations, the barcode has been successfully generated. Here are the details:","Félicitation, le barcode a bien été généré. Voici les informations :"
+Tracking number,Numéro de tracking
+Print the label,Imprimer l'étiquette
+Customer Template,Modèle client
+Template name,Nom du modèle
+Selling Price,Prix ​​de vente
+Buying Quantity,Quantité d'achat
+Buying Price,Prix ​​d'achat
+Display the number,Afficher le numéro
+Value to use,Valeur à utiliser
+"Item barcode (if empty, use Item code)","Code-barres de l'article (s'il est vide, utilisez le code de l'article)"
+Item code,Code de l'article
+Display the number,Afficher le numéro
+Creating labels,Création d'étiquettes
+Create employee card.,Créer une carte d'employé
+Width (mm),Largeur (mm)
+Height (mm),Hauteur (mm)
+Is default,Est Défaut
+End Work,Fin des travaux
+Employee {0} has ended work,L'employé {0} a terminé son travail
+No open timesheet for {0},Pas de feuille de temps ouverte pour {0}
+Error ending work for {0},Erreur de fin de travail pour {0}
+Timesheet added successfully.,Feuille de temps ajoutée avec succès.
+Open Worksheet,Ouvrir la feuille de travail
+Worksheet Management,Gestion des feuilles de travail
+Scan And Open Worksheet,Scanner et ouvrir la feuille de travail
+End Work,Finir le travail
+Worksheet Department,Département des Travaux
+Scan Workseet,Scan la feuille de travail
+Scan Employee,Scan Employé
+Set all private,Uniquement disponible dans ERP
+Change file visibility: Private => only visible by Neoffice user system. Public => visible by anyone (can be indexed by Google),Changer la visibilité du fichier: Privé => visible uniquement par les utilisateurs système de Neoffice. Public => visible par tout le monde (peut être indexé par Google)
+Is Under Warranty,Est sous garantie
+Switch to draft,Passer à brouillon
+Hide company and customer address in printout,Masquer l'adresse de l'entreprise et du client sur l'impression
+Disable email sending using the mailgun api,Désactiver l'envoi d'e-mails à l'aide de l'API Mailgun
+Email error notification,Email de notification d'erreur
+Due Date First Installment (in days),Date d'échéance du premier versement (en jours)
+Default Item For Timesheet Invoicing,Article par défaut pour la facturation des feuilles de travail
+This timesheet is linked to a worksheet. You shouldn't modify it manually unless a message in the worksheet told you to.,"Cette feuille de temps est liée à une feuille de travail. Vous ne devez pas le modifier manuellement, sauf si un message dans la feuille de calcul vous le demande."
+Row {0}: Both Debit and Credit values cannot be zero,Ligne {0}: les valeurs de débit et de crédit ne peuvent pas être nulles.
+The column has been added successfully!,La colonne a été ajoutée avec succès!
+The '{}' column already exists!,La colonne '{}' existe déjà!
+There are cards with the column '{}'. - please unmark them before deleting this column.,Il y a des cartes avec la colonne '{}' - veuillez les dépalcer avant de supprimer cette colonne
+The '{}' collone successfully deleted!,La collone '{}' supprimée avec succès!
+Promotional Price,Prix promotionnel
+Promotional Price Starts,Début du prix promotionnel
+Promotional Price Ends,Fin du prix promotionnel
+Access Refused,Accès Refusé
+Your subscription does not give you access to this page. You can change your Neoffice subscription in the <a href='https://app.neoffice.io/clientarea.php?action=services' target='_blank'>My products & services</a> section of your account.,Votre abonnement ne vous permet pas d'accéder à cette page. Vous pouvez modifier votre abonnement Neoffice dans la section <a href='https://app.neoffice.io/clientarea.php?action=services' target='_blank'>Mes produits & services</a> de votre compte.
+Remind Me,Me rappeler
+Create a Reminder,Créer un rappel
+Remind Me In,Me rappeler dans
+Remind At,Me rappeler à
+Undo,Annuler
+Redo,Rétablir
+Clear all filters,Effacer les filtres
+UnReconcile,Déconcilier
+UnReconcile Allocations,Dissocier les allocations
