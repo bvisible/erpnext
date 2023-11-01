@@ -114,6 +114,7 @@
   {
    "fieldname": "posting_date",
    "fieldtype": "Date",
+   "in_list_view": 1,
    "label": "Posting Date",
    "no_copy": 1,
    "oldfieldname": "posting_date",
@@ -164,7 +165,6 @@
    "fieldname": "cheque_no",
    "fieldtype": "Data",
    "in_global_search": 1,
-   "in_list_view": 1,
    "label": "Reference Number",
    "mandatory_depends_on": "eval:doc.voucher_type == \"Bank Entry\"",
    "no_copy": 1,
@@ -185,6 +185,7 @@
   {
    "fieldname": "user_remark",
    "fieldtype": "Small Text",
+   "in_list_view": 1,
    "label": "User Remark",
    "no_copy": 1,
    "oldfieldname": "user_remark",
@@ -549,7 +550,7 @@
  "idx": 176,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-08-10 14:32:22.366895",
+ "modified": "2023-11-01 12:54:10.243847",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Journal Entry",
@@ -594,6 +595,8 @@
    "role": "Auditor"
   }
  ],
+ "read_only": 1,
+ "restrict_to_domain": "Gestion",
  "search_fields": "voucher_type,posting_date, due_date, cheque_no",
  "sort_field": "modified",
  "sort_order": "DESC",
