@@ -115,6 +115,7 @@
    "print_hide": 1
   },
   {
+   "columns": 1,
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_global_search": 1,
@@ -153,14 +154,15 @@
    "read_only": 1
   },
   {
-   "collapsible": 1,
    "fieldname": "section_break_6",
    "fieldtype": "Section Break",
    "label": "Description"
   },
   {
+   "columns": 2,
    "fieldname": "description",
    "fieldtype": "Text Editor",
+   "in_list_view": 1,
    "label": "Description",
    "oldfieldname": "description",
    "oldfieldtype": "Small Text",
@@ -186,6 +188,7 @@
    "label": "Quantity and Rate"
   },
   {
+   "columns": 1,
    "fieldname": "qty",
    "fieldtype": "Float",
    "in_list_view": 1,
@@ -215,6 +218,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "columns": 1,
    "fieldname": "uom",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -245,8 +249,10 @@
    "fieldtype": "Section Break"
   },
   {
+   "columns": 1,
    "fieldname": "price_list_rate",
    "fieldtype": "Currency",
+   "in_list_view": 1,
    "label": "Price List Rate",
    "oldfieldname": "ref_rate",
    "oldfieldtype": "Currency",
@@ -304,9 +310,11 @@
    "fieldtype": "Column Break"
   },
   {
+   "columns": 1,
    "depends_on": "price_list_rate",
    "fieldname": "discount_percentage",
    "fieldtype": "Float",
+   "in_list_view": 1,
    "label": "Discount (%) on Price List Rate with Margin",
    "oldfieldname": "adj_rate",
    "oldfieldtype": "Float",
@@ -315,9 +323,11 @@
    "width": "100px"
   },
   {
+   "columns": 1,
    "depends_on": "price_list_rate",
    "fieldname": "discount_amount",
    "fieldtype": "Currency",
+   "in_list_view": 1,
    "label": "Discount Amount",
    "options": "currency"
   },
@@ -335,6 +345,7 @@
    "fieldtype": "Section Break"
   },
   {
+   "columns": 1,
    "fieldname": "rate",
    "fieldtype": "Currency",
    "in_list_view": 1,
@@ -346,6 +357,7 @@
    "width": "150px"
   },
   {
+   "columns": 1,
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
@@ -893,7 +905,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2023-10-16 16:18:18.013379",
+ "modified": "2023-11-01 12:15:24.004680",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note Item",
