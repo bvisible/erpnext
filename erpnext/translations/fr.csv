@@ -10218,3 +10218,14 @@ Redo,Rétablir
 Clear all filters,Effacer les filtres
 UnReconcile,Déconcilier
 UnReconcile Allocations,Dissocier les allocations
+Type a reply / comment,Tapez une remarque ou un commentaire
+Portal Users,Utilisateurs du portail
+Supplier Portal Users,Utilisateurs du portail des fournisseurs
+Customer Portal Users,Utilisateurs du portail clients
+Force update,Forcer la mise à jour
+Don't Reserve Sales Order Qty on Sales Return,Ne pas réserver la quantité de la commande client sur le retour de vente
+Round Tax Amount Row-wise,Arrondir le montant de la taxe par ligne
+Tax Amount will be rounded on a row(items) level,Le montant de la taxe sera arrondi au niveau d'une ligne (articles)
+Show Balances in Chart Of Accounts,Afficher les soldes dans le plan comptable
+Chart Of Accounts,Plan comptable
+Auto Leave Encashment,Encaissement automatique des congés
