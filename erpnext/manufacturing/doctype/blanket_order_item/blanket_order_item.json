@@ -1,5 +1,6 @@
 {
- "creation": "2018-05-24 07:20:04.255236",
+ "actions": [],
+ "creation": "2022-03-07 17:18:40.386502",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -27,6 +28,7 @@
    "fetch_from": "item_code.item_name",
    "fieldname": "item_name",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Item Name"
   },
   {
@@ -65,7 +67,8 @@
   }
  ],
  "istable": 1,
- "modified": "2019-11-18 19:37:46.245878",
+ "links": [],
+ "modified": "2023-11-01 11:52:06.675679",
  "modified_by": "Administrator",
  "module": "Manufacturing",
  "name": "Blanket Order Item",
@@ -74,5 +77,6 @@
  "quick_entry": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "track_changes": 1
 }
