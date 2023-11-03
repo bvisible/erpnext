@@ -86,6 +86,8 @@
   "billed_amt",
   "accounting_details",
   "expense_account",
+  "column_break_fyqr",
+  "wip_composite_asset",
   "manufacture_details",
   "manufacturer",
   "manufacturer_part_no",
@@ -900,6 +902,16 @@
    "fieldname": "apply_tds",
    "fieldtype": "Check",
    "label": "Apply TDS"
+  },
+  {
+   "fieldname": "wip_composite_asset",
+   "fieldtype": "Link",
+   "label": "WIP Composite Asset",
+   "options": "Asset"
+  },
+  {
+   "fieldname": "column_break_fyqr",
+   "fieldtype": "Column Break"
   }
  ],
  "idx": 1,
