@@ -182,14 +182,14 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 		if not item_price:
 			result.append(item)
 
-		item_prices = {} #//// added from v14 maybe conflict
+		item_prices = {} #//// added
 		item_promos = {} #//// added
 		for price in item_price:
-			#//// added from v14 maybe conflict
-			item_prices[price.item_code] = price 
-			promo = get_price(price.item_code, price_list, '', company, from_pos=True)
+			#//// added
+			item_prices[item.item_code] = price 
+			promo = get_price(item.item_code, price_list, '', company, from_pos=True)
 			if promo:
-				item_promos[price.item_code] = float(promo.get('price_list_rate')) if promo.get('formatted_mrp') else '-1'
+				item_promos[item.item_code] = float(promo.get('price_list_rate')) if promo.get('formatted_mrp') else '-1'
 			#////
 			uom = next(filter(lambda x: x.uom == price.uom, uoms), {})
 
@@ -203,8 +203,8 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 					"currency": price.get("currency"),
 					"uom": price.uom or item.uom,
 					"batch_no": price.batch_no,
-					"item_price": item_prices.get('item_code') or {}, #//// added from v14 maybe conflict
-					"item_promo": item_promos.get('item_code') or {} #//// added from v14 maybe conflict
+					"item_price": item_prices.get(item.item_code) or {}, #//// added
+					"promo_price": item_promos.get(item.item_code) or {} #//// added
 				}
 			)
 	return {"items": result}
