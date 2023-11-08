@@ -125,11 +125,14 @@ erpnext.PointOfSale.ItemSelector = class {
 
 		////
 		function get_promo_price_html() {
+			console.log(item.promo_price)
 			if(item.promo_price && item.promo_price > -1 && price_list_rate > 0) {
+				console.log("promo_price")
 				const promo_precision = flt(item.promo_price, 2) % 1 != 0 ? 2 : 0;
-				return `<div class="item-prices"><div class="item-rate has-promo">${format_currency(price_list_rate, item.currency, precision) || 0}</div><div class="item-promo-rate">${format_currency(item.promo_price, item.currency, promo_precision)}</div>`;
+				return `<div class="item-prices"><div class="item-rate has-promo">${format_currency(price_list_rate, item.currency, precision) || 0}</div><div class="item-promo-rate">${format_currency(item.promo_price, item.currency, promo_precision)} / ${uom}</div>`;
 			} else {
-				return `<div class="item-prices"><div class="item-rate">${format_currency(price_list_rate, item.currency, precision) || 0}</div>`;
+				console.log("no promo_price")
+				return `<div class="item-prices"><div class="item-rate">${format_currency(price_list_rate, item.currency, precision) || 0} / ${uom}</div>`;
 			}
 		}
 
@@ -144,9 +147,9 @@ erpnext.PointOfSale.ItemSelector = class {
 		}
 		////
 
-		////maybe conflict replace data-batch-no="${escape(batch_no)}" data-uom="${escape(stock_uom)}" instead of data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}" ?
+		////replace data-batch-no="${escape(batch_no)}" data-uom="${escape(stock_uom)}" instead of data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}" ?
 		////added <div class="wrap-item-attribute">${div_attr}</div>
-		////maybe conflict replace ${get_promo_price_html()} instead of <div class="item-rate">${format_currency(price_list_rate, item.currency, precision) || 0} / ${uom}</div>
+		////replace ${get_promo_price_html()} instead of <div class="item-rate">${format_currency(price_list_rate, item.currency, precision) || 0} / ${uom}</div>
 		return (
 			`<div class="item-wrapper"
 				data-item-code="${escape(item.item_code)}" data-serial-no="${escape(serial_no)}"
@@ -160,7 +163,7 @@ erpnext.PointOfSale.ItemSelector = class {
 					<div class="item-name">
 						${frappe.ellipsis(item.item_name, 18)}
 					</div>
-					<div class="item-rate">${format_currency(price_list_rate, item.currency, precision) || 0} / ${uom}</div>
+					${get_promo_price_html()}
 				</div>
 			</div>`
 		);
