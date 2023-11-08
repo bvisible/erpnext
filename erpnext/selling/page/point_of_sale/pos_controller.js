@@ -1003,10 +1003,13 @@ erpnext.PointOfSale.Controller = class {
 		frappe.utils.play_sound("error");
 	}
 
-	get_item_from_frm({ name, item_code, batch_no, uom, rate }) {
+	//// remove name get_item_from_frm({ name, item_code, batch_no, uom, rate }) {
+	get_item_from_frm({ item_code, batch_no, uom, rate }) {	
 		let item_row = null;
-		if (name) {
-			item_row = this.frm.doc.items.find(i => i.name == name);
+		//// change name by item_code if (name) {
+		//// change name by item_code  item_row = this.frm.doc.items.find(i => i.name == name);
+		if (item_code) {
+			item_row = this.frm.doc.items.find(i => i.item_code == item_code);
 		} else {
 			// if item is clicked twice from item selector
 			// then "item_code, batch_no, uom, rate" will help in getting the exact item
