@@ -553,7 +553,15 @@ def get_stock_availability(item_code, warehouse):
 		bin_qty = get_bin_qty(item_code, warehouse)
 		pos_sales_qty = get_pos_reserved_qty(item_code, warehouse)
 
-		return bin_qty - pos_sales_qty, is_stock_item
+		#//// Calculate the total reserved quantity for the item.
+		total_reserved_qty = frappe.db.sql("""SELECT SUM(reserved_qty) FROM `tabBin` 
+											  WHERE item_code = %s AND warehouse = %s""", 
+											  (item_code, warehouse))[0][0] or 0
+		
+		#//// Subtract the total_reserved_qty from the bin_qty to get the actual available quantity.
+		available_qty = bin_qty - pos_sales_qty - total_reserved_qty
+		return available_qty, is_stock_item
+		#//// return bin_qty - pos_sales_qty, is_stock_item
 	else:
 		is_stock_item = True
 		if frappe.db.exists("Product Bundle", item_code):
