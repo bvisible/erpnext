@@ -196,17 +196,31 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 			if price.uom != item.stock_uom and uom and uom.conversion_factor:
 				item.actual_qty = item.actual_qty // uom.conversion_factor
 
-			result.append(
-				{
-					**item,
-					"price_list_rate": price.get("price_list_rate"),
-					"currency": price.get("currency"),
-					"uom": price.uom or item.uom,
-					"batch_no": price.batch_no,
-					"item_price": item_prices.get(item.item_code) or {}, #//// added
-					"promo_price": item_promos.get(item.item_code) or {} #//// added
-				}
-			)
+			#////
+			# Create a base dictionary with common data.
+			common_data = {
+				**item,
+				"price_list_rate": price.get("price_list_rate"),
+				"currency": price.get("currency"),
+				"uom": price.uom or item.uom,
+				"batch_no": price.batch_no,
+				"item_price": item_prices.get(item.item_code) or {},
+				"promo_price": item_promos.get(item.item_code) or {}
+			}
+
+			# Add variant-specific data if applicable.
+			if item.variant_of:
+				attributes = frappe.get_all(
+					"Item Variant Attribute",
+					fields=["attribute", "attribute_value"],
+					filters={"parent": item.item_code},
+				)
+				common_data.update({"attributes": attributes, "variant_of": item.variant_of})
+
+			# Append the common data to the results list.
+			result.append(common_data)
+			#////
+
 	return {"items": result}
 
 
