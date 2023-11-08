@@ -126,7 +126,7 @@ erpnext.PointOfSale.Controller = class {
 			args: { "pos_profile": this.pos_profile },
 			callback: (res) => {
 				const profile = res.message;
-				//// added for stripe and drawer
+				////
 				window.enable_raw_print = profile.enable_raw_printing;
 				window.enable_stripe_terminal = profile.enable_stripe_terminal;
 				window.stripe_mode_of_payment = profile.stripe_mode_of_payment;
@@ -181,9 +181,9 @@ erpnext.PointOfSale.Controller = class {
 				window.open_cash_drawer_automatically = profile.open_cash_drawer_automatically;
 				//For weigh scale
 				window.enable_weigh_scale = profile.enable_weigh_scale;
+				window.enable_twint = profile.enable_twint; //// custom add
+				window.twint_mode_of_payment = profile.twint_mode_of_payment; //// custom add
 				////
-				window.enable_twint = profile.enable_twint; //// custom add for twint
-				window.twint_mode_of_payment = profile.twint_mode_of_payment; //// custom add for twint
 				Object.assign(this.settings, profile);
 				this.settings.customer_groups = profile.customer_groups.map(group => group.name);
 				this.make_app();
@@ -284,7 +284,6 @@ erpnext.PointOfSale.Controller = class {
 		voucher.pos_opening_entry = this.pos_opening;
 		voucher.period_end_date = frappe.datetime.now_datetime();
 		voucher.posting_date = frappe.datetime.now_date();
-		voucher.posting_time = frappe.datetime.now_time();
 		frappe.set_route('Form', 'POS Closing Entry', voucher.name);
 	}
 
@@ -348,7 +347,7 @@ erpnext.PointOfSale.Controller = class {
 							value,
 							item: this.item_details.current_item
 						};
-						return this.on_cart_update(args, true); //// added true
+						return this.on_cart_update(args, true);
 					}
 
 					return Promise.resolve();
@@ -388,7 +387,8 @@ erpnext.PointOfSale.Controller = class {
 					this.item_details.toggle_item_details_section(null);
 					this.cart.prev_action = null;
 					this.cart.toggle_item_highlight();
-					//// added For weigh scale
+					////
+					//For weigh scale
 					if(window.enable_weigh_scale == 1){
 						window.is_item_details_open = false;
 						window.mettlerWorker.postMessage({"command": "stop"});
@@ -418,11 +418,14 @@ erpnext.PointOfSale.Controller = class {
 				},
 
 				submit_invoice: () => {
-					var allowSubmit = 1; //// added for stripe and twint
-					var refund_request = ""; //// added for stripe and twint
-					//// added for twint payment
+					////
+					//Support for stripe payments
+					var allowSubmit = 1;
+					//// custom add for twint payment
+					var from_stripe = 0;
 					var from_twint = 0;
 					var twint_amount = 0;
+					var refund_request = "";
 					if(window.enable_twint == 1) {
 						if (this.frm.doc.payments.length > 0) {
 							for (var i = 0; i <= this.frm.doc.payments.length; i++) {
@@ -447,8 +450,7 @@ erpnext.PointOfSale.Controller = class {
 						}
 					}
 					//// end custom add for twint payment
-					//// added for stripe
-					var from_stripe = 0;
+
 					if(window.enable_stripe_terminal == 1)
 					{
 
@@ -476,11 +478,12 @@ erpnext.PointOfSale.Controller = class {
 							}
 						}
 					}
+
+					if (allowSubmit == 1){
 					////
-					if (allowSubmit == 1){ //// added if condition
 						this.frm.savesubmit()
 							.then((r) => {
-								//// added for stripe/drawer/printer
+								////
 								if(this.stripe) this.stripe.clear_display(); //// custom add
 								//For raw printing
 								if(window.open_cash_drawer_automatically == 1){
@@ -499,16 +502,15 @@ erpnext.PointOfSale.Controller = class {
 									message: __('POS invoice {0} created succesfully', [r.doc.name])
 								});
 							});
-					} else { //// close if and start else
-						//// added for stripe
+				////
+					}
+					else{
 						//var stripe = new erpnext.PointOfSale.StripeTerminal();
 						//this.stripe.assign_stripe_connection_token(this,true);
-						if(from_stripe == 1) { //// custom add to handle twint
+						if(from_stripe == 1) { //// custom add
 							this.stripe.collecting_payments(this, true);
-						} //// custom add to handle twint
-						////
+						} //// custom add
 
-						//// added for twint
 						if(from_twint == 1) { //// custom add for twint payment
 							var cancel = false;
 							if(this.frm.doc.is_return == 1){
@@ -702,11 +704,10 @@ erpnext.PointOfSale.Controller = class {
 									}
 								})
 							}
-						}
-						////
-					} //// end else
+						} //// end custom add for twint payment
+					}
 				},
-				//// added for printer/drawer
+
 				raw_print: () => {
 					this.raw_print(this.frm);
 				},
@@ -770,15 +771,15 @@ erpnext.PointOfSale.Controller = class {
 						() => this.item_selector.toggle_component(true),
 						() => frappe.dom.unfreeze(),
 					]);
+				////
 				},
-				//// added for printer/drawer
 				raw_print: () => {
 					this.raw_print(this.frm);
 				},
 				open_cash_drawer: () => {
 					this.open_cash_drawer();
+				////
 				}
-				//// added for printer/drawer
 			}
 		})
 	}
@@ -872,7 +873,7 @@ erpnext.PointOfSale.Controller = class {
 		this.page.set_indicator(this.pos_profile, "blue");
 	}
 
-	async on_cart_update(args, updated=false) { //// added , updated=false
+	async on_cart_update(args, updated=false) {
 		frappe.dom.freeze();
 		let item_row = undefined;
 		try {
@@ -902,12 +903,12 @@ erpnext.PointOfSale.Controller = class {
 				if (!this.frm.doc.customer)
 					return this.raise_customer_selection_alert();
 
-				const { item_code, batch_no, serial_no, rate, uom } = item;
+				const { item_code, batch_no, serial_no, rate } = item;
 
 				if (!item_code)
 					return;
 
-				const new_item = { item_code, batch_no, rate, uom, [field]: value };
+				const new_item = { item_code, batch_no, rate, [field]: value };
 
 				if (serial_no) {
 					await this.check_serial_no_availablilty(item_code, this.frm.doc.set_warehouse, serial_no);
@@ -938,7 +939,7 @@ erpnext.PointOfSale.Controller = class {
 		} catch (error) {
 			console.log(error);
 		} finally {
-			//// added for stripe
+			////
 			setTimeout(() => {
 				let items = this.frm.doc.items;
 				let data = {};
@@ -990,7 +991,7 @@ erpnext.PointOfSale.Controller = class {
 			}
 			////
 			frappe.dom.unfreeze();
-			return item_row; // eslint-disable-line no-unsafe-finally
+			return item_row;
 		}
 	}
 
@@ -1003,13 +1004,10 @@ erpnext.PointOfSale.Controller = class {
 		frappe.utils.play_sound("error");
 	}
 
-	//// remove name get_item_from_frm({ name, item_code, batch_no, uom, rate }) {
-	get_item_from_frm({ item_code, batch_no, uom, rate }) {	
+	get_item_from_frm({ name, item_code, batch_no, uom, rate }) {
 		let item_row = null;
-		//// change name by item_code if (name) {
-		//// change name by item_code  item_row = this.frm.doc.items.find(i => i.name == name);
-		if (item_code) {
-			item_row = this.frm.doc.items.find(i => i.item_code == item_code);
+		if (name) {
+			item_row = this.frm.doc.items.find(i => i.name == name);
 		} else {
 			// if item is clicked twice from item selector
 			// then "item_code, batch_no, uom, rate" will help in getting the exact item
@@ -1019,6 +1017,7 @@ erpnext.PointOfSale.Controller = class {
 				i => i.item_code === item_code
 					&& (!has_batch_no || (has_batch_no && i.batch_no === batch_no))
 					&& (i.uom === uom)
+					&& (i.rate == rate)
 			);
 		}
 
@@ -1064,7 +1063,6 @@ erpnext.PointOfSale.Controller = class {
 		const is_stock_item = resp[1];
 
 		frappe.dom.unfreeze();
-		const bold_uom = item_row.stock_uom.bold();
 		const bold_item_code = item_row.item_code.bold();
 		const bold_warehouse = warehouse.bold();
 		const bold_available_qty = available_qty.toString().bold()
@@ -1080,7 +1078,7 @@ erpnext.PointOfSale.Controller = class {
 			}
 		} else if (is_stock_item && available_qty < qty_needed) {
 			frappe.throw({
-				message: __('Stock quantity not enough for Item Code: {0} under warehouse {1}. Available quantity {2} {3}.', [bold_item_code, bold_warehouse, bold_available_qty, bold_uom]),
+				message: __('Stock quantity not enough for Item Code: {0} under warehouse {1}. Available quantity {2}.', [bold_item_code, bold_warehouse, bold_available_qty]),
 				indicator: 'orange'
 			});
 			frappe.utils.play_sound("error");
@@ -1139,7 +1137,7 @@ erpnext.PointOfSale.Controller = class {
 				frappe.model.clear_doc(doctype, name);
 				this.update_cart_html(current_item, true);
 				this.item_details.toggle_item_details_section(null);
-				//// added for stripe
+				////
 				setTimeout(() => {
 					let items = this.frm.doc.items;
 					let data = {};
@@ -1215,7 +1213,7 @@ erpnext.PointOfSale.Controller = class {
 		}
 	}
 
-	//// added functions
+	////
 	init_stripe_terminal(){
 		if(window.enable_stripe_terminal == 1){
 			this.stripe = new erpnext.PointOfSale.StripeTerminal();
