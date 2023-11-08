@@ -125,13 +125,10 @@ erpnext.PointOfSale.ItemSelector = class {
 
 		////
 		function get_promo_price_html() {
-			console.log(item.promo_price)
 			if(item.promo_price && item.promo_price > -1 && price_list_rate > 0) {
-				console.log("promo_price")
 				const promo_precision = flt(item.promo_price, 2) % 1 != 0 ? 2 : 0;
 				return `<div class="item-prices"><div class="item-rate has-promo">${format_currency(price_list_rate, item.currency, precision) || 0}</div><div class="item-promo-rate">${format_currency(item.promo_price, item.currency, promo_precision)} / ${uom}</div>`;
 			} else {
-				console.log("no promo_price")
 				return `<div class="item-prices"><div class="item-rate">${format_currency(price_list_rate, item.currency, precision) || 0} / ${uom}</div>`;
 			}
 		}
