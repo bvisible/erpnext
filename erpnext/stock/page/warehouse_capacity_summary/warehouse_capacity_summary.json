@@ -1,15 +1,16 @@
 {
  "content": null,
- "creation": "2020-11-25 12:07:54.056208",
+ "creation": "2022-03-07 17:18:52.984830",
  "docstatus": 0,
  "doctype": "Page",
  "idx": 0,
- "modified": "2020-11-25 11:07:54.056208",
+ "modified": "2023-11-06 16:23:37.848396",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "warehouse-capacity-summary",
  "owner": "Administrator",
- "page_name": "Warehouse Capacity Summary",
+ "page_name": "warehouse-capacity-summary",
+ "restrict_to_domain": "Gestion",
  "roles": [
   {
    "role": "Stock User"

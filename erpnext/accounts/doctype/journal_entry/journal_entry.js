@@ -42,7 +42,7 @@ frappe.ui.form.on("Journal Entry", {
 			}, __('Actions'));
 		}
 
-		if (frm.doc.__islocal) {
+		if (frm.doc.docstatus == 0) { ////if (frm.doc.__islocal) {
 			frm.add_custom_button(__('Quick Entry'), function() {
 				return erpnext.journal_entry.quick_entry(frm);
 			});
@@ -575,11 +575,175 @@ $.extend(erpnext.journal_entry, {
 				{fieldtype: "Date", fieldname: "posting_date", label: __("Date"), reqd: 1,
 					default: frm.doc.posting_date},
 				{fieldtype: "Small Text", fieldname: "user_remark", label: __("User Remark")},
-				{fieldtype: "Select", fieldname: "naming_series", label: __("Series"), reqd: 1,
-					options: naming_series_options, default: naming_series_default},
-			]
+				////{fieldtype: "Select", fieldname: "naming_series", label: __("Series"), reqd: 1,
+				////	options: naming_series_options, default: naming_series_default},
+			],
+			//// set secondary action
+			secondary_action_label: __("Save & Create New"),
+			secondary_action: function() {
+				var btn = this;
+				var values = dialog.get_values();
+
+				frm.set_value("posting_date", values.posting_date);
+				frm.set_value("user_remark", values.user_remark);
+				////frm.set_value("naming_series", values.naming_series);
+
+				if(frm.doc.accounts.length == 1) {
+					frm.clear_table("accounts");
+				}
+
+				frm.set_value("is_vat_excluded", values.is_vat_excluded);
+				frappe.call({
+					method: "frappe.client.get",
+					args: {
+						doctype: "Journal Entry Template",
+						name: cur_dialog.get_value("template"),
+					},
+					callback(r) {
+						if(r.message) {
+							var template_doc = r.message;
+							var totalization_doc = template_doc.accounting_entry_totalization[0]
+
+							frappe.db.get_value("Account", template_doc.accounting_entry_totalization[0].account, "taxable_account", (re) => {
+								if(re.taxable_account) var tax_account_name = re.taxable_account;
+								else tax_account_name ="Sans TVA - pri"
+
+								frappe.call({
+									method: "frappe.client.get",
+									args: {
+										doctype: "Item Tax Template",
+										name: tax_account_name,
+									},
+									callback(result) {
+										if(result.message) {
+											var tax_template = result.message;
+											if(tax_template.taxes) {
+												var has_vat = false;
+												if(values.credit_or_debit == "Debit") {
+													var debit = values.totalization;
+													var credit = 0;
+												} else {
+													var debit = 0;
+													var credit = values.totalization;
+												}
+												var totalization_values = [totalization_doc.account, totalization_doc.party_type, totalization_doc.party, debit, credit, totalization_doc.user_remark];
+												for(var i = 0; i < tax_template.taxes.length; i++) {
+													if(tax_template.taxes[i].tax_rate > 0) {
+														var debit_tax = debit * tax_template.taxes[i].tax_rate / 100;
+														var debit_ht = debit - debit_tax;
+														var credit_tax = credit * tax_template.taxes[i].tax_rate / 100;
+														var credit_ht = credit - credit_tax;
+														var remark = totalization_doc.user_remark
+														totalization_values = [totalization_doc.account, totalization_doc.party_type, totalization_doc.party, debit_ht, credit_ht, totalization_doc.user_remark];
+														var totalization_row = frm.fields_dict.accounts.grid.add_new_row();
+														populate_row(totalization_row.doctype, totalization_row.name, totalization_values);
+
+														/*****   VAT   *****/
+														var totalization_row_vat = frm.fields_dict.accounts.grid.add_new_row()
+														var totalization_vat_values = [tax_template.taxes[i].tax_type, null, null, debit_tax, credit_tax, totalization_doc.user_remark ? __("VAT for") + " " + totalization_doc.user_remark : __("VAT for") + " " + totalization_doc.account]
+														populate_row(totalization_row_vat.doctype, totalization_row_vat.name, totalization_vat_values);
+														has_vat = true;
+														break;
+													}
+												}
+												if(!has_vat) {
+													var totalization_row = frm.fields_dict.accounts.grid.add_new_row();
+													populate_row(totalization_row.doctype, totalization_row.name, totalization_values);
+												}
+											}
+										}
+
+										var counterparty_row = [];
+										var counterparty_vat_row = [];
+										var unique_counterparty = template_doc.accounting_entry_counterparty.length == 1 ? true : false;
+										var amount = unique_counterparty ? values.totalization / template_doc.accounting_entry_counterparty.length : null;
+										if(values.credit_or_debit == "Debit") {
+											var debit_counterparty = unique_counterparty ? 0 : null;
+											var credit_counterparty = amount;
+										} else {
+											var debit_counterparty = amount;
+											var credit_counterparty = unique_counterparty ? 0 : null;
+										}
+										template_doc.accounting_entry_counterparty.forEach(function(val,index) {
+											frappe.db.get_value("Account", val.account, "taxable_account", (re) => {
+												var tax_name = "";
+												if(re.taxable_account) tax_name = re.taxable_account;
+												else tax_name = "Sans TVA - pri";
+
+												frappe.call({
+													method: "frappe.client.get",
+													args: {
+														doctype: "Item Tax Template",
+														name: tax_name,
+													},
+													callback(result) {
+														if(result.message) {
+															counterparty_row[index] = frm.fields_dict.accounts.grid.add_new_row();
+															var tax_template = result.message;
+															//if(index > 1) amount = 0;
+															var counterparty_values = [val.account, val.party_type, val.party, debit_counterparty, credit_counterparty, val.user_remark];
+															has_vat = false;
+															if(tax_template.taxes) {
+																for(var j = 0; j < tax_template.taxes.length; j++) {
+																	if(tax_template.taxes[j].tax_rate > 0) {
+																		var debit_ht_counterparty = unique_counterparty ? values.is_vat_excluded ? debit_counterparty : debit_counterparty / (1+tax_template.taxes[j].tax_rate / 100) : null;
+																		var debit_tax_counterparty = unique_counterparty ? values.is_vat_excluded ? debit_counterparty * tax_template.taxes[j].tax_rate / 100 : debit_counterparty - debit_ht_counterparty : null;
+
+																		var credit_ht_counterparty = unique_counterparty ? values.is_vat_excluded ? credit_counterparty : credit_counterparty / (1+tax_template.taxes[j].tax_rate / 100) : null;
+																		var credit_tax_counterparty = unique_counterparty ? values.is_vat_excluded ? credit_counterparty * tax_template.taxes[j].tax_rate / 100 : credit_counterparty - credit_ht_counterparty : null;
+
+																		counterparty_values = [val.account, val.party_type, val.party, debit_ht_counterparty, credit_ht_counterparty, val.user_remark];
+																		frappe.model.set_value(totalization_row.doctype, totalization_row.name, "debit_in_account_currency", credit_ht_counterparty + credit_tax_counterparty);
+																		frappe.model.set_value(totalization_row.doctype, totalization_row.name, "credit_in_account_currency", debit_ht_counterparty + debit_tax_counterparty);
+																		populate_row(counterparty_row[index].doctype, counterparty_row[index].name, counterparty_values);
+																		/*****   VAT   *****/
+																		var vat_account = tax_template.taxes[j].tax_type
+																		if(unique_counterparty && index == template_doc.accounting_entry_counterparty.length - 1 && values.totalization % template_doc.accounting_entry_counterparty.length != 0) {
+																			var rest = (values.totalization % template_doc.accounting_entry_counterparty.length).toFixed(2);
+																			debit_tax > 0? debit_tax += rest : credit_tax += rest;
+																		}
+																		counterparty_vat_row[index] = frm.fields_dict.accounts.grid.add_new_row();
+																		var counterparty_vat_values = [vat_account, null, null, debit_tax_counterparty, credit_tax_counterparty, val.user_remark? __("VAT for") + " " + val.user_remark : __("VAT for") + " "  + val.account];
+																		populate_row(counterparty_vat_row[index].doctype, counterparty_vat_row[index].name, counterparty_vat_values);
+																		has_vat = true;
+																		break;
+																	}
+																}
+															}
+															if(!has_vat) {
+																if( unique_counterparty && index == template_doc.accounting_entry_counterparty.length - 1 && values.totalization % template_doc.accounting_entry_counterparty.length != 0) {
+																	rest = (values.totalization % template_doc.accounting_entry_counterparty.length).toFixed(2);
+																	debit_counterparty > 0? debit_counterparty += rest : credit_counterparty += rest;
+																	counterparty_values = [val.account, val.party_type, val.party, debit_counterparty, credit_counterparty, val.user_remark];
+																}
+																populate_row(counterparty_row[index].doctype, counterparty_row[index].name, counterparty_values);
+															}
+														}
+														if(i == template_doc.accounting_entry_counterparty.length - 1) {
+															refresh_field("accounts");
+															//frm.save();
+														}
+													}
+												});
+											});
+											//setTimeout(function() {}, 200);
+										});
+									}
+								});
+							});
+						}
+					}
+				});
+				dialog.hide();
+				setTimeout(function() {
+					frm.save().then(() => {
+						frappe.new_doc("Journal Entry");
+					});
+				}, 500);
+			}
 		});
 		////
+
 		function populate_row(dt, dn, values){
 			setTimeout(function(){
 				var fields = ["account", "party_type", "party", "debit_in_account_currency", "credit_in_account_currency", "user_remark"];
@@ -596,7 +760,7 @@ $.extend(erpnext.journal_entry, {
 
 			frm.set_value("posting_date", values.posting_date);
 			frm.set_value("user_remark", values.user_remark);
-			frm.set_value("naming_series", values.naming_series);
+			////frm.set_value("naming_series", values.naming_series);
 
 			// clear table is used because there might've been an error while adding child
 			// and cleanup didn't happen
@@ -766,8 +930,10 @@ $.extend(erpnext.journal_entry, {
 			frm.save();
 			*/
 			////
-			setTimeout(function() { dialog.show(); }, 400); ////
-			////dialog.hide();
+			dialog.hide(); ////
+			setTimeout(function() {////
+				frm.save(); ////
+			}, 500);////
 		});
 
 		dialog.show();

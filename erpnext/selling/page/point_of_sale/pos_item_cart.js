@@ -96,6 +96,7 @@ erpnext.PointOfSale.ItemCart = class {
 	make_cart_totals_section() {
 		this.$totals_section = this.$component.find('.cart-totals-section');
 
+		//// added line discount <div class="discount-container hidden"> <div>${__('Discount')}</div> <div>0.00</div> </div>
 		this.$totals_section.append(
 			`<div class="add-discount-wrapper">
 				${this.get_discount_icon()} ${__('Add Discount')}
@@ -109,6 +110,10 @@ erpnext.PointOfSale.ItemCart = class {
 				<div class="net-total-value">0.00</div>
 			</div>
 			<div class="taxes-container"></div>
+			<div class="discount-container hidden">
+				<div>${__('Discount')}</div>
+				<div>0.00</div>
+			</div>
 			<div class="grand-total-container">
 				<div>${__('Grand Total')}</div>
 				<div>0.00</div>

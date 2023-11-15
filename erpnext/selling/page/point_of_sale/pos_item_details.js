@@ -438,5 +438,14 @@ erpnext.PointOfSale.ItemDetails = class {
 
 	toggle_component(show) {
 		show ? this.$component.css('display', 'flex') : this.$component.css('display', 'none');
+		////
+		if(show){
+			cur_pos.item_selector.$items_container.attr("style","grid-template-columns: repeat(1, minmax(0px, 1fr))!important;");
+			cur_pos.item_selector.$item_group_container.hide();
+		} else {
+			cur_pos.item_selector.$items_container.attr("style","");
+			cur_pos.item_selector.$item_group_container.show()
+		}
+		////
 	}
 }

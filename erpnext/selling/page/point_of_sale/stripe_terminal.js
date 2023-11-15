@@ -8,7 +8,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 	this.assign_stripe_connection_token = function(payment, is_online) {
 		payment_object = payment;
 		is_online = is_online;
-		show_loading_modal('Connecting to Stripe Terminal', 'Please Wait<br>Connecting to Stripe Terminal');
+		show_loading_modal(__('Connecting to Stripe Terminal'), __('Please Wait'));
 		frappe.dom.freeze();
 		frappe.call({
 			method: "pasigono.pasigono.api.get_stripe_terminal_token",
@@ -26,7 +26,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 					});
 					connect_to_stripe_terminal(payment, is_online);
 				} else {
-					show_error_dialog('Please configure the stripe settings.');
+					show_error_dialog(__('Please configure the stripe settings.'));
 				}
 			}
 		});
@@ -52,7 +52,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 		html += '</div>';
 		loading_dialog.fields_dict.show_dialog.$wrapper.html(html);
 		loading_dialog.show();
-		if(title == 'Collecting Payments') {
+		if(title == __('Collecting Payments')) {
 			loading_dialog.set_primary_action(__('Cancel'), function () {
 				loading_dialog.hide();
 				terminal.clearReaderDisplay();
@@ -90,16 +90,16 @@ erpnext.PointOfSale.StripeTerminal = function(){
 				};
 				terminal.discoverReaders(config).then(function (discoverResult) {
 					if (discoverResult.error) {
-						connecting_dialog.hide();
-						show_error_dialog('No Stripe readers found.');
+						cur_dialog.hide();
+						show_error_dialog(__('No Stripe readers found.'));
 					} else if (discoverResult.discoveredReaders.length === 0) {
-						connecting_dialog.hide();
-						show_error_dialog('No Stripe readers found.');
+						cur_dialog.hide();
+						show_error_dialog(__('No Stripe readers found.'));
 					} else {
 						var devices = '';
 						for(let x in discoverResult.discoveredReaders){
 							devices = devices + '\n' + discoverResult.discoveredReaders[x].label;
-						}
+						}						
 						var d = new frappe.ui.Dialog({
 							'fields': [
 								{'fieldname': 'stripe_readers', 'fieldtype': 'Select', 'reqd': 1, 'label': 'Stripe Reader', 'options': devices }
@@ -115,8 +115,8 @@ erpnext.PointOfSale.StripeTerminal = function(){
 								}
 								terminal.connectReader(selectedReader).then(function (connectResult) {
 									if (connectResult.error) {
-										connecting_dialog.hide();
-										show_error_dialog('Failed to connect.' + connectResult.error.message);
+										cur_dialog.hide();
+										show_error_dialog(__('Failed to connect.') + connectResult.error.message);
 
 									} else {
 										if (r.message.enable_test_mode == 1 && testCardNumber != "" && testCardtype != "") {
@@ -130,13 +130,41 @@ erpnext.PointOfSale.StripeTerminal = function(){
 								});
 							},
 							secondary_action: function(){
-								frappe.msgprint('Please disable Stripe Terminal in the POS Profile.');
+								frappe.msgprint(__('Please disable Stripe Terminal in the POS Profile.'));
 								d.hide();
 							},
-							secondary_action_label: 'Cancel',
-							title: 'Select a Stripe Terminal device'
+							secondary_action_label: __('Cancel'),
+							title: __('Select a Stripe Terminal device')
 						});
 						d.show();
+						// if only one reader is found, set in stripe_readers field
+						var userInteracted = false;
+						if(discoverResult.discoveredReaders.length == 1){
+							d.fields_dict.stripe_readers.set_input(discoverResult.discoveredReaders[0].label);
+							// Show alert to the user
+							frappe.show_alert({
+								message:__('Without any action on your part, the Stripe Terminal device will be automatically selected in 5 seconds.'),
+								indicator:'green'
+							}, 5);
+							
+							// Set up a timeout to automatically execute the primary action
+							setTimeout(function(){
+								// Check if the user has interacted with the dialog or if the dialog is still open
+								if(!userInteracted && d.$wrapper.find('.modal-dialog').length > 0){
+									d.hide();
+									d.primary_action();
+								}
+							}, 5000);
+						}
+
+						// Event handlers for user interactions
+						d.$wrapper.on('click', 'button, .modal-dialog', function() {
+							userInteracted = true;
+						});
+						d.$wrapper.on('change', 'input, select', function() {
+							userInteracted = true;
+						});
+
 					}
 				});
 			}
@@ -144,52 +172,57 @@ erpnext.PointOfSale.StripeTerminal = function(){
 	}
 
 
-	this.display_details = async function(payment){
+	this.display_details = async function(payment){	
 		var items = [];
-		/*var frm = payment.frm.doc;
-		var items = [];
-		var taxes = Math.round(payment.frm.doc.total_taxes_and_charges*100);
-		var total = Math.round(payment.frm.doc.grand_total*100);*/
 		var currency = payment.frm.doc.currency;
+	
 		cur_frm.doc.items.forEach(function(row){
-			//var amount = row.amount*100;
+			var amount = Math.round(row.rate * row.qty * 100); // Ensure this is an integer
 			var item = {
 				"description": row.item_name,
-				"quantity": (row.qty),
-				"amount": (row.rate * row.qty * 100)
+				"quantity": row.qty,
+				"amount": amount
 			};
 			items.push(item);
 		});
-		//await terminal.clearReaderDisplay();
+		
 		setTimeout(function(){
-			terminal.setReaderDisplay({
-				type: 'cart',
-				cart: {
-					line_items: items,
-					tax: parseInt(cur_frm.doc.total_taxes_and_charges*100),
-					total: parseInt((cur_frm.doc.rounded_total || cur_frm.doc.grand_total) *100),
-					currency: currency
-				}
-			});
+			try {
+				terminal.setReaderDisplay({
+					type: 'cart',
+					cart: {
+						line_items: items,
+						tax: Math.round(cur_frm.doc.total_taxes_and_charges * 100), // Ensure tax is an integer
+						total: Math.round((cur_frm.doc.rounded_total || cur_frm.doc.grand_total) * 100), // Ensure total is an integer
+						currency: currency
+					}
+				}).then(function() {
+					//console.log('setReaderDisplay call successful');
+				}).catch(function(error) {
+					console.error('setReaderDisplay call failed', error);
+				});
+			} catch (error) {
+				console.error('Failed to set reader display:', error);
+			}
 		}, 400);
 	}
 
 	this.collecting_payments = function(payment, is_online) {
 		if(payment.frm.doc.is_return == 1){
 			confirm_dialog = new frappe.ui.Dialog({
-				title: 'Confirm, refund through Stripe',
+				title: __('Confirm, refund through Stripe'),
 				fields: [{
 						label: '',
 						fieldname: 'show_dialog',
 						fieldtype: 'HTML'
 					},
 				],
-				primary_action_label: "Confirm",
+				primary_action_label: __("Confirm"),
 				primary_action(values) {
 					confirm_dialog.hide();
 					refund_payment(payment, is_online);
 				},
-				secondary_action_label: "Cancel",
+				secondary_action_label: __("Cancel"),
 				secondary_action(values) {
 					confirm_dialog.hide();
 				}
@@ -204,8 +237,8 @@ erpnext.PointOfSale.StripeTerminal = function(){
 					to_refund += row.amount;
 				}
 			});
-			var html = '<div style="text-align: center;">Please confirm. Refund of ' + payment.frm.doc.currency.toUpperCase() + ' ';
-			html += to_refund + ' through stripe.</div>';
+			var html = '<div style="text-align: center;">' + __('Please confirm. Refund of') + ' ' + payment.frm.doc.currency.toUpperCase() + ' ';
+			html += to_refund + __(' through stripe.') + '</div>';
 			confirm_dialog.fields_dict.show_dialog.$wrapper.html(html);
 			confirm_dialog.show();
 			frappe.dom.unfreeze();////
@@ -222,7 +255,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 	////
 
 	function refund_payment(payment, is_online){
-		show_loading_modal('Refunding Payments', 'Please Wait<br>Refunding Payments');
+		show_loading_modal(__('Refunding Payments'), __('Please Wait'));
 		frappe.dom.freeze();
 		var payments = payment.frm.doc.payments;
 		payments.forEach(function(row){
@@ -266,7 +299,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 
 
 	function create_payment(payment, is_online){
-		show_loading_modal('Collecting Payments', 'Please Wait<br>Collecting Payments');
+		show_loading_modal(__('Collecting Payments'), __('Please Wait'));
 		loading_dialog.$wrapper.attr('id', 'myUniqueModalId');
 		loading_dialog.$wrapper.find('.btn-modal-close').hide()
 
@@ -300,26 +333,26 @@ erpnext.PointOfSale.StripeTerminal = function(){
 							} else if (result.paymentIntent) {
 								loading_dialog.hide();
 								confirm_dialog = new frappe.ui.Dialog({
-									title: 'Confirm Stripe Payment',
+									title: __('Confirm Stripe Payment'),
 									fields: [{
 											label: '',
 											fieldname: 'show_dialog',
 											fieldtype: 'HTML'
 										},
 									],
-									primary_action_label: "Confirm",
+									primary_action_label: __("Confirm"),
 									primary_action(values) {
 										capture_payment(payment, is_online, result.paymentIntent);
 										terminal.clearReaderDisplay();
 									},
-									secondary_action_label: "Cancel",
+									secondary_action_label: __("Cancel"),
 									secondary_action(values) {
 										cancel_payment(payment, is_online, result.paymentIntent);
 										terminal.clearReaderDisplay();
 									}
 								});
-								var html = '<div style="text-align: center;">Please confirm. Payment of ' + result.paymentIntent.currency.toUpperCase() + ' ';
-								html += result.paymentIntent.amount/100 + ' through stripe.</div>';
+								var html = '<div style="text-align: center;">' + __('Please confirm. Payment of') + ' ' + result.paymentIntent.currency.toUpperCase() + ' ';
+								html += result.paymentIntent.amount/100 + __(' through stripe.') + '</div>';
 								confirm_dialog.fields_dict.show_dialog.$wrapper.html(html);
 								confirm_dialog.show();
 								frappe.dom.unfreeze();////
@@ -337,7 +370,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 		confirm_dialog.hide();
 
 		var canceling_dialog = new frappe.ui.Dialog({
-			title: 'Canceling Stripe Terminal',
+			title: __('Canceling Stripe Terminal'),
 			fields: [{
 					label: '',
 					fieldname: 'show_dialog',
@@ -346,7 +379,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 			],
 		});
 		var html = '<div style="min-height:200px;position: relative;text-align: center;padding-top: 75px;line-height: 25px;font-size: 15px;">';
-		html += '<div style="">Please Wait<br>Canceling Stripe Terminal</div>';
+		html += '<div style="">' + __('Please Wait') + '</div>';
 		html += '</div>';
 		canceling_dialog.fields_dict.show_dialog.$wrapper.html(html);
 		canceling_dialog.show();
@@ -363,7 +396,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 			callback: function (intent_result) {
 				frappe.dom.unfreeze();
 				canceling_dialog.hide();
-				frappe.msgprint("Stripe payment cancelled.");
+				frappe.msgprint(__("Stripe payment cancelled."));
 			}
 		})
 	}
@@ -371,7 +404,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 
 	function capture_payment(payment, is_online, payment_intent){
 		confirm_dialog.hide();
-		show_loading_modal('COllecting Payments', 'Please Wait<br>Collecting Payments');
+		show_loading_modal(__('COllecting Payments'), __('Please Wait'));
 		frappe.call({
 			method: "pasigono.pasigono.api.capture_payment_intent",
 			freeze: true,
@@ -476,9 +509,10 @@ erpnext.PointOfSale.StripeTerminal = function(){
 					fieldtype: 'HTML'
 				},
 			],
-			primary_action_label: "Retry",
+			primary_action_label: __("Retry"),
 			primary_action(values) {
-				retry_stripe_terminal(me);
+				////retry_stripe_terminal(me);
+				me.assign_stripe_connection_token(payment_object, is_online);
 				message_dilaog.hide();
 			}
 		});
@@ -498,8 +532,8 @@ erpnext.PointOfSale.StripeTerminal = function(){
 				},
 
 			],
-			primary_action_label: "Retry",
-			secondary_action_label: "Change Payment Mode",
+			primary_action_label: __("Retry"),
+			secondary_action_label: __("Change Payment Mode"),
 			primary_action(values) {
 				retry_stripe_terminal(me, payment_object, is_online);
 				//me.collecting_payments(payment_object, is_online);
