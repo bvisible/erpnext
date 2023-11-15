@@ -11280,3 +11280,64 @@ Promotional Price Starts,Début du prix promotionnel
 Promotional Price Ends,Fin du prix promotionnel
 Access Refused,Accès Refusé
 Your subscription does not give you access to this page. You can change your Neoffice subscription in the <a href='https://app.neoffice.io/clientarea.php?action=services' target='_blank'>My products & services</a> section of your account.,Votre abonnement ne vous permet pas d'accéder à cette page. Vous pouvez modifier votre abonnement Neoffice dans la section <a href='https://app.neoffice.io/clientarea.php?action=services' target='_blank'>Mes produits & services</a> de votre compte.
+Remind Me,Me rappeler
+Create a Reminder,Créer un rappel
+Remind Me In,Me rappeler dans
+Remind At,Me rappeler à
+Undo,Annuler
+Redo,Rétablir
+Clear all filters,Effacer les filtres
+UnReconcile,Déconcilier
+UnReconcile Allocations,Dissocier les allocations
+Payment On Invoice,Paiement sur facture
+Enable Payment On Invoice,Activer le paiement sur facture
+Invoice Payment Title,Titre du paiement de la facture
+Invoice Payment Description,Description du paiement de la facture
+Minimum Amount For Payment On Invoice,Montant minimum pour le paiement sur facture
+Installments Conditions (between 2 and 12),Conditions de versements (entre 2 et 12)
+Number of Installments,Nombre de tranches
+Fee Percentage,Pourcentage de frais
+Project Profitability,Rentabilité du projet
+End,Fin
+Stock UOM Quantity,Quantité UdM en stock
+Allow to Edit Stock UOM Qty for Sales Documents,Autoriser la modification de la quantité UdM de stock pour les documents de vente
+Enable Stock Reservation,Activer la réservation de stock
+Allows to keep aside a specific quantity of inventory for a particular order.,Permet de conserver une quantité spécifique de stock pour une commande particulière.
+Serial number,N° de série
+Qty to Fetch,Quantité à récupérer
+Scan Serial No,Numériser le N°de série
+Scan Batch No,Numériser le N° de lot
+Fetch Based On,Récupérer sur la base de
+Serial & Batch Item Settings,Paramètres des éléments de série et de lot
+Auto Create Serial and Batch Bundle For Outward,Création automatique d'une combinaison de N° de série et de lots pour l'expédition
+Promo Discount Amount,Montant de la remise promotionnelle
+Loyalty Discount Amount,Montant de la remise des points de fidélité
+Total Discount Amount,Montant total de la remise
+Apply Discount,Appliquer la réduction
+To Pay,A payer
+This is based on transactions against this Supplier. See timeline below for details,Ceci est basé sur les transactions avec ce fournisseur. Voir la chronologie ci-dessous pour plus de détails
+This is based on transactions against this Customer. See timeline below for details,Ceci est basé sur les transactions avec ce client. Voir la chronologie ci-dessous pour plus de détails
+Gift card already added.,Carte cadeau déjà ajoutée.
+Loyalty Points Discount Amount,Points de fidélité Montant des remises
+Validate Code,Valider le code
+Cancel Applied Code,Annuler le code appliqué
+Old Email,Ancienne email
+Update User Email,Mise à jour de l'adresse email de l'utilisateur
+Update Primary Contact Email,Mise à jour de l'email du contact principal
+Update All Contacts Email (having the same old email),Mise à jour de l'email de tous les contacts (avec la même ancienne adresse)
+Update Primary Address,Mise à jour de l'adresse principale
+Update All Addresses Email (having the same old email),Mettre à jour toutes les adresses email (ayant le même ancien email)
+New Email,Nouvelle email
+Connecting to Stripe Terminal,Connexion au terminal Stripe
+Please Wait,Veuillez patienter
+Please configure the stripe settings.,Veuillez configurer Stripe.
+Failed to connect.,Échec de la connexion.
+Select a Stripe Terminal device,Sélectionner un terminal Stripe
+No Stripe readers found.,Aucun lecteur Stripe n'a été trouvé.
+Collecting Payments,Perception du paiement
+through stripe.,par l'intermédiaire de Stripe.
+Please confirm. Refund of,Veuillez confirmer. Remboursement de
+Refunding Payments,Remboursement du paiement
+Please confirm. Payment of,Veuillez confirmer. Paiement de
+"Without any action on your part, the Stripe Terminal device will be automatically selected in 5 seconds.","Sans aucune action de votre part, le terminal Stripe sera automatiquement sélectionné dans 5 secondes."
+Please disable Stripe Terminal in the POS Profile.,Veuillez désactiver le terminal Stripe dans le profil du point de vente.
