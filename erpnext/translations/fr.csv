@@ -11341,3 +11341,17 @@ Refunding Payments,Remboursement du paiement
 Please confirm. Payment of,Veuillez confirmer. Paiement de
 "Without any action on your part, the Stripe Terminal device will be automatically selected in 5 seconds.","Sans aucune action de votre part, le terminal Stripe sera automatiquement sélectionné dans 5 secondes."
 Please disable Stripe Terminal in the POS Profile.,Veuillez désactiver le terminal Stripe dans le profil du point de vente.
+Stock UOM Quantity,Quantité UdM en stock
+Allow to Edit Stock UOM Qty for Sales Documents,Autoriser la modification de la quantité UdM de stock pour les documents de vente
+Allow to Edit Stock UOM Qty for Purchase Documents,Autoriser la modification de la quantité UdM de stock pour les documents d'achat
+Enable Stock Reservation,Activer la réservation de stock
+Allows to keep aside a specific quantity of inventory for a particular order.,Permet de conserver une quantité spécifique de stock pour une commande particulière.
+Stock Reservation,Réservation de stock
+Allow Negative rates for Items,Autoriser les tarifs négatifs pour les articles
+Use Transaction Date Exchange Rate,Utiliser le taux de change à la date de transaction
+Blanket Order Allowance (%),Allocation de commande globale (%)
+Percentage you are allowed to order beyond the Blanket Order quantity.,Pourcentage que vous êtes autorisé à commander au-delà de la quantité de la commande globale.
+"While making Purchase Invoice from Purchase Order, use Exchange Rate on Invoice's transaction date rather than inheriting it from Purchase Order. Only applies for Purchase Invoice.","Lorsque vous créez une facture d'achat à partir d'un bon de commande, utilisez le taux de change à la date de transaction de la facture plutôt que de l'hériter du bon de commande. S'applique uniquement à la facture d'achat."
+Auto Leave Encashment,Encaissement automatique des congés
+Repeat Header and Footer,Répéter l'en-tête et le pied de page
+Don't Reserve Sales Order Qty on Sales Return,Ne pas réserver la quantité de commande client sur le retour vente
