@@ -664,7 +664,12 @@ $.extend(erpnext.journal_entry, {
 											var debit_counterparty = amount;
 											var credit_counterparty = unique_counterparty ? 0 : null;
 										}
-										template_doc.accounting_entry_counterparty.forEach(function(val,index) {
+										if(!template_doc.accounting_entry_counterparty) {
+											cur_frm.save().then(() => {
+												frappe.new_doc("Journal Entry");
+											});
+										}
+										template_doc.accounting_entry_counterparty.forEach(function(val,index, arr) {
 											frappe.db.get_value("Account", val.account, "taxable_account", (re) => {
 												var tax_name = "";
 												if(re.taxable_account) tax_name = re.taxable_account;
@@ -723,6 +728,14 @@ $.extend(erpnext.journal_entry, {
 															refresh_field("accounts");
 															//frm.save();
 														}
+														if (index === arr.length - 1) {
+															dialog.hide();
+															setTimeout(function() {
+																frm.save().then(() => {
+																	frappe.new_doc("Journal Entry");
+																});
+															}, 200);
+														}
 													}
 												});
 											});
@@ -734,12 +747,7 @@ $.extend(erpnext.journal_entry, {
 						}
 					}
 				});
-				dialog.hide();
-				setTimeout(function() {
-					frm.save().then(() => {
-						frappe.new_doc("Journal Entry");
-					});
-				}, 500);
+				//dialog.hide();
 			}
 		});
 		////
@@ -847,7 +855,11 @@ $.extend(erpnext.journal_entry, {
 										var debit_counterparty = amount;
 										var credit_counterparty = unique_counterparty ? 0 : null;
 									}
-									template_doc.accounting_entry_counterparty.forEach(function(val,index) {
+									if(!template_doc.accounting_entry_counterparty) {
+										cur_frm.save();
+										dialog.hide();
+									}
+									template_doc.accounting_entry_counterparty.forEach(function(val,index, arr) {
 										frappe.db.get_value("Account", val.account, "taxable_account", (re) => {
 											var tax_name = "";
 											if(re.taxable_account) tax_name = re.taxable_account;
@@ -906,6 +918,12 @@ $.extend(erpnext.journal_entry, {
 														refresh_field("accounts");
 														//frm.save();
 													}
+													if (index === arr.length - 1) {
+														dialog.hide();
+														setTimeout(function() {
+															frm.save()
+														}, 200);
+													}
 												}
 											});
 										});
@@ -930,11 +948,8 @@ $.extend(erpnext.journal_entry, {
 			frm.save();
 			*/
 			////
-			dialog.hide(); ////
-			setTimeout(function() {////
-				frm.save(); ////
-			}, 500);////
 		});
+		dialog.hide();
 
 		dialog.show();
 	},
