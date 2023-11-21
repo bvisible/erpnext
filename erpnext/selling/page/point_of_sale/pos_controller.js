@@ -235,6 +235,62 @@ erpnext.PointOfSale.Controller = class {
 		this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, 'Ctrl+S');
 
 		this.page.add_menu_item(__('Close the POS'), this.close_pos.bind(this), false, 'Shift+Ctrl+C');
+
+		/* //// added for stripe */
+		let me = this;
+		frappe.db.get_value('POS Profile', me.pos_profile, 'enable_stripe_terminal', function(r) {
+			if(r.enable_stripe_terminal == 0){
+				me.page.add_menu_item(__("Show Stripe payments"), function() {
+					frappe.call({
+						method: 'neoffice_theme.events.get_latest_stripe_payments',
+						callback: function(r) {
+							if (r.message) {
+								const payments = r.message;
+								let tableContent = `
+									<div class="form-grid-container">
+										<div class="form-grid">
+											<div class="grid-heading-row">
+												<div class="grid-row">
+													<div class="data-row row">
+														<div class="col grid-static-col col-xs-3">${__("Date")}</div>
+														<div class="col grid-static-col col-xs-4">${__("ID")}</div>
+														<div class="col grid-static-col col-xs-3">${__("Amount")}</div>
+														<div class="col grid-static-col col-xs-2">${__("Status")}</div>
+													</div>
+												</div>
+											</div>
+											<div class="grid-body">
+												<div class="rows">`;
+					
+								payments.forEach((payment, index) => {
+									const rowClass = payment.status === 'succeeded' ? 'style="background-color: var(--green-100);padding: 7px;border-radius: 50px;"' : 'style="background-color: var(--red-100);padding: 7px;border-radius: 50px;"';
+									tableContent += `
+										<div class="grid-row" data-idx="${index + 1}">
+											<div class="data-row row">
+												<div class="col grid-static-col col-xs-3">${payment.date}</div>
+												<div class="col grid-static-col col-xs-4">${payment.id}</div>
+												<div class="col grid-static-col col-xs-3">${format_currency(payment.amount)}</div>
+												<div class="col grid-static-col col-xs-2"><span class="ellipsis" ${rowClass}>${__(payment.status)}</span></div>
+											</div>
+										</div>`;
+								});
+					
+								tableContent += `
+												</div>
+											</div>
+										</div>
+									</div>`;
+					
+								frappe.msgprint({
+									title: __('Latest Stripe Payments'),
+									message: tableContent
+								});
+							}
+						}
+					})		
+				}, false, 'Shift+Ctrl+S');
+			}		
+		});
 	}
 
 	open_form_view() {
