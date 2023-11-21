@@ -239,7 +239,7 @@ erpnext.PointOfSale.Controller = class {
 		/* //// added for stripe */
 		let me = this;
 		frappe.db.get_value('POS Profile', me.pos_profile, 'enable_stripe_terminal', function(r) {
-			if(r.enable_stripe_terminal == 0){
+			if(r.enable_stripe_terminal == 1){
 				me.page.add_menu_item(__("Show Stripe payments"), function() {
 					frappe.call({
 						method: 'neoffice_theme.events.get_latest_stripe_payments',
