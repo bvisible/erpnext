@@ -9745,7 +9745,7 @@ Ecommerce Shipping Method Title,Titre de la méthode d'expédition du Ecommerce
 Submit Invoice Automatically,Valider la facture automatiquement
 Shipping address,Adresse de livraison
 Advanced product list,Liste des produits avancées
-Coupon Code,Code promo
+Coupon Code,Code de réduction
 Deliver and Bill,Livrer et facturer
 Unpaid,Non payé
 Do you want to consider the document as printed ?,Voulez-vous considérer le document comme imprimé ?
@@ -10287,3 +10287,8 @@ Don't Reserve Sales Order Qty on Sales Return,Ne pas réserver la quantité de c
 Send by Email,Envoyé par email
 View and print,Visualiser et imprimer
 Save & Create New,Enregistrer & Nouvelle
+Message (if any),Message (s'il y en a un)
+Email Receipt,Réception de l'email
+Send to,Envoyer à
+Send Gift card,Envoyer une carte cadeau
+POS Payment,Paiement PDV
