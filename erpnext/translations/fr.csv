@@ -10296,3 +10296,15 @@ See all news,Voir toutes les actualités
 Latest news,Dernières actualités
 There is no default bank for this payment method,Il n'y a pas de banque par défaut pour ce mode de paiement
 Mailgun API Key,Clé API de Mailgun
+Collect Payment,Encaissement du paiement
+New Payment Collection,Nouvel encaissement
+Collect Payment,Réception du paiement
+Payment Entry {0} created,Entrée de paiement {0} créée
+Submitting Payment Entry...,Soumission de l'entrée de paiement...
+Error in submitting document:,Erreur dans la soumission du document :
+Error on linking payment entry with POS.,Erreur lors de la liaison de l'entrée de paiement avec le PDV.
+Payment Entry submitted,Entrée de paiement soumise
+Cannot refund more than paid with Stripe payment.,Impossible de rembourser plus que ce qui a été payé avec le paiement Stripe.
+"You are using test keys. If you don't use live keys, you will not receive the payments.","Vous utilisez des clés de test. Si vous n'utilisez pas de clés existantes, vous ne recevrez pas les paiements."
+Are you sure to use test mode?,Etes-vous sûr d'utiliser le mode test ?
+Please use live keys to enable Stripe Payments.,Veuillez utiliser des clés valides pour activer les paiements Stripe.
