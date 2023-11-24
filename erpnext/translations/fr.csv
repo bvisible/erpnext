@@ -10291,12 +10291,11 @@ Message (if any),Message (s'il y en a un)
 Email Receipt,Réception de l'email
 Send to,Envoyer à
 Send Gift card,Envoyer une carte cadeau
-POS Payment,Paiement PDV
 See all news,Voir toutes les actualités
 Latest news,Dernières actualités
 There is no default bank for this payment method,Il n'y a pas de banque par défaut pour ce mode de paiement
 Mailgun API Key,Clé API de Mailgun
-Collect Payment,Encaissement du paiement
+Collect Payment,Encaisser le paiement
 New Payment Collection,Nouvel encaissement
 Collect Payment,Réception du paiement
 Payment Entry {0} created,Entrée de paiement {0} créée
