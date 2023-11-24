@@ -10307,3 +10307,7 @@ Cannot refund more than paid with Stripe payment.,Impossible de rembourser plus 
 "You are using test keys. If you don't use live keys, you will not receive the payments.","Vous utilisez des clés de test. Si vous n'utilisez pas de clés existantes, vous ne recevrez pas les paiements."
 Are you sure to use test mode?,Etes-vous sûr d'utiliser le mode test ?
 Please use live keys to enable Stripe Payments.,Veuillez utiliser des clés valides pour activer les paiements Stripe.
+Neoffice Settings,Paramètres de Neoffice
+Default Mode of Payment In Neoffice,Mode de paiement par défaut dans Neoffice
+Publishable Key,Clé Publique
+Header Image,Image d'en-tête
