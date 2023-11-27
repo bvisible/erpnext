@@ -10288,7 +10288,7 @@ Send by Email,Envoyé par email
 View and print,Visualiser et imprimer
 Save & Create New,Enregistrer & Nouvelle
 Message (if any),Message (s'il y en a un)
-Email Receipt,Réception de l'email
+Email Receipt,Reçus par email
 Send to,Envoyer à
 Send Gift card,Envoyer une carte cadeau
 See all news,Voir toutes les actualités
@@ -10311,3 +10311,20 @@ Neoffice Settings,Paramètres de Neoffice
 Default Mode of Payment In Neoffice,Mode de paiement par défaut dans Neoffice
 Publishable Key,Clé Publique
 Header Image,Image d'en-tête
+This QR Code has a structural problem. It is impossible to extract the information.,Ce QR Code présente un problème structurel. Il est impossible d'extraire l'information.
+Issue a debit note with 0 qty against an existing Sales Invoice,Creer une note de débit avec une quantité à O pour la facture
+Return Against,Retour contre
+Is Rate Adjustment Entry (Debit Note),Entrée d'ajustement du prix (note de débit)
+Issue a debit note with 0 qty against an existing Sales Invoice,Créer une note de débit avec une quantité à O pour une facture existante
+Custom Amount Promo,Montant personnalisé Promo
+Gift card refund,Remboursement d'une carte cadeau
+Gift card payment,Paiement par carte cadeau
+Custom Promo Percentage,Pourcentage de promotion personnalisé
+Custom Discount Percentage,Pourcentage de remise personnalisé
+Custom Discount Amount,Montant de la remise personnalisée
+Submit Generated Invoices,Valider les factures générées
+Generate Invoice At,Générer la facture
+Number of Days,Nombre de jours
+End of the current subscription period,A la fin de la période d'abonnement en cours
+Beginning of the current subscription period,Au début de la période d'abonnement en cours
+Days before the current subscription period,Nombre de jours précédant la période d'abonnement en cours
