@@ -10342,3 +10342,9 @@ Show Net Values in Party Account,Afficher les valeurs nettes dans compte de cont
 Add Columns in Transaction Currency,Ajouter des colonnes dans la devise de transaction
 Show net values in opening and closing columns,Afficher les valeurs nettes dans les colonnes d'ouverture et de fermeture
 Choose Journal Entry Template,Choisir un modèle d'écriture de journal
+Reference No,N° de référence
+Payment Details,Détails du paiement
+Advance Taxes and Charges,Impôts et taxes anticipés
+Revaluation Journals,Journaux de réévaluation
+Default Advance Account,Compte d'avance par défaut
+Close Invoice on Intermediate Account,Clôturer la facture sur le compte intermédiaire
