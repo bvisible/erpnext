@@ -697,6 +697,10 @@ erpnext.PointOfSale.Controller = class {
 												if(!loading_dialog.fields_dict['payment_link'].value) {
 													loading_dialog.fields_dict['payment_link'].set_value(r.message.url);
 													$(loading_dialog.$wrapper).find('.modal-footer .btn-primary').html(__('Open Payment Link'));
+													frappe.call({
+														method: "neoffice_theme.events.check_twint_order",
+														args: {order_id: res.message},
+													})
 												}
 												if (r.message.payment_status != "SUCCESS") {
 													let reason_fail = false;
