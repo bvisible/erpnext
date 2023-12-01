@@ -217,7 +217,8 @@ def enqueue_multiple_variant_creation(item, args):
 		variants = json.loads(args)
 	total_variants = 1
 	for key in variants:
-		total_variants *= len(variants[key])
+		if key != "is_stock_item": #//// added if condition
+			total_variants *= len(variants[key])
 	if total_variants >= 600:
 		frappe.throw(_("Please do not create more than 500 items at a time"))
 		return
@@ -238,11 +239,14 @@ def create_multiple_variants(item, args):
 	if isinstance(args, str):
 		args = json.loads(args)
 
+	manage_stock = args.get("is_stock_item") #//// added
+	args.pop("is_stock_item") #//// added
 	args_set = generate_keyed_value_combinations(args)
 
 	for attribute_values in args_set:
 		if not get_variant(item, args=attribute_values):
 			variant = create_variant(item, attribute_values)
+			variant.is_stock_item = manage_stock #//// added
 			variant.save()
 			count += 1
 

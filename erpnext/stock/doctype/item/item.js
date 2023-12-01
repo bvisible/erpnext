@@ -523,13 +523,25 @@ $.extend(erpnext.item, {
 						options: `<label class="control-label">
 							${__("Select at least one value from each of the attributes.")}
 						</label>`,
+					},
+					//// added
+					{
+						fieldtype: "Section Break",
+					},
+					{
+						fieldtype: "Check",
+						fieldname: "is_stock_item",
+						label: __("Manage Stock"),
+						default: 1,
 					}
+					////
 				].concat(fields)
 			});
 
 			me.multiple_variant_dialog.set_primary_action(__('Create Variants'), () => {
 				let selected_attributes = get_selected_attributes();
 
+				selected_attributes["is_stock_item"] = me.multiple_variant_dialog.get_value("is_stock_item"); //// added line
 				me.multiple_variant_dialog.hide();
 				frappe.call({
 					method: "erpnext.controllers.item_variant.enqueue_multiple_variant_creation",
@@ -564,7 +576,7 @@ $.extend(erpnext.item, {
 		function get_selected_attributes() {
 			let selected_attributes = {};
 			me.multiple_variant_dialog.$wrapper.find('.form-column').each((i, col) => {
-				if(i===0) return;
+				if(i===0 || i===1) return; //// added || i===1
 				let attribute_name = $(col).find('.column-label').html().trim();
 				//// added code block
 				const elements = cur_frm.$wrapper[0].querySelectorAll('[data-fieldname="attributes"] a[data-value]');
