@@ -10353,3 +10353,7 @@ ACTIVE CUSTOMERS,CLIENTS ACTIFS
 ANNUAL SALES,CHIFFRE D'AFFAIRES ANNUEL
 ACTIVE SUPPLIERS,FOURNISSEURS ACTIFS
 ANNUAL PURCHASE,ACHAT ANNUEL
+Linked Sales Invoice Collections,Recouvrement des factures de vente
+Sales Invoice Collections,Encaissement des factures de vente
+Sales Invoice Reconciliation,Rapprochement des factures de vente
+Default warehouse used if manage stock is used in variants.,Entrepôt par défaut utilisé si la gestion des stocks est utilisée dans les variantes.
