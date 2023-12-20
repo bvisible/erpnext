@@ -354,6 +354,11 @@ class Customer(TransactionBase):
 		if self.loyalty_program:
 			return
 
+		#////added if
+		if self.name == "Passage":
+			return
+		#////
+		
 		loyalty_program = get_loyalty_programs(self)
 		if not loyalty_program:
 			return

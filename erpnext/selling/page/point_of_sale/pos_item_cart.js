@@ -595,6 +595,11 @@ erpnext.PointOfSale.ItemCart = class {
 		});
 
 		//// added <div id="varInfo_${item_data.idx}" class="item-desc" style="display:block;height:18px;"></div> after ${get_description_html()}
+		/*//// added
+			<div className="item-show-discount">
+				${get_base_and_discount()}
+			</div>
+		////*/
 		$item_to_update.html(
 			`${get_item_image_html()}
 			<div class="item-name-desc">
@@ -603,6 +608,9 @@ erpnext.PointOfSale.ItemCart = class {
 				</div>
 				${get_description_html()}
 				<div id="varInfo_${item_data.idx}" class="item-desc" style="display:block;height:18px;"></div>
+			</div>
+			<div class="item-show-discount">
+				${get_base_and_discount()}
 			</div>
 			${get_rate_discount_html()}`
 		)
@@ -625,6 +633,19 @@ erpnext.PointOfSale.ItemCart = class {
 			me.$cart_header.find(".rate-amount-header").css("width", max_width);
 			me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
 		}
+
+		//// added get_base_and_discount function
+		function get_base_and_discount() {
+			if (item_data.discount_percentage != 0) {
+				return `
+					<div class="item-price-before-discount">${format_currency(item_data.price_list_rate, currency)}</div>
+					<div class="item-discount-percent">-${item_data.discount_percentage}%</div>
+				`
+			} else {
+				return ''
+			}
+		}
+		////
 
 		function get_rate_discount_html() {
 			if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
