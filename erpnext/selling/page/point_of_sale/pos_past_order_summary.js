@@ -113,8 +113,9 @@ erpnext.PointOfSale.PastOrderSummary = class {
 
 	get_discount_html(doc) {
 		if (doc.discount_amount) {
+			////<div>Discount (${doc.additional_discount_percentage} %)</div> modified to <div>${__('Discount')}</div>
 			return `<div class="summary-row-wrapper">
-						<div>Discount (${doc.additional_discount_percentage} %)</div>
+						<div>${__('Discount')}</div>
 						<div>${format_currency(doc.discount_amount, doc.currency)}</div>
 					</div>`;
 		} else {
@@ -149,9 +150,10 @@ erpnext.PointOfSale.PastOrderSummary = class {
 	}
 
 	get_grand_total_html(doc) {
+		//// <div>${format_currency(doc.grand_total, doc.currency)}</div> to ${format_currency(doc.rounded_total, doc.currency)}
 		return `<div class="summary-row-wrapper grand-total">
 					<div>${__('Grand Total')}</div>
-					<div>${format_currency(doc.grand_total, doc.currency)}</div>
+					<div>${format_currency(doc.rounded_total, doc.currency)}</div>
 				</div>`;
 	}
 
