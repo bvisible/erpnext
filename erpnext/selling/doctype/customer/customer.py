@@ -740,7 +740,13 @@ def make_contact(args, is_primary_contact=1):
 		contact.add_email(args.get("email_id"), is_primary=True)
 	if args.get("mobile_no"):
 		contact.add_phone(args.get("mobile_no"), is_primary_mobile_no=True)
-	contact.insert(ignore_permissions=True) #//// added ignore_permissions=True
+	#//// added if-else condition
+	existing = frappe.db.get_all("Contact", filters={"email_id": args.get("email_id")})
+	if existing:
+		contact = frappe.get_doc("Contact", existing[0].name)
+	else:
+	#////
+		contact.insert(ignore_permissions=True) #//// added ignore_permissions=True
 
 	return contact
 
