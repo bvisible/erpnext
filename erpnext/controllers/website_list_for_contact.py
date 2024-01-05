@@ -236,14 +236,6 @@ def get_customers_suppliers(doctype, user):
 	if has_common(["Supplier", "Customer"], frappe.get_roles(user)):
 		suppliers = get_parents_for_user("Supplier")
 		customers = get_parents_for_user("Customer")
-		#////
-		if customers:
-			for idx, customer in enumerate(customers):
-				customers[idx] = frappe.db.get_value("Customer", {"email_id":customer}, "name")
-		else:
-			self_customer = frappe.db.get_value("Customer", {"email_id": user}, "name")
-			customers = [self_customer] if self_customer else []
-		#////
 	elif frappe.has_permission(doctype, "read", user=user):
 		customer_list = frappe.get_list("Customer")
 		customers = suppliers = [customer.name for customer in customer_list]
@@ -253,28 +245,11 @@ def get_customers_suppliers(doctype, user):
 
 def get_parents_for_user(parenttype: str) -> list[str]:
 	portal_user = frappe.qb.DocType("Portal User")
-	'''
-	#/// code to merge in erpnext
-	customer = frappe.qb.DocType("Customer")
-
-	query = (
-		frappe.qb
-		.from_(portal_user)
-		.left_join(customer)
-		.on(customer.email_id == portal_user.user)
-		.select(customer.name)
-		.where(portal_user.parenttype == parenttype)
-	).run(pluck="name")
-
-	if not query:
-		return portal_user.parent
-	return query
-	'''
 
 	return (
 		frappe.qb.from_(portal_user)
-		.select(portal_user.user) #//// .select(portal_user.parent
-		#////.where(portal_user.user == frappe.session.user)
+		.select(portal_user.parent)
+		.where(portal_user.user == frappe.session.user)
 		.where(portal_user.parenttype == parenttype)
 	).run(pluck="name")
 
