@@ -169,6 +169,7 @@ frappe.ui.form.on("Account", {
 					fieldname: "account_number",
 					fieldtype: "Data",
 					default: frm.doc.account_number,
+					read_only_depends_on: 'eval:frappe.session.user != "Administrator" && ' + frm.doc.tax_code //// added
 				},
 			],
 			primary_action: function () {
