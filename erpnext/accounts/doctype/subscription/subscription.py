@@ -16,6 +16,7 @@ from frappe.utils.data import (
 	date_diff,
 	flt,
 	get_last_day,
+	get_link_to_form,
 	getdate,
 	nowdate,
 )
@@ -107,7 +108,7 @@ class Subscription(Document):
 		return _current_invoice_start, _current_invoice_end
 
 	def get_current_invoice_start(
-		self, date: Optional["DateTimeLikeObject"] = None
+			self, date: Optional["DateTimeLikeObject"] = None
 	) -> Union[datetime.date, str]:
 		"""
 		This returns the date of the beginning of the current billing period.
@@ -117,9 +118,9 @@ class Subscription(Document):
 		_current_invoice_start = None
 
 		if (
-			self.is_new_subscription()
-			and self.trial_period_end
-			and getdate(self.trial_period_end) > getdate(self.start_date)
+				self.is_new_subscription()
+				and self.trial_period_end
+				and getdate(self.trial_period_end) > getdate(self.start_date)
 		):
 			_current_invoice_start = add_days(self.trial_period_end, 1)
 		elif self.trial_period_start and self.is_trialling():
@@ -132,7 +133,7 @@ class Subscription(Document):
 		return _current_invoice_start
 
 	def get_current_invoice_end(
-		self, date: Optional["DateTimeLikeObject"] = None
+			self, date: Optional["DateTimeLikeObject"] = None
 	) -> Union[datetime.date, str]:
 		"""
 		This returns the date of the end of the current billing period.
@@ -234,7 +235,7 @@ class Subscription(Document):
 		if self.is_trialling():
 			self.status = "Trialling"
 		elif (
-			self.status == "Active" and self.end_date and getdate(posting_date) > getdate(self.end_date)
+				self.status == "Active" and self.end_date and getdate(posting_date) > getdate(self.end_date)
 		):
 			self.status = "Completed"
 		elif self.is_past_grace_period():
@@ -253,7 +254,7 @@ class Subscription(Document):
 
 	@staticmethod
 	def period_has_passed(
-		end_date: Union[str, datetime.date], posting_date: Optional["DateTimeLikeObject"] = None
+			end_date: Union[str, datetime.date], posting_date: Optional["DateTimeLikeObject"] = None
 	) -> bool:
 		"""
 		Returns true if the given `end_date` has passed
@@ -284,7 +285,7 @@ class Subscription(Document):
 		return getdate(posting_date) >= getdate(add_days(self.current_invoice.due_date, grace_period))
 
 	def current_invoice_is_past_due(
-		self, posting_date: Optional["DateTimeLikeObject"] = None
+			self, posting_date: Optional["DateTimeLikeObject"] = None
 	) -> bool:
 		"""
 		Returns `True` if the current generated invoice is overdue
@@ -316,6 +317,37 @@ class Subscription(Document):
 
 		if self.is_new():
 			self.set_subscription_status()
+
+		self.validate_party_billing_currency()
+
+	def validate_party_billing_currency(self):
+		"""
+		Subscription should be of the same currency as the Party's default billing currency or company default.
+		"""
+		if self.party:
+			party_billing_currency = frappe.get_cached_value(
+				self.party_type, self.party, "default_currency"
+			) or frappe.get_cached_value("Company", self.company, "default_currency")
+
+			plans = [x.plan for x in self.plans]
+			subscription_plan_currencies = frappe.db.get_all(
+				"Subscription Plan", filters={"name": ("in", plans)}, fields=["name", "currency"]
+			)
+			unsupported_plans = []
+			for x in subscription_plan_currencies:
+				if x.currency and party_billing_currency and x.currency != party_billing_currency: #//// added x.currency and party_billing_currency and
+					unsupported_plans.append("{0}".format(get_link_to_form("Subscription Plan", x.name)))
+
+			if unsupported_plans:
+				unsupported_plans = [
+					                    _(
+						                    "Below Subscription Plans are of different currency to the party default billing currency/Company currency: {0}"
+					                    ).format(frappe.bold(party_billing_currency))
+				                    ] + unsupported_plans
+
+				frappe.throw(
+					unsupported_plans, frappe.ValidationError, "Unsupported Subscription Plans", as_list=True
+				)
 
 	def validate_trial_period(self) -> None:
 		"""
@@ -353,21 +385,23 @@ class Subscription(Document):
 			frappe.throw(_("Billing Interval in Subscription Plan must be Month to follow calendar months"))
 
 	def generate_invoice(
-		self,
-		from_date: Optional[Union[str, datetime.date]] = None,
-		to_date: Optional[Union[str, datetime.date]] = None,
+			self,
+			from_date: Optional[Union[str, datetime.date]] = None,
+			to_date: Optional[Union[str, datetime.date]] = None,
+			posting_date: Optional[Union[str, datetime.date]] = None,
 	) -> Document:
 		"""
 		Creates a `Invoice` for the `Subscription`, updates `self.invoices` and
 		saves the `Subscription`.
 		Backwards compatibility
 		"""
-		return self.create_invoice(from_date=from_date, to_date=to_date)
+		return self.create_invoice(from_date=from_date, to_date=to_date, posting_date=posting_date)
 
 	def create_invoice(
-		self,
-		from_date: Optional[Union[str, datetime.date]] = None,
-		to_date: Optional[Union[str, datetime.date]] = None,
+			self,
+			from_date: Optional[Union[str, datetime.date]] = None,
+			to_date: Optional[Union[str, datetime.date]] = None,
+			posting_date: Optional[Union[str, datetime.date]] = None,
 	) -> Document:
 		"""
 		Creates a `Invoice`, submits it and returns it
@@ -380,17 +414,19 @@ class Subscription(Document):
 			frappe.throw(
 				_("Company is mandatory was generating invoice. Please set default company in Global Defaults.")
 			)
-			# fmt: on
+		# fmt: on
 
 		invoice = frappe.new_doc(self.invoice_document_type)
 		invoice.company = company
 		invoice.customer_reference = self.customer_reference #//// added
 		invoice.set_posting_time = 1
-		invoice.posting_date = (
-			self.current_invoice_start
-			if self.generate_invoice_at == "Beginning of the current subscription period"
-			else self.current_invoice_end
-		)
+
+		if self.generate_invoice_at == "Beginning of the current subscription period":
+			invoice.posting_date = self.current_invoice_start
+		elif self.generate_invoice_at == "Days before the current subscription period":
+			invoice.posting_date = add_days(self.current_invoice_start, -1 * self.number_of_days) #////posting_date or self.current_invoice_start
+		else:
+			invoice.posting_date = self.current_invoice_end
 
 		invoice.cost_center = self.cost_center
 
@@ -414,6 +450,7 @@ class Subscription(Document):
 		# Subscription is better suited for service items. I won't update `update_stock`
 		# for that reason
 		items_list = self.get_items_from_plans(self.plans, is_prorate())
+
 		for item in items_list:
 			item["cost_center"] = self.cost_center
 			invoice.append("items", item)
@@ -470,7 +507,7 @@ class Subscription(Document):
 		return invoice
 
 	def get_items_from_plans(
-		self, plans: List[Dict[str, str]], prorate: Optional[bool] = None
+			self, plans: List[Dict[str, str]], prorate: Optional[bool] = None
 	) -> List[Dict]:
 		"""
 		Returns the `Item`s linked to `Subscription Plan`
@@ -555,14 +592,16 @@ class Subscription(Document):
 		2. `process_for_past_due`
 		"""
 		if not self.is_current_invoice_generated(
-			self.current_invoice_start, self.current_invoice_end
+				self.current_invoice_start, self.current_invoice_end
 		) and self.can_generate_new_invoice(posting_date):
-			self.generate_invoice()
+			self.generate_invoice(posting_date=posting_date)
 			self.update_subscription_period(add_days(self.current_invoice_end, 1))
+		elif posting_date and getdate(posting_date) > getdate(self.current_invoice_end):
+			self.update_subscription_period()
 
 		if self.cancel_at_period_end and (
-			getdate(posting_date) >= getdate(self.current_invoice_end)
-			or getdate(posting_date) >= getdate(self.end_date)
+				getdate(posting_date) >= getdate(self.current_invoice_end)
+				or getdate(posting_date) >= getdate(self.end_date)
 		):
 			self.cancel_subscription()
 
@@ -578,22 +617,22 @@ class Subscription(Document):
 			return False
 
 		if self.generate_invoice_at == "Beginning of the current subscription period" and (
-			getdate(posting_date) == getdate(self.current_invoice_start) or self.is_new_subscription()
+				getdate(posting_date) >= getdate(self.current_invoice_start) or self.is_new_subscription() #//// changed from == to >=
 		):
 			return True
 		elif self.generate_invoice_at == "Days before the current subscription period" and (
-			getdate(posting_date) == getdate(add_days(self.current_invoice_start, -1 * self.number_of_days))
+				getdate(posting_date) >= getdate(add_days(self.current_invoice_start, -1 * self.number_of_days)) #//// changed from == to >=
 		):
 			return True
-		elif getdate(posting_date) == getdate(self.current_invoice_end):
+		elif getdate(posting_date) >= getdate(self.current_invoice_end): #//// changed from == to >=
 			return True
 		else:
 			return False
 
 	def is_current_invoice_generated(
-		self,
-		_current_start_date: Union[datetime.date, str] = None,
-		_current_end_date: Union[datetime.date, str] = None,
+			self,
+			_current_start_date: Union[datetime.date, str] = None,
+			_current_end_date: Union[datetime.date, str] = None,
 	) -> bool:
 		if not (_current_start_date and _current_end_date):
 			_current_start_date, _current_end_date = self._get_subscription_period(
@@ -601,7 +640,7 @@ class Subscription(Document):
 			)
 
 		if self.current_invoice and getdate(_current_start_date) <= getdate(
-			self.current_invoice.posting_date
+				self.current_invoice.posting_date
 		) <= getdate(_current_end_date):
 			return True
 
@@ -677,7 +716,7 @@ class Subscription(Document):
 		to_generate_invoice = (
 			True
 			if self.status == "Active"
-			and not self.generate_invoice_at == "Beginning of the current subscription period"
+			   and not self.generate_invoice_at == "Beginning of the current subscription period"
 			else False
 		)
 		self.status = "Cancelled"
@@ -709,9 +748,9 @@ def is_prorate() -> int:
 
 
 def get_prorata_factor(
-	period_end: Union[datetime.date, str],
-	period_start: Union[datetime.date, str],
-	is_prepaid: Optional[int] = None,
+		period_end: Union[datetime.date, str],
+		period_start: Union[datetime.date, str],
+		is_prepaid: Optional[int] = None,
 ) -> Union[int, float]:
 	if is_prepaid:
 		return 1
@@ -722,7 +761,7 @@ def get_prorata_factor(
 
 
 def process_all(
-	subscription: str | None = None, posting_date: Optional["DateTimeLikeObject"] = None
+		subscription: str | None = None, posting_date: Optional["DateTimeLikeObject"] = None
 ) -> None:
 	"""
 	Task to updates the status of all `Subscription` apart from those that are cancelled
@@ -740,3 +779,4 @@ def process_all(
 		except frappe.ValidationError:
 			frappe.db.rollback()
 			subscription.log_error("Subscription failed")
+
