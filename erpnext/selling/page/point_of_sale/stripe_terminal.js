@@ -324,12 +324,12 @@ erpnext.PointOfSale.StripeTerminal = function(){
 				terminal.collectPaymentMethod(r.message.client_secret).then(function (result) {
 					if (result.error) {
 						loading_dialog.hide();
-						show_payment_error_dialog(result.error.message);
+						show_payment_error_dialog(result.error.message, is_online);
 					} else {
 						terminal.processPayment(result.paymentIntent).then(function (result) {
 							if (result.error) {
 								loading_dialog.hide();
-								show_payment_error_dialog(result.error.message);
+								show_payment_error_dialog(result.error.message, is_online);
 							} else if (result.paymentIntent) {
 								loading_dialog.hide();
 								confirm_dialog = new frappe.ui.Dialog({
@@ -521,7 +521,7 @@ erpnext.PointOfSale.StripeTerminal = function(){
 		message_dilaog.show();
 	}
 
-	function show_payment_error_dialog(message) {
+	function show_payment_error_dialog(message, is_online) {
 		message_dilaog = new frappe.ui.Dialog({
 			title: 'Message',
 			fields: [{
@@ -545,5 +545,15 @@ erpnext.PointOfSale.StripeTerminal = function(){
 		var html = "<p>" + message + "</p>";
 		message_dilaog.fields_dict.show_dialog.$wrapper.html(html);
 		message_dilaog.show();
+
+		message_dilaog.$wrapper.attr('id', 'myUniqueModalId');
+		message_dilaog.$wrapper.find('.btn-modal-close').hide()
+		$(document).on('shown.bs.modal', '#myUniqueModalId', function() {
+			$(this).data('bs.modal')._config.backdrop = 'static';
+			$(this).data('bs.modal')._config.keyboard = false;
+		});
+		$(document).on('hidden.bs.modal', '#myUniqueModalId', function() {
+			$(this).removeAttr('id');
+		});
 	}
 }
