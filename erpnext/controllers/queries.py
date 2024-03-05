@@ -270,6 +270,7 @@ def item_query(doctype, txt, searchfield, start, page_len, filters, as_dict=Fals
 		# scan description only if items are less than 50000
 		description_cond = "or tabItem.description LIKE %(txt)s"
 
+	#//// added or tabItem.item_code IN (select parent from `tabItem Supplier` where supplier_part_no LIKE %(txt)s)
 	return frappe.db.sql(
 		"""select
 			tabItem.name {columns}
@@ -279,6 +280,7 @@ def item_query(doctype, txt, searchfield, start, page_len, filters, as_dict=Fals
 			and tabItem.has_variants=0
 			and (tabItem.end_of_life > %(today)s or ifnull(tabItem.end_of_life, '0000-00-00')='0000-00-00')
 			and ({scond} or tabItem.item_code IN (select parent from `tabItem Barcode` where barcode LIKE %(txt)s)
+			or tabItem.item_code IN (select parent from `tabItem Supplier` where supplier_part_no LIKE %(txt)s)
 				{description_cond})
 			{fcond} {mcond}
 		order by

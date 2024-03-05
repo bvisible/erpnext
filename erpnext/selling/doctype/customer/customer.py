@@ -222,8 +222,9 @@ class Customer(TransactionBase):
 
 	def on_update(self):
 		self.validate_name_with_customer_group()
-		self.create_primary_contact()
-		self.create_primary_address()
+		if not frappe.flags.in_import: #//// added if condition
+			self.create_primary_contact()
+			self.create_primary_address()
 
 		if self.flags.old_lead != self.lead_name:
 			self.update_lead_status()
