@@ -213,6 +213,52 @@ erpnext.PointOfSale.ItemSelector = class {
 		this.item_group_field.toggle_label(false);
 
 		this.attach_clear_btn();
+		////to uncomment let search_element = this.$component.find('.search-field').find('div')[0];
+		////to uncomment $(search_element).append('<span class="search-icon"><i class="fa fa-search" aria-hidden="true"></i></span>');
+
+		// Use jQuery to add a click event listener to the span element
+		/* ////to uncomment $(search_element).on('click', '.search-icon', function() {
+			const dialog = new frappe.ui.form.MultiSelectDialog({
+				doctype: "Item",
+				target: cur_frm,
+				setters: {
+					item_name: '',
+					item_group: '',
+					brand: '',
+				},
+				add_filters_group: 1,
+				allow_child_item_selection: 1,
+				child_fieldname: "supplier_items", // child table fieldname, whose records will be shown &amp; can be filtered
+				child_columns: ["supplier", "supplier_part_no"], // child item columns to be displayed
+				action(selections) {
+					cur_dialog.hide()
+					//setTimeout(() => {
+						console.log(me);
+						console.log(me.events);
+						for (const item_data of selections) {
+							console.log(2, item_data);
+							let item_code = item_data;
+							let batch_no = "null";
+							let serial_no = undefined;
+							let uom = "Unité";
+							let rate = "200.9";
+							console.log(item_code, batch_no, serial_no, uom, rate);
+							me.events.item_selected({
+								field: 'qty',
+								value: "+1",
+								item: {item_code, batch_no, serial_no, uom, rate}
+							});
+
+							//let child = frappe.model.add_child(frm.doc, 'Worksheet Item', 'items');
+							//await frappe.model.set_value(child.doctype, child.name, 'item_code', item_data);
+
+							// Optionally set additional fields here
+						}
+					//}, 2000);
+				}
+			});
+			console.log('Span clicked');
+		});*/
 	}
 
 	attach_clear_btn() {
