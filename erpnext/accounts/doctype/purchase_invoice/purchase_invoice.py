@@ -867,8 +867,20 @@ class PurchaseInvoice(BuyingController):
 
 		purchase_receipt_doc_map = {}
 
+		#//// added block
+		company = frappe.defaults.get_global_default("company")
+		flat_rate = frappe.db.get_value("Company", company, "vat_accounting_method") == "Flat-rate taxation"
+		wanted_vat = []
+		for tax in self.get("taxes"):
+			tax_code = frappe.db.get_value("Account", tax.account_head, "tax_code")
+
+			frappe.neolog(tax.account_head + " tax_code = " + str(tax_code))
+			if tax_code:
+				wanted_vat.append(tax.account_head)
+		#////
 		for item in self.get("items"):
 			if flt(item.base_net_amount):
+				tax_excluded = flt(item.base_net_amount, item.precision("base_net_amount")) == flt(item.base_amount, item.precision("base_net_amount")) #//// added
 				account_currency = get_account_currency(item.expense_account)
 				if item.item_code:
 					asset_category = frappe.get_cached_value("Item", item.item_code, "asset_category")
@@ -999,7 +1011,18 @@ class PurchaseInvoice(BuyingController):
 						else item.deferred_expense_account
 					)
 
-					dummy, amount = self.get_amount_and_base_amount(item, None)
+					dummy, amount = self.get_amount_and_base_amount(item, None, flat_rate) #//// added flat_rate
+					#//// added
+					if flat_rate and (tax_excluded or self.get("discount_amount")):
+						if item.item_tax_template:
+							vat_details = frappe.db.get_all("Item Tax Template Detail", {"parent": item.item_tax_template, "parenttype": "Item Tax Template", "tax_rate": [">", 0]}, ['tax_type', 'tax_rate'])
+							frappe.neolog("vat_details", vat_details)
+							frappe.neolog("wanted_vat", wanted_vat)
+							if vat_details and vat_details[0].tax_type in wanted_vat:
+								applied_tax_rate = vat_details[0].tax_rate
+								dummy = dummy + (dummy * applied_tax_rate / 100)
+								amount = amount + (amount * applied_tax_rate / 100)
+					#////
 
 					if provisional_accounting_for_non_stock_items:
 						if item.purchase_receipt:
@@ -1187,7 +1210,13 @@ class PurchaseInvoice(BuyingController):
 		# tax table gl entries
 		valuation_tax = {}
 
+		company = frappe.defaults.get_global_default("company") #//// added
+		flat_rate = frappe.db.get_value("Company", company, "vat_accounting_method") == "Flat-rate taxation" #//// added
 		for tax in self.get("taxes"):
+			#//// added if
+			if flat_rate and frappe.db.get_value("Account", tax.account_head, "tax_code"):
+				continue
+			#////
 			amount, base_amount = self.get_tax_amounts(tax, None)
 			if tax.category in ("Total", "Valuation and Total") and flt(base_amount):
 				account_currency = get_account_currency(tax.account_head)
@@ -1454,6 +1483,9 @@ class PurchaseInvoice(BuyingController):
 			"Payment Ledger Entry",
 			"Tax Withheld Vouchers",
 			"Serial and Batch Bundle",
+			"Payment Entry", #//// added
+			"Journal Entry", #//// added
+			"Purchase Invoice", #//// added
 		)
 		self.update_advance_tax_references(cancel=1)
 

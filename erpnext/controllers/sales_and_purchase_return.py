@@ -49,9 +49,10 @@ def validate_return_against(doc):
 			)
 
 			if get_datetime(return_posting_datetime) < get_datetime(ref_posting_datetime):
-				frappe.throw(
+				pass #//// added
+				'''frappe.throw(
 					_("Posting timestamp must be after {0}").format(format_datetime(ref_posting_datetime))
-				)
+				)''' #////commented
 
 			# validate same exchange rate
 			if doc.conversion_rate != ref_doc.conversion_rate:

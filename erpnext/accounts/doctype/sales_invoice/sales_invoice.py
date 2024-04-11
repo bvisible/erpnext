@@ -515,7 +515,7 @@ class SalesInvoice(SellingController):
 					frappe.bold("Consolidated Sales Invoice"),
 					get_link_to_form("POS Closing Entry", pos_closing_entry[0]),
 				)
-				frappe.throw(msg, title=_("Not Allowed"))
+				#////frappe.throw(msg, title=_("Not Allowed"))
 
 	def before_cancel(self):
 		self.check_if_consolidated_invoice()
@@ -584,6 +584,12 @@ class SalesInvoice(SellingController):
 			"Unreconcile Payment Entries",
 			"Payment Ledger Entry",
 			"Serial and Batch Bundle",
+			"Payment Entry", #//// added
+			"POS Invoice Merge Log", #//// adde
+			"POS Invoice", #//// added
+			"Sales Invoice", #//// added
+			"Journal Entry", #//// added
+			"POS Closing Entry", #//// added
 		)
 
 	def update_status_updater_args(self):
@@ -1244,12 +1250,18 @@ class SalesInvoice(SellingController):
 		enable_discount_accounting = cint(
 			frappe.db.get_single_value("Selling Settings", "enable_discount_accounting")
 		)
+		company = frappe.defaults.get_global_default("company") #//// added
+		flat_rate = frappe.db.get_value("Company", company, "vat_accounting_method") == "Flat-rate taxation" #//// added
 
 		for tax in self.get("taxes"):
 			amount, base_amount = self.get_tax_amounts(tax, enable_discount_accounting)
 
 			if flt(tax.base_tax_amount_after_discount_amount):
 				account_currency = get_account_currency(tax.account_head)
+				#//// added if
+				if flat_rate and frappe.db.get_value("Account", tax.account_head, "tax_code"):
+					continue
+				#////
 				gl_entries.append(
 					self.get_gl_dict(
 						{
@@ -1291,15 +1303,39 @@ class SalesInvoice(SellingController):
 			frappe.db.get_single_value("Selling Settings", "enable_discount_accounting")
 		)
 
+		#//// added block
+		company = frappe.defaults.get_global_default("company")
+		flat_rate = frappe.db.get_value("Company", company, "vat_accounting_method") == "Flat-rate taxation"
+		wanted_vat = []
+		for tax in self.get("taxes"):
+			tax_code = frappe.db.get_value("Account", tax.account_head, "tax_code")
+
+			frappe.neolog(tax.account_head + " tax_code = " + str(tax_code))
+			if tax_code:
+				wanted_vat.append(tax.account_head)
+		#////
+
 		for item in self.get("items"):
 			if flt(item.base_net_amount, item.precision("base_net_amount")):
+				tax_excluded = flt(item.base_net_amount, item.precision("base_net_amount")) == flt(item.base_amount, item.precision("base_net_amount")) #//// added
 				if item.is_fixed_asset:
 					asset = self.get_asset(item)
 
+					#//// added
+					amount = item.base_net_amount
+					if flat_rate:
+						if tax_excluded:
+							if item.item_tax_template:
+								item_vat = frappe.db.get_value("Item Tax Template Detail", {"parent": item.item_tax_template, "parenttype": "Item Tax Template", "tax_rate": [">", 0]}, ['tax_type'])
+								if item_vat in wanted_vat:
+									amount = amount + (amount * item.tax_rate / 100)
+						else:
+							amount = item.base_amount
+					#////
 					if self.is_return:
 						fixed_asset_gl_entries = get_gl_entries_on_asset_regain(
 							asset,
-							item.base_net_amount,
+							amount, #////item.base_net_amount,
 							item.finance_book,
 							self.get("doctype"),
 							self.get("name"),
@@ -1333,7 +1369,7 @@ class SalesInvoice(SellingController):
 
 						fixed_asset_gl_entries = get_gl_entries_on_asset_disposal(
 							asset,
-							item.base_net_amount,
+							amount, #////item.base_net_amount,
 							item.finance_book,
 							self.get("doctype"),
 							self.get("name"),
@@ -1357,7 +1393,16 @@ class SalesInvoice(SellingController):
 							else item.deferred_revenue_account
 						)
 
-						amount, base_amount = self.get_amount_and_base_amount(item, enable_discount_accounting)
+						amount, base_amount = self.get_amount_and_base_amount(item, enable_discount_accounting, flat_rate) #//// added flat_rate and not tax_excluded
+						#//// added
+						if flat_rate and (tax_excluded or self.get("discount_amount")):
+							if item.item_tax_template:
+								vat_details = frappe.db.get_all("Item Tax Template Detail", {"parent": item.item_tax_template, "parenttype": "Item Tax Template", "tax_rate": [">", 0]}, ['tax_type', 'tax_rate'])
+								if vat_details and vat_details[0].tax_type in wanted_vat:
+									applied_tax_rate = vat_details[0].tax_rate
+									amount = amount + (amount * applied_tax_rate / 100)
+									base_amount = base_amount + (base_amount * applied_tax_rate / 100)
+						#////
 
 						account_currency = get_account_currency(income_account)
 						gl_entries.append(

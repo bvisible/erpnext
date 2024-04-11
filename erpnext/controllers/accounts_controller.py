@@ -1432,14 +1432,16 @@ class AccountsController(TransactionBase):
 
 		return tax_map
 
-	def get_amount_and_base_amount(self, item, enable_discount_accounting):
+	def get_amount_and_base_amount(self, item, enable_discount_accounting, flat_rate=False): #//// added  flat_rate=False
 		amount = item.net_amount
 		base_amount = item.base_net_amount
 
 		if (
-			enable_discount_accounting
+			(enable_discount_accounting #//// added (
 			and self.get("discount_amount")
 			and self.get("additional_discount_account")
+			and not flat_rate) #//// added line
+			or (flat_rate and not self.get("discount_amount"))  #//// added line
 		):
 			amount = item.amount
 			base_amount = item.base_amount
