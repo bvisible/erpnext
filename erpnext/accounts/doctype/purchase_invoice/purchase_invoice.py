@@ -874,7 +874,6 @@ class PurchaseInvoice(BuyingController):
 		for tax in self.get("taxes"):
 			tax_code = frappe.db.get_value("Account", tax.account_head, "tax_code")
 
-			frappe.neolog(tax.account_head + " tax_code = " + str(tax_code))
 			if tax_code:
 				wanted_vat.append(tax.account_head)
 		#////
@@ -1016,8 +1015,6 @@ class PurchaseInvoice(BuyingController):
 					if flat_rate and (tax_excluded or self.get("discount_amount")):
 						if item.item_tax_template:
 							vat_details = frappe.db.get_all("Item Tax Template Detail", {"parent": item.item_tax_template, "parenttype": "Item Tax Template", "tax_rate": [">", 0]}, ['tax_type', 'tax_rate'])
-							frappe.neolog("vat_details", vat_details)
-							frappe.neolog("wanted_vat", wanted_vat)
 							if vat_details and vat_details[0].tax_type in wanted_vat:
 								applied_tax_rate = vat_details[0].tax_rate
 								dummy = dummy + (dummy * applied_tax_rate / 100)
@@ -1483,9 +1480,9 @@ class PurchaseInvoice(BuyingController):
 			"Payment Ledger Entry",
 			"Tax Withheld Vouchers",
 			"Serial and Batch Bundle",
-			"Payment Entry", #//// added
-			"Journal Entry", #//// added
-			"Purchase Invoice", #//// added
+			#"Payment Entry", #//// added
+			#"Journal Entry", #//// added
+			#"Purchase Invoice", #//// added
 		)
 		self.update_advance_tax_references(cancel=1)
 

@@ -515,7 +515,7 @@ class SalesInvoice(SellingController):
 					frappe.bold("Consolidated Sales Invoice"),
 					get_link_to_form("POS Closing Entry", pos_closing_entry[0]),
 				)
-				#////frappe.throw(msg, title=_("Not Allowed"))
+				frappe.throw(msg, title=_("Not Allowed"))
 
 	def before_cancel(self):
 		self.check_if_consolidated_invoice()
@@ -584,12 +584,15 @@ class SalesInvoice(SellingController):
 			"Unreconcile Payment Entries",
 			"Payment Ledger Entry",
 			"Serial and Batch Bundle",
-			"Payment Entry", #//// added
-			"POS Invoice Merge Log", #//// adde
-			"POS Invoice", #//// added
-			"Sales Invoice", #//// added
-			"Journal Entry", #//// added
-			"POS Closing Entry", #//// added
+			#"Payment Entry", #//// added
+			#"POS Invoice Merge Log", #//// adde
+			#"POS Invoice", #//// added
+			#"Sales Invoice", #//// added
+			#"Journal Entry", #//// added
+			#"POS Closing Entry", #//// added
+			#"Payment Reminder", #//// added
+			#"Payment Request", #//// added
+			#"Delivery Note", #//// added
 		)
 
 	def update_status_updater_args(self):
@@ -1309,8 +1312,6 @@ class SalesInvoice(SellingController):
 		wanted_vat = []
 		for tax in self.get("taxes"):
 			tax_code = frappe.db.get_value("Account", tax.account_head, "tax_code")
-
-			frappe.neolog(tax.account_head + " tax_code = " + str(tax_code))
 			if tax_code:
 				wanted_vat.append(tax.account_head)
 		#////
