@@ -478,7 +478,7 @@ class SalesOrder(SellingController):
 			frappe.throw(_("{0} {1} has been modified. Please refresh.").format(self.doctype, self.name))
 
 	def update_status(self, status):
-		old, woocommerce_id = frappe.get_cached_value("Sales Order", self.name, ["status", "woocommerce_id"]) //// added
+		old, woocommerce_id = frappe.get_cached_value("Sales Order", self.name, ["status", "woocommerce_id"]) #//// added
 		self.check_modified_date()
 		self.set_status(update=True, status=status)
 		if not (old == "On Hold" and woocommerce_id): #//// added if condition
