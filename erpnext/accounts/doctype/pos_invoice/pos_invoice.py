@@ -11,7 +11,6 @@ from erpnext.accounts.doctype.loyalty_program.loyalty_program import validate_lo
 from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import (
 	SalesInvoice,
-	get_bank_cash_account,
 	get_mode_of_payment_info,
 	update_multi_mode_option,
 )
@@ -110,7 +109,7 @@ class POSInvoice(SalesInvoice):
 		loyalty_redemption_cost_center: DF.Link | None
 		naming_series: DF.Literal["ACC-PSINV-.YYYY.-"]
 		net_total: DF.Currency
-		other_charges_calculation: DF.LongText | None
+		other_charges_calculation: DF.TextEditor | None
 		outstanding_amount: DF.Currency
 		packed_items: DF.Table[PackedItem]
 		paid_amount: DF.Currency
@@ -184,12 +183,12 @@ class POSInvoice(SalesInvoice):
 	# end: auto-generated types
 
 	def __init__(self, *args, **kwargs):
-		super(POSInvoice, self).__init__(*args, **kwargs)
+		super().__init__(*args, **kwargs)
 
 	def validate(self):
 		if not cint(self.is_pos):
 			frappe.throw(
-				_("POS Invoice should have {} field checked.").format(frappe.bold("Include Payment"))
+				_("POS Invoice should have the field {0} checked.").format(frappe.bold(_("Include Payment")))
 			)
 
 		# run on validate method of selling controller
@@ -208,7 +207,6 @@ class POSInvoice(SalesInvoice):
 		self.validate_stock_availablility()
 		self.validate_return_items_qty()
 		self.set_status()
-		self.set_account_for_mode_of_payment()
 		self.validate_pos()
 		self.validate_payment_amount()
 		self.validate_loyalty_transaction()
@@ -230,7 +228,10 @@ class POSInvoice(SalesInvoice):
 			self.apply_loyalty_points()
 		self.check_phone_payments()
 		self.set_status(update=True)
-		self.submit_serial_batch_bundle()
+		self.make_bundle_for_sales_purchase_return()
+		for table_name in ["items", "packed_items"]:
+			self.make_bundle_using_old_serial_batch_fields(table_name)
+			self.submit_serial_batch_bundle(table_name)
 
 		if self.coupon_code:
 			from erpnext.accounts.doctype.pricing_rule.utils import update_coupon_code_count
@@ -284,10 +285,11 @@ class POSInvoice(SalesInvoice):
 						{"is_cancelled": 1, "voucher_no": ""},
 					)
 
+				frappe.get_doc("Serial and Batch Bundle", row.serial_and_batch_bundle).cancel()
 				row.db_set("serial_and_batch_bundle", None)
 
-	def submit_serial_batch_bundle(self):
-		for item in self.items:
+	def submit_serial_batch_bundle(self, table_name):
+		for item in self.get(table_name):
 			if item.serial_and_batch_bundle:
 				doc = frappe.get_doc("Serial and Batch Bundle", item.serial_and_batch_bundle)
 
@@ -310,7 +312,9 @@ class POSInvoice(SalesInvoice):
 				)
 
 				if paid_amt and pay.amount != paid_amt:
-					return frappe.throw(_("Payment related to {0} is not completed").format(pay.mode_of_payment))
+					return frappe.throw(
+						_("Payment related to {0} is not completed").format(pay.mode_of_payment)
+					)
 
 	def validate_stock_availablility(self):
 		if self.is_return:
@@ -330,7 +334,7 @@ class POSInvoice(SalesInvoice):
 
 				available_stock, is_stock_item = get_stock_availability(d.item_code, d.warehouse)
 
-				item_code, warehouse, qty = (
+				item_code, warehouse, _qty = (
 					frappe.bold(d.item_code),
 					frappe.bold(d.warehouse),
 					frappe.bold(d.qty),
@@ -354,10 +358,16 @@ class POSInvoice(SalesInvoice):
 		error_msg = []
 		for d in self.get("items"):
 			error_msg = ""
-			if d.get("has_serial_no") and not d.serial_and_batch_bundle:
+			if d.get("has_serial_no") and (
+				(not d.use_serial_batch_fields and not d.serial_and_batch_bundle)
+				or (d.use_serial_batch_fields and not d.serial_no)
+			):
 				error_msg = f"Row #{d.idx}: Please select Serial No. for item {bold(d.item_code)}"
 
-			elif d.get("has_batch_no") and not d.serial_and_batch_bundle:
+			elif d.get("has_batch_no") and (
+				(not d.use_serial_batch_fields and not d.serial_and_batch_bundle)
+				or (d.use_serial_batch_fields and not d.batch_no)
+			):
 				error_msg = f"Row #{d.idx}: Please select Batch No. for item {bold(d.item_code)}"
 
 		if error_msg:
@@ -410,8 +420,7 @@ class POSInvoice(SalesInvoice):
 		if (
 			self.change_amount
 			and self.account_for_change_amount
-			and frappe.get_cached_value("Account", self.account_for_change_amount, "company")
-			!= self.company
+			and frappe.get_cached_value("Account", self.account_for_change_amount, "company") != self.company
 		):
 			frappe.throw(
 				_("The selected change account {} doesn't belongs to Company {}.").format(
@@ -442,6 +451,7 @@ class POSInvoice(SalesInvoice):
 
 		if self.is_return:
 			invoice_total = self.rounded_total or self.grand_total
+			total_amount_in_payments = flt(total_amount_in_payments, self.precision("grand_total"))
 			if total_amount_in_payments and total_amount_in_payments < invoice_total:
 				frappe.throw(_("Total payments amount can't be greater than {}").format(-invoice_total))
 
@@ -643,11 +653,6 @@ class POSInvoice(SalesInvoice):
 			update_multi_mode_option(self, pos_profile)
 			self.paid_amount = 0
 
-	def set_account_for_mode_of_payment(self):
-		for pay in self.payments:
-			if not pay.account:
-				pay.account = get_bank_cash_account(pay.mode_of_payment, self.company).get("account")
-
 	@frappe.whitelist()
 	def create_payment_request(self):
 		for pay in self.payments:
@@ -773,7 +778,7 @@ def get_pos_reserved_qty(item_code, warehouse):
 	reserved_qty = (
 		frappe.qb.from_(p_inv)
 		.from_(p_item)
-		.select(Sum(p_item.qty).as_("qty"))
+		.select(Sum(p_item.stock_qty).as_("stock_qty"))
 		.where(
 			(p_inv.name == p_item.parent)
 			& (IfNull(p_inv.consolidated_invoice, "") == "")
@@ -783,7 +788,7 @@ def get_pos_reserved_qty(item_code, warehouse):
 		)
 	).run(as_dict=True)
 
-	return reserved_qty[0].qty or 0 if reserved_qty else 0
+	return flt(reserved_qty[0].stock_qty) if reserved_qty else 0
 
 
 @frappe.whitelist()

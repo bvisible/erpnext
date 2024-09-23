@@ -77,7 +77,7 @@ class RepostItemValuation(Document):
 
 	def validate_period_closing_voucher(self):
 		# Period Closing Voucher
-		year_end_date = self.get_max_year_end_date(self.company)
+		year_end_date = self.get_max_period_closing_date(self.company)
 		if year_end_date and getdate(self.posting_date) <= getdate(year_end_date):
 			date = frappe.format(year_end_date, "Date")
 			msg = f"Due to period closing, you cannot repost item valuation before {date}"
@@ -120,24 +120,16 @@ class RepostItemValuation(Document):
 		return frappe.get_all("Closing Stock Balance", fields=["name", "to_date"], filters=filters)
 
 	@staticmethod
-	def get_max_year_end_date(company):
-		data = frappe.get_all(
-			"Period Closing Voucher", fields=["fiscal_year"], filters={"docstatus": 1, "company": company}
-		)
-
-		if not data:
-			return
-
-		fiscal_years = [d.fiscal_year for d in data]
-		table = frappe.qb.DocType("Fiscal Year")
+	def get_max_period_closing_date(company):
+		table = frappe.qb.DocType("Period Closing Voucher")
 
 		query = (
 			frappe.qb.from_(table)
-			.select(Max(table.year_end_date))
-			.where((table.name.isin(fiscal_years)) & (table.disabled == 0))
+			.select(Max(table.posting_date))
+			.where((table.company == company) & (table.docstatus == 1))
 		).run()
 
-		return query[0][0] if query else None
+		return query[0][0] if query and query[0][0] else None
 
 	def validate_accounts_freeze(self):
 		acc_settings = frappe.db.get_value(
@@ -149,15 +141,12 @@ class RepostItemValuation(Document):
 		if not acc_settings.acc_frozen_upto:
 			return
 		if getdate(self.posting_date) <= getdate(acc_settings.acc_frozen_upto):
-			if (
+			if acc_settings.frozen_accounts_modifier and frappe.session.user in get_users_with_role(
 				acc_settings.frozen_accounts_modifier
-				and frappe.session.user in get_users_with_role(acc_settings.frozen_accounts_modifier)
 			):
 				frappe.msgprint(_("Caution: This might alter frozen accounts."))
 				return
-			frappe.throw(
-				_("You cannot repost item valuation before {}").format(acc_settings.acc_frozen_upto)
-			)
+			frappe.throw(_("You cannot repost item valuation before {}").format(acc_settings.acc_frozen_upto))
 
 	def reset_field_values(self):
 		if self.based_on == "Transaction":
@@ -190,7 +179,7 @@ class RepostItemValuation(Document):
 	def clear_attachment(self):
 		if attachments := get_attachments(self.doctype, self.name):
 			attachment = attachments[0]
-			frappe.delete_doc("File", attachment.name)
+			frappe.delete_doc("File", attachment.name, ignore_permissions=True)
 
 		if self.reposting_data_file:
 			self.db_set("reposting_data_file", None)
@@ -219,14 +208,9 @@ class RepostItemValuation(Document):
 		if self.status not in ("Queued", "In Progress"):
 			return
 
-		if not (self.voucher_no and self.voucher_no):
-			return
-
-		transaction_status = frappe.db.get_value(self.voucher_type, self.voucher_no, "docstatus")
-		if transaction_status == 2:
-			msg = _("Cannot cancel as processing of cancelled documents is  pending.")
-			msg += "<br>" + _("Please try again in an hour.")
-			frappe.throw(msg, title=_("Pending processing"))
+		msg = _("Cannot cancel as processing of cancelled documents is pending.")
+		msg += "<br>" + _("Please try again in an hour.")
+		frappe.throw(msg, title=_("Pending processing"))
 
 	@frappe.whitelist()
 	def restart_reposting(self):
@@ -235,6 +219,7 @@ class RepostItemValuation(Document):
 		self.distinct_item_and_warehouse = None
 		self.items_to_be_repost = None
 		self.gl_reposting_index = 0
+		self.clear_attachment()
 		self.db_update()
 
 	def deduplicate_similar_repost(self):
@@ -272,6 +257,7 @@ def on_doctype_update():
 
 def repost(doc):
 	try:
+		frappe.flags.through_repost_item_valuation = True
 		if not frappe.db.exists("Repost Item Valuation", doc.name):
 			return
 
@@ -286,6 +272,8 @@ def repost(doc):
 		repost_gl_entries(doc)
 
 		doc.set_status("Completed")
+		doc.db_set("reposting_data_file", None)
+		remove_attached_file(doc.name)
 
 	except Exception as e:
 		if frappe.flags.in_test:
@@ -294,13 +282,29 @@ def repost(doc):
 			raise
 
 		frappe.db.rollback()
-		traceback = frappe.get_traceback()
+		traceback = frappe.get_traceback(with_context=True)
 		doc.log_error("Unable to repost item valuation")
 
 		message = frappe.message_log.pop() if frappe.message_log else ""
+		if isinstance(message, dict):
+			message = message.get("message")
+
+		status = "Failed"
+		# If failed because of timeout, set status to In Progress
+		if traceback and "timeout" in traceback.lower():
+			status = "In Progress"
+
 		if traceback:
-			message += "<br>" + "Traceback: <br>" + traceback
-		frappe.db.set_value(doc.doctype, doc.name, "error_log", message)
+			message += "<br><br>" + "<b>Traceback:</b> <br>" + traceback
+
+		frappe.db.set_value(
+			doc.doctype,
+			doc.name,
+			{
+				"error_log": message,
+				"status": status,
+			},
+		)
 
 		outgoing_email_account = frappe.get_cached_value(
 			"Email Account", {"default_outgoing": 1, "enable_outgoing": 1}, "name"
@@ -312,6 +316,13 @@ def repost(doc):
 	finally:
 		if not frappe.flags.in_test:
 			frappe.db.commit()
+
+
+def remove_attached_file(docname):
+	if file_name := frappe.db.get_value(
+		"File", {"attached_to_name": docname, "attached_to_doctype": "Repost Item Valuation"}, "name"
+	):
+		frappe.delete_doc("File", file_name, ignore_permissions=True, delete_permanently=True)
 
 
 def repost_sl_entries(doc):

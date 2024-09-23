@@ -3,12 +3,12 @@
 
 import frappe
 from frappe import _
+from frappe.model.docstatus import DocStatus
+from frappe.model.document import Document
 from frappe.utils import flt
 
-from erpnext.controllers.status_updater import StatusUpdater
 
-
-class BankTransaction(StatusUpdater):
+class BankTransaction(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
 
@@ -49,6 +49,35 @@ class BankTransaction(StatusUpdater):
 
 	def validate(self):
 		self.validate_duplicate_references()
+		self.validate_currency()
+
+	def validate_currency(self):
+		"""
+		Bank Transaction should be on the same currency as the Bank Account.
+		"""
+		if self.currency and self.bank_account:
+			if account := frappe.get_cached_value("Bank Account", self.bank_account, "account"):
+				account_currency = frappe.get_cached_value("Account", account, "account_currency")
+
+				if self.currency != account_currency:
+					frappe.throw(
+						_(
+							"Transaction currency: {0} cannot be different from Bank Account({1}) currency: {2}"
+						).format(
+							frappe.bold(self.currency),
+							frappe.bold(self.bank_account),
+							frappe.bold(account_currency),
+						)
+					)
+
+	def set_status(self):
+		if self.docstatus == 2:
+			self.db_set("status", "Cancelled")
+		elif self.docstatus == 1:
+			if self.unallocated_amount > 0:
+				self.db_set("status", "Unreconciled")
+			elif self.unallocated_amount <= 0:
+				self.db_set("status", "Reconciled")
 
 	def validate_duplicate_references(self):
 		"""Make sure the same voucher is not allocated twice within the same Bank Transaction"""
@@ -67,10 +96,13 @@ class BankTransaction(StatusUpdater):
 			pe.append(reference)
 
 	def update_allocated_amount(self):
-		self.allocated_amount = (
+		allocated_amount = (
 			sum(p.allocated_amount for p in self.payment_entries) if self.payment_entries else 0.0
 		)
-		self.unallocated_amount = abs(flt(self.withdrawal) - flt(self.deposit)) - self.allocated_amount
+		unallocated_amount = abs(flt(self.withdrawal) - flt(self.deposit)) - allocated_amount
+
+		self.allocated_amount = flt(allocated_amount, self.precision("allocated_amount"))
+		self.unallocated_amount = flt(unallocated_amount, self.precision("unallocated_amount"))
 
 	def before_submit(self):
 		self.allocate_payment_entries()
@@ -83,12 +115,13 @@ class BankTransaction(StatusUpdater):
 		self.validate_duplicate_references()
 		self.allocate_payment_entries()
 		self.update_allocated_amount()
+		self.set_status()
 
 	def on_cancel(self):
 		for payment_entry in self.payment_entries:
 			self.clear_linked_payment_entry(payment_entry, for_cancel=True)
 
-		self.set_status(update=True)
+		self.set_status()
 
 	def add_payment_entries(self, vouchers):
 		"Add the vouchers with zero allocation. Save() will perform the allocations and clearance"
@@ -149,7 +182,7 @@ class BankTransaction(StatusUpdater):
 					frappe.throw(_("Voucher {0} is over-allocated by {1}").format(unallocated_amount))
 
 		for payment_entry in to_remove:
-			self.remove(to_remove)
+			self.remove(payment_entry)
 
 	@frappe.whitelist()
 	def remove_payment_entries(self):
@@ -204,9 +237,7 @@ def get_clearance_details(transaction, payment_entry):
 	"""
 	gl_bank_account = frappe.db.get_value("Bank Account", transaction.bank_account, "account")
 	gles = get_related_bank_gl_entries(payment_entry.payment_document, payment_entry.payment_entry)
-	bt_allocations = get_total_allocated_amount(
-		payment_entry.payment_document, payment_entry.payment_entry
-	)
+	bt_allocations = get_total_allocated_amount(payment_entry.payment_document, payment_entry.payment_entry)
 
 	unallocated_amount = min(
 		transaction.unallocated_amount,
@@ -301,7 +332,6 @@ def get_total_allocated_amount(doctype, docname):
 
 def get_paid_amount(payment_entry, currency, gl_bank_account):
 	if payment_entry.payment_document in ["Payment Entry", "Sales Invoice", "Purchase Invoice"]:
-
 		paid_amount_field = "paid_amount"
 		if payment_entry.payment_document == "Payment Entry":
 			doc = frappe.get_doc("Payment Entry", payment_entry.payment_entry)
@@ -340,9 +370,7 @@ def get_paid_amount(payment_entry, currency, gl_bank_account):
 		)
 
 	elif payment_entry.payment_document == "Loan Repayment":
-		return frappe.db.get_value(
-			payment_entry.payment_document, payment_entry.payment_entry, "amount_paid"
-		)
+		return frappe.db.get_value(payment_entry.payment_document, payment_entry.payment_entry, "amount_paid")
 
 	elif payment_entry.payment_document == "Bank Transaction":
 		dep, wth = frappe.db.get_value(
@@ -352,9 +380,7 @@ def get_paid_amount(payment_entry, currency, gl_bank_account):
 
 	else:
 		frappe.throw(
-			"Please reconcile {0}: {1} manually".format(
-				payment_entry.payment_document, payment_entry.payment_entry
-			)
+			f"Please reconcile {payment_entry.payment_document}: {payment_entry.payment_entry} manually"
 		)
 
 
@@ -366,15 +392,17 @@ def set_voucher_clearance(doctype, docname, clearance_date, self):
 			and len(get_reconciled_bank_transactions(doctype, docname)) < 2
 		):
 			return
-		frappe.db.set_value(doctype, docname, "clearance_date", clearance_date)
 
-	elif doctype == "Sales Invoice":
-		frappe.db.set_value(
-			"Sales Invoice Payment",
-			dict(parenttype=doctype, parent=docname),
-			"clearance_date",
-			clearance_date,
-		)
+		if doctype == "Sales Invoice":
+			frappe.db.set_value(
+				"Sales Invoice Payment",
+				dict(parenttype=doctype, parent=docname),
+				"clearance_date",
+				clearance_date,
+			)
+			return
+
+		frappe.db.set_value(doctype, docname, "clearance_date", clearance_date)
 
 	elif doctype == "Bank Transaction":
 		# For when a second bank transaction has fixed another, e.g. refund
@@ -404,3 +432,21 @@ def unclear_reference_payment(doctype, docname, bt_name):
 	bt = frappe.get_doc("Bank Transaction", bt_name)
 	set_voucher_clearance(doctype, docname, None, bt)
 	return docname
+
+
+def remove_from_bank_transaction(doctype, docname):
+	"""Remove a (cancelled) voucher from all Bank Transactions."""
+	for bt_name in get_reconciled_bank_transactions(doctype, docname):
+		bt = frappe.get_doc("Bank Transaction", bt_name)
+		if bt.docstatus == DocStatus.cancelled():
+			continue
+
+		modified = False
+
+		for pe in bt.payment_entries:
+			if pe.payment_document == doctype and pe.payment_entry == docname:
+				bt.remove(pe)
+				modified = True
+
+		if modified:
+			bt.save()

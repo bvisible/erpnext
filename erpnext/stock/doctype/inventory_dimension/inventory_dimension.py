@@ -33,7 +33,7 @@ class InventoryDimension(Document):
 		dimension_name: DF.Data
 		disabled: DF.Check
 		document_type: DF.Link | None
-		fetch_from_parent: DF.Literal
+		fetch_from_parent: DF.Literal[None]
 		istable: DF.Check
 		mandatory_depends_on: DF.SmallText | None
 		reference_document: DF.Link
@@ -305,7 +305,7 @@ def get_evaluated_inventory_dimension(doc, sl_dict, parent_doc=None):
 	dimensions = get_document_wise_inventory_dimensions(doc.doctype)
 	filter_dimensions = []
 	for row in dimensions:
-		if row.type_of_transaction:
+		if row.type_of_transaction and row.type_of_transaction != "Both":
 			if (
 				row.type_of_transaction == "Inward"
 				if doc.docstatus == 1
@@ -384,9 +384,7 @@ def delete_dimension(dimension):
 
 @frappe.whitelist()
 def get_parent_fields(child_doctype, dimension_name):
-	parent_doctypes = frappe.get_all(
-		"DocField", fields=["parent"], filters={"options": child_doctype}
-	)
+	parent_doctypes = frappe.get_all("DocField", fields=["parent"], filters={"options": child_doctype})
 
 	fields = []
 

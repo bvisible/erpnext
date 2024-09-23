@@ -95,14 +95,14 @@ class TestSubcontractingOrder(FrappeTestCase):
 		self.assertEqual(sco.status, "Partially Received")
 
 		# Closed
-		ste = get_materials_from_supplier(sco.name, [d.name for d in sco.supplied_items])
-		ste.save()
-		ste.submit()
-		sco.load_from_db()
+		sco.update_status("Closed")
 		self.assertEqual(sco.status, "Closed")
-		ste.cancel()
-		sco.load_from_db()
+		scr = make_subcontracting_receipt(sco.name)
+		scr.save()
+		self.assertRaises(frappe.exceptions.ValidationError, scr.submit)
+		sco.update_status()
 		self.assertEqual(sco.status, "Partially Received")
+		scr.cancel()
 
 		# Completed
 		scr = make_subcontracting_receipt(sco.name)
@@ -211,7 +211,7 @@ class TestSubcontractingOrder(FrappeTestCase):
 			item["qty"] -= 1
 			itemwise_transfer_qty[item["item_code"]] += item["qty"]
 
-		ste = make_stock_transfer_entry(
+		make_stock_transfer_entry(
 			sco_no=sco.name,
 			rm_items=rm_items,
 			itemwise_details=copy.deepcopy(itemwise_details),
@@ -564,7 +564,6 @@ class TestSubcontractingOrder(FrappeTestCase):
 
 		sco.load_from_db()
 
-		self.assertEqual(sco.status, "Closed")
 		self.assertEqual(sco.supplied_items[0].returned_qty, 5)
 
 	def test_ordered_qty_for_subcontracting_order(self):
@@ -714,7 +713,7 @@ def create_subcontracting_order(**args):
 		warehouses.add(item.warehouse)
 
 	if len(warehouses) == 1:
-		sco.set_warehouse = list(warehouses)[0]
+		sco.set_warehouse = next(iter(warehouses))
 
 	if not args.do_not_save:
 		sco.insert()

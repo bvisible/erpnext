@@ -51,13 +51,14 @@ class StockLedgerEntry(Document):
 		item_code: DF.Link | None
 		outgoing_rate: DF.Currency
 		posting_date: DF.Date | None
+		posting_datetime: DF.Datetime | None
 		posting_time: DF.Time | None
 		project: DF.Link | None
 		qty_after_transaction: DF.Float
 		recalculate_rate: DF.Check
 		serial_and_batch_bundle: DF.Link | None
 		serial_no: DF.LongText | None
-		stock_queue: DF.Text | None
+		stock_queue: DF.LongText | None
 		stock_uom: DF.Link | None
 		stock_value: DF.Currency
 		stock_value_difference: DF.Currency
@@ -92,7 +93,20 @@ class StockLedgerEntry(Document):
 		self.validate_with_last_transaction_posting_time()
 		self.validate_inventory_dimension_negative_stock()
 
+	def set_posting_datetime(self, save=False):
+		from erpnext.stock.utils import get_combine_datetime
+
+		if save:
+			posting_datetime = get_combine_datetime(self.posting_date, self.posting_time)
+			if not self.posting_datetime or self.posting_datetime != posting_datetime:
+				self.db_set("posting_datetime", posting_datetime)
+		else:
+			self.posting_datetime = get_combine_datetime(self.posting_date, self.posting_time)
+
 	def validate_inventory_dimension_negative_stock(self):
+		if self.is_cancelled:
+			return
+
 		extra_cond = ""
 		kwargs = {}
 
@@ -111,16 +125,20 @@ class StockLedgerEntry(Document):
 				"posting_date": self.posting_date,
 				"posting_time": self.posting_time,
 				"company": self.company,
+				"sle": self.name,
 			}
 		)
 
 		sle = get_previous_sle(kwargs, extra_cond=extra_cond)
+		qty_after_transaction = 0.0
+		flt_precision = cint(frappe.db.get_default("float_precision")) or 2
 		if sle:
-			flt_precision = cint(frappe.db.get_default("float_precision")) or 2
-			diff = sle.qty_after_transaction + flt(self.actual_qty)
-			diff = flt(diff, flt_precision)
-			if diff < 0 and abs(diff) > 0.0001:
-				self.throw_validation_error(diff, dimensions)
+			qty_after_transaction = sle.qty_after_transaction
+
+		diff = qty_after_transaction + flt(self.actual_qty)
+		diff = flt(diff, flt_precision)
+		if diff < 0 and abs(diff) > 0.0001:
+			self.throw_validation_error(diff, dimensions)
 
 	def throw_validation_error(self, diff, dimensions):
 		dimension_msg = _(", with the inventory {0}: {1}").format(
@@ -155,6 +173,7 @@ class StockLedgerEntry(Document):
 		return inv_dimension_dict
 
 	def on_submit(self):
+		self.set_posting_datetime(save=True)
 		self.check_stock_frozen_date()
 
 		# Added to handle few test cases where serial_and_batch_bundles are not required
@@ -245,7 +264,9 @@ class StockLedgerEntry(Document):
 			)
 			if older_than_x_days_ago and stock_settings.stock_auth_role not in frappe.get_roles():
 				frappe.throw(
-					_("Not allowed to update stock transactions older than {0}").format(stock_frozen_upto_days),
+					_("Not allowed to update stock transactions older than {0}").format(
+						stock_frozen_upto_days
+					),
 					StockFreezeError,
 				)
 
@@ -263,7 +284,9 @@ class StockLedgerEntry(Document):
 			expiry_date = frappe.db.get_value("Batch", self.batch_no, "expiry_date")
 			if expiry_date:
 				if getdate(self.posting_date) > getdate(expiry_date):
-					frappe.throw(_("Batch {0} of Item {1} has expired.").format(self.batch_no, self.item_code))
+					frappe.throw(
+						_("Batch {0} of Item {1} has expired.").format(self.batch_no, self.item_code)
+					)
 
 	def validate_and_set_fiscal_year(self):
 		if not self.fiscal_year:
@@ -296,7 +319,7 @@ class StockLedgerEntry(Document):
 					(self.item_code, self.warehouse),
 				)[0][0]
 
-				cur_doc_posting_datetime = "%s %s" % (
+				cur_doc_posting_datetime = "{} {}".format(
 					self.posting_date,
 					self.get("posting_time") or "00:00:00",
 				)
@@ -305,7 +328,9 @@ class StockLedgerEntry(Document):
 					last_transaction_time
 				):
 					msg = _("Last Stock Transaction for item {0} under warehouse {1} was on {2}.").format(
-						frappe.bold(self.item_code), frappe.bold(self.warehouse), frappe.bold(last_transaction_time)
+						frappe.bold(self.item_code),
+						frappe.bold(self.warehouse),
+						frappe.bold(last_transaction_time),
 					)
 
 					msg += "<br><br>" + _(
@@ -323,9 +348,7 @@ class StockLedgerEntry(Document):
 
 
 def on_doctype_update():
-	frappe.db.add_index(
-		"Stock Ledger Entry", fields=["posting_date", "posting_time"], index_name="posting_sort_index"
-	)
 	frappe.db.add_index("Stock Ledger Entry", ["voucher_no", "voucher_type"])
 	frappe.db.add_index("Stock Ledger Entry", ["batch_no", "item_code", "warehouse"])
 	frappe.db.add_index("Stock Ledger Entry", ["warehouse", "item_code"], "item_warehouse")
+	frappe.db.add_index("Stock Ledger Entry", ["posting_datetime", "creation"])

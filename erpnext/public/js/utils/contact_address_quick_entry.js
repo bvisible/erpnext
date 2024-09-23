@@ -1,6 +1,8 @@
-frappe.provide('frappe.ui.form');
+frappe.provide("frappe.ui.form");
 
-frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm extends frappe.ui.form.QuickEntryForm {
+frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm extends (
+	frappe.ui.form.QuickEntryForm
+) {
 	constructor(doctype, after_insert, init_callback, doc, force) {
 		super(doctype, after_insert, init_callback, doc, force);
 		this.skip_redirect_on_error = true;
@@ -37,8 +39,8 @@ frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm
 		 * Therefor, resulting in the fields being "hidden".
 		 */
 		const map_field_names = {
-			"email_address": "email_id",
-			"mobile_number": "mobile_no",
+			email_address: "email_id",
+			mobile_number: "mobile_no",
 		};
 
 		Object.entries(map_field_names).forEach(([fieldname, new_fieldname]) => {
@@ -124,4 +126,4 @@ frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm
 
 		return variant_fields;
 	}
-}
+};
