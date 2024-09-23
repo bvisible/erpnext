@@ -2650,3 +2650,16 @@ def make_payment_order(source_name, target_doc=None):
 @erpnext.allow_regional
 def add_regional_gl_entries(gl_entries, doc):
 	return
+
+@frappe.whitelist()
+def get_tax_data(account):
+	item_tax_template = frappe.db.get_value("Account", account, "taxable_account")
+	if not item_tax_template:
+		return []
+	return frappe.db.sql(
+		"""SELECT ittd.tax_rate as rate, ittd.tax_type as account
+			FROM `tabItem Tax Template` itt
+			LEFT JOIN `tabItem Tax Template Detail`ittd on itt.name=ittd.parent
+			WHERE ittd.tax_rate > 0
+			AND itt.name = %s""", (item_tax_template), as_dict=True
+	)

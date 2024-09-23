@@ -94,6 +94,7 @@
    "options": "Task Type"
   },
   {
+   "allow_in_quick_entry": 1,
    "bold": 1,
    "default": "0",
    "fieldname": "is_group",
@@ -212,6 +213,7 @@
    "oldfieldname": "description",
    "oldfieldtype": "Text Editor",
    "print_width": "300px",
+   "reqd": 1,
    "width": "300px"
   },
   {
@@ -362,6 +364,7 @@
    "options": "User"
   },
   {
+   "allow_in_quick_entry": 1,
    "default": "0",
    "fieldname": "is_template",
    "fieldtype": "Check",
@@ -419,6 +422,7 @@
   }
  ],
  "quick_entry": 1,
+ "restrict_to_domain": "Gestion",
  "search_fields": "subject",
  "show_name_in_global_search": 1,
  "show_preview_popup": 1,

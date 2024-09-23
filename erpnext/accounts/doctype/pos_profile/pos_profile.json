@@ -359,6 +359,7 @@
    "default": "0",
    "fieldname": "validate_stock_on_save",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "Validate Stock on Save"
   },
   {

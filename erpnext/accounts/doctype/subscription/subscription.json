@@ -86,14 +86,14 @@
   {
    "fieldname": "current_invoice_start",
    "fieldtype": "Date",
-   "label": "Current Invoice Start Date",
+   "label": "Next Invoice Start Date",
    "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "current_invoice_end",
    "fieldtype": "Date",
-   "label": "Current Invoice End Date",
+   "label": "Next Invoice End Date",
    "no_copy": 1,
    "read_only": 1
   },

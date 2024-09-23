@@ -403,36 +403,41 @@ erpnext.PointOfSale.PastOrderSummary = class {
 			this.set_dynamic_rate_header_width();
 			//// added for giftcard
 			frappe.call({
-				method: "neoffice_ecommerce.events.custom_get_all",
-				args: {
-					doctype: "Neoffice Giftcard",
-					filters: {
-						"pos_invoice": doc.name
-					}
-				},
-				callback: r => {
-					let data = r.message;
-					if($(".giftcards_block").length == 0){
-						let giftcard_html = '<div class="giftcards_block">';
-						data.forEach(item => {
-							giftcard_html += '<div class="giftcard-line"><span giftcard-code>'+item.code+'</span><div class="giftcard-btns"><button type="button" class="send-giftcard-btn btn btn-primary btn-sm btn-modal-primary" value="'+item.code+'">'+__("Send Email")+'</button><button class="print-giftcard-btn text-muted btn btn-default icon-btn" title="" data-original-title="Print" value="'+item.code+'"> <svg class="icon  icon-sm" style=""> <use class="" href="#icon-printer"></use> </svg> </button></div></div>';
-						});
-						giftcard_html += '</div>';
-						this.$items_container.append(giftcard_html);
-						$('.send-giftcard-btn').click(function() {
-							let code = $(this).attr('value');
-							dsg.fields_dict.code.input.value = code;
-							dsg.show();
-							setTimeout(() => {
-								$("[data-fieldname=code] input").prop('readonly', true);
-							}, 200);
-						})
-						$('.print-giftcard-btn').click(function() {
-							let code = $(this).attr('value');
-							let url = "/web/fr?pwgc_number="+code+"&pdf=1"
-							window.open(url, '_blank').focus();
-						})
-					}
+				method: "neoffice_theme.events.get_wp_module",
+				callback: res => {
+					frappe.call({
+						method: res.message + ".events.custom_get_all",
+						args: {
+							doctype: "Neoffice Giftcard",
+							filters: {
+								"pos_invoice": doc.name
+							}
+						},
+						callback: r => {
+							let data = r.message;
+							if($(".giftcards_block").length == 0){
+								let giftcard_html = '<div class="giftcards_block">';
+								data.forEach(item => {
+									giftcard_html += '<div class="giftcard-line"><span giftcard-code>'+item.code+'</span><div class="giftcard-btns"><button type="button" class="send-giftcard-btn btn btn-primary btn-sm btn-modal-primary" value="'+item.code+'">'+__("Send Email")+'</button><button class="print-giftcard-btn text-muted btn btn-default icon-btn" title="" data-original-title="Print" value="'+item.code+'"> <svg class="icon  icon-sm" style=""> <use class="" href="#icon-printer"></use> </svg> </button></div></div>';
+								});
+								giftcard_html += '</div>';
+								this.$items_container.append(giftcard_html);
+								$('.send-giftcard-btn').click(function() {
+									let code = $(this).attr('value');
+									dsg.fields_dict.code.input.value = code;
+									dsg.show();
+									setTimeout(() => {
+										$("[data-fieldname=code] input").prop('readonly', true);
+									}, 200);
+								})
+								$('.print-giftcard-btn').click(function() {
+									let code = $(this).attr('value');
+									let url = "/web/fr?pwgc_number="+code+"&pdf=1"
+									window.open(url, '_blank').focus();
+								})
+							}
+						}
+					});
 				}
 			});
 			////
@@ -464,23 +469,28 @@ erpnext.PointOfSale.PastOrderSummary = class {
 				{
 					if(dsg.fields_dict.send_to.input.value) {
 						frappe.call({
-							method: "neoffice_ecommerce.events.send_email_giftcard",
-							freeze: true,
-							args: {
-								code: dsg.fields_dict.code.input.value,
-								email: dsg.fields_dict.send_to.input.value,
-								message: dsg.fields_dict.message.input.value
-							},
-							callback: r => {
-								if(r.message && r.message == "error") {
-									frappe.throw(__("Failed to send the gift card email"));
-								} else {
-									frappe.show_alert({
-										message:__('Gift card email sent successfully'),
-										indicator:'green'
-									}, 5);
-								}
-								dsg.clear();
+							method: "neoffice_theme.events.get_wp_module",
+							callback: res => {
+								frappe.call({
+									method: res.message + ".events.send_email_giftcard",
+									freeze: true,
+									args: {
+										code: dsg.fields_dict.code.input.value,
+										email: dsg.fields_dict.send_to.input.value,
+										message: dsg.fields_dict.message.input.value
+									},
+									callback: r => {
+										if(r.message && r.message == "error") {
+											frappe.throw(__("Failed to send the gift card email"));
+										} else {
+											frappe.show_alert({
+												message:__('Gift card email sent successfully'),
+												indicator:'green'
+											}, 5);
+										}
+										dsg.clear();
+									}
+								});
 							}
 						});
 						dsg.hide();

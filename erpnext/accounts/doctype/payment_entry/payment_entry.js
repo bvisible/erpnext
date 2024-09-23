@@ -1042,9 +1042,22 @@ frappe.ui.form.on('Payment Entry', {
 							} else {
 								row = write_off_row[0];
 							}
-
+							let new_difference_amount = 0; //// added
 							if (row) {
-								row.amount = flt(row.amount) + difference_amount;
+								//// added
+								if(details["no_tax"] != 1 && details["tax_rate"] && details["tax_account"]) {
+									tax_amount = difference_amount * flt(details["tax_rate"]) / 100;
+									new_difference_amount = difference_amount - tax_amount;
+									let row_taxes = frm.add_child("deductions");
+									row_taxes.account = details["tax_account"];
+									row_taxes.cost_center = details["cost_center"];
+									row_taxes.amount = tax_amount;
+									row_taxes.description = details["vat_description"];
+								}
+								row.description = details["description"];
+								////
+
+								row.amount = flt(row.amount) + (new_difference_amount != 0 ? new_difference_amount : difference_amount); //// modified from row.amount = flt(row.amount) + difference_amount;
 							} else {
 								frappe.msgprint(__("No gain or loss in the exchange rate"))
 							}
@@ -1052,6 +1065,93 @@ frappe.ui.form.on('Payment Entry', {
 						};
 
 						if (!r.message[account]) {
+							//// modified
+							frappe.db.get_value("Company", frm.doc.company, "vat_accounting_method").then(({ message }) => {
+								let fields = [
+									{
+										label: __("Please Specify Account"),
+										fieldname: account,
+										fieldtype: "Link",
+										options: "Account",
+										get_query: () => ({
+											filters: {
+												company: frm.doc.company,
+											}
+										}),
+										onchange: () => {
+											frappe.call({
+												method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_tax_data",
+												args: {
+													account: dg.fields_dict[account].get_value(),
+												},
+												callback: (res) => {
+													if (res.message && res.message.length > 0) {
+														dg.fields_dict.no_tax.set_value(0);
+														dg.fields_dict.tax_rate.set_value(res.message[0]["rate"]);
+														dg.fields_dict.tax_account.set_value(res.message[0]["account"]);
+														dg.fields_dict.no_tax.set_value(0);
+														console.log(dg.fields_dict.tax_rate.get_value(), dg.fields_dict.tax_account.get_value(), dg.fields_dict.no_tax.get_value());
+													} else {
+														dg.fields_dict.no_tax.set_value(1);
+														dg.set_df_property("no_tax", "hidden", 1);
+														dg.fields_dict.tax_rate.set_value("");
+														dg.fields_dict.tax_account.set_value("");
+														console.log(dg.fields_dict.tax_rate.get_value(), dg.fields_dict.tax_account.get_value(), dg.fields_dict.no_tax.get_value());
+													}
+												}
+											});
+										}
+									},
+									{
+										label: __("Do Not Calculate Tax"),
+										fieldname: "no_tax",
+										fieldtype: "Check",
+										default: 0,
+										hidden: 0,
+										onchange: () => {
+											dg.set_df_property("vat_description", "hidden", dg.fields_dict.no_tax.get_value());
+										}
+									},
+									{
+										label: __("Tax Rate"),
+										fieldname: "tax_rate",
+										fieldtype: "Float",
+										read_only: 1,
+										hidden: 1,
+									},
+									{
+										label: __("Tax Account"),
+										fieldname: "tax_account",
+										fieldtype: "Data",
+										read_only: 1,
+										hidden: 1,
+									},
+									{
+										label: __("Description"),
+										fieldname: "description",
+										fieldtype: "Small Text",
+										hidden: 0,
+
+									},
+									{
+										label: __("VAT Description"),
+										fieldname: "vat_description",
+										fieldtype: "Small Text",
+										hidden: 0,
+
+									}
+								]
+								if (message.vat_accounting_method  == "Flat-rate taxation") {
+									fields[1].hidden = 1;
+									fields[1].default = 1;
+								}
+								let dg = frappe.prompt(fields, (values) => {
+									const details = Object.assign({}, r.message, values);
+									add_deductions(details);
+								}, __(frappe.unscrub(account)));
+							});
+							////
+							/*//// original
 							frappe.prompt({
 								label: __("Please Specify Account"),
 								fieldname: account,
@@ -1066,6 +1166,7 @@ frappe.ui.form.on('Payment Entry', {
 								const details = Object.assign({}, r.message, values);
 								add_deductions(details);
 							}, __(frappe.unscrub(account)));
+							////*/
 						} else {
 							add_deductions(r.message);
 						}

@@ -1,15 +1,17 @@
 {
- "creation": "2021-12-02 10:37:55.433087",
+ "creation": "2024-05-14 22:32:46.630514",
  "docstatus": 0,
  "doctype": "Form Tour",
  "first_document": 0,
  "idx": 0,
  "include_name_field": 0,
  "is_standard": 1,
- "modified": "2021-12-02 10:37:55.433087",
+ "list_name": "List",
+ "modified": "2024-05-14 22:32:46.630514",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item General",
+ "new_document_form": 0,
  "owner": "Administrator",
  "reference_doctype": "Item",
  "save_on_complete": 1,
@@ -20,11 +22,17 @@
    "fieldname": "item_code",
    "fieldtype": "Data",
    "has_next_condition": 0,
+   "hide_buttons": 0,
    "is_table_field": 0,
    "label": "Item Code",
-   "parent_field": "",
+   "modal_trigger": 0,
+   "next_on_click": 0,
+   "offset_x": 0,
+   "offset_y": 0,
+   "popover_element": 0,
    "position": "Right",
-   "title": "Item Code"
+   "title": "Item Code",
+   "ui_tour": 0
   },
   {
    "description": "Enter name for the Item",
@@ -32,11 +40,17 @@
    "fieldname": "item_name",
    "fieldtype": "Data",
    "has_next_condition": 0,
+   "hide_buttons": 0,
    "is_table_field": 0,
    "label": "Item Name",
-   "parent_field": "",
+   "modal_trigger": 0,
+   "next_on_click": 0,
+   "offset_x": 0,
+   "offset_y": 0,
+   "popover_element": 0,
    "position": "Right",
-   "title": "Item Name"
+   "title": "Item Name",
+   "ui_tour": 0
   },
   {
    "description": "Select an Item Group",
@@ -44,11 +58,17 @@
    "fieldname": "item_group",
    "fieldtype": "Link",
    "has_next_condition": 0,
+   "hide_buttons": 0,
    "is_table_field": 0,
    "label": "Item Group",
-   "parent_field": "",
+   "modal_trigger": 0,
+   "next_on_click": 0,
+   "offset_x": 0,
+   "offset_y": 0,
+   "popover_element": 0,
    "position": "Right",
-   "title": "Item Group"
+   "title": "Item Group",
+   "ui_tour": 0
   },
   {
    "description": "This is the default measuring unit that you will use for your product. It could be Nos, Kgs, Meters, etc.",
@@ -56,11 +76,17 @@
    "fieldname": "stock_uom",
    "fieldtype": "Link",
    "has_next_condition": 0,
+   "hide_buttons": 0,
    "is_table_field": 0,
    "label": "Default Unit of Measure",
-   "parent_field": "",
+   "modal_trigger": 0,
+   "next_on_click": 0,
+   "offset_x": 0,
+   "offset_y": 0,
+   "popover_element": 0,
    "position": "Right",
-   "title": "Default Unit of Measurement"
+   "title": "Default Unit of Measurement",
+   "ui_tour": 0
   },
   {
    "description": "When creating an Item, entering a value for this field will automatically create an Item Price at the backend. Entering a value after the Item has been saved will not work. In this case, the Item Price is created from any transactions with the Item.",
@@ -68,12 +94,21 @@
    "fieldname": "standard_rate",
    "fieldtype": "Currency",
    "has_next_condition": 0,
+   "hide_buttons": 0,
    "is_table_field": 0,
    "label": "Standard Selling Rate",
-   "parent_field": "",
+   "modal_trigger": 0,
+   "next_on_click": 0,
+   "offset_x": 0,
+   "offset_y": 0,
+   "popover_element": 0,
    "position": "Left",
-   "title": "Standard Selling Rate"
+   "title": "Standard Selling Rate",
+   "ui_tour": 0
   }
  ],
- "title": "Item General"
+ "title": "Item General",
+ "track_steps": 0,
+ "ui_tour": 0,
+ "view_name": "Workspaces"
 }

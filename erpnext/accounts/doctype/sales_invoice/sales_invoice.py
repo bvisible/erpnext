@@ -1261,10 +1261,16 @@ class SalesInvoice(SellingController):
 
 			if flt(tax.base_tax_amount_after_discount_amount):
 				account_currency = get_account_currency(tax.account_head)
-				#//// added if
+				#//// added block
 				if flat_rate and frappe.db.get_value("Account", tax.account_head, "tax_code"):
 					continue
+				
+				remark = ""
+				remark += (str(self.rounded_total) or str(self.grand_total)) + " " + self.currency
+				if self.customer_reference:
+					remark += " " + self.customer_reference[:25]
 				#////
+    
 				gl_entries.append(
 					self.get_gl_dict(
 						{
@@ -1277,6 +1283,7 @@ class SalesInvoice(SellingController):
 								else flt(amount, tax.precision("tax_amount_after_discount_amount"))
 							),
 							"cost_center": tax.cost_center,
+							"remarks": remark, #//// added
 						},
 						account_currency,
 						item=tax,
@@ -1319,6 +1326,15 @@ class SalesInvoice(SellingController):
 		for item in self.get("items"):
 			if flt(item.base_net_amount, item.precision("base_net_amount")):
 				tax_excluded = flt(item.base_net_amount, item.precision("base_net_amount")) == flt(item.base_amount, item.precision("base_net_amount")) #//// added
+    
+				#//// added block
+				remark = ""
+				remark += (str(self.rounded_total) or str(self.grand_total)) + " " + self.currency
+				if self.customer_reference:
+					remark += " " + self.customer_reference[:25]
+				remark += (" " + item.description[:40]) if item.description else ""
+				#////
+     
 				if item.is_fixed_asset:
 					asset = self.get_asset(item)
 
@@ -1332,6 +1348,7 @@ class SalesInvoice(SellingController):
 									amount = amount + (amount * item.tax_rate / 100)
 						else:
 							amount = item.base_amount
+    
 					#////
 					if self.is_return:
 						fixed_asset_gl_entries = get_gl_entries_on_asset_regain(
@@ -1380,6 +1397,7 @@ class SalesInvoice(SellingController):
 						add_asset_activity(asset.name, _("Asset sold"))
 
 					for gle in fixed_asset_gl_entries:
+						gle["remarks"] = remark #//// added
 						gle["against"] = self.customer
 						gl_entries.append(self.get_gl_dict(gle, item=item))
 
@@ -1419,6 +1437,7 @@ class SalesInvoice(SellingController):
 									),
 									"cost_center": item.cost_center,
 									"project": item.project or self.project,
+									"remarks": remark #//// added
 								},
 								account_currency,
 								item=item,

@@ -441,6 +441,7 @@
    "default": "1",
    "fieldname": "enable_perpetual_inventory",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "Enable Perpetual Inventory"
   },
   {
@@ -690,6 +691,7 @@
    "default": "0",
    "fieldname": "enable_provisional_accounting_for_non_stock_items",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "Enable Provisional Accounting For Non Stock Items"
   },
   {
@@ -840,6 +842,8 @@
    "write": 1
   }
  ],
+ "read_only": 1,
+ "restrict_to_domain": "Core",
  "show_name_in_global_search": 1,
  "sort_field": "modified",
  "sort_order": "ASC",

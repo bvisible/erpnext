@@ -879,6 +879,13 @@ class PurchaseInvoice(BuyingController):
 		#////
 		for item in self.get("items"):
 			if flt(item.base_net_amount):
+       			#//// added block
+				remark = ""
+				remark += (str(self.rounded_total) or str(self.grand_total)) + " " + self.currency
+				if self.customer_reference:
+					remark += " " + self.customer_reference[:25]
+				remark += (" " + item.description[:40]) if item.description else ""
+				#////
 				tax_excluded = flt(item.base_net_amount, item.precision("base_net_amount")) == flt(item.base_amount, item.precision("base_net_amount")) #//// added
 				account_currency = get_account_currency(item.expense_account)
 				if item.item_code:
@@ -1060,6 +1067,7 @@ class PurchaseInvoice(BuyingController):
 									"debit": amount,
 									"cost_center": item.cost_center,
 									"project": item.project or self.project,
+									"remarks": remark, #//// added
 								},
 								account_currency,
 								item=item,
@@ -1213,6 +1221,11 @@ class PurchaseInvoice(BuyingController):
 			#//// added if
 			if flat_rate and frappe.db.get_value("Account", tax.account_head, "tax_code"):
 				continue
+
+			remark = ""
+			remark += (str(self.rounded_total) or str(self.grand_total)) + " " + self.currency
+			if self.customer_reference:
+				remark += " " + self.customer_reference[:25]
 			#////
 			amount, base_amount = self.get_tax_amounts(tax, None)
 			if tax.category in ("Total", "Valuation and Total") and flt(base_amount):
@@ -1230,6 +1243,7 @@ class PurchaseInvoice(BuyingController):
 							if account_currency == self.company_currency
 							else amount,
 							"cost_center": tax.cost_center,
+							"remarks": remark, #//// added
 						},
 						account_currency,
 						item=tax,

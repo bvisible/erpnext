@@ -715,8 +715,8 @@ class Subscription(Document):
 
 		to_generate_invoice = (
 			True
-			if self.status == "Active"
-			   and not self.generate_invoice_at == "Beginning of the current subscription period"
+			if self.status != "Active" #//// changed == to !=
+			   #//// commented and not self.generate_invoice_at == "Beginning of the current subscription period"
 			else False
 		)
 		self.status = "Cancelled"

@@ -70,5 +70,6 @@
  ],
  "title": "Stock Settings",
  "track_steps": 0,
- "ui_tour": 0
+ "ui_tour": 0,
+ "view_name": "Workspaces"
 }
