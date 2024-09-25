@@ -1295,13 +1295,13 @@ class SalesInvoice(SellingController):
 				#//// added block
 				if flat_rate and frappe.db.get_value("Account", tax.account_head, "tax_code"):
 					continue
-				
+
 				remark = ""
 				remark += (str(self.rounded_total) or str(self.grand_total)) + " " + self.currency
 				if self.customer_reference:
 					remark += " " + self.customer_reference[:25]
 				#////
-    
+
 				gl_entries.append(
 					self.get_gl_dict(
 						{
@@ -1357,7 +1357,7 @@ class SalesInvoice(SellingController):
 		for item in self.get("items"):
 			if flt(item.base_net_amount, item.precision("base_net_amount")):
 				tax_excluded = flt(item.base_net_amount, item.precision("base_net_amount")) == flt(item.base_amount, item.precision("base_net_amount")) #//// added
-    
+
 				#//// added block
 				remark = ""
 				remark += (str(self.rounded_total) or str(self.grand_total)) + " " + self.currency
@@ -1365,7 +1365,7 @@ class SalesInvoice(SellingController):
 					remark += " " + self.customer_reference[:25]
 				remark += (" " + item.description[:40]) if item.description else ""
 				#////
-     
+
 				# Do not book income for transfer within same company
 				if self.is_internal_transfer():
 					continue
@@ -1383,7 +1383,7 @@ class SalesInvoice(SellingController):
 									amount = amount + (amount * item.tax_rate / 100)
 						else:
 							amount = item.base_amount
-    
+
 					#////
 					if self.is_return:
 						fixed_asset_gl_entries = get_gl_entries_on_asset_regain(
@@ -1447,42 +1447,42 @@ class SalesInvoice(SellingController):
 						else item.deferred_revenue_account
 					)
 
-						amount, base_amount = self.get_amount_and_base_amount(item, enable_discount_accounting, flat_rate) #//// added flat_rate and not tax_excluded
-						#//// added
-						if flat_rate and (tax_excluded or self.get("discount_amount")):
-							if item.item_tax_template:
-								vat_details = frappe.db.get_all("Item Tax Template Detail", {"parent": item.item_tax_template, "parenttype": "Item Tax Template", "tax_rate": [">", 0]}, ['tax_type', 'tax_rate'])
-								if vat_details and vat_details[0].tax_type in wanted_vat:
-									applied_tax_rate = vat_details[0].tax_rate
-									amount = amount + (amount * applied_tax_rate / 100)
-									base_amount = base_amount + (base_amount * applied_tax_rate / 100)
-						#////
+					amount, base_amount = self.get_amount_and_base_amount(item, enable_discount_accounting, flat_rate) #//// added flat_rate and not tax_excluded
+					#//// added
+					if flat_rate and (tax_excluded or self.get("discount_amount")):
+						if item.item_tax_template:
+							vat_details = frappe.db.get_all("Item Tax Template Detail", {"parent": item.item_tax_template, "parenttype": "Item Tax Template", "tax_rate": [">", 0]}, ['tax_type', 'tax_rate'])
+							if vat_details and vat_details[0].tax_type in wanted_vat:
+								applied_tax_rate = vat_details[0].tax_rate
+								amount = amount + (amount * applied_tax_rate / 100)
+								base_amount = base_amount + (base_amount * applied_tax_rate / 100)
+					#////
 
-						account_currency = get_account_currency(income_account)
-						gl_entries.append(
-							self.get_gl_dict(
-								{
-									"account": income_account,
-									"against": self.customer,
-									"credit": flt(base_amount, item.precision("base_net_amount")),
-									"credit_in_account_currency": (
-										flt(base_amount, item.precision("base_net_amount"))
-										if account_currency == self.company_currency
-										else flt(amount, item.precision("net_amount"))
-									),
-									"cost_center": item.cost_center,
-									"project": item.project or self.project,
-									"remarks": remark #//// added
-								},
-								account_currency,
-								item=item,
-							)
+					account_currency = get_account_currency(income_account)
+					gl_entries.append(
+						self.get_gl_dict(
+							{
+								"account": income_account,
+								"against": self.customer,
+								"credit": flt(base_amount, item.precision("base_net_amount")),
+								"credit_in_account_currency": (
+									flt(base_amount, item.precision("base_net_amount"))
+									if account_currency == self.company_currency
+									else flt(amount, item.precision("net_amount"))
+								),
+								"cost_center": item.cost_center,
+								"project": item.project or self.project,
+								"remarks": remark #//// added
+							},
+							account_currency,
+							item=item,
 						)
 					)
 
 		# expense account gl entries
 		if cint(self.update_stock) and erpnext.is_perpetual_inventory_enabled(self.company):
 			gl_entries += super().get_gl_entries()
+
 
 	def get_asset(self, item):
 		if item.get("asset"):
