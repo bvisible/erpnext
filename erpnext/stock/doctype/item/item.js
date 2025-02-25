@@ -602,6 +602,17 @@ $.extend(erpnext.item, {
 							${__("Select at least one value from each of the attributes.")}
 						</label>`,
 					},
+					//// added
+					{
+						fieldtype: "Section Break",
+					},
+					{
+						fieldtype: "Check",
+						fieldname: "is_stock_item",
+						label: __("Manage Stock"),
+						default: 1,
+					}
+					////
 				]
 					.concat(fields)
 					.filter(Boolean),
@@ -611,6 +622,7 @@ $.extend(erpnext.item, {
 				let selected_attributes = get_selected_attributes();
 				let use_template_image = me.multiple_variant_dialog.get_value("use_template_image");
 
+				selected_attributes["is_stock_item"] = me.multiple_variant_dialog.get_value("is_stock_item"); //// added line
 				me.multiple_variant_dialog.hide();
 				frappe.call({
 					method: "erpnext.controllers.item_variant.enqueue_multiple_variant_creation",
@@ -648,8 +660,20 @@ $.extend(erpnext.item, {
 		function get_selected_attributes() {
 			let selected_attributes = {};
 			me.multiple_variant_dialog.$wrapper.find(".form-column").each((i, col) => {
-				if (i === 0) return;
+				if(i===0 || i===1) return; //// added || i===1
 				let attribute_name = $(col).find(".column-label").html().trim();
+				//// added code block
+				const elements = cur_frm.$wrapper[0].querySelectorAll('[data-fieldname="attributes"] a[data-value]');
+				const values = Array.from(elements).map(element => ({
+					original: element.getAttribute('data-value'),
+					trad: element.textContent.trim()
+				}));
+				values.forEach(value => {
+					if(value.trad === attribute_name) {
+						attribute_name = value.original;
+					}
+				});
+				////
 				selected_attributes[attribute_name] = [];
 				let checked_opts = $(col).find(".checkbox input");
 				checked_opts.each((i, opt) => {

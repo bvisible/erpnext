@@ -88,6 +88,7 @@ erpnext.PointOfSale.ItemCart = class {
 	make_cart_totals_section() {
 		this.$totals_section = this.$component.find(".cart-totals-section");
 
+		//// added line discount <div class="discount-container hidden"> <div>${__('Discount')}</div> <div>0.00</div> </div>
 		this.$totals_section.append(
 			`<div class="add-discount-wrapper">
 				${this.get_discount_icon()} ${__("Add Discount")}
@@ -101,6 +102,10 @@ erpnext.PointOfSale.ItemCart = class {
 				<div class="net-total-value">0.00</div>
 			</div>
 			<div class="taxes-container"></div>
+			<div class="discount-container hidden">
+				<div>${__('Discount')}</div>
+				<div>0.00</div>
+			</div>
 			<div class="grand-total-container">
 				<div>${__("Grand Total")}</div>
 				<div>0.00</div>
@@ -317,7 +322,7 @@ erpnext.PointOfSale.ItemCart = class {
 					if (this.value) {
 						const frm = me.events.get_frm();
 						frappe.dom.freeze();
-						frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", this.value);
+						frappe.model.set_value(frm.doc.doctype, frm.doc.name, {"customer": this.value, "title": this.value});  //// {'customer': this.value, "title": this.value} replaces: 'customer', this.value
 						frm.script_manager.trigger("customer", frm.doc.doctype, frm.doc.name).then(() => {
 							frappe.run_serially([
 								() => me.fetch_customer_details(this.value),
@@ -493,7 +498,9 @@ erpnext.PointOfSale.ItemCart = class {
 			: frm.doc.rounded_total;
 		this.render_grand_total(grand_total);
 
-		this.render_taxes(frm.doc.taxes);
+		setTimeout(() => { //// added surrounding setTimeout
+			this.render_taxes(frm.doc.taxes);
+		}, 100);////
 	}
 
 	render_net_total(value) {
@@ -588,13 +595,40 @@ erpnext.PointOfSale.ItemCart = class {
 		const me = this;
 
 		if (!$item_to_update.length) {
-			this.$cart_items_wrapper.append(
+			////this.$cart_items_wrapper.append(
+			this.$cart_items_wrapper.prepend(
 				`<div class="cart-item-wrapper" data-row-name="${escape(item_data.name)}"></div>
 				<div class="seperator"></div>`
 			);
 			$item_to_update = this.get_cart_item(item_data);
 		}
 
+		//// added code block
+		// get item data from item master
+		frappe.db.get_doc('Item', item_data.item_code).then(itemInfo => {
+			if (itemInfo.attributes && itemInfo.variant_of) {
+			  let spans = "";
+			  itemInfo.attributes.forEach(function(attribute) {
+				spans += "  <span><i>" + attribute.attribute + "</i> : <strong>" + attribute.attribute_value + "</strong></span>";
+			  });
+			  $("#varInfo_" + item_data.idx).html(spans);
+			}
+		});
+		$item_to_update.html(
+			`${get_item_image_html()}
+			<div class="item-name-desc">
+				<div class="item-name">
+					${item_data.item_name}
+				</div>
+				${get_description_html()}
+				<div id="varInfo_${item_data.idx}" class="item-desc" style="display:block;height:18px;"></div>
+			</div>
+			<div class="item-show-discount">
+				${get_base_and_discount()}
+			</div>
+			${get_rate_discount_html()}`
+		);
+		/*
 		$item_to_update.html(
 			`${get_item_image_html()}
 			<div class="item-name-desc">
@@ -604,7 +638,7 @@ erpnext.PointOfSale.ItemCart = class {
 				${get_description_html()}
 			</div>
 			${get_rate_discount_html()}`
-		);
+		); //// */
 
 		set_dynamic_rate_header_width();
 
@@ -623,6 +657,19 @@ erpnext.PointOfSale.ItemCart = class {
 			me.$cart_header.find(".rate-amount-header").css("width", max_width);
 			me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
 		}
+
+		//// added get_base_and_discount function
+		function get_base_and_discount() {
+			if (item_data.discount_percentage != 0) {
+				return `
+					<div class="item-price-before-discount">${format_currency(item_data.price_list_rate, currency)}</div>
+					<div class="item-discount-percent">-${item_data.discount_percentage}%</div>
+				`
+			} else {
+				return ''
+			}
+		}
+		////
 
 		function get_rate_discount_html() {
 			if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {

@@ -5,9 +5,9 @@ import frappe
 from frappe.utils import cint, flt, fmt_money
 
 from erpnext.accounts.doctype.pricing_rule.pricing_rule import get_pricing_rule_for_item
+import json #//// added
 
-
-def get_price(item_code, price_list, customer_group, company, qty=1, party=None):
+def get_price(item_code, price_list, customer_group, company, qty=1, party=None, from_pos=False): #//// added , from_pos=False
 	template_item_code = frappe.db.get_value("Item", item_code, "variant_of")
 
 	if price_list:
@@ -65,6 +65,22 @@ def get_price(item_code, price_list, customer_group, company, qty=1, party=None)
 							rate_discount, currency=price_obj["currency"]
 						)
 					price_obj.price_list_rate = pricing_rule.price_list_rate or 0
+				
+				#//// added code block
+				if pricing_rule.pricing_rule_for == "Discount Amount":
+					price_obj.price_list_rate = flt(price_obj.price_list_rate - pricing_rule.discount_amount)
+
+				if pricing_rule.pricing_rules:
+					valid_from = frappe.db.get_value("Pricing Rule", json.loads(pricing_rule.pricing_rules)[0], "valid_from")
+					valid_upto = frappe.db.get_value("Pricing Rule", json.loads(pricing_rule.pricing_rules)[0], "valid_upto")
+					synchronized_rule = frappe.db.get_value("Pricing Rule", json.loads(pricing_rule.pricing_rules)[0], "synchronized_rule")
+					if valid_from:
+						price[0].valid_from = str(valid_from) + " 00:00:00"
+
+					if valid_upto:
+						price[0].valid_upto = str(valid_upto) + " 23:59:59"
+					price[0].synchronized_rule = synchronized_rule
+				#////
 
 			if price_obj:
 				price_obj["formatted_price"] = fmt_money(

@@ -5,7 +5,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, today
+from frappe.utils import flt, today, cint
 
 
 class LoyaltyProgram(Document):
@@ -166,7 +166,8 @@ def validate_loyalty_points(ref_doc, points_to_redeem):
 		if points_to_redeem > loyalty_program_details.loyalty_points:
 			frappe.throw(_("You don't have enough Loyalty Points to redeem"))
 
-		loyalty_amount = flt(points_to_redeem * loyalty_program_details.conversion_factor)
+		float_precision = cint(frappe.db.get_default("float_precision")) or 2
+		loyalty_amount = flt(points_to_redeem * loyalty_program_details.conversion_factor, float_precision)
 
 		if loyalty_amount > ref_doc.rounded_total:
 			frappe.throw(_("You can't redeem Loyalty Points having more value than the Rounded Total."))

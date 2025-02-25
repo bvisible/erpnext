@@ -10,6 +10,26 @@ frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm
 
 	render_dialog() {
 		this.mandatory = this.mandatory.concat(this.get_variant_fields());
+		//// added code block
+		let count = 0;
+		let territory_idx = 0;
+		let name_idx = 0;
+		this.mandatory.forEach(df => {
+			if (df.fieldname === "territory") {
+				territory_idx = count;
+			}
+			if (df.fieldname === "customer_name") {
+				name_idx = count;
+			}
+			count++;
+		})
+		if(territory_idx != 0) {
+			this.mandatory.splice(territory_idx+1, 0, {fieldtype: 'Column Break'});
+		}
+		if(name_idx != 0) {
+			this.mandatory.splice(name_idx + 1, 0, {fieldtype: 'Section Break'});
+		}
+		//// end of added code block
 		super.render_dialog();
 	}
 
@@ -36,13 +56,14 @@ frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm
 			{
 				fieldtype: "Section Break",
 				label: __("Primary Contact Details"),
-				collapsible: 1,
+				collapsible: 0 //// modified from 1 to 0
 			},
 			{
 				label: __("Email Id"),
 				fieldname: "email_address",
 				fieldtype: "Data",
 				options: "Email",
+				reqd: 1, //// added
 			},
 			{
 				fieldtype: "Column Break",
@@ -61,6 +82,7 @@ frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm
 				label: __("Address Line 1"),
 				fieldname: "address_line1",
 				fieldtype: "Data",
+				mandatory_depends_on: "eval:doc.address_line1 || doc.city || doc.pincode" //// added
 			},
 			{
 				label: __("Address Line 2"),
@@ -71,6 +93,7 @@ frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm
 				label: __("ZIP Code"),
 				fieldname: "pincode",
 				fieldtype: "Data",
+				mandatory_depends_on: "eval:doc.address_line1 || doc.city || doc.pincode" //// added
 			},
 			{
 				fieldtype: "Column Break",
@@ -79,6 +102,7 @@ frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm
 				label: __("City"),
 				fieldname: "city",
 				fieldtype: "Data",
+				mandatory_depends_on: "eval:doc.address_line1 || doc.city || doc.pincode" //// added
 			},
 			{
 				label: __("State"),
@@ -90,6 +114,7 @@ frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm
 				fieldname: "country",
 				fieldtype: "Link",
 				options: "Country",
+				mandatory_depends_on: "eval:doc.address_line1 || doc.city || doc.pincode" //// added
 			},
 			{
 				label: __("Customer POS Id"),
