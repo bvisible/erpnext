@@ -83,16 +83,6 @@ erpnext.PointOfSale.Payment = class {
 				this[`${df.fieldname}_field`].set_value(frm.doc[df.fieldname]);
 			});
 		});
-		//// added for printing
-		//For raw printing buttons
-		if(window.enable_raw_print == 1){
-			this.$invoice_fields_section.find('.invoice-fields').append(
-				`<div style="position: absolute; bottom: 0; width: 100%; margin-bottom: 10px;" class="summary-btn btn btn-default cash-drawer-btn">
-					Open Cash Drawer
-				</div>`
-			);
-		}
-		////
 	}
 
 	initialize_numpad() {
@@ -330,11 +320,6 @@ erpnext.PointOfSale.Payment = class {
 				this[`${mode}_control`].set_value(default_mop.amount);
 			}
 		});
-		//// added for printing
-		//For raw printing buttons
-		this.$component.on('click', '.cash-drawer-btn', () => {
-			this.events.open_cash_drawer();
-		});
 	}
 
 	setup_listener_for_payments() {
@@ -463,14 +448,6 @@ erpnext.PointOfSale.Payment = class {
 
 		this.render_payment_section();
 		this.after_render();
-		//// for weight machine
-		//For weigh scale
-		if(window.enable_weigh_scale == 1){
-			if(typeof(window.mettlerWorker) != "undefined"){
-				window.mettlerWorker.postMessage({"command": "stop"});
-			}
-		}
-		////
 	}
 
 	toggle_remarks_control() {
