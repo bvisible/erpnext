@@ -1,12 +1,10 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, today
-
+from frappe.utils import flt, today, cint
 
 class LoyaltyProgram(Document):
 	# begin: auto-generated types
@@ -48,8 +46,7 @@ def get_loyalty_details(
 	condition = ""
 	if company:
 		condition = " and company=%s " % frappe.db.escape(company)
-	#//// commented
-	'''if not include_expired_entry:
+	if not include_expired_entry:
 		condition += " and expiry_date>='%s' " % expiry_date
 
 	loyalty_point_details = frappe.db.sql(
@@ -60,21 +57,7 @@ def get_loyalty_details(
 		group by customer""",
 		(customer, loyalty_program, expiry_date),
 		as_dict=1,
-	)'''
-	#////
-	#//// replacement
-	loyalty_point_details = frappe.db.sql(
-		"""select sum(loyalty_points) as loyalty_points,
-		sum(purchase_amount) as total_spent from `tabLoyalty Point Entry`
-		where customer=%s and loyalty_program=%s
-		{condition}
-		group by customer""".format(
-			condition=condition
-		),
-		(customer, loyalty_program),
-		as_dict=1,
 	)
-	#////
 
 	if loyalty_point_details:
 		return loyalty_point_details[0]
@@ -92,7 +75,6 @@ def get_loyalty_program_details_with_points(
 	include_expired_entry=False,
 	current_transaction_amount=0,
 ):
-	current_transaction_amount = 0 #////
 	lp_details = get_loyalty_program_details(customer, loyalty_program, company=company, silent=silent)
 	loyalty_program = frappe.get_doc("Loyalty Program", loyalty_program)
 	lp_details.update(
@@ -102,10 +84,10 @@ def get_loyalty_program_details_with_points(
 	tier_spent_level = sorted(
 		[d.as_dict() for d in loyalty_program.collection_rules],
 		key=lambda rule: rule.min_spent,
-		reverse=False, #////True,
+		reverse=True,
 	)
 	for i, d in enumerate(tier_spent_level):
-		if i == 0 or (lp_details.total_spent + current_transaction_amount) >= d.min_spent: #////<= d.min_spent:
+		if i == 0 or (lp_details.total_spent + current_transaction_amount) <= d.min_spent:
 			lp_details.tier_name = d.tier_name
 			lp_details.collection_factor = d.collection_factor
 		else:
@@ -182,7 +164,8 @@ def validate_loyalty_points(ref_doc, points_to_redeem):
 		if points_to_redeem > loyalty_program_details.loyalty_points:
 			frappe.throw(_("You don't have enough Loyalty Points to redeem"))
 
-		loyalty_amount = flt(points_to_redeem * loyalty_program_details.conversion_factor)
+		float_precision = cint(frappe.db.get_default("float_precision")) or 2
+		loyalty_amount = flt(points_to_redeem * loyalty_program_details.conversion_factor, float_precision)
 
 		if loyalty_amount > ref_doc.rounded_total:
 			frappe.throw(_("You can't redeem Loyalty Points having more value than the Rounded Total."))

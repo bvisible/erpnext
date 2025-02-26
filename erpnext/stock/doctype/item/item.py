@@ -1018,10 +1018,6 @@ class Item(Document):
 			]
 
 		for doctype in linked_doctypes:
-			#//// added if
-			if doctype == "Material Request Item":
-				return
-			#////
 			filters = {"item_code": self.name, "docstatus": 1}
 
 			if doctype in ("Product Bundle", "BOM"):

@@ -497,11 +497,8 @@ class SalesOrder(SellingController):
 			frappe.throw(_("{0} {1} has been modified. Please refresh.").format(self.doctype, self.name))
 
 	def update_status(self, status):
-		old, woocommerce_id = frappe.get_cached_value("Sales Order", self.name, ["status", "woocommerce_id"]) #//// added
 		self.check_modified_date()
 		self.set_status(update=True, status=status)
-		if not (old == "On Hold" and woocommerce_id): #//// added if condition
-			self.update_reserved_qty()
 		# Upon Sales Order Re-open, check for credit limit.
 		# Limit should be checked after the 'Hold/Closed' status is reset.
 		if status == "Draft" and self.docstatus == 1:

@@ -14,7 +14,6 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		this.attach_shortcuts();
 	}
 
-	//// added <div class="raw-btns summary-container"></div>
 	prepare_dom() {
 		this.wrapper.append(
 			`<section class="past-order-summary">
@@ -31,7 +30,6 @@ erpnext.PointOfSale.PastOrderSummary = class {
 						<div class="label">${__("Payments")}</div>
 						<div class="payments-container summary-container"></div>
 						<div class="summary-btns"></div>
-						<div class="raw-btns summary-container"></div>
 					</div>
 				</div>
 			</section>`
@@ -45,7 +43,6 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		this.$totals_container = this.$summary_container.find(".totals-container");
 		this.$payment_container = this.$summary_container.find(".payments-container");
 		this.$summary_btns = this.$summary_container.find(".summary-btns");
-		this.$raw_btns = this.$summary_container.find(".raw-btns"); //// added line
 	}
 
 	init_email_print_dialog() {
@@ -215,17 +212,6 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		this.$summary_container.on("click", ".print-btn", () => {
 			this.print_receipt();
 		});
-
-		//// added for printing
-		//For raw print
-		this.$summary_container.on('click', '.direct-print-btn', () => {
-			this.events.raw_print();
-		});
-
-		this.$summary_container.on('click', '.cash-drawer-btn', () => {
-			this.events.open_cash_drawer();
-		});
-		////
 	}
 
 	print_receipt() {
@@ -407,105 +393,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 			const item_dom = this.get_item_html(doc, item);
 			this.$items_container.append(item_dom);
 			this.set_dynamic_rate_header_width();
-			//// added for giftcard
-			frappe.call({
-				method: "neoffice_theme.events.get_wp_module",
-				callback: res => {
-					frappe.call({
-						method: res.message + ".events.custom_get_all",
-						args: {
-							doctype: "Neoffice Giftcard",
-							filters: {
-								"pos_invoice": doc.name
-							}
-						},
-						callback: r => {
-							let data = r.message;
-							if($(".giftcards_block").length == 0){
-								let giftcard_html = '<div class="giftcards_block">';
-								data.forEach(item => {
-									giftcard_html += '<div class="giftcard-line"><span giftcard-code>'+item.code+'</span><div class="giftcard-btns"><button type="button" class="send-giftcard-btn btn btn-primary btn-sm btn-modal-primary" value="'+item.code+'">'+__("Send Email")+'</button><button class="print-giftcard-btn text-muted btn btn-default icon-btn" title="" data-original-title="Print" value="'+item.code+'"> <svg class="icon  icon-sm" style=""> <use class="" href="#icon-printer"></use> </svg> </button></div></div>';
-								});
-								giftcard_html += '</div>';
-								this.$items_container.append(giftcard_html);
-								$('.send-giftcard-btn').click(function() {
-									let code = $(this).attr('value');
-									dsg.fields_dict.code.input.value = code;
-									dsg.show();
-									setTimeout(() => {
-										$("[data-fieldname=code] input").prop('readonly', true);
-									}, 200);
-								})
-								$('.print-giftcard-btn').click(function() {
-									let code = $(this).attr('value');
-									let url = "/web/fr?pwgc_number="+code+"&pdf=1"
-									window.open(url, '_blank').focus();
-								})
-							}
-						}
-					});
-				}
-			});
-			////
 		});
-		//// added for sending giftcard
-		let dsg = new frappe.ui.Dialog
-			({
-				title: __('Send Gift card'),
-				fields: [
-					{
-						label: 'Code',
-						fieldname: 'code',
-						fieldtype: 'Data',
-						readonly: 1,
-					},
-					{
-						label: 'Send to',
-						fieldname: 'send_to',
-						fieldtype: 'Data',
-					},
-					{
-						label: 'Message',
-						fieldname: 'message',
-						fieldtype: 'Text',
-					},
-				],
-				primary_action_label: __('Send gift card'),
-				primary_action(val)
-				{
-					if(dsg.fields_dict.send_to.input.value) {
-						frappe.call({
-							method: "neoffice_theme.events.get_wp_module",
-							callback: res => {
-								frappe.call({
-									method: res.message + ".events.send_email_giftcard",
-									freeze: true,
-									args: {
-										code: dsg.fields_dict.code.input.value,
-										email: dsg.fields_dict.send_to.input.value,
-										message: dsg.fields_dict.message.input.value
-									},
-									callback: r => {
-										if(r.message && r.message == "error") {
-											frappe.throw(__("Failed to send the gift card email"));
-										} else {
-											frappe.show_alert({
-												message:__('Gift card email sent successfully'),
-												indicator:'green'
-											}, 5);
-										}
-										dsg.clear();
-									}
-								});
-							}
-						});
-						dsg.hide();
-					}
-				},
-			});
-		$('.send-giftcard-btn').on('click', function() {
-		});
-		////
 	}
 
 	set_dynamic_rate_header_width() {

@@ -47,9 +47,8 @@
 				<span class="label label-info">{{ __("Reserved Stock") }}: {{ (d.total_reserved > 0) ? (d.total_reserved) : 0 }}</span><br>
 				<span class="label label-info">{{ __("Actual Stock") }}: {{ (d.actual_qty > 0) ? (d.actual_qty) : 0 }}</span><br>
 				<span class="label label-info">{{ __("Stock in Purchase") }}: {{ (d.pending_qty > 0) ? (d.pending_qty) : 0 }}</span><br>
-				<span class="label label-info">{{ __("Sold to be Validated") }}: {{ (d.sold_to_be_validated > 0) ? (d.sold_to_be_validated) : 0 }}</span><br>
 				<hr>
-				<span class="label label-info">{{ __("Total Stock") }}: <strong>{{ ((d.actual_qty > 0) ? (d.actual_qty) : 0) - ((d.sold_to_be_validated > 0) ? (d.sold_to_be_validated) : 0) - ((d.total_reserved > 0) ? (d.total_reserved) : 0) }}</strong></span><br>
+				<span class="label label-info">{{ __("Total Stock") }}: <strong>{{ ((d.actual_qty > 0) ? (d.actual_qty) : 0) - ((d.total_reserved > 0) ? (d.total_reserved) : 0) }}</strong></span><br>
 				<!-- //// -->
 			</div>
 			{% if can_write %}

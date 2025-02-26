@@ -684,36 +684,6 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": " Gift Card",
-   "link_count": 0,
-   "link_to": "Neoffice Giftcard",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": " Gift Card setup",
-   "link_count": 0,
-   "link_to": "ecommerce-giftcard",
-   "link_type": "Page",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Code Promo",
-   "link_count": 0,
-   "link_to": "Neoffice Code Promo",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
   }
  ],
  "modified": "2023-07-04 14:35:58.204465",

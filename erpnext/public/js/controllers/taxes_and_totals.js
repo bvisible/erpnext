@@ -885,20 +885,6 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 			return;
 		}
 
-		//// added from v14 maybe conflict
-		let left_to_pay = total_amount_to_pay;
-		this.frm.doc.payments.find(pay => {
-			left_to_pay -= pay.amount;
-		});
-
-		if (left_to_pay != 0) {
-			this.frm.doc.payments.find(pay => {
-				if (pay.default) {
-					pay.amount = left_to_pay;
-				}
-			});
-		}////
-
 		this.frm.doc.payments.find(payment => {
 			if (payment.default) {
 				payment.amount = total_amount_to_pay;
