@@ -31,6 +31,9 @@ class ProcessStatementOfAccounts(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		from erpnext.accounts.doctype.process_statement_of_accounts_cc.process_statement_of_accounts_cc import (
+			ProcessStatementOfAccountsCC,
+		)
 		from erpnext.accounts.doctype.process_statement_of_accounts_customer.process_statement_of_accounts_customer import (
 			ProcessStatementOfAccountsCustomer,
 		)
@@ -41,7 +44,7 @@ class ProcessStatementOfAccounts(Document):
 		ageing_based_on: DF.Literal["Due Date", "Posting Date"]
 		based_on_payment_terms: DF.Check
 		body: DF.TextEditor | None
-		cc_to: DF.Link | None
+		cc_to: DF.TableMultiSelect[ProcessStatementOfAccountsCC]
 		collection_name: DF.DynamicLink | None
 		company: DF.Link
 		cost_center: DF.TableMultiSelect[PSOACostCenter]
@@ -70,6 +73,7 @@ class ProcessStatementOfAccounts(Document):
 		sales_person: DF.Link | None
 		sender: DF.Link | None
 		show_net_values_in_party_account: DF.Check
+		show_remarks: DF.Check
 		start_date: DF.Date | None
 		subject: DF.Data | None
 		terms_and_conditions: DF.Link | None
@@ -187,6 +191,7 @@ def get_common_filters(doc):
 			"finance_book": doc.finance_book if doc.finance_book else None,
 			"account": [doc.account] if doc.account else None,
 			"cost_center": [cc.cost_center_name for cc in doc.cost_center],
+			"show_remarks": doc.show_remarks,
 		}
 	)
 
@@ -231,17 +236,21 @@ def get_ar_filters(doc, entry):
 
 def get_html(doc, filters, entry, col, res, ageing):
 	base_template_path = "frappe/www/printview.html"
-	template_path = (
-		"erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.html"
-		if doc.report == "General Ledger"
-		else "erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts_accounts_receivable.html"
-	)
+	template_path = "erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts_accounts_receivable.html"
+	if doc.report == "General Ledger":
+		template_path = (
+			"erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.html"
+		)
+
+	process_soa_html = frappe.get_hooks("process_soa_html")
+	# fetching custom print format for Process Statement of Accounts
+	if process_soa_html and process_soa_html.get(doc.report):
+		template_path = process_soa_html[doc.report][-1]
 
 	if doc.letter_head:
 		from frappe.www.printview import get_letter_head
 
 		letter_head = get_letter_head(doc, 0)
-
 	html = frappe.render_template(
 		template_path,
 		{
@@ -257,7 +266,6 @@ def get_html(doc, filters, entry, col, res, ageing):
 			else None,
 		},
 	)
-
 	html = frappe.render_template(
 		base_template_path,
 		{"body": html, "css": get_print_style(), "title": "Statement For " + entry.customer},
@@ -316,13 +324,16 @@ def get_recipients_and_cc(customer, doc):
 	recipients = []
 	for clist in doc.customers:
 		if clist.customer == customer:
-			recipients.append(clist.billing_email)
+			if clist.billing_email:
+				for email in clist.billing_email.split(","):
+					recipients.append(email.strip())
 			if doc.primary_mandatory and clist.primary_email:
-				recipients.append(clist.primary_email)
+				for email in clist.primary_email.split(","):
+					recipients.append(email.strip())
 	cc = []
 	if doc.cc_to != "":
 		try:
-			cc = [frappe.get_value("User", doc.cc_to, "email")]
+			cc = [frappe.get_value("User", user.cc, "email") for user in doc.cc_to]
 		except Exception:
 			pass
 
@@ -472,6 +483,7 @@ def send_emails(document_name, from_scheduler=False, posting_date=None):
 				reference_doctype="Process Statement Of Accounts",
 				reference_name=document_name,
 				attachments=attachments,
+				expose_recipients="header",
 			)
 
 		if doc.enable_auto_email and from_scheduler:

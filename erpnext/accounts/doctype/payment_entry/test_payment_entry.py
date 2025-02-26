@@ -479,16 +479,9 @@ class TestPaymentEntry(FrappeTestCase):
 		self.assertEqual(pe.deductions[0].account, "Write Off - _TC")
 
 		# Exchange loss
-		self.assertEqual(pe.difference_amount, 300.0)
-
-		pe.append(
-			"deductions",
-			{
-				"account": "_Test Exchange Gain/Loss - _TC",
-				"cost_center": "_Test Cost Center - _TC",
-				"amount": 300.0,
-			},
-		)
+		self.assertEqual(pe.deductions[-1].amount, 300.0)
+		pe.deductions[-1].account = "_Test Exchange Gain/Loss - _TC"
+		pe.deductions[-1].cost_center = "_Test Cost Center - _TC"
 
 		pe.insert()
 		pe.submit()
@@ -552,16 +545,10 @@ class TestPaymentEntry(FrappeTestCase):
 		pe.reference_no = "1"
 		pe.reference_date = "2016-01-01"
 
-		self.assertEqual(pe.difference_amount, 100)
+		self.assertEqual(pe.deductions[0].amount, 100)
+		pe.deductions[0].account = "_Test Exchange Gain/Loss - _TC"
+		pe.deductions[0].cost_center = "_Test Cost Center - _TC"
 
-		pe.append(
-			"deductions",
-			{
-				"account": "_Test Exchange Gain/Loss - _TC",
-				"cost_center": "_Test Cost Center - _TC",
-				"amount": 100,
-			},
-		)
 		pe.insert()
 		pe.submit()
 
@@ -654,16 +641,9 @@ class TestPaymentEntry(FrappeTestCase):
 		pe.set_exchange_rate()
 		pe.set_amounts()
 
-		self.assertEqual(pe.difference_amount, 500)
-
-		pe.append(
-			"deductions",
-			{
-				"account": "_Test Exchange Gain/Loss - _TC",
-				"cost_center": "_Test Cost Center - _TC",
-				"amount": 500,
-			},
-		)
+		self.assertEqual(pe.deductions[0].amount, 500)
+		pe.deductions[0].account = "_Test Exchange Gain/Loss - _TC"
+		pe.deductions[0].cost_center = "_Test Cost Center - _TC"
 
 		pe.insert()
 		pe.submit()
@@ -955,6 +935,53 @@ class TestPaymentEntry(FrappeTestCase):
 		self.assertEqual(flt(expected_account_balance), account_balance)
 		self.assertEqual(flt(expected_party_balance), party_balance)
 		self.assertEqual(flt(expected_party_account_balance, 2), flt(party_account_balance, 2))
+
+	def test_gl_of_multi_currency_payment_transaction(self):
+		from erpnext.setup.doctype.currency_exchange.test_currency_exchange import (
+			save_new_records,
+			test_records,
+		)
+
+		save_new_records(test_records)
+		paid_from = create_account(
+			parent_account="Current Liabilities - _TC",
+			account_name="_Test Cash USD",
+			company="_Test Company",
+			account_type="Cash",
+			account_currency="USD",
+		)
+		payment_entry = create_payment_entry(
+			party="_Test Supplier USD",
+			paid_from=paid_from,
+			paid_to="_Test Payable USD - _TC",
+			paid_amount=100,
+			save=True,
+		)
+		payment_entry.source_exchange_rate = 84.4
+		payment_entry.target_exchange_rate = 84.4
+		payment_entry.save()
+		payment_entry = payment_entry.submit()
+		gle = qb.DocType("GL Entry")
+		gl_entries = (
+			qb.from_(gle)
+			.select(
+				gle.account,
+				gle.debit,
+				gle.credit,
+				gle.debit_in_account_currency,
+				gle.credit_in_account_currency,
+				gle.debit_in_transaction_currency,
+				gle.credit_in_transaction_currency,
+			)
+			.orderby(gle.account)
+			.where(gle.voucher_no == payment_entry.name)
+			.run()
+		)
+		expected_gl_entries = (
+			(paid_from, 0.0, 8440.0, 0.0, 100.0, 0.0, 100.0),
+			("_Test Payable USD - _TC", 8440.0, 0.0, 100.0, 0.0, 100.0, 0.0),
+		)
+		self.assertEqual(gl_entries, expected_gl_entries)
 
 	def test_multi_currency_payment_entry_with_taxes(self):
 		payment_entry = create_payment_entry(
@@ -1452,7 +1479,7 @@ class TestPaymentEntry(FrappeTestCase):
 			parent_account="Current Liabilities - _TC",
 			account_name="Advances Paid",
 			company=company,
-			account_type="Liability",
+			account_type="Payable",
 		)
 
 		frappe.db.set_value(

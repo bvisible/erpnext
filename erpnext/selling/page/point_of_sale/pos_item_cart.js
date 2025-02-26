@@ -395,6 +395,14 @@ erpnext.PointOfSale.ItemCart = class {
 				input_class: "input-xs",
 				onchange: function () {
 					this.value = flt(this.value);
+					if (this.value > 100) {
+						frappe.msgprint({
+							title: __("Invalid Discount"),
+							indicator: "red",
+							message: __("Discount cannot be greater than 100%."),
+						});
+						this.value = 0;
+					}
 					frappe.model.set_value(
 						frm.doc.doctype,
 						frm.doc.name,
@@ -782,6 +790,7 @@ erpnext.PointOfSale.ItemCart = class {
 				frappe.utils.play_sound("error");
 				return;
 			}
+			this.highlight_numpad_btn($btn, current_action);
 
 			if (first_click_event || field_to_edit_changed) {
 				this.prev_action = current_action;
@@ -827,7 +836,6 @@ erpnext.PointOfSale.ItemCart = class {
 			this.numpad_value = current_action;
 		}
 
-		this.highlight_numpad_btn($btn, current_action);
 		this.events.numpad_event(this.numpad_value, this.prev_action);
 	}
 
@@ -962,9 +970,12 @@ erpnext.PointOfSale.ItemCart = class {
 		const me = this;
 		dfs.forEach((df) => {
 			this[`customer_${df.fieldname}_field`] = frappe.ui.form.make_control({
-				df: { ...df, onchange: handle_customer_field_change },
+				df: df,
 				parent: $customer_form.find(`.${df.fieldname}-field`),
 				render_input: true,
+			});
+			this[`customer_${df.fieldname}_field`].$input?.on("blur", () => {
+				handle_customer_field_change.apply(this[`customer_${df.fieldname}_field`]);
 			});
 			this[`customer_${df.fieldname}_field`].set_value(this.customer_info[df.fieldname]);
 		});
@@ -1008,17 +1019,19 @@ erpnext.PointOfSale.ItemCart = class {
 
 				if (!res.length) {
 					transaction_container.html(
-						`<div class="no-transactions-placeholder">No recent transactions found</div>`
+						`<div class="no-transactions-placeholder">${__("No recent transactions found")}</div>`
 					);
 					return;
 				}
 
 				const elapsed_time = moment(res[0].posting_date + " " + res[0].posting_time).fromNow();
-				this.$customer_section.find(".customer-desc").html(`Last transacted ${elapsed_time}`);
+				this.$customer_section
+					.find(".customer-desc")
+					.html(`${__("Last transacted")} ${__(elapsed_time)}`);
 
 				res.forEach((invoice) => {
-					const posting_datetime = moment(invoice.posting_date + " " + invoice.posting_time).format(
-						"Do MMMM, h:mma"
+					const posting_datetime = frappe.datetime.str_to_user(
+						invoice.posting_date + " " + invoice.posting_time
 					);
 					let indicator_color = {
 						Paid: "green",
@@ -1039,7 +1052,7 @@ erpnext.PointOfSale.ItemCart = class {
 							</div>
 							<div class="invoice-status">
 								<span class="indicator-pill whitespace-nowrap ${indicator_color[invoice.status]}">
-									<span>${invoice.status}</span>
+									<span>${__(invoice.status)}</span>
 								</span>
 							</div>
 						</div>

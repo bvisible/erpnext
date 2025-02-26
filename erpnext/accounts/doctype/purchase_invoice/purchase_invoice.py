@@ -10,7 +10,6 @@ from frappe.utils import cint, cstr, flt, formatdate, get_link_to_form, getdate,
 
 import erpnext
 from erpnext.accounts.deferred_revenue import validate_service_stop_date
-from erpnext.accounts.doctype.gl_entry.gl_entry import update_outstanding_amt
 from erpnext.accounts.doctype.repost_accounting_ledger.repost_accounting_ledger import (
 	validate_docs_for_deferred_accounting,
 	validate_docs_for_voucher_types,
@@ -33,7 +32,7 @@ from erpnext.accounts.general_ledger import (
 	merge_similar_entries,
 )
 from erpnext.accounts.party import get_due_date, get_party_account
-from erpnext.accounts.utils import get_account_currency, get_fiscal_year
+from erpnext.accounts.utils import get_account_currency, get_fiscal_year, update_voucher_outstanding
 from erpnext.assets.doctype.asset.asset import is_cwip_accounting_enabled
 from erpnext.assets.doctype.asset_category.asset_category import get_asset_category_account
 from erpnext.buying.utils import check_on_hold_or_closed_status
@@ -838,12 +837,12 @@ class PurchaseInvoice(BuyingController):
 
 	def update_supplier_outstanding(self, update_outstanding):
 		if update_outstanding == "No":
-			update_outstanding_amt(
-				self.credit_to,
-				"Supplier",
-				self.supplier,
-				self.doctype,
-				self.return_against if cint(self.is_return) and self.return_against else self.name,
+			update_voucher_outstanding(
+				voucher_type=self.doctype,
+				voucher_no=self.return_against if cint(self.is_return) and self.return_against else self.name,
+				account=self.credit_to,
+				party_type="Supplier",
+				party=self.supplier,
 			)
 
 	def get_gl_entries(self, warehouse_account=None):
@@ -863,6 +862,7 @@ class PurchaseInvoice(BuyingController):
 
 		self.make_tax_gl_entries(gl_entries)
 		self.make_internal_transfer_gl_entries(gl_entries)
+		self.make_gl_entries_for_tax_withholding(gl_entries)
 
 		gl_entries = make_regional_gl_entries(gl_entries, self)
 
@@ -896,32 +896,37 @@ class PurchaseInvoice(BuyingController):
 		)
 
 		if grand_total and not self.is_internal_transfer():
-			against_voucher = self.name
-			if self.is_return and self.return_against and not self.update_outstanding_for_self:
-				against_voucher = self.return_against
+			self.add_supplier_gl_entry(gl_entries, base_grand_total, grand_total)
 
-			# Did not use base_grand_total to book rounding loss gle
-			gl_entries.append(
-				self.get_gl_dict(
-					{
-						"account": self.credit_to,
-						"party_type": "Supplier",
-						"party": self.supplier,
-						"due_date": self.due_date,
-						"against": self.against_expense_account,
-						"credit": base_grand_total,
-						"credit_in_account_currency": base_grand_total
-						if self.party_account_currency == self.company_currency
-						else grand_total,
-						"against_voucher": against_voucher,
-						"against_voucher_type": self.doctype,
-						"project": self.project,
-						"cost_center": self.cost_center,
-					},
-					self.party_account_currency,
-					item=self,
-				)
-			)
+	def add_supplier_gl_entry(
+		self, gl_entries, base_grand_total, grand_total, against_account=None, remarks=None, skip_merge=False
+	):
+		against_voucher = self.name
+		if self.is_return and self.return_against and not self.update_outstanding_for_self:
+			against_voucher = self.return_against
+
+		# Did not use base_grand_total to book rounding loss gle
+		gl = {
+			"account": self.credit_to,
+			"party_type": "Supplier",
+			"party": self.supplier,
+			"due_date": self.due_date,
+			"against": against_account or self.against_expense_account,
+			"credit": base_grand_total,
+			"credit_in_account_currency": base_grand_total
+			if self.party_account_currency == self.company_currency
+			else grand_total,
+			"against_voucher": against_voucher,
+			"against_voucher_type": self.doctype,
+			"project": self.project,
+			"cost_center": self.cost_center,
+			"_skip_merge": skip_merge,
+		}
+
+		if remarks:
+			gl["remarks"] = remarks
+
+		gl_entries.append(self.get_gl_dict(gl, self.party_account_currency, item=self))
 
 	def make_item_gl_entries(self, gl_entries):
 		# item gl entries
@@ -1148,6 +1153,7 @@ class PurchaseInvoice(BuyingController):
 								exchange_rate_map[item.purchase_receipt]
 								and self.conversion_rate != exchange_rate_map[item.purchase_receipt]
 								and item.net_rate == net_rate_map[item.pr_detail]
+								and item.item_code in stock_items
 							):
 								discrepancy_caused_by_exchange_rate_difference = (
 									item.qty * item.net_rate
@@ -1453,6 +1459,31 @@ class PurchaseInvoice(BuyingController):
 				)
 			)
 
+	def make_gl_entries_for_tax_withholding(self, gl_entries):
+		"""
+		Tax withholding amount is not part of supplier invoice.
+		Separate supplier GL Entry for correct reporting.
+		"""
+		if not self.apply_tds:
+			return
+
+		for row in self.get("taxes"):
+			if not row.is_tax_withholding_account or not row.tax_amount:
+				continue
+
+			base_tds_amount = row.base_tax_amount_after_discount_amount
+			tds_amount = row.tax_amount_after_discount_amount
+
+			self.add_supplier_gl_entry(gl_entries, base_tds_amount, tds_amount)
+			self.add_supplier_gl_entry(
+				gl_entries,
+				-base_tds_amount,
+				-tds_amount,
+				against_account=row.account_head,
+				remarks=_("TDS Deducted"),
+				skip_merge=True,
+			)
+
 	def make_payment_gl_entries(self, gl_entries):
 		# Make Cash GL Entries
 		if cint(self.is_paid) and self.cash_bank_account and self.paid_amount:
@@ -1546,9 +1577,28 @@ class PurchaseInvoice(BuyingController):
 		# eg: rounding_adjustment = 0.01 and exchange rate = 0.05 and precision of base_rounding_adjustment is 2
 		# 	then base_rounding_adjustment becomes zero and error is thrown in GL Entry
 		if not self.is_internal_transfer() and self.rounding_adjustment and self.base_rounding_adjustment:
-			round_off_account, round_off_cost_center = get_round_off_account_and_cost_center(
+			(
+				round_off_account,
+				round_off_cost_center,
+				round_off_for_opening,
+			) = get_round_off_account_and_cost_center(
 				self.company, "Purchase Invoice", self.name, self.use_company_roundoff_cost_center
 			)
+
+			if self.is_opening == "Yes" and self.rounding_adjustment:
+				if not round_off_for_opening:
+					frappe.throw(
+						_(
+							"Opening Invoice has rounding adjustment of {0}.<br><br> '{1}' account is required to post these values. Please set it in Company: {2}.<br><br> Or, '{3}' can be enabled to not post any rounding adjustment."
+						).format(
+							frappe.bold(self.rounding_adjustment),
+							frappe.bold("Round Off for Opening"),
+							get_link_to_form("Company", self.company),
+							frappe.bold("Disable Rounded Total"),
+						)
+					)
+				else:
+					round_off_account = round_off_for_opening
 
 			gl_entries.append(
 				self.get_gl_dict(
@@ -1636,7 +1686,11 @@ class PurchaseInvoice(BuyingController):
 		for proj, value in projects.items():
 			res = frappe.qb.from_(pj).select(pj.total_purchase_cost).where(pj.name == proj).for_update().run()
 			current_purchase_cost = res and res[0][0] or 0
-			frappe.db.set_value("Project", proj, "total_purchase_cost", current_purchase_cost + value)
+			# frappe.db.set_value("Project", proj, "total_purchase_cost", current_purchase_cost + value)
+			project_doc = frappe.get_doc("Project", proj)
+			project_doc.total_purchase_cost = current_purchase_cost + value
+			project_doc.calculate_gross_margin()
+			project_doc.db_update()
 
 	def validate_supplier_invoice(self):
 		if self.bill_date:
@@ -1666,7 +1720,12 @@ class PurchaseInvoice(BuyingController):
 
 				if pi:
 					pi = pi[0][0]
-					frappe.throw(_("Supplier Invoice No exists in Purchase Invoice {0}").format(pi))
+
+					frappe.throw(
+						_("Supplier Invoice No exists in Purchase Invoice {0}").format(
+							get_link_to_form("Purchase Invoice", pi)
+						)
+					)
 
 	def update_billing_status_in_pr(self, update_modified=True):
 		if self.is_return and not self.update_billed_amount_in_purchase_receipt:
@@ -1780,13 +1839,13 @@ class PurchaseInvoice(BuyingController):
 			self.remove(d)
 
 		## Add pending vouchers on which tax was withheld
-		for voucher_no, voucher_details in voucher_wise_amount.items():
+		for row in voucher_wise_amount:
 			self.append(
 				"tax_withheld_vouchers",
 				{
-					"voucher_name": voucher_no,
-					"voucher_type": voucher_details.get("voucher_type"),
-					"taxable_amount": voucher_details.get("amount"),
+					"voucher_name": row.voucher_name,
+					"voucher_type": row.voucher_type,
+					"taxable_amount": row.taxable_amount,
 				},
 			)
 

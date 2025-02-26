@@ -22,6 +22,46 @@ class OverWorkLoggedError(frappe.ValidationError):
 
 
 class Timesheet(Document):
+	# begin: auto-generated types
+	# This code is auto-generated. Do not modify anything in this block.
+
+	from typing import TYPE_CHECKING
+
+	if TYPE_CHECKING:
+		from frappe.types import DF
+
+		from erpnext.projects.doctype.timesheet_detail.timesheet_detail import TimesheetDetail
+
+		amended_from: DF.Link | None
+		base_total_billable_amount: DF.Currency
+		base_total_billed_amount: DF.Currency
+		base_total_costing_amount: DF.Currency
+		company: DF.Link | None
+		currency: DF.Link | None
+		customer: DF.Link | None
+		department: DF.Link | None
+		employee: DF.Link | None
+		employee_name: DF.Data | None
+		end_date: DF.Date | None
+		exchange_rate: DF.Float
+		naming_series: DF.Literal["TS-.YYYY.-"]
+		note: DF.TextEditor | None
+		parent_project: DF.Link | None
+		per_billed: DF.Percent
+		sales_invoice: DF.Link | None
+		start_date: DF.Date | None
+		status: DF.Literal["Draft", "Submitted", "Billed", "Payslip", "Completed", "Cancelled"]
+		time_logs: DF.Table[TimesheetDetail]
+		title: DF.Data | None
+		total_billable_amount: DF.Currency
+		total_billable_hours: DF.Float
+		total_billed_amount: DF.Currency
+		total_billed_hours: DF.Float
+		total_costing_amount: DF.Currency
+		total_hours: DF.Float
+		user: DF.Link | None
+	# end: auto-generated types
+
 	def validate(self):
 		self.set_status()
 		self.validate_dates()
@@ -126,12 +166,16 @@ class Timesheet(Document):
 			if data.task and data.task not in tasks:
 				task = frappe.get_doc("Task", data.task)
 				task.update_time_and_costing()
-				task.save()
+				task.save(ignore_permissions=True)
 				tasks.append(data.task)
 
-			elif data.project and data.project not in projects:
-				frappe.get_doc("Project", data.project).update_project()
+			if data.project and data.project not in projects:
 				projects.append(data.project)
+
+		for project in projects:
+			project_doc = frappe.get_doc("Project", project)
+			project_doc.update_project()
+			project_doc.save(ignore_permissions=True)
 
 	def validate_dates(self):
 		for data in self.time_logs:

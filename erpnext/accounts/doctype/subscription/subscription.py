@@ -114,10 +114,10 @@ class Subscription(Document):
 
 		if self.trial_period_end and getdate(self.trial_period_end) > getdate(self.start_date):
 			_current_invoice_start = add_days(self.trial_period_end, 1)
-		elif self.trial_period_start and self.is_trialling():
-			_current_invoice_start = self.trial_period_start
 		elif date:
 			_current_invoice_start = date
+		elif self.trial_period_start and self.is_trialling():
+			_current_invoice_start = self.trial_period_start
 		else:
 			_current_invoice_start = nowdate()
 
@@ -415,8 +415,8 @@ class Subscription(Document):
 			if frappe.db.get_value("Supplier", self.party, "tax_withholding_category"):
 				invoice.apply_tds = 1
 
-		# Add party currency to invoice
-		invoice.currency = get_party_account_currency(self.party_type, self.party, self.company)
+		# Add currency to invoice
+		invoice.currency = frappe.db.get_value("Subscription Plan", {"name": self.plans[0].plan}, "currency")
 
 		# Add dimensions in invoice for subscription:
 		accounting_dimensions = get_accounting_dimensions()
@@ -635,9 +635,7 @@ class Subscription(Document):
 		"""
 		invoice = frappe.get_all(
 			self.invoice_document_type,
-			{
-				"subscription": self.name,
-			},
+			{"subscription": self.name, "docstatus": ("<", 2)},
 			limit=1,
 			order_by="to_date desc",
 			pluck="name",
@@ -676,6 +674,7 @@ class Subscription(Document):
 			self.invoice_document_type,
 			{
 				"subscription": self.name,
+				"docstatus": 1,
 				"status": ["!=", "Paid"],
 			},
 		)
@@ -698,7 +697,7 @@ class Subscription(Document):
 		self.status = "Cancelled"
 		self.cancelation_date = nowdate()
 
-		if to_generate_invoice:
+		if to_generate_invoice and self.cancelation_date >= self.current_invoice_start:
 			self.generate_invoice(self.current_invoice_start, self.cancelation_date)
 
 		self.save()

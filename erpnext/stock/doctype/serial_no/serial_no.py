@@ -50,7 +50,7 @@ class SerialNo(StockController):
 		purchase_document_no: DF.Data | None
 		purchase_rate: DF.Float
 		serial_no: DF.Data
-		status: DF.Literal["", "Active", "Inactive", "Delivered", "Expired"]
+		status: DF.Literal["", "Active", "Inactive", "Consumed", "Delivered", "Expired"]
 		warehouse: DF.Link | None
 		warranty_expiry_date: DF.Date | None
 		warranty_period: DF.Int
@@ -167,21 +167,6 @@ def update_maintenance_status():
 		doc = frappe.get_doc("Serial No", serial_no[0])
 		doc.set_maintenance_status()
 		frappe.db.set_value("Serial No", doc.name, "maintenance_status", doc.maintenance_status)
-
-
-def get_delivery_note_serial_no(item_code, qty, delivery_note):
-	serial_nos = ""
-	dn_serial_nos = frappe.db.sql_list(
-		f""" select name from `tabSerial No`
-		where item_code = %(item_code)s and delivery_document_no = %(delivery_note)s
-		and sales_invoice is null limit {cint(qty)}""",
-		{"item_code": item_code, "delivery_note": delivery_note},
-	)
-
-	if dn_serial_nos and len(dn_serial_nos) > 0:
-		serial_nos = "\n".join(dn_serial_nos)
-
-	return serial_nos
 
 
 @frappe.whitelist()

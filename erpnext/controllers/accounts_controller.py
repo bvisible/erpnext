@@ -8,7 +8,7 @@ from collections import defaultdict
 import frappe
 from frappe import _, bold, qb, throw
 from frappe.model.workflow import get_workflow_name, is_transition_condition_satisfied
-from frappe.query_builder import Criterion
+from frappe.query_builder import Criterion, DocType
 from frappe.query_builder.custom import ConstantColumn
 from frappe.query_builder.functions import Abs, Sum
 from frappe.utils import (
@@ -170,7 +170,7 @@ class AccountsController(TransactionBase):
 			self.validate_qty_is_not_zero()
 
 		if (
-			self.doctype in ["Sales Invoice", "Purchase Invoice"]
+			self.doctype in ["Sales Invoice", "Purchase Invoice", "POS Invoice"]
 			and self.get("is_return")
 			and self.get("update_stock")
 		):
@@ -252,6 +252,8 @@ class AccountsController(TransactionBase):
 			self.validate_deferred_income_expense_account()
 			self.set_inter_company_account()
 
+		self.set_taxes_and_charges()
+
 		if self.doctype == "Purchase Invoice":
 			self.calculate_paid_amount()
 			# apply tax withholding only if checked and applicable
@@ -266,6 +268,7 @@ class AccountsController(TransactionBase):
 
 		self.set_total_in_words()
 		self.set_default_letter_head()
+		self.validate_company_in_accounting_dimension()
 
 	def set_default_letter_head(self):
 		if hasattr(self, "letter_head") and not self.letter_head:
@@ -345,9 +348,21 @@ class AccountsController(TransactionBase):
 					repost_doc.flags.ignore_links = True
 					repost_doc.save(ignore_permissions=True)
 
+	def _remove_advance_payment_ledger_entries(self):
+		adv = qb.DocType("Advance Payment Ledger Entry")
+		qb.from_(adv).delete().where(adv.voucher_type.eq(self.doctype) & adv.voucher_no.eq(self.name)).run()
+
+		advance_payment_doctypes = frappe.get_hooks("advance_payment_doctypes")
+
+		if self.doctype in advance_payment_doctypes:
+			qb.from_(adv).delete().where(
+				adv.against_voucher_type.eq(self.doctype) & adv.against_voucher_no.eq(self.name)
+			).run()
+
 	def on_trash(self):
 		from erpnext.accounts.utils import delete_exchange_gain_loss_journal
 
+		self._remove_advance_payment_ledger_entries()
 		self._remove_references_in_repost_doctypes()
 		self._remove_references_in_unreconcile()
 		self.remove_serial_and_batch_bundle()
@@ -367,13 +382,14 @@ class AccountsController(TransactionBase):
 					== 1
 				)
 			).run()
-			frappe.db.sql(
-				"delete from `tabGL Entry` where voucher_type=%s and voucher_no=%s", (self.doctype, self.name)
-			)
-			frappe.db.sql(
-				"delete from `tabStock Ledger Entry` where voucher_type=%s and voucher_no=%s",
-				(self.doctype, self.name),
-			)
+			gle = frappe.qb.DocType("GL Entry")
+			frappe.qb.from_(gle).delete().where(
+				(gle.voucher_type == self.doctype) & (gle.voucher_no == self.name)
+			).run()
+			sle = frappe.qb.DocType("Stock Ledger Entry")
+			frappe.qb.from_(sle).delete().where(
+				(sle.voucher_type == self.doctype) & (sle.voucher_no == self.name)
+			).run()
 
 	def remove_serial_and_batch_bundle(self):
 		bundles = frappe.get_all(
@@ -390,15 +406,51 @@ class AccountsController(TransactionBase):
 		for row in batches:
 			frappe.delete_doc("Batch", row.name)
 
+	def validate_company_in_accounting_dimension(self):
+		doc_field = DocType("DocField")
+		accounting_dimension = DocType("Accounting Dimension")
+		dimension_list = (
+			frappe.qb.from_(accounting_dimension)
+			.select(accounting_dimension.document_type)
+			.join(doc_field)
+			.on(doc_field.parent == accounting_dimension.document_type)
+			.where(doc_field.fieldname == "company")
+		).run(as_list=True)
+
+		dimension_list = sum(dimension_list, ["Project"])
+		self.validate_company(dimension_list)
+
+		for child in self.get_all_children() or []:
+			self.validate_company(dimension_list, child)
+
+	def validate_company(self, dimension_list, child=None):
+		for dimension in dimension_list:
+			if not child:
+				dimension_value = self.get(frappe.scrub(dimension))
+			else:
+				dimension_value = child.get(frappe.scrub(dimension))
+
+			if dimension_value:
+				company = frappe.get_cached_value(dimension, dimension_value, "company")
+				if company and company != self.company:
+					frappe.throw(
+						_("{0}: {1} does not belong to the Company: {2}").format(
+							dimension, frappe.bold(dimension_value), self.company
+						)
+					)
+
 	def validate_return_against_account(self):
 		if self.doctype in ["Sales Invoice", "Purchase Invoice"] and self.is_return and self.return_against:
 			cr_dr_account_field = "debit_to" if self.doctype == "Sales Invoice" else "credit_to"
-			cr_dr_account_label = "Debit To" if self.doctype == "Sales Invoice" else "Credit To"
-			cr_dr_account = self.get(cr_dr_account_field)
-			if frappe.get_value(self.doctype, self.return_against, cr_dr_account_field) != cr_dr_account:
+			original_account = frappe.get_value(self.doctype, self.return_against, cr_dr_account_field)
+			if original_account != self.get(cr_dr_account_field):
 				frappe.throw(
-					_("'{0}' account: '{1}' should match the Return Against Invoice").format(
-						frappe.bold(cr_dr_account_label), frappe.bold(cr_dr_account)
+					_(
+						"Please set {0} to {1}, the same account that was used in the original invoice {2}."
+					).format(
+						frappe.bold(_(self.meta.get_label(cr_dr_account_field), context=self.doctype)),
+						frappe.bold(original_account),
+						frappe.bold(self.return_against),
 					)
 				)
 
@@ -448,6 +500,18 @@ class AccountsController(TransactionBase):
 					)
 
 	def validate_invoice_documents_schedule(self):
+		if (
+			self.is_return
+			or (self.doctype == "Purchase Invoice" and self.is_paid)
+			or (self.doctype == "Sales Invoice" and self.is_pos)
+			or self.get("is_opening") == "Yes"
+		):
+			self.payment_terms_template = ""
+			self.payment_schedule = []
+
+		if self.is_return:
+			return
+
 		self.validate_payment_schedule_dates()
 		self.set_due_date()
 		self.set_payment_schedule()
@@ -462,7 +526,7 @@ class AccountsController(TransactionBase):
 		self.validate_payment_schedule_amount()
 
 	def validate_all_documents_schedule(self):
-		if self.doctype in ("Sales Invoice", "Purchase Invoice") and not self.is_return:
+		if self.doctype in ("Sales Invoice", "Purchase Invoice"):
 			self.validate_invoice_documents_schedule()
 		elif self.doctype in ("Quotation", "Purchase Order", "Sales Order"):
 			self.validate_non_invoice_documents_schedule()
@@ -749,7 +813,17 @@ class AccountsController(TransactionBase):
 					ret = get_item_details(args, self, for_validate=for_validate, overwrite_warehouse=False)
 					for fieldname, value in ret.items():
 						if item.meta.get_field(fieldname) and value is not None:
-							if item.get(fieldname) is None or fieldname in force_item_fields:
+							if (
+								item.get(fieldname) is None
+								or fieldname in force_item_fields
+								or (
+									fieldname in ["serial_no", "batch_no"]
+									and item.get("use_serial_batch_fields")
+								)
+							):
+								if fieldname == "batch_no" and not item.batch_no and not item.is_free_item:
+									item.set("rate", ret.get("rate"))
+									item.set("price_list_rate", ret.get("price_list_rate"))
 								item.set(fieldname, value)
 
 							elif fieldname in ["cost_center", "conversion_factor"] and not item.get(
@@ -899,6 +973,12 @@ class AccountsController(TransactionBase):
 			and self.pos_profile != frappe.db.get_value("Sales Invoice", self.name, "pos_profile")
 		):
 			return True
+
+	def set_taxes_and_charges(self):
+		if frappe.db.get_single_value("Accounts Settings", "add_taxes_from_item_tax_template"):
+			if hasattr(self, "taxes_and_charges") and not self.get("taxes") and not self.get("is_pos"):
+				if tax_master_doctype := self.meta.get_field("taxes_and_charges").options:
+					self.append_taxes_from_master(tax_master_doctype)
 
 	def append_taxes_from_master(self, tax_master_doctype=None):
 		if self.get("taxes_and_charges"):
@@ -1076,9 +1156,11 @@ class AccountsController(TransactionBase):
 			return "Purchase Return"
 		elif self.doctype == "Delivery Note" and self.is_return:
 			return "Sales Return"
-		elif (self.doctype == "Sales Invoice" and self.is_return) or self.doctype == "Purchase Invoice":
+		elif self.doctype == "Sales Invoice" and self.is_return:
 			return "Credit Note"
-		elif (self.doctype == "Purchase Invoice" and self.is_return) or self.doctype == "Sales Invoice":
+		elif self.doctype == "Sales Invoice" and self.is_debit_note:
+			return "Debit Note"
+		elif self.doctype == "Purchase Invoice" and self.is_return:
 			return "Debit Note"
 
 		return self.doctype
@@ -1128,11 +1210,12 @@ class AccountsController(TransactionBase):
 	def clear_unallocated_advances(self, childtype, parentfield):
 		self.set(parentfield, self.get(parentfield, {"allocated_amount": ["not in", [0, None, ""]]}))
 
-		frappe.db.sql(
-			"""delete from `tab{}` where parentfield={} and parent = {}
-			and allocated_amount = 0""".format(childtype, "%s", "%s"),
-			(parentfield, self.name),
-		)
+		doctype = frappe.qb.DocType(childtype)
+		frappe.qb.from_(doctype).delete().where(
+			(doctype.parentfield == parentfield)
+			& (doctype.parent == self.name)
+			& (doctype.allocated_amount == 0)
+		).run()
 
 	@frappe.whitelist()
 	def apply_shipping_rule(self):
@@ -1182,6 +1265,7 @@ class AccountsController(TransactionBase):
 				"advance_amount": flt(d.amount),
 				"allocated_amount": allocated_amount,
 				"ref_exchange_rate": flt(d.exchange_rate),  # exchange_rate of advance entry
+				"difference_posting_date": self.posting_date,
 			}
 			if d.get("paid_from"):
 				advance_row["account"] = d.paid_from
@@ -1192,7 +1276,9 @@ class AccountsController(TransactionBase):
 
 	def get_advance_entries(self, include_unallocated=True):
 		party_account = []
-		if self.doctype == "Sales Invoice":
+		default_advance_account = None
+
+		if self.doctype in ["Sales Invoice", "POS Invoice"]:
 			party_type = "Customer"
 			party = self.customer
 			amount_field = "credit_in_account_currency"
@@ -1207,9 +1293,13 @@ class AccountsController(TransactionBase):
 			order_doctype = "Purchase Order"
 			party_account.append(self.credit_to)
 
-		party_account.extend(
-			get_party_account(party_type, party=party, company=self.company, include_advance=True)
+		party_accounts = get_party_account(
+			party_type, party=party, company=self.company, include_advance=True
 		)
+
+		if party_accounts:
+			party_account.append(party_accounts[0])
+			default_advance_account = party_accounts[1] if len(party_accounts) == 2 else None
 
 		order_list = list(set(d.get(order_field) for d in self.get("items") if d.get(order_field)))
 
@@ -1218,7 +1308,13 @@ class AccountsController(TransactionBase):
 		)
 
 		payment_entries = get_advance_payment_entries_for_regional(
-			party_type, party, party_account, order_doctype, order_list, include_unallocated
+			party_type,
+			party,
+			party_account,
+			order_doctype,
+			order_list,
+			default_advance_account,
+			include_unallocated,
 		)
 
 		res = journal_entries + payment_entries
@@ -1276,7 +1372,11 @@ class AccountsController(TransactionBase):
 				d.exchange_gain_loss = difference
 
 	def make_precision_loss_gl_entry(self, gl_entries):
-		round_off_account, round_off_cost_center = get_round_off_account_and_cost_center(
+		(
+			round_off_account,
+			round_off_cost_center,
+			round_off_for_opening,
+		) = get_round_off_account_and_cost_center(
 			self.company, "Purchase Invoice", self.name, self.use_company_roundoff_cost_center
 		)
 
@@ -1471,7 +1571,6 @@ class AccountsController(TransactionBase):
 						gain_loss_account = frappe.get_cached_value(
 							"Company", self.company, "exchange_gain_loss_account"
 						)
-
 						je = create_gain_loss_journal(
 							self.company,
 							args.get("difference_posting_date") if args else self.posting_date,
@@ -1557,6 +1656,7 @@ class AccountsController(TransactionBase):
 							"Company", self.company, "exchange_gain_loss_account"
 						),
 						"exchange_gain_loss": flt(d.get("exchange_gain_loss")),
+						"difference_posting_date": d.get("difference_posting_date"),
 					}
 				)
 				lst.append(args)
@@ -1805,22 +1905,22 @@ class AccountsController(TransactionBase):
 				continue
 
 			ref_amt = flt(reference_details.get(item.get(item_ref_dn)), self.precision(based_on, item))
+			based_on_amt = flt(item.get(based_on))
 
 			if not ref_amt:
-				frappe.msgprint(
-					_("System will not check over billing since amount for Item {0} in {1} is zero").format(
-						item.item_code, ref_dt
-					),
-					title=_("Warning"),
-					indicator="orange",
-				)
+				if based_on_amt:  # Skip warning for free items
+					frappe.msgprint(
+						_(
+							"System will not check over billing since amount for Item {0} in {1} is zero"
+						).format(item.item_code, ref_dt),
+						title=_("Warning"),
+						indicator="orange",
+					)
 				continue
 
 			already_billed = self.get_billed_amount_for_item(item, item_ref_dn, based_on)
 
-			total_billed_amt = flt(
-				flt(already_billed) + flt(item.get(based_on)), self.precision(based_on, item)
-			)
+			total_billed_amt = flt(flt(already_billed) + based_on_amt, self.precision(based_on, item))
 
 			allowance, item_allowance, global_qty_allowance, global_amount_allowance = get_allowance_for(
 				item.item_code, item_allowance, global_qty_allowance, global_amount_allowance, "amount"
@@ -1929,21 +2029,23 @@ class AccountsController(TransactionBase):
 
 		return stock_items
 
-	def set_total_advance_paid(self):
-		ple = frappe.qb.DocType("Payment Ledger Entry")
-		party = self.customer if self.doctype == "Sales Order" else self.supplier
+	def calculate_total_advance_from_ledger(self):
+		adv = frappe.qb.DocType("Advance Payment Ledger Entry")
 		advance = (
-			frappe.qb.from_(ple)
-			.select(ple.account_currency, Abs(Sum(ple.amount_in_account_currency)).as_("amount"))
+			frappe.qb.from_(adv)
+			.select(adv.currency.as_("account_currency"), Abs(Sum(adv.amount)).as_("amount"))
 			.where(
-				(ple.against_voucher_type == self.doctype)
-				& (ple.against_voucher_no == self.name)
-				& (ple.party == party)
-				& (ple.delinked == 0)
-				& (ple.company == self.company)
+				(adv.against_voucher_type == self.doctype)
+				& (adv.against_voucher_no == self.name)
+				& (adv.company == self.company)
 			)
 			.run(as_dict=True)
 		)
+		return advance
+
+	def set_total_advance_paid(self):
+		advance = self.calculate_total_advance_from_ledger()
+		advance_paid, order_total = None, None
 
 		if advance:
 			advance = advance[0]
@@ -1976,7 +2078,7 @@ class AccountsController(TransactionBase):
 					).format(formatted_advance_paid, self.name, formatted_order_total)
 				)
 
-			frappe.db.set_value(self.doctype, self.name, "advance_paid", advance_paid)
+			self.db_set("advance_paid", advance_paid)
 
 	@property
 	def company_abbr(self):
@@ -2090,11 +2192,9 @@ class AccountsController(TransactionBase):
 		for adv in self.advances:
 			consider_for_total_advance = True
 			if adv.reference_name == linked_doc_name:
-				frappe.db.sql(
-					f"""delete from `tab{self.doctype} Advance`
-					where name = %s""",
-					adv.name,
-				)
+				doctype = frappe.qb.DocType(self.doctype + " Advance")
+				frappe.qb.from_(doctype).delete().where(doctype.name == adv.name).run()
+
 				consider_for_total_advance = False
 
 			if consider_for_total_advance:
@@ -2307,6 +2407,7 @@ class AccountsController(TransactionBase):
 			return
 
 		for d in self.get("payment_schedule"):
+			d.validate_from_to_dates("discount_date", "due_date")
 			if self.doctype == "Sales Order" and getdate(d.due_date) < getdate(self.transaction_date):
 				frappe.throw(
 					_("Row {0}: Due Date in the Payment Terms table cannot be before Posting Date").format(
@@ -2359,10 +2460,15 @@ class AccountsController(TransactionBase):
 					)
 
 			if (
-				flt(total, self.precision("grand_total")) - flt(grand_total, self.precision("grand_total"))
+				abs(
+					flt(total, self.precision("grand_total"))
+					- flt(grand_total, self.precision("grand_total"))
+				)
 				> 0.1
-				or flt(base_total, self.precision("base_grand_total"))
-				- flt(base_grand_total, self.precision("base_grand_total"))
+				or abs(
+					flt(base_total, self.precision("base_grand_total"))
+					- flt(base_grand_total, self.precision("base_grand_total"))
+				)
 				> 0.1
 			):
 				frappe.throw(
@@ -2439,6 +2545,12 @@ class AccountsController(TransactionBase):
 		secondary_account = get_party_account(secondary_party_type, secondary_party, self.company)
 		primary_account_currency = get_account_currency(primary_account)
 		secondary_account_currency = get_account_currency(secondary_account)
+		default_currency = erpnext.get_company_currency(self.company)
+
+		# Determine if multi-currency journal entry is needed
+		multi_currency = (
+			primary_account_currency != default_currency or secondary_account_currency != default_currency
+		)
 
 		jv = frappe.new_doc("Journal Entry")
 		jv.voucher_type = "Journal Entry"
@@ -2463,7 +2575,7 @@ class AccountsController(TransactionBase):
 		advance_entry.cost_center = self.cost_center or erpnext.get_default_cost_center(self.company)
 		advance_entry.is_advance = "Yes"
 
-		# update dimesions
+		# Update dimensions
 		dimensions_dict = frappe._dict()
 		active_dimensions = get_dimensions()[0]
 		for dim in active_dimensions:
@@ -2472,17 +2584,58 @@ class AccountsController(TransactionBase):
 		reconcilation_entry.update(dimensions_dict)
 		advance_entry.update(dimensions_dict)
 
-		if self.doctype == "Sales Invoice":
-			reconcilation_entry.credit_in_account_currency = self.outstanding_amount
-			advance_entry.debit_in_account_currency = self.outstanding_amount
+		# Calculate exchange rates if necessary
+		if multi_currency:
+			# Exchange rates for primary and secondary accounts
+			exc_rate_primary_to_default = (
+				1
+				if primary_account_currency == default_currency
+				else get_exchange_rate(primary_account_currency, default_currency, self.posting_date)
+			)
+			exc_rate_secondary_to_default = (
+				1
+				if secondary_account_currency == default_currency
+				else get_exchange_rate(secondary_account_currency, default_currency, self.posting_date)
+			)
+			exc_rate_secondary_to_primary = (
+				1
+				if secondary_account_currency == primary_account_currency
+				else get_exchange_rate(
+					secondary_account_currency, primary_account_currency, self.posting_date
+				)
+			)
+
+			# Convert outstanding amount from secondary to primary account currency, if needed
+
+			os_in_default_currency = self.outstanding_amount * exc_rate_secondary_to_default
+			os_in_primary_currency = self.outstanding_amount * exc_rate_secondary_to_primary
+
+			if self.doctype == "Sales Invoice":
+				# Calculate credit and debit values for reconciliation and advance entries
+				reconcilation_entry.credit_in_account_currency = self.outstanding_amount
+				reconcilation_entry.credit = os_in_default_currency
+
+				advance_entry.debit_in_account_currency = os_in_primary_currency
+				advance_entry.debit = os_in_default_currency
+			else:
+				advance_entry.credit_in_account_currency = os_in_primary_currency
+				advance_entry.credit = os_in_default_currency
+
+				reconcilation_entry.debit_in_account_currency = self.outstanding_amount
+				reconcilation_entry.debit = os_in_default_currency
+
+			# Set exchange rates for entries
+			reconcilation_entry.exchange_rate = exc_rate_secondary_to_default
+			advance_entry.exchange_rate = exc_rate_primary_to_default
 		else:
-			advance_entry.credit_in_account_currency = self.outstanding_amount
-			reconcilation_entry.debit_in_account_currency = self.outstanding_amount
+			if self.doctype == "Sales Invoice":
+				reconcilation_entry.credit_in_account_currency = self.outstanding_amount
+				advance_entry.debit_in_account_currency = self.outstanding_amount
+			else:
+				advance_entry.credit_in_account_currency = self.outstanding_amount
+				reconcilation_entry.debit_in_account_currency = self.outstanding_amount
 
-		default_currency = erpnext.get_company_currency(self.company)
-		if primary_account_currency != default_currency or secondary_account_currency != default_currency:
-			jv.multi_currency = 1
-
+		jv.multi_currency = multi_currency
 		jv.append("accounts", reconcilation_entry)
 		jv.append("accounts", advance_entry)
 
@@ -2539,6 +2692,67 @@ class AccountsController(TransactionBase):
 		repost_ledger.flags.ignore_permissions = True
 		repost_ledger.insert()
 		repost_ledger.submit()
+
+	def get_advance_payment_doctypes(self) -> list:
+		return frappe.get_hooks("advance_payment_doctypes")
+
+	def make_advance_payment_ledger_for_journal(self):
+		advance_payment_doctypes = self.get_advance_payment_doctypes()
+		advance_doctype_references = [
+			x for x in self.accounts if x.reference_type in advance_payment_doctypes
+		]
+
+		for x in advance_doctype_references:
+			# Looking for payments
+			dr_or_cr = (
+				"credit_in_account_currency"
+				if x.account_type == "Receivable"
+				else "debit_in_account_currency"
+			)
+
+			amount = x.get(dr_or_cr)
+			if amount > 0:
+				doc = frappe.new_doc("Advance Payment Ledger Entry")
+				doc.company = self.company
+				doc.voucher_type = self.doctype
+				doc.voucher_no = self.name
+				doc.against_voucher_type = x.reference_type
+				doc.against_voucher_no = x.reference_name
+				doc.amount = amount if self.docstatus == 1 else -1 * amount
+				doc.event = "Submit" if self.docstatus == 1 else "Cancel"
+				doc.currency = x.account_currency
+				doc.flags.ignore_permissions = 1
+				doc.save()
+
+	def make_advance_payment_ledger_for_payment(self):
+		advance_payment_doctypes = self.get_advance_payment_doctypes()
+		advance_doctype_references = [
+			x for x in self.references if x.reference_doctype in advance_payment_doctypes
+		]
+		currency = (
+			self.paid_from_account_currency
+			if self.payment_type == "Receive"
+			else self.paid_to_account_currency
+		)
+		for x in advance_doctype_references:
+			doc = frappe.new_doc("Advance Payment Ledger Entry")
+			doc.company = self.company
+			doc.voucher_type = self.doctype
+			doc.voucher_no = self.name
+			doc.against_voucher_type = x.reference_doctype
+			doc.against_voucher_no = x.reference_name
+			doc.amount = x.allocated_amount if self.docstatus == 1 else -1 * x.allocated_amount
+			doc.currency = currency
+			doc.event = "Submit" if self.docstatus == 1 else "Cancel"
+			doc.flags.ignore_permissions = 1
+			doc.save()
+
+	def make_advance_payment_ledger_entries(self):
+		if self.docstatus != 0:
+			if self.doctype == "Journal Entry":
+				self.make_advance_payment_ledger_for_journal()
+			elif self.doctype == "Payment Entry":
+				self.make_advance_payment_ledger_for_payment()
 
 
 @frappe.whitelist()
@@ -2782,6 +2996,7 @@ def get_advance_payment_entries(
 	party_account,
 	order_doctype,
 	order_list=None,
+	default_advance_account=None,
 	include_unallocated=True,
 	against_all_orders=False,
 	limit=None,
@@ -2795,6 +3010,7 @@ def get_advance_payment_entries(
 			party_type,
 			party,
 			party_account,
+			default_advance_account,
 			limit,
 			condition,
 		)
@@ -2805,6 +3021,7 @@ def get_advance_payment_entries(
 			(payment_ref.allocated_amount).as_("amount"),
 			(payment_ref.name).as_("reference_row"),
 			(payment_ref.reference_name).as_("against_order"),
+			(payment_entry.book_advance_payments_in_separate_party_account),
 		)
 
 		q = q.where(payment_ref.reference_doctype == order_doctype)
@@ -2818,6 +3035,7 @@ def get_advance_payment_entries(
 			party_type,
 			party,
 			party_account,
+			default_advance_account,
 			limit,
 			condition,
 		)
@@ -2833,6 +3051,7 @@ def get_common_query(
 	party_type,
 	party,
 	party_account,
+	default_advance_account,
 	limit,
 	condition,
 ):
@@ -2847,6 +3066,7 @@ def get_common_query(
 			(payment_entry.name).as_("reference_name"),
 			payment_entry.posting_date,
 			(payment_entry.remarks).as_("remarks"),
+			(payment_entry.book_advance_payments_in_separate_party_account),
 		)
 		.where(payment_entry.payment_type == payment_type)
 		.where(payment_entry.party_type == party_type)
@@ -2854,14 +3074,22 @@ def get_common_query(
 		.where(payment_entry.docstatus == 1)
 	)
 
-	if payment_type == "Receive":
-		q = q.select((payment_entry.paid_from_account_currency).as_("currency"))
-		q = q.select(payment_entry.paid_from)
-		q = q.where(payment_entry.paid_from.isin(party_account))
+	field = "paid_from" if payment_type == "Receive" else "paid_to"
+
+	q = q.select((payment_entry[f"{field}_account_currency"]).as_("currency"))
+	q = q.select(payment_entry[field])
+	account_condition = payment_entry[field].isin(party_account)
+	if default_advance_account:
+		q = q.where(
+			account_condition
+			| (
+				(payment_entry[field] == default_advance_account)
+				& (payment_entry.book_advance_payments_in_separate_party_account == 1)
+			)
+		)
+
 	else:
-		q = q.select((payment_entry.paid_to_account_currency).as_("currency"))
-		q = q.select(payment_entry.paid_to)
-		q = q.where(payment_entry.paid_to.isin(party_account))
+		q = q.where(account_condition)
 
 	if payment_type == "Receive":
 		q = q.select((payment_entry.source_exchange_rate).as_("exchange_rate"))
@@ -3510,6 +3738,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 						).format(frappe.bold(parent.name))
 					)
 	else:  # Sales Order
+		parent.validate_for_duplicate_items()
 		parent.validate_warehouse()
 		parent.update_reserved_qty()
 		parent.update_project()
@@ -3522,6 +3751,9 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 	parent.update_blanket_order()
 	parent.update_billing_percentage()
 	parent.set_status()
+
+	parent.validate_uom_is_integer("uom", "qty")
+	parent.validate_uom_is_integer("stock_uom", "stock_qty")
 
 	# Cancel and Recreate Stock Reservation Entries.
 	if parent_doctype == "Sales Order":

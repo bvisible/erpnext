@@ -130,6 +130,32 @@ frappe.ui.form.on("Work Order", {
 		);
 	},
 
+	allow_alternative_item: function (frm) {
+		let has_alternative = false;
+		if (frm.doc.required_items) {
+			has_alternative = frm.doc.required_items.find((i) => i.allow_alternative_item === 1);
+		}
+
+		if (frm.doc.allow_alternative_item && frm.doc.docstatus === 0 && has_alternative) {
+			frm.add_custom_button(__("Alternate Item"), () => {
+				erpnext.utils.select_alternate_items({
+					frm: frm,
+					child_docname: "required_items",
+					warehouse_field: "source_warehouse",
+					child_doctype: "Work Order Item",
+					original_item_field: "original_item",
+					condition: (d) => {
+						if (d.allow_alternative_item) {
+							return true;
+						}
+					},
+				});
+			});
+		} else {
+			frm.remove_custom_button(__("Alternate Item"));
+		}
+	},
+
 	refresh: function (frm) {
 		erpnext.toggle_naming_series();
 		erpnext.work_order.set_custom_buttons(frm);
@@ -163,26 +189,6 @@ frappe.ui.form.on("Work Order", {
 			}
 		}
 
-		if (frm.doc.required_items && frm.doc.allow_alternative_item) {
-			const has_alternative = frm.doc.required_items.find((i) => i.allow_alternative_item === 1);
-			if (frm.doc.docstatus == 0 && has_alternative) {
-				frm.add_custom_button(__("Alternate Item"), () => {
-					erpnext.utils.select_alternate_items({
-						frm: frm,
-						child_docname: "required_items",
-						warehouse_field: "source_warehouse",
-						child_doctype: "Work Order Item",
-						original_item_field: "original_item",
-						condition: (d) => {
-							if (d.allow_alternative_item) {
-								return true;
-							}
-						},
-					});
-				});
-			}
-		}
-
 		if (frm.doc.status == "Completed") {
 			if (frm.doc.__onload.backflush_raw_materials_based_on == "Material Transferred for Manufacture") {
 				frm.add_custom_button(
@@ -210,6 +216,7 @@ frappe.ui.form.on("Work Order", {
 		}
 
 		frm.trigger("add_custom_button_to_return_components");
+		frm.trigger("allow_alternative_item");
 	},
 
 	add_custom_button_to_return_components: function (frm) {
@@ -390,7 +397,10 @@ frappe.ui.form.on("Work Order", {
 		message = title;
 		// pending qty
 		if (!frm.doc.skip_transfer) {
-			var pending_complete = frm.doc.material_transferred_for_manufacturing - frm.doc.produced_qty;
+			var pending_complete =
+				frm.doc.material_transferred_for_manufacturing -
+				frm.doc.produced_qty -
+				frm.doc.process_loss_qty;
 			if (pending_complete) {
 				var width = (pending_complete / frm.doc.qty) * 100 - added_min;
 				title = __("{0} items in progress", [pending_complete]);
@@ -401,6 +411,16 @@ frappe.ui.form.on("Work Order", {
 				});
 				message = message + ". " + title;
 			}
+		}
+		if (frm.doc.process_loss_qty) {
+			var process_loss_width = (frm.doc.process_loss_qty / frm.doc.qty) * 100;
+			title = __("{0} items lost during process.", [frm.doc.process_loss_qty]);
+			bars.push({
+				title: title,
+				width: process_loss_width + "%",
+				progress_class: "progress-bar-danger",
+			});
+			message = message + ". " + title;
 		}
 		frm.dashboard.add_progress(__("Status"), bars, message);
 	},
@@ -540,6 +560,9 @@ frappe.ui.form.on("Work Order", {
 });
 
 frappe.ui.form.on("Work Order Item", {
+	allow_alternative_item(frm) {
+		frm.trigger("allow_alternative_item");
+	},
 	source_warehouse: function (frm, cdt, cdn) {
 		var row = locals[cdt][cdn];
 		if (!row.item_code) {
@@ -618,7 +641,7 @@ erpnext.work_order = {
 	set_custom_buttons: function (frm) {
 		var doc = frm.doc;
 
-		if (doc.status !== "Closed") {
+		if (doc.docstatus === 1 && doc.status !== "Closed") {
 			frm.add_custom_button(
 				__("Close"),
 				function () {

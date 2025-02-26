@@ -1,7 +1,8 @@
 erpnext.PointOfSale.PastOrderSummary = class {
-	constructor({ wrapper, events }) {
+	constructor({ wrapper, events, pos_profile }) {
 		this.wrapper = wrapper;
 		this.events = events;
+		this.pos_profile = pos_profile;
 
 		this.init_component();
 	}
@@ -49,7 +50,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 
 	init_email_print_dialog() {
 		const email_dialog = new frappe.ui.Dialog({
-			title: "Email Receipt",
+			title: __("Email Receipt"),
 			fields: [
 				{ fieldname: "email_id", fieldtype: "Data", options: "Email", label: "Email ID", reqd: 1 },
 				{ fieldname: "content", fieldtype: "Small Text", label: "Message (if any)" },
@@ -62,7 +63,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		this.email_dialog = email_dialog;
 
 		const print_dialog = new frappe.ui.Dialog({
-			title: "Print Receipt",
+			title: __("Print Receipt"),
 			fields: [{ fieldname: "print", fieldtype: "Data", label: "Print Preview" }],
 			primary_action: () => {
 				this.print_receipt();
@@ -88,7 +89,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 				<div class="right-section">
 					<div class="paid-amount">${format_currency(doc.paid_amount, doc.currency)}</div>
 					<div class="invoice-name">${doc.name}</div>
-					<span class="indicator-pill whitespace-nowrap ${indicator_color}"><span>${doc.status}</span></span>
+					<span class="indicator-pill whitespace-nowrap ${indicator_color}"><span>${__(doc.status)}</span></span>
 				</div>`;
 	}
 
@@ -116,7 +117,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		if (doc.discount_amount) {
 			////<div>Discount (${doc.additional_discount_percentage} %)</div> modified to <div>${__('Discount')}</div>
 			return `<div class="summary-row-wrapper">
-						<div>${__('Discount')}</div>
+						<div>${__("Discount")} (${doc.additional_discount_percentage} %)</div>
 						<div>${format_currency(doc.discount_amount, doc.currency)}</div>
 					</div>`;
 		} else {
@@ -376,8 +377,8 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		const condition_btns_map = this.get_condition_btn_map(after_submission);
 
 		this.add_summary_btns(condition_btns_map);
+
 		//// added code block
-		this.add_raw_btns();
 		const filename = this.doc.pos_profile+'.json';
 		frappe.call({
 			method: 'neoffice_theme.events.pos_screen',
@@ -387,20 +388,10 @@ erpnext.PointOfSale.PastOrderSummary = class {
 			}
 		});
 		////
-	}
-
-	//// added function
-	add_raw_btns(){
-		this.$raw_btns.html('');
-		if(window.enable_raw_print == 1 && window.raw_printer){
-			this.$raw_btns.append(
-			`<div class="summary-btn btn btn-default direct-print-btn">Direct Print</div>
-			<div style="margin-top: 10px;" class="summary-btn btn btn-default cash-drawer-btn">Open Cash Drawer</div>`
-			);
+		if (after_submission) {
+			this.print_receipt_on_order_complete();
 		}
-		this.$raw_btns.children().last().removeClass('mr-4');
 	}
-	////
 
 	attach_document_info(doc) {
 		frappe.db.get_value("Customer", this.doc.customer, "email_id").then(({ message }) => {
@@ -563,5 +554,17 @@ erpnext.PointOfSale.PastOrderSummary = class {
 
 	toggle_component(show) {
 		show ? this.$component.css("display", "flex") : this.$component.css("display", "none");
+	}
+
+	async print_receipt_on_order_complete() {
+		const res = await frappe.db.get_value(
+			"POS Profile",
+			this.pos_profile,
+			"print_receipt_on_order_complete"
+		);
+
+		if (res.message.print_receipt_on_order_complete) {
+			this.print_receipt();
+		}
 	}
 };

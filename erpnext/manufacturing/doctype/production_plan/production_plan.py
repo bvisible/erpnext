@@ -44,9 +44,7 @@ class ProductionPlan(Document):
 		from erpnext.manufacturing.doctype.material_request_plan_item.material_request_plan_item import (
 			MaterialRequestPlanItem,
 		)
-		from erpnext.manufacturing.doctype.production_plan_item.production_plan_item import (
-			ProductionPlanItem,
-		)
+		from erpnext.manufacturing.doctype.production_plan_item.production_plan_item import ProductionPlanItem
 		from erpnext.manufacturing.doctype.production_plan_item_reference.production_plan_item_reference import (
 			ProductionPlanItemReference,
 		)
@@ -270,6 +268,31 @@ class ProductionPlan(Document):
 			)
 
 	@frappe.whitelist()
+	def combine_so_items(self):
+		if self.combine_items and self.po_items and len(self.po_items) > 0:
+			items = []
+			for row in self.po_items:
+				items.append(
+					frappe._dict(
+						{
+							"parent": row.sales_order,
+							"item_code": row.item_code,
+							"warehouse": row.warehouse,
+							"qty": row.pending_qty,
+							"pending_qty": row.pending_qty,
+							"conversion_factor": 1.0,
+							"description": row.description,
+							"bom_no": row.bom_no,
+						}
+					)
+				)
+
+			self.set("po_items", [])
+			self.add_items(items)
+		else:
+			self.get_items()
+
+	@frappe.whitelist()
 	def get_items(self):
 		self.set("po_items", [])
 		if self.get_items_from == "Sales Order":
@@ -435,24 +458,28 @@ class ProductionPlan(Document):
 
 			item_details = get_item_details(data.item_code, throw=False)
 			if self.combine_items:
-				if item_details.bom_no in refs:
-					refs[item_details.bom_no]["so_details"].append(
+				bom_no = item_details.bom_no
+				if data.get("bom_no"):
+					bom_no = data.get("bom_no")
+
+				if bom_no in refs:
+					refs[bom_no]["so_details"].append(
 						{"sales_order": data.parent, "sales_order_item": data.name, "qty": data.pending_qty}
 					)
-					refs[item_details.bom_no]["qty"] += data.pending_qty
+					refs[bom_no]["qty"] += data.pending_qty
 					continue
 
 				else:
-					refs[item_details.bom_no] = {
+					refs[bom_no] = {
 						"qty": data.pending_qty,
 						"po_item_ref": data.name,
 						"so_details": [],
 					}
-					refs[item_details.bom_no]["so_details"].append(
+					refs[bom_no]["so_details"].append(
 						{"sales_order": data.parent, "sales_order_item": data.name, "qty": data.pending_qty}
 					)
 
-			bom_no = data.bom_no or item_details and item_details.bom_no or ""
+			bom_no = data.bom_no or item_details and item_details.get("bom_no") or ""
 			if not bom_no:
 				continue
 
@@ -910,8 +937,14 @@ class ProductionPlan(Document):
 
 			bom_data = []
 
-			warehouse = (self.sub_assembly_warehouse) if self.skip_available_sub_assembly_item else None
-			get_sub_assembly_items(row.bom_no, bom_data, row.planned_qty, self.company, warehouse=warehouse)
+			get_sub_assembly_items(
+				row.bom_no,
+				bom_data,
+				row.planned_qty,
+				self.company,
+				warehouse=self.sub_assembly_warehouse,
+				skip_available_sub_assembly_item=self.skip_available_sub_assembly_item,
+			)
 			self.set_sub_assembly_items_based_on_level(row, bom_data, manufacturing_type)
 			sub_assembly_items_store.extend(bom_data)
 
@@ -1056,24 +1089,33 @@ def download_raw_materials(doc, warehouses=None):
 	frappe.flags.show_qty_in_stock_uom = 1
 	items = get_items_for_material_requests(doc, warehouses=warehouses, get_parent_warehouse_data=True)
 
+	duplicate_item_wh_list = frappe._dict()
+
 	for d in items:
-		item_list.append(
-			[
-				d.get("item_code"),
-				d.get("item_name"),
-				d.get("description"),
-				d.get("stock_uom"),
-				d.get("warehouse"),
-				d.get("required_bom_qty"),
-				d.get("projected_qty"),
-				d.get("actual_qty"),
-				d.get("ordered_qty"),
-				d.get("planned_qty"),
-				d.get("reserved_qty_for_production"),
-				d.get("safety_stock"),
-				d.get("quantity"),
-			]
-		)
+		key = (d.get("item_code"), d.get("warehouse"))
+		if key in duplicate_item_wh_list:
+			rm_data = duplicate_item_wh_list[key]
+			rm_data[12] += d.get("quantity")
+			continue
+
+		rm_data = [
+			d.get("item_code"),
+			d.get("item_name"),
+			d.get("description"),
+			d.get("stock_uom"),
+			d.get("warehouse"),
+			d.get("required_bom_qty"),
+			d.get("projected_qty"),
+			d.get("actual_qty"),
+			d.get("ordered_qty"),
+			d.get("planned_qty"),
+			d.get("reserved_qty_for_production"),
+			d.get("safety_stock"),
+			d.get("quantity"),
+		]
+
+		duplicate_item_wh_list[key] = rm_data
+		item_list.append(rm_data)
 
 		if not doc.get("for_warehouse"):
 			row = {"item_code": d.get("item_code")}
@@ -1693,14 +1735,23 @@ def get_item_data(item_code):
 	}
 
 
-def get_sub_assembly_items(bom_no, bom_data, to_produce_qty, company, warehouse=None, indent=0):
+def get_sub_assembly_items(
+	bom_no,
+	bom_data,
+	to_produce_qty,
+	company,
+	warehouse=None,
+	indent=0,
+	skip_available_sub_assembly_item=False,
+):
 	data = get_bom_children(parent=bom_no)
 	for d in data:
 		if d.expandable:
 			parent_item_code = frappe.get_cached_value("BOM", bom_no, "item")
 			stock_qty = (d.stock_qty / d.parent_bom_qty) * flt(to_produce_qty)
 
-			if warehouse:
+			bin_details = frappe._dict()
+			if skip_available_sub_assembly_item:
 				bin_details = get_bin_details(d, company, for_warehouse=warehouse)
 
 				for _bin_dict in bin_details:
@@ -1710,11 +1761,14 @@ def get_sub_assembly_items(bom_no, bom_data, to_produce_qty, company, warehouse=
 							continue
 						else:
 							stock_qty = stock_qty - _bin_dict.projected_qty
+			elif warehouse:
+				bin_details = get_bin_details(d, company, for_warehouse=warehouse)
 
 			if stock_qty > 0:
 				bom_data.append(
 					frappe._dict(
 						{
+							"actual_qty": bin_details[0].get("actual_qty", 0) if bin_details else 0,
 							"parent_item_code": parent_item_code,
 							"description": d.description,
 							"production_item": d.item_code,
@@ -1732,7 +1786,13 @@ def get_sub_assembly_items(bom_no, bom_data, to_produce_qty, company, warehouse=
 
 				if d.value:
 					get_sub_assembly_items(
-						d.value, bom_data, stock_qty, company, warehouse, indent=indent + 1
+						d.value,
+						bom_data,
+						stock_qty,
+						company,
+						warehouse,
+						indent=indent + 1,
+						skip_available_sub_assembly_item=skip_available_sub_assembly_item,
 					)
 
 

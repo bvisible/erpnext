@@ -41,6 +41,7 @@ erpnext.PointOfSale.Payment = class {
 	}
 
 	make_invoice_fields_control() {
+		this.reqd_invoice_fields = [];
 		frappe.db.get_doc("POS Settings", undefined).then((doc) => {
 			const fields = doc.invoice_fields;
 			if (!fields.length) return;
@@ -66,6 +67,9 @@ erpnext.PointOfSale.Payment = class {
 							}
 						},
 					};
+				}
+				if (df.reqd && (df.fieldtype !== "Button" || !df.read_only)) {
+					this.reqd_invoice_fields.push({ fieldname: df.fieldname, label: df.label });
 				}
 
 				this[`${df.fieldname}_field`] = frappe.ui.form.make_control({
@@ -286,8 +290,14 @@ erpnext.PointOfSale.Payment = class {
 			const paid_amount = doc.paid_amount;
 			const items = doc.items;
 
-			if (!items.length) { ////if (paid_amount == 0 || !items.length) {
-				const message = items.length ? __("You cannot submit the order without payment.") : __("You cannot submit empty order.");
+			if (!this.validate_reqd_invoice_fields()) {
+				return;
+			}
+
+			if (!items.length || (paid_amount == 0 && doc.additional_discount_percentage != 100)) {
+				const message = items.length
+					? __("You cannot submit the order without payment.")
+					: __("You cannot submit empty order.");
 				frappe.show_alert({ message, indicator: "orange" });
 				frappe.utils.play_sound("error");
 				return;
@@ -315,7 +325,7 @@ erpnext.PointOfSale.Payment = class {
 		frappe.ui.form.on("Sales Invoice Payment", "amount", (frm, cdt, cdn) => {
 			// for setting correct amount after loyalty points are redeemed
 			const default_mop = locals[cdt][cdn];
-			const mode = default_mop.mode_of_payment.replace(/ +/g, "_").toLowerCase();
+			const mode = this.sanitize_mode_of_payment(default_mop.mode_of_payment);
 			if (this[`${mode}_control`] && this[`${mode}_control`].get_value() != default_mop.amount) {
 				this[`${mode}_control`].set_value(default_mop.amount);
 			}
@@ -417,11 +427,19 @@ erpnext.PointOfSale.Payment = class {
 		// pass
 	}
 
-	render_payment_section() {
+	async render_payment_section() {
 		this.render_payment_mode_dom();
 		this.make_invoice_fields_control();
 		this.update_totals_section();
-		this.focus_on_default_mop();
+		let r = await frappe.db.get_value(
+			"POS Profile",
+			this.frm.doc.pos_profile,
+			"disable_grand_total_to_default_mop"
+		);
+
+		if (!r.message.disable_grand_total_to_default_mop) {
+			this.focus_on_default_mop();
+		}
 	}
 
 	after_render() {
@@ -435,6 +453,11 @@ erpnext.PointOfSale.Payment = class {
 	}
 
 	checkout() {
+		const frm = this.events.get_frm();
+		frm.cscript.calculate_outstanding_amount();
+		frm.refresh_field("outstanding_amount");
+		frm.refresh_field("paid_amount");
+		frm.refresh_field("base_paid_amount");
 		this.events.toggle_other_sections(true);
 		this.toggle_component(true);
 
@@ -476,7 +499,7 @@ erpnext.PointOfSale.Payment = class {
 		this.$payment_modes.html(
 			`${payments
 				.map((p, i) => {
-					const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
+					const mode = this.sanitize_mode_of_payment(p.mode_of_payment);
 					const payment_type = p.type;
 					const margin = i % 2 === 0 ? "pr-2" : "pl-2";
 					const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
@@ -495,7 +518,7 @@ erpnext.PointOfSale.Payment = class {
 		);
 
 		payments.forEach((p) => {
-			const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
+			const mode = this.sanitize_mode_of_payment(p.mode_of_payment);
 			const me = this;
 			this[`${mode}_control`] = frappe.ui.form.make_control({
 				df: {
@@ -530,7 +553,7 @@ erpnext.PointOfSale.Payment = class {
 		const doc = this.events.get_frm().doc;
 		const payments = doc.payments;
 		payments.forEach((p) => {
-			const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
+			const mode = this.sanitize_mode_of_payment(p.mode_of_payment);
 			if (p.default) {
 				setTimeout(() => {
 					////this.$payment_modes.find(`.${mode}.mode-of-payment-control`).parent().click();
@@ -566,7 +589,7 @@ erpnext.PointOfSale.Payment = class {
 		this.$payment_modes.find(".cash-shortcuts").remove();
 		let shortcuts_html = shortcuts
 			.map((s) => {
-				return `<div class="shortcut" data-value="${s}">${format_currency(s, currency, 0)}</div>`;
+				return `<div class="shortcut" data-value="${s}">${format_currency(s, currency)}</div>`;
 			})
 			.join("");
 
@@ -693,7 +716,7 @@ erpnext.PointOfSale.Payment = class {
 		const remaining = grand_total - doc.paid_amount;
 		const change = doc.change_amount || remaining <= 0 ? -1 * remaining : undefined;
 		const currency = doc.currency;
-		const label = change ? __("Change") : __("To Be Paid");
+		const label = __("Change Amount");
 
 		this.$totals.html(
 			`<div class="col">
@@ -715,5 +738,29 @@ erpnext.PointOfSale.Payment = class {
 
 	toggle_component(show) {
 		show ? this.$component.css("display", "flex") : this.$component.css("display", "none");
+	}
+
+	sanitize_mode_of_payment(mode_of_payment) {
+		return mode_of_payment
+			.replace(/ +/g, "_")
+			.replace(/[^\p{L}\p{N}_-]/gu, "")
+			.replace(/^[^_a-zA-Z\p{L}]+/u, "")
+			.toLowerCase();
+	}
+
+	validate_reqd_invoice_fields() {
+		const doc = this.events.get_frm().doc;
+		let validation_flag = true;
+		for (let field of this.reqd_invoice_fields) {
+			if (!doc[field.fieldname]) {
+				validation_flag = false;
+				frappe.show_alert({
+					message: __("{0} is a mandatory field.", [field.label]),
+					indicator: "orange",
+				});
+				frappe.utils.play_sound("error");
+			}
+		}
+		return validation_flag;
 	}
 };

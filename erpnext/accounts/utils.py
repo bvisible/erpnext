@@ -130,7 +130,9 @@ def get_fiscal_years(
 			else:
 				return ((fy.name, fy.year_start_date, fy.year_end_date),)
 
-	error_msg = _("""{0} {1} is not in any active Fiscal Year""").format(label, formatdate(transaction_date))
+	error_msg = _("""{0} {1} is not in any active Fiscal Year""").format(
+		_(label), formatdate(transaction_date)
+	)
 	if company:
 		error_msg = _("""{0} for {1}""").format(error_msg, frappe.bold(company))
 
@@ -474,10 +476,14 @@ def reconcile_against_document(
 		doc = frappe.get_doc(voucher_type, voucher_no)
 		frappe.flags.ignore_party_validation = True
 
-		# For payments with `Advance` in separate account feature enabled, only new ledger entries are posted for each reference.
-		# No need to cancel/delete payment ledger entries
+		# When Advance is allocated from an Order to an Invoice
+		# whole ledger must be reposted
+		repost_whole_ledger = any([x.voucher_detail_no for x in entries])
 		if voucher_type == "Payment Entry" and doc.book_advance_payments_in_separate_party_account:
-			doc.make_advance_gl_entries(cancel=1)
+			if repost_whole_ledger:
+				doc.make_gl_entries(cancel=1)
+			else:
+				doc.make_advance_gl_entries(cancel=1)
 		else:
 			_delete_pl_entries(voucher_type, voucher_no)
 
@@ -511,9 +517,14 @@ def reconcile_against_document(
 		doc = frappe.get_doc(entry.voucher_type, entry.voucher_no)
 
 		if voucher_type == "Payment Entry" and doc.book_advance_payments_in_separate_party_account:
-			# both ledgers must be posted to for `Advance` in separate account feature
-			# TODO: find a more efficient way post only for the new linked vouchers
-			doc.make_advance_gl_entries()
+			# When Advance is allocated from an Order to an Invoice
+			# whole ledger must be reposted
+			if repost_whole_ledger:
+				doc.make_gl_entries()
+			else:
+				# both ledgers must be posted to for `Advance` in separate account feature
+				# TODO: find a more efficient way post only for the new linked vouchers
+				doc.make_advance_gl_entries()
 		else:
 			gl_map = doc.build_gl_map()
 			# Make sure there is no overallocation
@@ -621,6 +632,16 @@ def update_reference_in_journal_entry(d, journal_entry, do_not_save=False):
 	if jv_detail.get("reference_type") in ["Sales Order", "Purchase Order"]:
 		update_advance_paid.append((jv_detail.reference_type, jv_detail.reference_name))
 
+	rev_dr_or_cr = (
+		"debit_in_account_currency"
+		if d["dr_or_cr"] == "credit_in_account_currency"
+		else "credit_in_account_currency"
+	)
+	if jv_detail.get(rev_dr_or_cr):
+		d["dr_or_cr"] = rev_dr_or_cr
+		d["allocated_amount"] = d["allocated_amount"] * -1
+		d["unadjusted_amount"] = d["unadjusted_amount"] * -1
+
 	if flt(d["unadjusted_amount"]) - flt(d["allocated_amount"]) != 0:
 		# adjust the unreconciled balance
 		amount_in_account_currency = flt(d["unadjusted_amount"]) - flt(d["allocated_amount"])
@@ -691,6 +712,23 @@ def update_reference_in_payment_entry(
 	}
 	update_advance_paid = []
 
+	# Update Reconciliation effect date in reference
+	if payment_entry.book_advance_payments_in_separate_party_account:
+		if payment_entry.advance_reconciliation_takes_effect_on == "Advance Payment Date":
+			reconcile_on = payment_entry.posting_date
+		elif payment_entry.advance_reconciliation_takes_effect_on == "Oldest Of Invoice Or Advance":
+			date_field = "posting_date"
+			if d.against_voucher_type in ["Sales Order", "Purchase Order"]:
+				date_field = "transaction_date"
+			reconcile_on = frappe.db.get_value(d.against_voucher_type, d.against_voucher, date_field)
+
+			if getdate(reconcile_on) < getdate(payment_entry.posting_date):
+				reconcile_on = payment_entry.posting_date
+		elif payment_entry.advance_reconciliation_takes_effect_on == "Reconciliation Date":
+			reconcile_on = nowdate()
+
+		reference_details.update({"reconcile_effect_on": reconcile_on})
+
 	if d.voucher_detail_no:
 		existing_row = payment_entry.get("references", {"name": d["voucher_detail_no"]})[0]
 
@@ -735,6 +773,8 @@ def update_reference_in_payment_entry(
 		frappe._dict({"difference_posting_date": d.difference_posting_date}), dimensions_dict
 	)
 
+	# Ledgers will be reposted by Reconciliation tool
+	payment_entry.flags.ignore_reposting_on_reconciliation = True
 	if not do_not_save:
 		payment_entry.save(ignore_permissions=True)
 	return row, update_advance_paid
@@ -1538,12 +1578,16 @@ def compare_existing_and_expected_gle(existing_gle, expected_gle, precision):
 	return matched
 
 
-def get_stock_accounts(company, voucher_type=None, voucher_no=None):
+def get_stock_accounts(company, voucher_type=None, voucher_no=None, accounts=None):
 	stock_accounts = [
 		d.name
 		for d in frappe.db.get_all("Account", {"account_type": "Stock", "company": company, "is_group": 0})
 	]
-	if voucher_type and voucher_no:
+
+	if accounts:
+		stock_accounts = [row.account for row in accounts if row.account in stock_accounts]
+
+	elif voucher_type and voucher_no:
 		if voucher_type == "Journal Entry":
 			stock_accounts = [
 				d.account
@@ -1602,7 +1646,7 @@ def get_stock_and_account_balance(account=None, posting_date=None, company=None)
 			if wh_details.account == account and not wh_details.is_group
 		]
 
-	total_stock_value = get_stock_value_on(related_warehouses, posting_date)
+	total_stock_value = get_stock_value_on(related_warehouses, posting_date, company=company)
 
 	precision = frappe.get_precision("Journal Entry Account", "debit_in_account_currency")
 	return flt(account_balance, precision), flt(total_stock_value, precision), related_warehouses
@@ -1956,6 +2000,7 @@ class QueryPaymentLedger:
 				ple.cost_center.as_("cost_center"),
 				Sum(ple.amount).as_("amount"),
 				Sum(ple.amount_in_account_currency).as_("amount_in_account_currency"),
+				ple.remarks,
 			)
 			.where(ple.delinked == 0)
 			.where(Criterion.all(filter_on_voucher_no))
@@ -2018,6 +2063,7 @@ class QueryPaymentLedger:
 				Table("vouchers").due_date,
 				Table("vouchers").currency,
 				Table("vouchers").cost_center.as_("cost_center"),
+				Table("vouchers").remarks,
 			)
 			.where(Criterion.all(filter_on_outstanding_amount))
 		)
@@ -2206,3 +2252,38 @@ def run_ledger_health_checks():
 					doc.general_and_payment_ledger_mismatch = True
 					doc.checked_on = run_date
 					doc.save()
+
+
+def sync_auto_reconcile_config(auto_reconciliation_job_trigger: int = 15):
+	auto_reconciliation_job_trigger = auto_reconciliation_job_trigger or frappe.db.get_single_value(
+		"Accounts Settings", "auto_reconciliation_job_trigger"
+	)
+	method = "erpnext.accounts.doctype.process_payment_reconciliation.process_payment_reconciliation.trigger_reconciliation_for_queued_docs"
+
+	sch_event = frappe.get_doc(
+		"Scheduler Event", {"scheduled_against": "Process Payment Reconciliation", "method": method}
+	)
+	if frappe.db.get_value("Scheduled Job Type", {"method": method}):
+		frappe.get_doc(
+			"Scheduled Job Type",
+			{
+				"method": method,
+			},
+		).update(
+			{
+				"cron_format": f"0/{auto_reconciliation_job_trigger} * * * *",
+				"scheduler_event": sch_event.name,
+			}
+		).save()
+	else:
+		frappe.get_doc(
+			{
+				"doctype": "Scheduled Job Type",
+				"method": method,
+				"scheduler_event": sch_event.name,
+				"cron_format": f"0/{auto_reconciliation_job_trigger} * * * *",
+				"create_log": True,
+				"stopped": False,
+				"frequency": "Cron",
+			}
+		).save()

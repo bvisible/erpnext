@@ -207,6 +207,7 @@ frappe.ui.form.on("Stock Reconciliation", {
 					posting_time: frm.doc.posting_time,
 					batch_no: d.batch_no,
 					row: d,
+					company: frm.doc.company,
 				},
 				callback: function (r) {
 					const row = frappe.model.get_doc(cdt, cdn);
@@ -294,6 +295,11 @@ frappe.ui.form.on("Stock Reconciliation Item", {
 
 	qty: function (frm, cdt, cdn) {
 		frm.events.set_amount_quantity(frm, cdt, cdn);
+
+		let row = locals[cdt][cdn];
+		if (row.use_serial_batch_fields && !row.qty && row.serial_no) {
+			frappe.model.set_value(cdt, cdn, "serial_no", "");
+		}
 	},
 
 	valuation_rate: function (frm, cdt, cdn) {
