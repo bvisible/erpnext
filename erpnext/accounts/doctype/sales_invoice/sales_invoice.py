@@ -1250,6 +1250,7 @@ class SalesInvoice(SellingController):
 		self.make_write_off_gl_entry(gl_entries)
 		self.make_gle_for_rounding_adjustment(gl_entries)
 
+		self.set_transaction_currency_and_rate_in_gl_map(gl_entries)
 		return gl_entries
 
 	def make_customer_gl_entry(self, gl_entries):
@@ -1283,6 +1284,7 @@ class SalesInvoice(SellingController):
 						"debit_in_account_currency": base_grand_total
 						if self.party_account_currency == self.company_currency
 						else grand_total,
+						"debit_in_transaction_currency": grand_total,
 						"against_voucher": against_voucher,
 						"against_voucher_type": self.doctype,
 						"cost_center": self.cost_center,
@@ -1326,6 +1328,9 @@ class SalesInvoice(SellingController):
 								if account_currency == self.company_currency
 								else flt(amount, tax.precision("tax_amount_after_discount_amount"))
 							),
+							"credit_in_transaction_currency": flt(
+								amount, tax.precision("tax_amount_after_discount_amount")
+							),
 							"cost_center": tax.cost_center,
 							"remarks": remark, #//// added
 						},
@@ -1344,6 +1349,7 @@ class SalesInvoice(SellingController):
 						"against": self.customer,
 						"debit": flt(self.total_taxes_and_charges),
 						"debit_in_account_currency": flt(self.base_total_taxes_and_charges),
+						"debit_in_transaction_currency": flt(self.total_taxes_and_charges),
 						"cost_center": self.cost_center,
 					},
 					account_currency,
@@ -1484,6 +1490,7 @@ class SalesInvoice(SellingController):
 									if account_currency == self.company_currency
 									else flt(amount, item.precision("net_amount"))
 								),
+								"credit_in_transaction_currency": flt(amount, item.precision("net_amount")),
 								"cost_center": item.cost_center,
 								"project": item.project or self.project,
 								"remarks": remark #//// added
@@ -1537,6 +1544,7 @@ class SalesInvoice(SellingController):
 						+ cstr(self.loyalty_redemption_account)
 						+ " for the Loyalty Program",
 						"credit": self.loyalty_amount,
+						"credit_in_transaction_currency": self.loyalty_amount,
 						"against_voucher": self.return_against if cint(self.is_return) else self.name,
 						"against_voucher_type": self.doctype,
 						"cost_center": self.cost_center,
@@ -1551,6 +1559,7 @@ class SalesInvoice(SellingController):
 						"cost_center": self.cost_center or self.loyalty_redemption_cost_center,
 						"against": self.customer,
 						"debit": self.loyalty_amount,
+						"debit_in_transaction_currency": self.loyalty_amount,
 						"remark": "Loyalty Points redeemed by the customer",
 					},
 					item=self,
@@ -1584,6 +1593,7 @@ class SalesInvoice(SellingController):
 								"credit_in_account_currency": payment_mode.base_amount
 								if self.party_account_currency == self.company_currency
 								else payment_mode.amount,
+								"credit_in_transaction_currency": payment_mode.amount,
 								"against_voucher": against_voucher,
 								"against_voucher_type": self.doctype,
 								"cost_center": self.cost_center,
@@ -1603,6 +1613,7 @@ class SalesInvoice(SellingController):
 								"debit_in_account_currency": payment_mode.base_amount
 								if payment_mode_account_currency == self.company_currency
 								else payment_mode.amount,
+								"debit_in_transaction_currency": payment_mode.amount,
 								"cost_center": self.cost_center,
 							},
 							payment_mode_account_currency,
@@ -1627,6 +1638,7 @@ class SalesInvoice(SellingController):
 							"debit_in_account_currency": flt(self.base_change_amount)
 							if self.party_account_currency == self.company_currency
 							else flt(self.change_amount),
+							"debit_in_transaction_currency": flt(self.change_amount),
 							"against_voucher": self.return_against
 							if cint(self.is_return) and self.return_against
 							else self.name,
@@ -1645,6 +1657,7 @@ class SalesInvoice(SellingController):
 							"account": self.account_for_change_amount,
 							"against": self.customer,
 							"credit": self.base_change_amount,
+							"credit_in_transaction_currency": self.change_amount,
 							"cost_center": self.cost_center,
 						},
 						item=self,
@@ -1676,6 +1689,9 @@ class SalesInvoice(SellingController):
 							if self.party_account_currency == self.company_currency
 							else flt(self.write_off_amount, self.precision("write_off_amount"))
 						),
+						"credit_in_transaction_currency": flt(
+							self.write_off_amount, self.precision("write_off_amount")
+						),
 						"against_voucher": self.return_against if cint(self.is_return) else self.name,
 						"against_voucher_type": self.doctype,
 						"cost_center": self.cost_center,
@@ -1695,6 +1711,9 @@ class SalesInvoice(SellingController):
 							flt(self.base_write_off_amount, self.precision("base_write_off_amount"))
 							if write_off_account_currency == self.company_currency
 							else flt(self.write_off_amount, self.precision("write_off_amount"))
+						),
+						"debit_in_transaction_currency": flt(
+							self.write_off_amount, self.precision("write_off_amount")
 						),
 						"cost_center": self.cost_center or self.write_off_cost_center or default_cost_center,
 					},
@@ -1738,6 +1757,9 @@ class SalesInvoice(SellingController):
 						"account": round_off_account,
 						"against": self.customer,
 						"credit_in_account_currency": flt(
+							self.rounding_adjustment, self.precision("rounding_adjustment")
+						),
+						"credit_in_transaction_currency": flt(
 							self.rounding_adjustment, self.precision("rounding_adjustment")
 						),
 						"credit": flt(
