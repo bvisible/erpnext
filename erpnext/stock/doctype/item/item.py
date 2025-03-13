@@ -148,6 +148,12 @@ class Item(Document):
 		warranty_period: DF.Data | None
 		weight_per_unit: DF.Float
 		weight_uom: DF.Link | None
+		# //// Start: Custom Shipping Rule - Multiple Constraints ////
+		length: DF.Float
+		width: DF.Float
+		height: DF.Float
+		dimensions_uom: DF.Link | None
+		# //// End: Custom Shipping Rule - Multiple Constraints ////
 	# end: auto-generated types
 
 	def onload(self):

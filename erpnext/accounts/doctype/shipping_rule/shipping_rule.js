@@ -28,6 +28,9 @@ frappe.ui.form.on("Shipping Rule", {
 	},
 	toggle_reqd: function (frm) {
 		frm.toggle_reqd("shipping_amount", frm.doc.calculate_based_on === "Fixed");
-		frm.toggle_reqd("conditions", frm.doc.calculate_based_on !== "Fixed");
+		frm.toggle_reqd("conditions", frm.doc.calculate_based_on !== "Fixed" && frm.doc.calculate_based_on !== "Multiple Constraints");
+		frm.toggle_reqd("condition_multiple_constraints", frm.doc.calculate_based_on === "Multiple Constraints");
+		frm.toggle_reqd("weight_uom", frm.doc.calculate_based_on === "Multiple Constraints");
+		frm.toggle_reqd("dimensions_uom", frm.doc.calculate_based_on === "Multiple Constraints");
 	},
 });

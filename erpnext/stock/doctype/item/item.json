@@ -49,6 +49,11 @@
   "weight_per_unit",
   "weight_uom",
   "allow_negative_stock",
+  "column_break_nscp",
+  "length",
+  "width",
+  "height",
+  "dimensions_uom",
   "sb_barcodes",
   "barcodes",
   "reorder_section",
@@ -373,6 +378,31 @@
    "fieldtype": "Link",
    "ignore_user_permissions": 1,
    "label": "Weight UOM",
+   "options": "UOM"
+  },
+  {
+   "depends_on": "is_stock_item",
+   "fieldname": "length",
+   "fieldtype": "Float",
+   "label": "Length Per Unit"
+  },
+  {
+   "depends_on": "is_stock_item",
+   "fieldname": "width",
+   "fieldtype": "Float",
+   "label": "Width Per Unit"
+  },
+  {
+   "depends_on": "is_stock_item",
+   "fieldname": "height",
+   "fieldtype": "Float",
+   "label": "Height Per Unit"
+  },
+  {
+   "depends_on": "is_stock_item",
+   "fieldname": "dimensions_uom",
+   "fieldtype": "Link",
+   "label": "Dimensions UOM",
    "options": "UOM"
   },
   {
@@ -885,6 +915,10 @@
    "fieldname": "deferred_accounting_section",
    "fieldtype": "Section Break",
    "label": "Deferred Accounting"
+  },
+  {
+   "fieldname": "column_break_nscp",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-tag",
@@ -892,7 +926,7 @@
  "image_field": "image",
  "links": [],
  "make_attachments_public": 1,
- "modified": "2025-02-03 23:43:57.253667",
+ "modified": "2025-03-12 12:38:27.859761",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",

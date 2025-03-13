@@ -1,9 +1,11 @@
 {
+ "actions": [],
  "allow_import": 1,
  "autoname": "field:label",
  "creation": "2013-06-25 11:48:03",
  "description": "Specify conditions to calculate shipping amount",
  "doctype": "DocType",
+ "engine": "InnoDB",
  "field_order": [
   "label",
   "disabled",
@@ -13,6 +15,8 @@
   "company",
   "column_break_12",
   "account",
+  "taxable_account",
+  "tax_is_included",
   "accounting_dimensions_section",
   "cost_center",
   "dimension_col_break",
@@ -22,6 +26,12 @@
   "shipping_amount",
   "rule_conditions_section",
   "conditions",
+  "shipping_rule_conditions_multiple_constraints_section",
+  "weight_uom",
+  "column_break_umar",
+  "dimensions_uom",
+  "section_break_vgym",
+  "condition_multiple_constraints",
   "section_break_6",
   "countries"
  ],
@@ -93,7 +103,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Calculate Based On",
-   "options": "Fixed\nNet Total\nNet Weight"
+   "options": "Fixed\nNet Total\nNet Weight\nMultiple Constraints"
   },
   {
    "fieldname": "column_break_8",
@@ -106,16 +116,70 @@
    "label": "Shipping Amount"
   },
   {
-   "depends_on": "eval:doc.calculate_based_on!=='Fixed'",
+   "depends_on": "eval:doc.calculate_based_on!=='Fixed' && doc.calculate_based_on!=='Multiple Constraints'",
    "fieldname": "rule_conditions_section",
    "fieldtype": "Section Break",
    "label": "Shipping Rule Conditions"
   },
   {
+   "depends_on": "eval:doc.calculate_based_on!=='Fixed' && doc.calculate_based_on!=='Multiple Constraints'",
    "fieldname": "conditions",
    "fieldtype": "Table",
    "label": "Shipping Rule Conditions",
    "options": "Shipping Rule Condition"
+  },
+  {
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
+  },
+  {
+   "fieldname": "dimension_col_break",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "If not defined, it will not add tax",
+   "fieldname": "taxable_account",
+   "fieldtype": "Link",
+   "label": "Taxable account",
+   "options": "Item Tax Template"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.taxable_account ? true : false",
+   "description": "If checked, tax will be deducted from shipping amount",
+   "fieldname": "tax_is_included",
+   "fieldtype": "Check",
+   "label": "Tax is included in the price"
+  },
+  {
+   "depends_on": "eval:doc.calculate_based_on==='Multiple Constraints'",
+   "fieldname": "shipping_rule_conditions_multiple_constraints_section",
+   "fieldtype": "Section Break",
+   "label": "Configuration Multiple Constraints"
+  },
+  {
+   "depends_on": "eval:doc.calculate_based_on==='Multiple Constraints'",
+   "description": "Unit of measure used for weight constraints",
+   "fieldname": "weight_uom",
+   "fieldtype": "Link",
+   "label": "Unit of weight",
+   "options": "UOM"
+  },
+  {
+   "depends_on": "eval:doc.calculate_based_on==='Multiple Constraints'",
+   "description": "Unit of measure used for dimensions constraints",
+   "fieldname": "dimensions_uom",
+   "fieldtype": "Link",
+   "label": "Unit of dimensions",
+   "options": "UOM"
+  },
+  {
+   "depends_on": "eval:doc.calculate_based_on==='Multiple Constraints'",
+   "fieldname": "condition_multiple_constraints",
+   "fieldtype": "Table",
+   "label": "Condition Multiple Constraints",
+   "options": "Shipping Rule Condition Multiple Constraints"
   },
   {
    "fieldname": "section_break_6",
@@ -129,21 +193,23 @@
    "options": "Shipping Rule Country"
   },
   {
-   "fieldname": "accounting_dimensions_section",
-   "fieldtype": "Section Break",
-   "label": "Accounting Dimensions"
+   "fieldname": "column_break_umar",
+   "fieldtype": "Column Break"
   },
   {
-   "fieldname": "dimension_col_break",
-   "fieldtype": "Column Break"
+   "depends_on": "eval:doc.calculate_based_on==='Multiple Constraints'",
+   "fieldname": "section_break_vgym",
+   "fieldtype": "Section Break"
   }
  ],
  "icon": "fa fa-truck",
  "idx": 1,
- "modified": "2019-05-25 23:12:26.156405",
+ "links": [],
+ "modified": "2025-03-13 14:13:54.444947",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Shipping Rule",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
@@ -189,5 +255,7 @@
    "write": 1
   }
  ],
- "sort_order": "ASC"
+ "sort_field": "modified",
+ "sort_order": "ASC",
+ "states": []
 }

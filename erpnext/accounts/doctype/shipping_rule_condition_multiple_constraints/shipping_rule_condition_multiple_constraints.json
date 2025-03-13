@@ -1,0 +1,66 @@
+{
+ "actions": [],
+ "creation": "2025-03-12 19:22:47.925967",
+ "default_view": "List",
+ "description": "A condition for a Shipping Rule",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "condition_group",
+  "constraint_type",
+  "min_value",
+  "max_value",
+  "shipping_amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "condition_group",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Condition Group",
+   "reqd": 1
+  },
+  {
+   "fieldname": "constraint_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Constraint Type",
+   "options": "Weight\nPrice\nLength\nWidth\nHeight",
+   "reqd": 1
+  },
+  {
+   "fieldname": "min_value",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Min Value",
+   "reqd": 1
+  },
+  {
+   "fieldname": "max_value",
+   "fieldtype": "Float",
+   "label": "Max Value",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "shipping_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Shipping Amount",
+   "options": "Company:company:default_currency",
+   "reqd": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2025-03-12 19:22:47.925967",
+ "modified_by": "Administrator",
+ "module": "Accounts",
+ "name": "Shipping Rule Condition Multiple Constraints",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
