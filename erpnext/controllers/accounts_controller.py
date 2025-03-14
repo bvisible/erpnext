@@ -419,7 +419,7 @@ class AccountsController(TransactionBase):
 			.where(doc_field.fieldname == "company")
 		).run(as_list=True)
 
-		dimension_list = sum(dimension_list, ["Project"])
+		dimension_list = sum(dimension_list, ["Project", "Cost Center"])
 		self.validate_company(dimension_list)
 
 		for child in self.get_all_children() or []:
@@ -3293,6 +3293,7 @@ def set_child_tax_template_and_map(item, child_item, parent_doc):
 		"posting_date": parent_doc.transaction_date,
 		"tax_category": parent_doc.get("tax_category"),
 		"company": parent_doc.get("company"),
+		"base_net_rate": item.get("base_net_rate"),
 	}
 
 	child_item.item_tax_template = _get_item_tax_template(args, item.taxes)

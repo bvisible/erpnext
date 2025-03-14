@@ -988,6 +988,7 @@ class PurchaseInvoice(BuyingController):
 				#////
 				tax_excluded = flt(item.base_net_amount, item.precision("base_net_amount")) == flt(item.base_amount, item.precision("base_net_amount")) #//// added
 				account_currency = get_account_currency(item.expense_account)
+
 				if item.item_code:
 					frappe.get_cached_value("Item", item.item_code, "asset_category")
 
@@ -996,6 +997,7 @@ class PurchaseInvoice(BuyingController):
 					and self.auto_accounting_for_stock
 					and (item.item_code in stock_items or item.is_fixed_asset)
 				):
+					account_currency = get_account_currency(item.expense_account)
 					# warehouse account
 					warehouse_debit_amount = self.make_stock_adjustment_entry(
 						gl_entries, item, voucher_wise_stock_value, account_currency
@@ -1131,6 +1133,7 @@ class PurchaseInvoice(BuyingController):
 					)
 
 					base_amount, amount = self.get_amount_and_base_amount(item, None, flat_rate) #//// added flat_rate
+					account_currency = get_account_currency(expense_account)
 					#//// added
 					if flat_rate and (tax_excluded or self.get("discount_amount")):
 						if item.item_tax_template:
