@@ -74,7 +74,7 @@ erpnext.accounts.ledger_preview = {
 
 		setTimeout(function () {
 			me.get_datatable(columns, data, dialog.get_field(fieldname).wrapper);
-		}, 200);
+		}, 1000);
 
 		dialog.show();
 	},
