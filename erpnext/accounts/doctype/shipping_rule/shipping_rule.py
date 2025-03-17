@@ -204,6 +204,9 @@ class ShippingRule(Document):
 			length = width = height = 0
 			total_weight = 0
 			
+			# List to store items for 3D packing optimization
+			packing_items = []
+			
 			# Get max dimensions and weight from all items
 			if hasattr(doc, 'items') and doc.items:
 				for item in doc.items:
@@ -261,6 +264,17 @@ class ShippingRule(Document):
 							width = item_width
 						if item_height > height:
 							height = item_height
+						
+						# Add item to packing list for 3D optimization
+						if item_length > 0 and item_width > 0 and item_height > 0:
+							for i in range(int(qty)):
+								packing_items.append({
+									"name": f"{item_code}_{i}",
+									"length": item_length,
+									"width": item_width,
+									"height": item_height,
+									"weight": item_weight/qty if qty > 0 else 0
+								})
 					
 					# If no item doc or no dimensions found, try to get from item row
 					else:
@@ -292,6 +306,20 @@ class ShippingRule(Document):
 							width = item_width
 						if item_height > height:
 							height = item_height
+						
+						# Add item to packing list for 3D optimization
+						if item_length > 0 and item_width > 0 and item_height > 0:
+							for i in range(int(qty)):
+								packing_items.append({
+									"name": f"Row_{item.idx}_{i}",
+									"length": item_length,
+									"width": item_width,
+									"height": item_height,
+									"weight": item_weight/qty if qty > 0 else 0
+								})
+			
+			# Calculate optimized packing if we have items
+			optimal_packing = self.calculate_optimal_packing(packing_items)
 			
 			# Process each constraint group
 			for condition in self.condition_multiple_constraints:
@@ -311,7 +339,7 @@ class ShippingRule(Document):
 				# Check if constraint is valid based on type
 				constraint_value = 0
 				
-					# Déterminer la valeur de la contrainte en fonction du type
+				# Determine the constraint value based on type
 				if condition.constraint_type == "Weight":
 					constraint_value = flt(total_weight)
 					constraint_label = _("Weight")
@@ -325,19 +353,31 @@ class ShippingRule(Document):
 				
 				# Length constraint
 				elif condition.constraint_type == "Length":
-					constraint_value = flt(length)
+					# Use the optimally packed length if available
+					if optimal_packing["length"] > 0:
+						constraint_value = flt(optimal_packing["length"])
+					else:
+						constraint_value = flt(length)
 					constraint_label = _("Length")
 					constraint_uom = self.dimensions_uom
 				
 				# Width constraint
 				elif condition.constraint_type == "Width":
-					constraint_value = flt(width)
+					# Use the optimally packed width if available
+					if optimal_packing["width"] > 0:
+						constraint_value = flt(optimal_packing["width"])
+					else:
+						constraint_value = flt(width)
 					constraint_label = _("Width")
 					constraint_uom = self.dimensions_uom
 				
 				# Height constraint
 				elif condition.constraint_type == "Height":
-					constraint_value = flt(height)
+					# Use the optimally packed height if available
+					if optimal_packing["height"] > 0:
+						constraint_value = flt(optimal_packing["height"])
+					else:
+						constraint_value = flt(height)
 					constraint_label = _("Height")
 					constraint_uom = self.dimensions_uom
 				else:
@@ -375,7 +415,243 @@ class ShippingRule(Document):
 		finally:
 			# Clear processing flag
 			doc._processing_shipping_rule = False
+
+	@classmethod
+	def calculate_optimal_packing(cls, packing_items):
+		"""Calculate optimal 3D arrangement of items using py3dbp bin packing algorithm
+		
+		Args:
+			packing_items (list): List of items with dimensions
+		
+		Returns:
+			dict: Optimal packing dimensions
+		"""
+		try:
+			# Import py3dbp library
+			from py3dbp import Packer, Bin, Item
 			
+			# If no items with dimensions, return default values
+			if not packing_items:
+				return {
+					"length": 0, 
+					"width": 0, 
+					"height": 0, 
+					"volume": 0
+				}
+			
+			# Create a virtual packing bin with large dimensions
+			# We use this to find the optimal arrangement, not to validate constraints
+			max_dim = 1000000  # A very large dimension to ensure all items can fit
+			virtual_bin = Bin('VirtualContainer', max_dim, max_dim, max_dim, max_dim)
+			
+			# Initialize the packer
+			packer = Packer()
+			packer.add_bin(virtual_bin)
+			
+			# Add all items to the packer
+			for i, item in enumerate(packing_items):
+				# Extract dimensions from the item dictionary
+				length = float(item.get("length", 0))
+				width = float(item.get("width", 0))
+				height = float(item.get("height", 0))
+				weight = float(item.get("weight", 0))
+				
+				# Skip invalid items
+				if length <= 0 or width <= 0 or height <= 0:
+					continue
+				
+				# Create an item for py3dbp
+				item_id = f"Item_{i}"
+				packing_item = Item(item_id, length, width, height, weight)
+				
+				# Allow rotation for better packing
+				# This will try different orientations of the item
+				packing_item.position = [0, 0, 0]  # Default position
+				
+				# Enable rotation for better packing
+				packing_item.can_rotate = True
+				
+				# For books, it is very important to allow stacking
+				# That's why we enable all possible rotations
+				packing_item.rotation_type = 0  # Allow all rotations (default value in py3dbp)
+				
+				# Add item to the packer
+				packer.add_item(packing_item)
+						
+			# Run the packing algorithm
+			# This will arrange items in the virtual container
+			packer.pack(bigger_first=True)
+			
+			# Get the packed bin
+			packed_bin = packer.bins[0]
+			
+			# If no items were packed (could happen if all items have invalid dimensions)
+			if not packed_bin.items:
+				return {
+					"length": 0, 
+					"width": 0, 
+					"height": 0, 
+					"volume": 0
+				}
+			
+			# Calculate the maximum dimensions used by the packed items
+			max_x = max_y = max_z = 0
+			for item in packed_bin.items:
+				# Get position and dimensions
+				pos = item.position
+				dim = item.get_dimension()
+				
+				# Calculate the furthest point in each dimension
+				max_x = max(max_x, float(pos[0]) + float(dim[0]))
+				max_y = max(max_y, float(pos[1]) + float(dim[1]))
+				max_z = max(max_z, float(pos[2]) + float(dim[2]))
+			
+			
+			# Identify the smallest dimension - probably height for books
+			dimensions_sorted = sorted([max_x, max_y, max_z])
+			
+			# For books or flat objects, we reorder the dimensions 
+			# to make the height the smallest dimension
+			# and length > width
+			if len(packing_items) == 1:
+				# For a single item, we respect the original dimensions
+				# because it might be important for dimension constraints
+				result = {
+					"length": max_x,
+					"width": max_y,
+					"height": max_z,
+					"volume": max_x * max_y * max_z
+				}
+				return result
+			else:
+				# For multiple items, we reorder the dimensions
+				# The smallest dimension (index 0) becomes the height
+				# The other two become length and width (with length >= width)
+				height = dimensions_sorted[0]
+				width = dimensions_sorted[1]
+				length = dimensions_sorted[2]
+				
+				# We use the dimensions calculated by py3dbp instead of artificially multiplying
+				# because the algorithm has already determined the optimal placement (side by side or stacked)
+				result = {
+					"length": length,
+					"width": width,
+					"height": height,
+					"volume": length * width * height
+				}
+				return result
+			
+		except ImportError:
+			# Fallback to the original packing algorithm if py3dbp is not available
+			frappe.log_error("py3dbp library not available, falling back to basic packing algorithm", "ShippingRule")
+			
+			# If no items with dimensions, return default values
+			if not packing_items:
+				return {
+					"length": 0, 
+					"width": 0, 
+					"height": 0, 
+					"volume": 0
+				}
+			
+			# Sort items by volume (largest first) for better packing
+			packing_items.sort(key=lambda x: x["length"] * x["width"] * x["height"], reverse=True)
+			
+			# Group items by dimensions while preserving orientation
+			grouped_items = {}
+			for item in packing_items:
+				# Use original dimensions to preserve orientation
+				item_key = (item["length"], item["width"], item["height"])
+				
+				if item_key not in grouped_items:
+					grouped_items[item_key] = []
+				grouped_items[item_key].append(item)
+			
+			# Simplified bin packing - stack similar items
+			packings = []
+			for dims, items in grouped_items.items():
+				# Keep original orientations
+				l, w, h = dims
+				
+				# How many items in this group
+				count = len(items)
+				
+				# For a single item, just use its dimensions directly
+				if count == 1:
+					packings.append({
+						"length": l,
+						"width": w,
+						"height": h,
+						"items": 1,
+						"volume": l * w * h,
+						"type": "single"
+					})
+					continue
+				
+				# Generate possible stacking arrangements
+				# Option 1: Stack vertically (on top of each other)
+				vert_stack = {
+					"length": l,
+					"width": w,
+					"height": h * count,
+					"items": count,
+					"volume": l * w * h * count,
+					"type": "vertical"
+				}
+				
+				# Option 2: Arrange horizontally in length
+				length_stack = {
+					"length": l * count,
+					"width": w,
+					"height": h,
+					"items": count,
+					"volume": l * w * h * count,
+					"type": "length"
+				}
+				
+				# Option 3: Arrange horizontally in width
+				width_stack = {
+					"length": l,
+					"width": w * count,
+					"height": h,
+					"items": count,
+					"volume": l * w * h * count,
+					"type": "width"
+				}
+				
+				# Add all options for this group
+				packings.extend([vert_stack, length_stack, width_stack])
+			
+			# Find the most compact arrangement (minimize the max of length, width, height)
+			if packings:
+				# IMPORTANT: For single items, we must prioritize original dimensions to avoid
+				# breaking shipping rules validation
+				single_item_packings = [p for p in packings if p.get("type") == "single"]
+				if single_item_packings:
+					best_packing = single_item_packings[0]
+				else:
+					# Sort by maximum dimension
+					packings.sort(key=lambda x: max(x["length"], x["width"], x["height"]))
+					best_packing = packings[0]
+				
+				return best_packing
+			else:
+				return {
+					"length": 0,
+					"width": 0,
+					"height": 0,
+					"volume": 0
+				}
+		except Exception as e:
+			# Log any other errors and return a safe default
+			frappe.log_error(f"Error in calculate_optimal_packing: {str(e)}", "ShippingRule")
+			return {
+				"length": 0, 
+				"width": 0, 
+				"height": 0, 
+				"volume": 0
+			}
+
 	def convert_to_uom(self, value, from_uom, to_uom):
 		"""Convert value from one UOM to another
 		
@@ -421,8 +697,8 @@ class ShippingRule(Document):
 			# Convert value
 			return flt(value) * flt(from_conversion_factor) / flt(to_conversion_factor)
 		except Exception as e:
-			frappe.log_error(f"Erreur lors de la conversion d'unité de {from_uom} à {to_uom}: {str(e)}")
-			frappe.throw(_("Aucun facteur de conversion trouvé entre {0} et {1}").format(from_uom, to_uom))
+			frappe.log_error(f"Error converting unit from {from_uom} to {to_uom}: {str(e)}")
+			frappe.throw(_("No conversion factor found between {0} and {1}").format(from_uom, to_uom))
 	# //// End: Custom Shipping Rule - Multiple Constraints ////
 
 	def validate_countries(self, doc):

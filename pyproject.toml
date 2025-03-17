@@ -19,6 +19,9 @@ dependencies = [
     "googlemaps",
     "plaid-python~=7.2.1",
     "python-youtube~=0.8.0",
+    "py3dbp",
+    "matplotlib",
+    "numpy",
 
     # Not used directly - required by PyQRCode for PNG generation
     "pypng~=0.20220715.0",
