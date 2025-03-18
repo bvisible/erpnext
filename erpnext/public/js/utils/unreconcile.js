@@ -93,12 +93,13 @@ erpnext.accounts.unreconcile_payment = {
 				},
 				{ label: __("Currency"), fieldname: "account_currency", fieldtype: "Currency", read_only: 1 },
 			];
+			/// read_only 1 => 0
 			let unreconcile_dialog_fields = [
 				{
 					label: __("Allocations"),
 					fieldname: "allocations",
 					fieldtype: "Table",
-					read_only: 1,
+					read_only: 0,
 					fields: child_table_fields,
 					cannot_add_rows: true,
 				},
