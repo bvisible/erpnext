@@ -658,7 +658,7 @@ erpnext.PointOfSale.ItemCart = class {
 			if (item_data.discount_percentage != 0) {
 				return `
 					<div class="item-price-before-discount">${format_currency(item_data.price_list_rate, currency)}</div>
-					<div class="item-discount-percent">-${item_data.discount_percentage}%</div>
+					<div class="item-discount-percent">-${item_data.discount_percentage | 0}%</div>
 				`
 			} else {
 				return ''

@@ -627,8 +627,10 @@ erpnext.PointOfSale.Controller = class {
 						message: __("Price is not set for the item."),
 						indicator: "orange",
 					});
-					frappe.utils.play_sound("error");
-					return;
+					//// frappe.utils.play_sound("error");
+					//// return;
+					this.item_details.toggle_component(true);
+					////
 				}
 				const new_item = { item_code, batch_no, rate, uom, [field]: value, stock_uom };
 

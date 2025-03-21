@@ -16,9 +16,9 @@ erpnext.PointOfSale.ItemSelector = class {
 		this.prepare_dom();
 		this.make_search_bar();
 		this.load_items_data();
-		this.load_item_groups_data();  //// Ajoutez ceci après avoir chargé les articles
+		this.load_item_groups_data();  //// added for pos item groups
 		this.bind_events();
-		this.bind_item_group_events();  //// Ajoutez ceci après avoir lié les événements
+		this.bind_item_group_events();  //// added for pos item groups
 		this.attach_shortcuts();
 	}
 
@@ -216,68 +216,120 @@ erpnext.PointOfSale.ItemSelector = class {
 		this.item_group_field.toggle_label(false);
 
 		this.attach_clear_btn();
-		////to uncomment let search_element = this.$component.find('.search-field').find('div')[0];
-		////to uncomment $(search_element).append('<span class="search-icon"><i class="fa fa-search" aria-hidden="true"></i></span>');
+		let search_element = this.$component.find('.search-field').find('div')[0];
+		$(search_element).append('<span class="search-icon"><i class="fa fa-search" aria-hidden="true"></i></span>');
 
-		// Use jQuery to add a click event listener to the span element
-		/* ////to uncomment $(search_element).on('click', '.search-icon', function() {
-			const dialog = new frappe.ui.form.MultiSelectDialog({
+		$(search_element).on('click', '.search-icon', function() {
+			const self = me || this;
+			const modalDialog = new frappe.ui.form.MultiSelectDialog({
 				doctype: "Item",
 				target: cur_frm,
 				setters: {
-					item_name: '',
-					item_group: '',
-					brand: '',
+					item_name: null,
+					item_group: null,
+					brand: null,
 				},
 				add_filters_group: 1,
 				allow_child_item_selection: 1,
-				child_fieldname: "supplier_items", // child table fieldname, whose records will be shown &amp; can be filtered
-				child_columns: ["supplier", "supplier_part_no"], // child item columns to be displayed
+				child_fieldname: "supplier_items",
+				child_columns: ["supplier", "supplier_part_no"],
+				get_query: function() {
+					return {
+						filters: { }
+					};
+				},
 				action(selections) {
-					cur_dialog.hide()
-					//setTimeout(() => {
-						console.log(me);
-						console.log(me.events);
-						for (const item_data of selections) {
-							console.log(2, item_data);
-							let item_code = item_data;
-							let batch_no = "null";
-							let serial_no = undefined;
-							let uom = "Unité";
-							let rate = "200.9";
-							console.log(item_code, batch_no, serial_no, uom, rate);
-							me.events.item_selected({
-								field: 'qty',
-								value: "+1",
-								item: {item_code, batch_no, serial_no, uom, rate}
-							});
-
-							//let child = frappe.model.add_child(frm.doc, 'Worksheet Item', 'items');
-							//await frappe.model.set_value(child.doctype, child.name, 'item_code', item_data);
-
-							// Optionally set additional fields here
+					cur_dialog.hide();
+					
+					if (selections && selections.length) {
+						for (const item_code of selections) {
+							if (typeof me !== 'undefined' && me && me.events && typeof me.events.item_selected === 'function') {
+								me.events.item_selected({
+									field: 'qty',
+									value: "+1",
+									item: {
+										item_code: item_code,
+										batch_no: "",
+										serial_no: "",
+										uom: "",
+										rate: ""
+									}
+								});
+							}
 						}
-					//}, 2000);
+					}
 				}
 			});
-			console.log('Span clicked');
-		});*/
+			
+			// Wait for the dialog to be fully initialized
+			setTimeout(() => {
+				// Main method to refresh results
+				const refreshResults = function() {
+					if (modalDialog.is_child_selection_enabled()) {
+						modalDialog.show_child_results();
+					} else {
+						modalDialog.get_results();
+					}
+				};
+				
+				// Configure event listeners
+				modalDialog.dialog.$wrapper.on('awesomplete-selectcomplete', function() {
+					refreshResults();
+				});
+				
+				// Handle value removal (when a field loses focus)
+				modalDialog.dialog.$wrapper.on('blur', '[data-fieldtype="Link"]', function() {
+					setTimeout(refreshResults, 100);
+				});
+				
+				// Listen to Data field changes
+				modalDialog.dialog.$wrapper.on('input', '[data-fieldtype="Data"]', function() {
+					clearTimeout(this.inputTimeout);
+					this.inputTimeout = setTimeout(refreshResults, 300);
+				});
+			}, 500);
+		});
 	}
 
 	attach_clear_btn() {
 		this.search_field.$wrapper.find(".control-input").append(
-			`<span class="link-btn" style="top: 2px;">
+			`<span class="link-btn" style="top: 0px; right: 25px; ">
 				<a class="btn-open no-decoration" title="${__("Clear")}">
 					${frappe.utils.icon("close", "sm")}
 				</a>
+			</span>
+			<span style="display: inline;position: absolute;right: 8px;top: 2px;" id="scanBarcode">
+				<a class="btn-open no-decoration" title="${__("Scan")}">
+					${frappe.utils.icon("scan", "sm")}
+				</a>
 			</span>`
 		);
-
-		this.$clear_search_btn = this.search_field.$wrapper.find(".link-btn");
-
+	
+		this.$clear_search_btn = this.search_field.$wrapper.find(".link-btn:last-child");
+		this.$scan_barcode_btn = this.search_field.$wrapper.find("#scanBarcode");
+	
 		this.$clear_search_btn.on("click", "a", () => {
 			this.set_search_value("");
 			this.search_field.set_focus();
+		});
+	
+		this.$scan_barcode_btn.on("click", () => {
+			new frappe.ui.Scanner({
+				dialog: true,
+				multiple: false,
+				on_scan: (data) => {
+					if (data && data.result && data.result.text) {
+						frappe.show_alert({
+							message: __('Product scanned') + " <b>" + data.result.text + "</b> " + 
+									__('in format') + " " + data.result.format.formatName,
+							indicator: 'green'
+						}, 5);
+						
+						this.set_search_value(data.result.text);
+						this.filter_items({ search_term: data.result.text });
+					}
+				}
+			});
 		});
 	}
 
@@ -412,6 +464,8 @@ erpnext.PointOfSale.ItemSelector = class {
 
 	filter_items({ search_term = "" } = {}) {
 		const selling_price_list = this.events.get_frm().doc.selling_price_list;
+		//// if search term is empty, disable auto add item
+		if (search_term === "") this.auto_add_item = false;
 
 		if (search_term) {
 			search_term = search_term.toLowerCase();
@@ -563,9 +617,6 @@ erpnext.PointOfSale.ItemSelector = class {
 		this.$parent_item_group_container.on("click", ".item-group-wrapper", function(){
 			const $item_group = $(this);
 			const item_group_name = unescape($item_group.attr('data-item-group-name'));
-
-			// Vous pouvez filtrer les articles par catégorie ici
-			// Par exemple :
 			me.filter_items_by_item_group(item_group_name);
 		});
 	}
@@ -589,7 +640,6 @@ erpnext.PointOfSale.ItemSelector = class {
 		let bgColor = window.getComputedStyle(element).backgroundColor;
 		let matches = bgColor.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
 
-		// Vérifiez si des correspondances ont été trouvées
 		if (matches && matches.length >= 4) {
 			let luminance = this.getLuminance(parseInt(matches[1]), parseInt(matches[2]), parseInt(matches[3]));
 			if (luminance > 0.5) {
