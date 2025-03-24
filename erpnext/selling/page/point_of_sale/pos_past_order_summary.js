@@ -1,8 +1,8 @@
 erpnext.PointOfSale.PastOrderSummary = class {
-	constructor({ wrapper, events, pos_profile }) {
+	constructor({ wrapper, settings, events }) {
 		this.wrapper = wrapper;
 		this.events = events;
-		this.pos_profile = pos_profile;
+		this.print_receipt_on_order_complete = settings.print_receipt_on_order_complete;
 
 		this.init_component();
 	}
@@ -261,7 +261,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		const content = this.email_dialog.get_values().content;
 		const doc = this.doc || frm.doc;
 		const print_format = frm.pos_print_format;
-		
+
 		frappe.db.get_value('Company', doc.company, 'email', (r) => { //// added to get company email
 			frappe.call({
 				method: "frappe.core.doctype.communication.email.make",
@@ -364,18 +364,8 @@ erpnext.PointOfSale.PastOrderSummary = class {
 
 		this.add_summary_btns(condition_btns_map);
 
-		//// added code block
-		const filename = this.doc.pos_profile+'.json';
-		frappe.call({
-			method: 'neoffice_theme.events.pos_screen',
-			args: { json_content: {}, filename: filename },
-			callback: function(response) {
-				console.log(response.message); // File written successfully.
-			}
-		});
-		////
-		if (after_submission) {
-			this.print_receipt_on_order_complete();
+		if (after_submission && this.print_receipt_on_order_complete) {
+			this.print_receipt();
 		}
 	}
 
@@ -442,17 +432,5 @@ erpnext.PointOfSale.PastOrderSummary = class {
 
 	toggle_component(show) {
 		show ? this.$component.css("display", "flex") : this.$component.css("display", "none");
-	}
-
-	async print_receipt_on_order_complete() {
-		const res = await frappe.db.get_value(
-			"POS Profile",
-			this.pos_profile,
-			"print_receipt_on_order_complete"
-		);
-
-		if (res.message.print_receipt_on_order_complete) {
-			this.print_receipt();
-		}
 	}
 };
