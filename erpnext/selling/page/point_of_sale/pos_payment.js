@@ -226,7 +226,7 @@ erpnext.PointOfSale.Payment = class {
 				return;
 			}
 
-			if (!items.length || (paid_amount == 0 && doc.additional_discount_percentage != 100)) {
+			if (!items.length || (paid_amount == 0 && doc.additional_discount_percentage != 100 && doc.discount_amount != doc.total)) {
 				const message = items.length
 					? __("You cannot submit the order without payment.")
 					: __("You cannot submit empty order.");
@@ -477,8 +477,6 @@ erpnext.PointOfSale.Payment = class {
 							this.$payment_modes.find(`.${mode}.mode-of-payment-control input`).val("");
 							if(cur_frm.doc.outstanding_amount == 0) {
 								$(".submit-order-btn").prop("disabled",false).css("background","var(--blue-500)");
-							} else {
-								$(".submit-order-btn").prop("disabled",true).css("background","red");
 							}
 						}
 						this.$payment_modes.find(`.${mode}.mode-of-payment-control`).parent().click();

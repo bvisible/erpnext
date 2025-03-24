@@ -604,6 +604,10 @@ def apply_pricing_rule_on_transaction(doc):
 							else:
 								# reset discount if not linked
 								doc.set(field, 0)
+						elif doc.doctype == "Quotation" and doc.get("order_type") == "Shopping Cart" and doc.get("gift_card_coupon"):
+							continue
+						elif doc.doctype == "Sales Invoice":
+							continue
 						else:
 							# if coupon code based but no coupon code selected
 							doc.set(field, 0)
@@ -739,28 +743,50 @@ def get_pricing_rule_items(pr_doc, other_items=False) -> list:
 
 
 def validate_coupon_code(coupon_name):
+	#//// Change fore return POS
 	coupon = frappe.get_doc("Coupon Code", coupon_name)
+	# Check if it's a gift card
+	is_gift_card = coupon.coupon_type == "Gift Card"
+
+	# Check validity
 	if coupon.valid_from and coupon.valid_from > getdate(today()):
 		frappe.throw(_("Sorry, this coupon code's validity has not started"))
 	elif coupon.valid_upto and coupon.valid_upto < getdate(today()):
 		frappe.throw(_("Sorry, this coupon code's validity has expired"))
-	elif coupon.maximum_use and coupon.used >= coupon.maximum_use:
-		frappe.throw(_("Sorry, this coupon code is no longer valid"))
+
+	# Check remaining balance for gift cards
+	if is_gift_card:
+		if flt(coupon.gift_card_amount) <= 0:
+			frappe.throw(_("Sorry, this gift card has no remaining balance"))
+	else:
+		# For normal coupons, use standard validation
+		if coupon.maximum_use and coupon.used >= coupon.maximum_use:
+			frappe.throw(_("Sorry, this coupon code is no longer valid"))
 
 
 def update_coupon_code_count(coupon_name, transaction_type):
+	#//// Change fore return POS
 	coupon = frappe.get_doc("Coupon Code", coupon_name)
+	# Check if it's a gift card
+	is_gift_card = coupon.coupon_type == "Gift Card"
+
 	if coupon:
 		if transaction_type == "used":
-			if coupon.used < coupon.maximum_use:
+			if is_gift_card:
+				# For gift cards, we don't check the number of uses
 				coupon.used = coupon.used + 1
 				coupon.save(ignore_permissions=True)
 			else:
-				frappe.throw(
-					_("{0} Coupon used are {1}. Allowed quantity is exhausted").format(
-						coupon.coupon_code, coupon.used
+				# For normal coupons, use standard validation
+				if coupon.used < coupon.maximum_use:
+					coupon.used = coupon.used + 1
+					coupon.save(ignore_permissions=True)
+				else:
+					frappe.throw(
+						_("{0} Coupon used are {1}. Allowed quantity is exhausted").format(
+							coupon.coupon_code, coupon.used
+						)
 					)
-				)
 		elif transaction_type == "cancelled":
 			if coupon.used > 0:
 				coupon.used = coupon.used - 1
