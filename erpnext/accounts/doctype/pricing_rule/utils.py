@@ -604,6 +604,7 @@ def apply_pricing_rule_on_transaction(doc):
 							else:
 								# reset discount if not linked
 								doc.set(field, 0)
+						# //// START : Add bypass for gift card coupon
 						elif doc.doctype == "Quotation" and doc.get("order_type") == "Shopping Cart" and doc.get("gift_card_coupon"):
 							continue
 						elif doc.doctype == "Sales Invoice":
@@ -611,6 +612,7 @@ def apply_pricing_rule_on_transaction(doc):
 						else:
 							# if coupon code based but no coupon code selected
 							doc.set(field, 0)
+						# //// END : Add bypass for gift card coupon
 
 				doc.calculate_taxes_and_totals()
 

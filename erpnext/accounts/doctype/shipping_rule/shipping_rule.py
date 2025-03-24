@@ -788,6 +788,14 @@ class ShippingRule(Document):
 		# First remove any existing shipping charges
 		self.remove_shipping_charges_from_tax_table(doc)
 		
+		# Store loyalty taxes separately and remove them temporarily
+		loyalty_taxes = []
+		for i in range(len(doc.taxes) - 1, -1, -1):  # Process in reverse to avoid index issues
+			tax = doc.taxes[i]
+			if hasattr(tax, 'is_loyalty_points_reduction') and tax.is_loyalty_points_reduction:
+				loyalty_taxes.append(tax)
+				doc.taxes.pop(i)
+		
 		# Define document type based on shipping rule type
 		if self.shipping_rule_type == "Selling":
 			# check if not applied on purchase
@@ -884,12 +892,20 @@ class ShippingRule(Document):
 				"category": "Valuation and Total",
 				"add_deduct_tax": "Add"
 			}
-		
+
 		# Final step: append the main shipping row and any tax rows
 		try:
-			# Add the main shipping charge
+			# Find the maximum idx currently in the taxes table
+			max_idx = 0
+			for tax in doc.taxes:
+				if hasattr(tax, 'idx') and tax.idx > max_idx:
+					max_idx = tax.idx
+
+			# Add the main shipping charge with the next available idx
+			new_tax_row["idx"] = max_idx + 1
 			doc.append("taxes", new_tax_row)
-			
+			max_idx += 1
+
 			# Add all tax rows
 			for tax_row in tax_rows:
 				# Add necessary doctype info based on shipping rule type
@@ -899,10 +915,24 @@ class ShippingRule(Document):
 					tax_row["doctype"] = "Purchase Taxes and Charges"
 					tax_row["category"] = "Valuation and Total"
 					tax_row["add_deduct_tax"] = "Add"
-				
+
+				# Increment idx for each tax row
+				max_idx += 1
+				tax_row["idx"] = max_idx
+
 				# Add the tax row
 				doc.append("taxes", tax_row)
-				
+
+			# Now restore loyalty taxes at the end with incremented idx values
+			for loyalty_tax in loyalty_taxes:
+				max_idx += 1
+				loyalty_tax.idx = max_idx
+				doc.append("taxes", loyalty_tax)
+
+			# Reindex all taxes to ensure sequential idx values
+			for i, tax in enumerate(doc.taxes):
+				tax.idx = i + 1
+
 			# Store shipping rule information in document for reference
 			doc.shipping_rule = self.name
 			doc.shipping_rule_rate = shipping_amount
