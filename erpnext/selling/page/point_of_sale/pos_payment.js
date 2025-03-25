@@ -226,7 +226,8 @@ erpnext.PointOfSale.Payment = class {
 				return;
 			}
 
-			if (!items.length || (paid_amount == 0 && doc.additional_discount_percentage != 100 && doc.discount_amount != doc.total)) {
+			//// Add discount check
+			if (!items.length || (paid_amount == 0 && doc.additional_discount_percentage != 100 && doc.discount_amount != doc.total) && (doc.discount_amount != (doc.total + doc.rounding_adjustment))) {
 				const message = items.length
 					? __("You cannot submit the order without payment.")
 					: __("You cannot submit empty order.");

@@ -588,6 +588,37 @@ def apply_pricing_rule_on_transaction(doc):
 					else:
 						if not d.coupon_code_based:
 							doc.set(field, d.get(pr_field))
+						elif doc.doctype == "POS Invoice":
+							# For POS Invoice, check if it's a Gift Card coupon
+							coupon = None
+							if doc.get("coupon_code"):
+								coupon = frappe.get_doc("Coupon Code", doc.get("coupon_code"))
+
+							if coupon and coupon.coupon_type == "Gift Card":
+								# Si c'est un Gift Card, on définit condition_met à True pour sortir
+								# de la boucle principale après cette itération
+								condition_met = True
+								# Ne pas appliquer de remise
+								doc.set(field, 0)
+								# Sortir de la boucle des champs
+								break
+							elif doc.get("coupon_code"):
+								# coupon code based pricing rule
+								coupon_code_pricing_rule = frappe.db.get_value(
+									"Coupon Code", doc.get("coupon_code"), "pricing_rule"
+								)
+								if coupon_code_pricing_rule == d.name:
+									# if selected coupon code is linked with pricing rule
+									doc.set(field, d.get(pr_field))
+
+									# Set the condition_met variable to True
+									condition_met = True
+									break
+								else:
+									# reset discount if not linked
+									doc.set(field, 0)
+							else:
+								continue
 						elif doc.get("coupon_code"):
 							# coupon code based pricing rule
 							coupon_code_pricing_rule = frappe.db.get_value(
