@@ -67,6 +67,7 @@ erpnext.PointOfSale.ItemSelector = class {
 	get_items({ start = 0, page_length = 40, search_term = "" }) {
 		const doc = this.events.get_frm().doc;
 		const price_list = (doc && doc.selling_price_list) || this.price_list;
+		const customer = (doc && doc.customer) || this.customer;
 		let { item_group, pos_profile } = this;
 
 		!item_group && (item_group = this.parent_item_group);
@@ -74,7 +75,7 @@ erpnext.PointOfSale.ItemSelector = class {
 		return frappe.call({
 			method: "erpnext.selling.page.point_of_sale.point_of_sale.get_items",
 			freeze: true,
-			args: { start, page_length, price_list, item_group, search_term, pos_profile },
+			args: { start, page_length, price_list, item_group, pos_profile, customer, search_term },
 		});
 	}
 
@@ -131,7 +132,7 @@ erpnext.PointOfSale.ItemSelector = class {
 		function get_promo_price_html() {
 			if(item.promo_price && item.promo_price > -1 && price_list_rate > 0) {
 				const promo_precision = flt(item.promo_price, 2) % 1 != 0 ? 2 : 0;
-				return `<div class="item-prices"><div class="item-rate has-promo">${format_currency(price_list_rate, item.currency, precision) || 0}</div><div class="item-promo-rate">${format_currency(item.promo_price, item.currency, promo_precision)} / ${uom}</div>`;
+				return `<div class="item-prices"><div class="item-rate has-promo">${format_currency(price_list_rate, item.currency, precision) || 2}</div><div class="item-promo-rate">${format_currency(item.promo_price, item.currency, promo_precision)} / ${uom}</div>`;
 			} else {
 				return `<div class="item-prices"><div class="item-rate">${format_currency(price_list_rate, item.currency, precision) || 0} / ${uom}</div>`;
 			}

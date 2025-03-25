@@ -125,7 +125,7 @@ def get_parent_item_group():
 
 
 @frappe.whitelist()
-def get_items(start, page_length, price_list, item_group, pos_profile, search_term=""):
+def get_items(start, page_length, price_list, item_group, pos_profile, customer=None, search_term=""):
 	warehouse, hide_unavailable_items, company = frappe.db.get_value( #//// added , company
 		"POS Profile", pos_profile, ["warehouse", "hide_unavailable_items", "company"] #//// , "company"
 	)
@@ -224,9 +224,17 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 		for price in item_price:
 			#//// added
 			item_prices[item.item_code] = price 
-			promo = get_price(item.item_code, price_list, '', company, from_pos=True)
-			if promo:
-				item_promos[item.item_code] = float(promo.get('price_list_rate')) if promo.get('formatted_mrp') else '-1'
+			try:
+				# In point_of_sale.py, modify the get_items function:
+				customer_group = None
+				if customer:
+					customer_group = frappe.db.get_value("Customer", customer, "customer_group")
+				promo = get_price(item.item_code, price_list, customer_group, company, from_pos=True)
+				if promo:
+					item_promos[item.item_code] = float(promo.get('price_list_rate')) if promo.get('formatted_mrp') else '-1'
+			except Exception as e:
+				frappe.log_error(f"Error getting pricing for {item.item_code}: {str(e)}")
+				item_promos[item.item_code] = '-1'
 			#////
 			uom = next(filter(lambda x: x.uom == price.uom, uoms), {})
 
