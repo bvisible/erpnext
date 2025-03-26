@@ -575,6 +575,8 @@ erpnext.PointOfSale.ItemCart = class {
 
 	update_item_html(item, remove_item) {
 		const $item = this.get_cart_item(item);
+		//// Add trigger
+		$(document).trigger("item_added_to_cart", [item]);
 
 		if (remove_item) {
 			$item && $item.next().remove() && $item.remove();
