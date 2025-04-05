@@ -13,8 +13,8 @@ app_logo_url = "/assets/erpnext/images/erpnext-logo.svg"
 add_to_apps_screen = [
 	{
 		"name": "erpnext",
-		"logo": "/assets/erpnext/images/erpnext-logo-blue.png",
-		"title": "ERPNext",
+		"logo": "/assets/frappe/images/frappe-framework-logo.svg",
+		"title": "ERP",
 		"route": "/app/home",
 		"has_permission": "erpnext.check_app_permission",
 	}
