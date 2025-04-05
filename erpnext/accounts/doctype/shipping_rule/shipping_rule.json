@@ -22,6 +22,7 @@
   "dimension_col_break",
   "shipping_amount_section",
   "calculate_based_on",
+  "show_constraint_group",
   "column_break_8",
   "shipping_amount",
   "rule_conditions_section",
@@ -104,6 +105,14 @@
    "in_standard_filter": 1,
    "label": "Calculate Based On",
    "options": "Fixed\nNet Total\nNet Weight\nMultiple Constraints"
+  },
+  {
+   "depends_on": "eval:doc.calculate_based_on==='Multiple Constraints'",
+   "default": "1",
+   "description": "Show the constraint group name in the shipping description (e.g. 'Next Day Shipping - Midi_B5_500g')",
+   "fieldname": "show_constraint_group",
+   "fieldtype": "Check",
+   "label": "Show Constraint Group in Description"
   },
   {
    "fieldname": "column_break_8",

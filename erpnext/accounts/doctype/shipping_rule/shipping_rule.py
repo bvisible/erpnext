@@ -140,6 +140,41 @@ class ShippingRule(Document):
 		# //// Start: Custom Shipping Rule - Multiple Constraints ////
 		# If shipping amount is 0, remove the shipping rule from the document
 		if flt(shipping_amount) == 0:
+			# For Multiple Constraints, show a message explaining why the shipping rule was removed
+			if self.calculate_based_on == "Multiple Constraints" and not getattr(doc, '_skip_shipping_rule_notification', False):
+				# Get the reason why shipping rule was not applicable
+				invalid_reasons = []
+				
+				# Get all invalid reasons from constraint groups
+				for group, data in getattr(doc, '_constraint_groups', {}).items():
+					if not data.get('valid') and 'invalid_reasons' in data:
+						for reason in data['invalid_reasons']:
+							if reason not in invalid_reasons:
+								invalid_reasons.append(reason)
+				
+				# If we have reasons, show them to the user
+				if invalid_reasons:
+					# Format a concise message showing the non-compliance
+					message = _("Shipping rule '{0}' is not applicable: ").format(self.label)
+					
+					# Limit to first 3 reasons to avoid excessive message length
+					if len(invalid_reasons) > 3:
+						formatted_reasons = ", ".join(invalid_reasons[:3]) + ", ..."
+					else:
+						formatted_reasons = ", ".join(invalid_reasons)
+					
+					message += formatted_reasons
+					
+					# Show the message to the user
+					frappe.msgprint(
+						message,
+						title=_("Shipping Rule Not Applicable"),
+						indicator="orange"
+					)
+					
+					# Set flag to avoid showing multiple messages
+					doc._skip_shipping_rule_notification = True
+			
 			# Clear shipping rule fields from the document
 			doc.shipping_rule = ""
 			doc.shipping_rule_rate = 0
@@ -218,7 +253,8 @@ class ShippingRule(Document):
 					if item_code:
 						try:
 							item_doc = frappe.get_cached_doc("Item", item_code)
-						except:
+						except Exception as e:
+							frappe.log_error("ShippingRule_Constraints",f"Could not retrieve item {item_code}: {str(e)}")
 							pass
 					
 					# Get weight and dimensions from item doc
@@ -230,12 +266,10 @@ class ShippingRule(Document):
 						# Convert weight to shipping rule's UOM if needed
 						if item_weight_uom and item_weight_uom != self.weight_uom:
 							try:
+								original_weight = item_weight
 								item_weight = self.convert_to_uom(item_weight, item_weight_uom, self.weight_uom)
 							except Exception as e:
-								frappe.log_error(
-									"Error calculating shipping rules",
-									f"Error converting weight unit: {str(e)} for item {item_code}"
-								)
+								frappe.log_error("ShippingRule_Constraints",f"Error converting weight unit: {str(e)} for item {item_code}")
 						
 						total_weight += item_weight
 						
@@ -244,7 +278,7 @@ class ShippingRule(Document):
 						item_width = getattr(item_doc, 'width', 0) or 0
 						item_height = getattr(item_doc, 'height', 0) or 0
 						item_dimensions_uom = getattr(item_doc, 'dimensions_uom', None)
-						
+												
 						# Convert dimensions to shipping rule's UOM if needed
 						if item_dimensions_uom and item_dimensions_uom != self.dimensions_uom:
 							try:
@@ -252,10 +286,7 @@ class ShippingRule(Document):
 								item_width = self.convert_to_uom(item_width, item_dimensions_uom, self.dimensions_uom)
 								item_height = self.convert_to_uom(item_height, item_dimensions_uom, self.dimensions_uom)
 							except Exception as e:
-								frappe.log_error(
-									"Error calculating shipping rules",
-									f"Error converting dimension unit: {str(e)} for item {item_code}"
-								)
+								frappe.log_error("ShippingRule_Constraints",f"Error converting dimension unit: {str(e)} for item {item_code}")
 						
 						# Update max dimensions
 						if item_length > length:
@@ -283,7 +314,7 @@ class ShippingRule(Document):
 						item_width = flt(getattr(item, 'width', 0) or 0)
 						item_height = flt(getattr(item, 'height', 0) or 0)
 						item_dimensions_uom = getattr(item, 'dimension_uom', None) or ''
-						
+												
 						# Convert dimensions if unit is specified and different
 						if item_dimensions_uom and item_dimensions_uom != self.dimensions_uom:
 							try:
@@ -294,10 +325,7 @@ class ShippingRule(Document):
 								if item_height:
 									item_height = self.convert_to_uom(item_height, item_dimensions_uom, self.dimensions_uom)
 							except Exception as e:
-								frappe.log_error(
-									"Error calculating shipping rules",
-									f"Error converting dimension unit from item row: {str(e)}"
-								)
+								frappe.log_error("ShippingRule_Constraints",f"Error converting dimension unit from item row: {str(e)}")
 						
 						# Update max dimensions
 						if item_length > length:
@@ -404,12 +432,19 @@ class ShippingRule(Document):
 						_("infini") if max_value == float('inf') else flt(max_value, precision=2)
 					)
 					valid_groups[group]["invalid_reasons"].append(reason)
+								
+			# Store the constraint evaluation results on the document for later use
+			doc._constraint_groups = valid_groups
 			
-			# Find the first valid group and apply its shipping amount
 			for group, data in valid_groups.items():
 				if data["valid"]:
+					# Store the applied constraint group for future reference
+					doc._applied_constraint_group = group
+					
 					return data["shipping_amount"]
 			
+			# Clear applied constraint group if none was found
+			doc._applied_constraint_group = ""
 			return 0.0
 
 		finally:
@@ -438,7 +473,63 @@ class ShippingRule(Document):
 					"height": 0, 
 					"volume": 0
 				}
+				
+			# Analyze items to determine if they're all identical (like multiple books)
+			all_identical = True
+			first_item = None
 			
+			if len(packing_items) > 1:
+				first_item = packing_items[0]
+				first_item_dims = (
+					float(first_item.get("length", 0) or 0),
+					float(first_item.get("width", 0) or 0),
+					float(first_item.get("height", 0) or 0)
+				)
+				
+				for item in packing_items[1:]:
+					item_dims = (
+						float(item.get("length", 0) or 0),
+						float(item.get("width", 0) or 0),
+						float(item.get("height", 0) or 0)
+					)
+					
+					if item_dims != first_item_dims:
+						all_identical = False
+						break
+			else:
+				all_identical = False
+			
+			# For books and similar flat objects, determine if they are flat (one dimension is much smaller)
+			items_are_flat = False
+			if all_identical and first_item:
+				length = float(first_item.get("length", 0) or 0)
+				width = float(first_item.get("width", 0) or 0)
+				height = float(first_item.get("height", 0) or 0)
+				
+				if height > 0 and (length / height > 5 or width / height > 5):
+					items_are_flat = True
+			
+			# For identical flat items like books, prefer vertical stacking
+			if all_identical and items_are_flat:
+				# Extract dimensions from the first item (they're all the same)
+				length = float(first_item.get("length", 0) or 0)
+				width = float(first_item.get("width", 0) or 0)
+				height = float(first_item.get("height", 0) or 0)
+				total_weight = sum(float(item.get("weight", 0) or 0) for item in packing_items)
+				
+				# Stack them vertically (height increases)
+				stacked_height = height * len(packing_items)
+				
+				result = {
+					"length": length,
+					"width": width,
+					"height": stacked_height,
+					"volume": length * width * stacked_height
+				}
+				
+				return result
+				
+			# If not stacking identical flat items, use the standard 3D packing algorithm
 			# Create a virtual packing bin with large dimensions
 			# We use this to find the optimal arrangement, not to validate constraints
 			max_dim = 1000000  # A very large dimension to ensure all items can fit
@@ -449,12 +540,13 @@ class ShippingRule(Document):
 			packer.add_bin(virtual_bin)
 			
 			# Add all items to the packer
+			items_added = 0
 			for i, item in enumerate(packing_items):
 				# Extract dimensions from the item dictionary
-				length = float(item.get("length", 0))
-				width = float(item.get("width", 0))
-				height = float(item.get("height", 0))
-				weight = float(item.get("weight", 0))
+				length = float(item.get("length", 0) or 0)
+				width = float(item.get("width", 0) or 0)
+				height = float(item.get("height", 0) or 0)
+				weight = float(item.get("weight", 0) or 0)
 				
 				# Skip invalid items
 				if length <= 0 or width <= 0 or height <= 0:
@@ -477,9 +569,18 @@ class ShippingRule(Document):
 				
 				# Add item to the packer
 				packer.add_item(packing_item)
+				items_added += 1
 						
 			# Run the packing algorithm
 			# This will arrange items in the virtual container
+			if items_added == 0:
+				return {
+					"length": 0, 
+					"width": 0, 
+					"height": 0, 
+					"volume": 0
+				}
+				
 			packer.pack(bigger_first=True)
 			
 			# Get the packed bin
@@ -505,7 +606,6 @@ class ShippingRule(Document):
 				max_x = max(max_x, float(pos[0]) + float(dim[0]))
 				max_y = max(max_y, float(pos[1]) + float(dim[1]))
 				max_z = max(max_z, float(pos[2]) + float(dim[2]))
-			
 			
 			# Identify the smallest dimension - probably height for books
 			dimensions_sorted = sorted([max_x, max_y, max_z])
@@ -541,10 +641,7 @@ class ShippingRule(Document):
 				}
 				return result
 			
-		except ImportError:
-			# Fallback to the original packing algorithm if py3dbp is not available
-			frappe.log_error("py3dbp library not available, falling back to basic packing algorithm", "ShippingRule")
-			
+		except ImportError as e:			
 			# If no items with dimensions, return default values
 			if not packing_items:
 				return {
@@ -554,14 +651,82 @@ class ShippingRule(Document):
 					"volume": 0
 				}
 			
+			# Detect identical flat items (like books)
+			all_identical = True
+			first_item = None
+			
+			if len(packing_items) > 1:
+				first_item = packing_items[0]
+				first_item_dims = (
+					float(first_item.get("length", 0) or 0),
+					float(first_item.get("width", 0) or 0),
+					float(first_item.get("height", 0) or 0)
+				)
+				
+				for item in packing_items[1:]:
+					item_dims = (
+						float(item.get("length", 0) or 0),
+						float(item.get("width", 0) or 0),
+						float(item.get("height", 0) or 0)
+					)
+					
+					if item_dims != first_item_dims:
+						all_identical = False
+						break
+			else:
+				all_identical = False
+			
+			# For books and similar flat objects, determine if they are flat (one dimension is much smaller)
+			items_are_flat = False
+			if all_identical and first_item:
+				length = float(first_item.get("length", 0) or 0)
+				width = float(first_item.get("width", 0) or 0)
+				height = float(first_item.get("height", 0) or 0)
+				
+				if height > 0 and (length / height > 5 or width / height > 5):
+					items_are_flat = True
+			
+			# For identical flat items like books, prefer vertical stacking
+			if all_identical and items_are_flat:
+				# Extract dimensions from the first item (they're all the same)
+				length = float(first_item.get("length", 0) or 0)
+				width = float(first_item.get("width", 0) or 0)
+				height = float(first_item.get("height", 0) or 0)
+				total_weight = sum(float(item.get("weight", 0) or 0) for item in packing_items)
+				
+				# Stack them vertically (height increases)
+				stacked_height = height * len(packing_items)
+				
+				result = {
+					"length": length,
+					"width": width,
+					"height": stacked_height,
+					"volume": length * width * stacked_height
+				}
+				
+				return result
+			
 			# Sort items by volume (largest first) for better packing
-			packing_items.sort(key=lambda x: x["length"] * x["width"] * x["height"], reverse=True)
+			packing_items.sort(key=lambda x: 
+				float(x.get("length", 0) or 0) * 
+				float(x.get("width", 0) or 0) * 
+				float(x.get("height", 0) or 0), 
+				reverse=True
+			)
 			
 			# Group items by dimensions while preserving orientation
 			grouped_items = {}
 			for item in packing_items:
-				# Use original dimensions to preserve orientation
-				item_key = (item["length"], item["width"], item["height"])
+				# Use original dimensions to preserve orientation, safely handling None values
+				l = float(item.get("length", 0) or 0)
+				w = float(item.get("width", 0) or 0)
+				h = float(item.get("height", 0) or 0)
+				
+				# Skip invalid dimensions
+				if l <= 0 or w <= 0 or h <= 0:
+					continue
+					
+				item_key = (l, w, h)
 				
 				if item_key not in grouped_items:
 					grouped_items[item_key] = []
@@ -619,8 +784,12 @@ class ShippingRule(Document):
 					"type": "width"
 				}
 				
-				# Add all options for this group
-				packings.extend([vert_stack, length_stack, width_stack])
+				# For flat items like books, prioritize vertical stacking
+				if h > 0 and (l / h > 5 or w / h > 5):
+					packings.append(vert_stack)
+				else:
+					# Add all options for this group
+					packings.extend([vert_stack, length_stack, width_stack])
 			
 			# Find the most compact arrangement (minimize the max of length, width, height)
 			if packings:
@@ -629,10 +798,19 @@ class ShippingRule(Document):
 				single_item_packings = [p for p in packings if p.get("type") == "single"]
 				if single_item_packings:
 					best_packing = single_item_packings[0]
-				else:
-					# Sort by maximum dimension
-					packings.sort(key=lambda x: max(x["length"], x["width"], x["height"]))
+				elif len(packings) == 1:
+					# If only one option, use it
 					best_packing = packings[0]
+				else:
+					# First, prioritize vertical stacking for flat items like books
+					vertical_packings = [p for p in packings if p.get("type") == "vertical" and p not in single_item_packings]
+					if vertical_packings and all(p.get("height", 0) <= 5 for p in vertical_packings):
+						# Use vertical stacking if the resulting height is reasonable (5 units or less)
+						best_packing = vertical_packings[0]
+					else:
+						# Otherwise sort by maximum dimension
+						packings.sort(key=lambda x: max(x["length"], x["width"], x["height"]))
+						best_packing = packings[0]
 				
 				return best_packing
 			else:
@@ -643,8 +821,11 @@ class ShippingRule(Document):
 					"volume": 0
 				}
 		except Exception as e:
-			# Log any other errors and return a safe default
-			frappe.log_error(f"Error in calculate_optimal_packing: {str(e)}", "ShippingRule")
+			# Try to extract as much information as possible
+			error_details = {
+				"error": str(e),
+				"packing_items": packing_items[:5] if packing_items else []  # First 5 items for brevity
+			}			
 			return {
 				"length": 0, 
 				"width": 0, 
@@ -667,39 +848,46 @@ class ShippingRule(Document):
 		if not value or not from_uom or not to_uom or from_uom == to_uom:
 			return value
 		
-		# Try to find a direct conversion factor first
-		uom_conversion = frappe.db.get_value(
-			"UOM Conversion Factor",
-			{"from_uom": from_uom, "to_uom": to_uom},
-			"value"
-		)
-		
-		if uom_conversion:
-			return flt(value) * flt(uom_conversion)
-		
-		# Try the reverse conversion
-		reverse_conversion = frappe.db.get_value(
-			"UOM Conversion Factor",
-			{"from_uom": to_uom, "to_uom": from_uom},
-			"value"
-		)
-		
-		if reverse_conversion:
-			return flt(value) / flt(reverse_conversion)
-		
-		# Fallback method: use standard conversion factors
 		try:
+			# Try to find a direct conversion factor first
+			uom_conversion = frappe.db.get_value(
+				"UOM Conversion Factor",
+				{"from_uom": from_uom, "to_uom": to_uom},
+				"value"
+			)
+			
+			if uom_conversion:
+				result = flt(value) * flt(uom_conversion)
+				return result
+			
+			# Try the reverse conversion
+			reverse_conversion = frappe.db.get_value(
+				"UOM Conversion Factor",
+				{"from_uom": to_uom, "to_uom": from_uom},
+				"value"
+			)
+			
+			if reverse_conversion:
+				result = flt(value) / flt(reverse_conversion)
+				return result
+			
+			# Fallback method: use standard conversion factors
 			from_conversion_factor = frappe.get_value("UOM Conversion Detail", 
 				{"parent": "UOM", "uom": from_uom}, "conversion_factor") or 1.0
 			to_conversion_factor = frappe.get_value("UOM Conversion Detail", 
 				{"parent": "UOM", "uom": to_uom}, "conversion_factor") or 1.0
-			
-			# Convert value
-			return flt(value) * flt(from_conversion_factor) / flt(to_conversion_factor)
-		except Exception as e:
-			frappe.log_error(f"Error converting unit from {from_uom} to {to_uom}: {str(e)}")
+				
+			if from_conversion_factor and to_conversion_factor:
+				# Convert value
+				result = flt(value) * flt(from_conversion_factor) / flt(to_conversion_factor)
+				return result
+				
 			frappe.throw(_("No conversion factor found between {0} and {1}").format(from_uom, to_uom))
-	# //// End: Custom Shipping Rule - Multiple Constraints ////
+			
+		except Exception as e:
+			# Return the original value if conversion fails
+			return value
+			# //// End: Custom Shipping Rule - Multiple Constraints ////
 
 	def validate_countries(self, doc):
 		# validate applicable countries
@@ -817,6 +1005,31 @@ class ShippingRule(Document):
 			# ////existing_shipping_charge[-1].tax_amount = shipping_amount
 			doctype = "Purchase Taxes and Charges"
 		
+		# Get applied constraint group name if available
+		applied_constraint_group = ""
+		if hasattr(doc, '_applied_constraint_group') and doc._applied_constraint_group:
+			applied_constraint_group = doc._applied_constraint_group
+		else:
+			# Try to determine which constraint group is being applied
+			if self.calculate_based_on == "Multiple Constraints":
+				# Get dimensions and constraints for logging
+				for group, data in getattr(doc, '_constraint_groups', {}).items():
+					if data.get('valid', False):
+						applied_constraint_group = group
+						break
+		
+		# Generate the description with constraint group if available
+		description = self.label
+		
+		# Check if the show_constraint_group option is enabled (default is True if not specified)
+		show_constraint_group = True
+		if hasattr(self, 'show_constraint_group') and self.show_constraint_group is not None:
+			show_constraint_group = bool(self.show_constraint_group)
+		
+		# Only append constraint group to description if enabled
+		if show_constraint_group and applied_constraint_group and self.calculate_based_on == "Multiple Constraints":
+			description = f"{self.label} - {applied_constraint_group}"
+		
 		# Calculate base amount and taxes if applicable
 		base_shipping_amount = shipping_amount
 		tax_rows = []
@@ -857,14 +1070,14 @@ class ShippingRule(Document):
 							
 							# Prepare a simple tax row with minimum required fields
 							tax_rows.append({
-								"description": f"{self.label} - {account_name} ({tax.tax_rate}%)",
+								"description": f"{description} - {account_name} ({tax.tax_rate}%)",
 								"account_head": tax.tax_type,
 								"charge_type": "Actual",
 								"tax_amount": tax_amount,
 								"cost_center": self.cost_center
 							})
 			except Exception as e:
-				frappe.log_error(f"Error processing shipping rule taxes: {str(e)}")
+				frappe.log_error("ShippingRule",f"Error processing shipping rule taxes: {str(e)}")
 		
 		# Add the shipping charge
 		if self.shipping_rule_type == "Selling":
@@ -872,7 +1085,7 @@ class ShippingRule(Document):
 			new_tax_row = {
 				"doctype": "Sales Taxes and Charges",
 				"charge_type": "Actual",
-				"description": self.label,
+				"description": description,
 				"account_head": self.account,
 				"cost_center": self.cost_center,
 				"tax_amount": base_shipping_amount
@@ -885,7 +1098,7 @@ class ShippingRule(Document):
 			new_tax_row = {
 				"doctype": "Purchase Taxes and Charges",
 				"charge_type": "Actual",
-				"description": self.label,
+				"description": description,
 				"account_head": self.account,
 				"cost_center": self.cost_center,
 				"tax_amount": base_shipping_amount,
@@ -937,7 +1150,7 @@ class ShippingRule(Document):
 			doc.shipping_rule = self.name
 			doc.shipping_rule_rate = shipping_amount
 		except Exception as e:
-			frappe.log_error(f"Failed to add shipping tax rows: {str(e)}")
+			frappe.log_error("ShippingRule",f"Failed to add shipping tax rows: {str(e)}")
 	# //// End: Custom Shipping Rule - Multiple Constraints ////
 
 	def sort_shipping_rule_conditions(self):

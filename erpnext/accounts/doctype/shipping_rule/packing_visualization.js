@@ -63,6 +63,13 @@ function visualize_packing_from_form(frm) {
             
             // Prepare item data for visualization
             const items_to_visualize = [];
+            const item_counts = {};
+            
+            // Count occurrences of each item code to identify identical items
+            frm.doc.items.forEach(form_item => {
+                if (!form_item.item_code) return;
+                item_counts[form_item.item_code] = (item_counts[form_item.item_code] || 0) + 1;
+            });
             
             // Iterate through all items in the form
             frm.doc.items.forEach(form_item => {
@@ -70,14 +77,14 @@ function visualize_packing_from_form(frm) {
                 
                 const item_data = item_dimensions[form_item.item_code] || {};
                 
-                // Utiliser les dimensions du formulaire si disponibles, sinon celles de l'Item
+                // Use dimensions from the form if available, otherwise use from Item doctype
                 const length = parseFloat(form_item.length || 0) || parseFloat(item_data.length || 0);
                 const width = parseFloat(form_item.width || 0) || parseFloat(item_data.width || 0);
                 const height = parseFloat(form_item.height || 0) || parseFloat(item_data.height || 0);
                 const weight = parseFloat(form_item.weight_per_unit || form_item.weight || 0) || 
                              parseFloat(item_data.weight || 0);
                 
-                // Ajouter l'article s'il a des dimensions valides
+                // Add the item if it has valid dimensions
                 if (length > 0 && width > 0 && height > 0) {
                     items_to_visualize.push({
                         name: form_item.item_name || item_data.item_name || form_item.item_code,
@@ -85,7 +92,11 @@ function visualize_packing_from_form(frm) {
                         width: width,
                         height: height,
                         weight: weight,
-                        qty: form_item.qty || 1
+                        qty: parseInt(form_item.qty || 1, 10),
+                        item_code: form_item.item_code,
+                        // Add properties to help with stacking detection
+                        is_flat: (height > 0 && (length / height > 5 || width / height > 5)),
+                        identical_count: item_counts[form_item.item_code] || 1
                     });
                 }
             });

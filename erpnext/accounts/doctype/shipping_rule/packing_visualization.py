@@ -32,19 +32,55 @@ def generate_packing_visualization(items_data, bin_dimensions=None):
 		# Prepare items for packing
 		packing_items = []
 		for item in items_data:
-			for _ in range(item.get("qty", 1)):
+			for i in range(int(item.get("qty", 1))):
+				# Check if this item already has a precalculated position
+				position = item.get("position", None)
+				
 				packing_items.append({
 					"name": item.get("name", "Item"),
 					"length": float(item.get("length", 0)),
 					"width": float(item.get("width", 0)),
 					"height": float(item.get("height", 0)),
-					"weight": float(item.get("weight", 0))
+					"weight": float(item.get("weight", 0)),
+					"position": position[i] if position and isinstance(position, list) and i < len(position) else None
 				})
 		
 		# If no container dimensions are provided, calculate optimal dimensions
 		if not bin_dimensions:
 			from erpnext.accounts.doctype.shipping_rule.shipping_rule import ShippingRule
 			bin_dimensions = ShippingRule.calculate_optimal_packing(packing_items)
+		
+		# Check if items are all identical (like books) and flat
+		all_identical = True
+		is_flat = False
+		items_with_positions = 0
+		
+		if len(packing_items) > 1:
+			first_item = packing_items[0]
+			first_dims = (
+				float(first_item.get("length", 0)),
+				float(first_item.get("width", 0)),
+				float(first_item.get("height", 0))
+			)
+			
+			# Check if item is flat
+			if first_dims[2] > 0 and (first_dims[0] / first_dims[2] > 5 or first_dims[1] / first_dims[2] > 5):
+				is_flat = True
+			
+			# Check if all items have identical dimensions
+			for item in packing_items[1:]:
+				item_dims = (
+					float(item.get("length", 0)),
+					float(item.get("width", 0)),
+					float(item.get("height", 0))
+				)
+				
+				if item_dims != first_dims:
+					all_identical = False
+					break
+			
+			# Count items with positions
+			items_with_positions = sum(1 for item in packing_items if item.get("position") is not None)
 		
 		# Initialize packer
 		packer = Packer()
@@ -57,19 +93,33 @@ def generate_packing_visualization(items_data, bin_dimensions=None):
 						bin_dimensions["length"] * bin_dimensions["width"] * bin_dimensions["height"])
 		packer.add_bin(virtual_bin)
 		
-		# Add items to packer
-		for i, item in enumerate(packing_items):
-			packing_item = Item(f"Item_{i}_{item['name']}", 
-							item.get("length"), 
-							item.get("width"), 
-							item.get("height"), 
-							item.get("weight", 0))
-			packing_item.can_rotate = True
-			packing_item.rotation_type = 0
-			packer.add_item(packing_item)
+		# For identical flat items (like books) that don't have precalculated positions
+		if is_flat and all_identical and items_with_positions == 0 and len(packing_items) > 1:
+			# Calculate stacked height based on item height
+			item_height = float(packing_items[0].get("height", 0))
+			
+			# Manually set positions to stack items vertically
+			for i, item in enumerate(packing_items):
+				item["position"] = [0, 0, i * item_height]
+				items_with_positions += 1
+				
+			frappe.log_error("PackingVisualization", f"Stacking {len(packing_items)} identical flat items vertically")
 		
-		# Execute packing algorithm
-		packer.pack(bigger_first=True)
+		# If items don't have precalculated positions, run packing algorithm
+		if items_with_positions == 0:
+			# Add items to packer
+			for i, item in enumerate(packing_items):
+				packing_item = Item(f"Item_{i}_{item['name']}", 
+								item.get("length"), 
+								item.get("width"), 
+								item.get("height"), 
+								item.get("weight", 0))
+				packing_item.can_rotate = True
+				packing_item.rotation_type = 0
+				packer.add_item(packing_item)
+			
+			# Execute packing algorithm
+			packer.pack(bigger_first=True)
 		
 		# Create visualization
 		fig = plt.figure(figsize=(10, 8))
@@ -192,23 +242,61 @@ def generate_packing_visualization(items_data, bin_dimensions=None):
 		
 		# Draw packed items
 		packed_items_info = []
-		for bin in packer.bins:
-			for item in bin.items:
+		
+		# Handle items with precalculated positions
+		if items_with_positions > 0:
+			frappe.log_error("PackingVisualization", f"Using {items_with_positions} precalculated positions")
+			
+			# Create Item objects with precalculated positions
+			custom_items = []
+			for i, item_data in enumerate(packing_items):
+				if item_data.get("position") is not None:
+					item = Item(f"Item_{i}_{item_data['name']}", 
+								float(item_data.get("length", 0)),
+								float(item_data.get("width", 0)), 
+								float(item_data.get("height", 0)),
+								float(item_data.get("weight", 0)))
+					item.position = item_data["position"]
+					custom_items.append(item)
+					
+					# Also store item info for the report
+					pos = np.array(item.position, dtype=float)
+					dim = np.array([float(item_data.get("length", 0)), 
+					                float(item_data.get("width", 0)), 
+					                float(item_data.get("height", 0))], dtype=float)
+					
+					# Extract original item name
+					item_name = item_data.get("name", f"Item_{i}")
+					
+					packed_items_info.append({
+						"name": item_name,
+						"position": pos.tolist(),
+						"dimensions": dim.tolist()
+					})
+			
+			# Draw each item with a different color
+			for item in custom_items:
 				color = get_random_color()
 				add_box(ax, item, color)
-				
-				# Collect information about the item for the report
-				pos = np.array(item.position, dtype=float)
-				dim = np.array(item.get_dimension(), dtype=float)
-				
-				# Extract original item name
-				item_name = item.name.split("_", 2)[2] if "_" in item.name else item.name
-				
-				packed_items_info.append({
-					"name": item_name,
-					"position": pos.tolist(),
-					"dimensions": dim.tolist()
-				})
+		else:
+			# Use items packed by py3dbp algorithm
+			for bin in packer.bins:
+				for item in bin.items:
+					color = get_random_color()
+					add_box(ax, item, color)
+					
+					# Collect information about the item for the report
+					pos = np.array(item.position, dtype=float)
+					dim = np.array(item.get_dimension(), dtype=float)
+					
+					# Extract original item name
+					item_name = item.name.split("_", 2)[2] if "_" in item.name else item.name
+					
+					packed_items_info.append({
+						"name": item_name,
+						"position": pos.tolist(),
+						"dimensions": dim.tolist()
+					})
 		
 		# Configure axes
 		ax.set_xlabel('Length (cm)', fontweight='bold')
@@ -311,22 +399,102 @@ def visualize_packing(items_data, shipping_rule=None, bin_dimensions=None):
 			# Get the name of the shipping rule
 			shipping_info["shipping_rule_name"] = rule.label or rule.name
 			
+			# For rules with multiple constraints, try to get the constraint name from document
+			constraint_group = ""
+			
 			# Try to retrieve the applicable constraint
 			if hasattr(rule, 'calculate_based_on'):
 				if rule.calculate_based_on == "Multiple Constraints" and hasattr(rule, 'condition_multiple_constraints'):
 					# For rules with multiple constraints
 					if rule.condition_multiple_constraints and len(rule.condition_multiple_constraints) > 0:
-						# For multiple constraints, retrieve the group name
-						constraint = rule.condition_multiple_constraints[0]
+						# Extract all constraint groups
+						constraint_groups = {}
+						for constraint in rule.condition_multiple_constraints:
+							if hasattr(constraint, 'condition_group') and constraint.condition_group:
+								group = constraint.condition_group
+								if group not in constraint_groups:
+									constraint_groups[group] = []
+								constraint_groups[group].append(constraint)
 						
-						# Find the name of the constraint group
-						if hasattr(constraint, 'condition_group') and constraint.condition_group:
-							shipping_info["constraint_name"] = constraint.condition_group
-						# Fallback sur le nom de la contrainte
-						elif hasattr(constraint, 'constraint_name') and constraint.constraint_name:
-							shipping_info["constraint_name"] = constraint.constraint_name
-						else:
-							shipping_info["constraint_name"] = "Contrainte multiple"
+						# If we have constraint groups, try to find the active one
+						if constraint_groups:
+							constraint_group = next(iter(constraint_groups))  # default to first group
+							
+							# Try to find the constraint with height that allows 3 books to be stacked
+							# Prepare items for packing
+							packing_items = []
+							for item in items_data:
+								for _ in range(int(item.get("qty", 1))):
+									packing_items.append({
+										"name": item.get("name", "Item"),
+										"length": float(item.get("length", 0)),
+										"width": float(item.get("width", 0)),
+										"height": float(item.get("height", 0)),
+										"weight": float(item.get("weight", 0))
+									})
+							
+							# Check if all items are flat and identical (like books)
+							all_identical = True
+							is_flat = False
+							first_item = None
+							
+							if len(packing_items) > 1:
+								first_item = packing_items[0]
+								first_length = float(first_item.get("length", 0))
+								first_width = float(first_item.get("width", 0))
+								first_height = float(first_item.get("height", 0))
+								
+								# Check if item is flat (height much smaller than length/width)
+								if first_height > 0 and (first_length / first_height > 5 or first_width / first_height > 5):
+									is_flat = True
+								
+								# Check if all items have the same dimensions
+								for item in packing_items[1:]:
+									length = float(item.get("length", 0))
+									width = float(item.get("width", 0))
+									height = float(item.get("height", 0))
+									
+									if (length != first_length or width != first_width or height != first_height):
+										all_identical = False
+										break
+							
+							# Calculate total weight
+							total_weight = sum(float(item.get("weight", 0) or 0) for item in packing_items)
+							
+							# For flat identical items like books, we need to find the right constraint group
+							if is_flat and all_identical and first_item:
+								# Calculate stacked height
+								stacked_height = first_height * len(packing_items)
+								
+								# Find a group that can accommodate the items
+								for group, constraints in constraint_groups.items():
+									# Extract max dimensions and weight from constraints
+									max_length = 0
+									max_width = 0
+									max_height = 0
+									max_weight = 0
+									
+									for c in constraints:
+										if hasattr(c, 'constraint_type') and hasattr(c, 'max_value'):
+											if c.constraint_type == "Length":
+												max_length = float(c.max_value)
+											elif c.constraint_type == "Width":
+												max_width = float(c.max_value)
+											elif c.constraint_type == "Height":
+												max_height = float(c.max_value)
+											elif c.constraint_type == "Weight":
+												max_weight = float(c.max_value)
+									
+									# Check if this group can accommodate the stacked items
+									if (first_length <= max_length and 
+										first_width <= max_width and 
+										stacked_height <= max_height and 
+										total_weight <= max_weight):
+										constraint_group = group
+										break
+							
+							# Store the constraint name for display
+							shipping_info["constraint_name"] = constraint_group
 				elif hasattr(rule, 'conditions'):
 					# For standard rules
 					if rule.conditions and len(rule.conditions) > 0:
@@ -344,72 +512,34 @@ def visualize_packing(items_data, shipping_rule=None, bin_dimensions=None):
 			max_length = 0
 			max_width = 0
 			max_height = 0
-			current_group = None
 			
-			# If the rule uses multiple constraints, try to retrieve the maximum dimensions
-			if rule.calculate_based_on == "Multiple Constraints" and hasattr(rule, 'condition_multiple_constraints'):
-				# Retrieve all constraints by group
-				constraint_groups = {}
-				
+			# If the rule uses multiple constraints, get dimensions from the selected constraint group
+			if rule.calculate_based_on == "Multiple Constraints" and constraint_group:
 				for constraint in rule.condition_multiple_constraints:
-					if hasattr(constraint, 'condition_group') and constraint.condition_group:
-						group = constraint.condition_group
-						if group not in constraint_groups:
-							constraint_groups[group] = {
-								"min_weight": float('inf'),
-								"max_weight": 0,
-								"length": 0,
-								"width": 0,
-								"height": 0
-							}
-						
-						# Extract constraint values
+					if hasattr(constraint, 'condition_group') and constraint.condition_group == constraint_group:
 						if hasattr(constraint, 'constraint_type') and hasattr(constraint, 'max_value'):
-							if constraint.constraint_type == "Weight":
-								constraint_groups[group]["min_weight"] = min(constraint_groups[group]["min_weight"], constraint.min_value)
-								constraint_groups[group]["max_weight"] = max(constraint_groups[group]["max_weight"], constraint.max_value)
-							elif constraint.constraint_type == "Length":
-								constraint_groups[group]["length"] = constraint.max_value
+							if constraint.constraint_type == "Length":
+								max_length = float(constraint.max_value)
 							elif constraint.constraint_type == "Width":
-								constraint_groups[group]["width"] = constraint.max_value
+								max_width = float(constraint.max_value)
 							elif constraint.constraint_type == "Height":
-								constraint_groups[group]["height"] = constraint.max_value
+								max_height = float(constraint.max_value)
 				
-				# Calculate total weight of items
-				total_weight = 0
-				for item in items_data:
-					item_weight = float(item.get("weight", 0))
-					item_qty = float(item.get("qty", 1))
-					total_weight += item_weight * item_qty
-				
-				# Find the applicable group based on the weight
-				for group, data in constraint_groups.items():
-					if data["min_weight"] <= total_weight <= data["max_weight"]:
-						max_length = data["length"]
-						max_width = data["width"]
-						max_height = data["height"]
-						current_group = group
-						break
+				# If we found constraint dimensions, use them
+				if max_length > 0 and max_width > 0 and max_height > 0:
+					bin_dimensions = {
+						"length": max_length,
+						"width": max_width,
+						"height": max_height,
+						"volume": max_length * max_width * max_height
+					}
 			
-			# Get the container dimensions from the shipping rule
-			if hasattr(rule, 'container_length') and hasattr(rule, 'container_width') and hasattr(rule, 'container_height'):
-				# Use the dimensions defined in the shipping rule
-				bin_dimensions = {
-					"length": float(rule.container_length or 0),
-					"width": float(rule.container_width or 0),
-					"height": float(rule.container_height or 0),
-					"volume": float(rule.container_length or 0) * float(rule.container_width or 0) * float(rule.container_height or 0)
-				}
-				
-				# If dimensions are not defined (or null), use the optimal calculation
-				if bin_dimensions["length"] <= 0 or bin_dimensions["width"] <= 0 or bin_dimensions["height"] <= 0:
-					bin_dimensions = None
-			
-			# Prepare items for packing (if optimal calculation is needed)
+			# If we don't have bin dimensions yet, calculate them
 			if not bin_dimensions:
+				# Prepare items for packing (if optimal calculation is needed)
 				packing_items = []
 				for item in items_data:
-					for _ in range(item.get("qty", 1)):
+					for _ in range(int(item.get("qty", 1))):
 						packing_items.append({
 							"name": item.get("name", "Item"),
 							"length": float(item.get("length", 0)),
@@ -418,34 +548,55 @@ def visualize_packing(items_data, shipping_rule=None, bin_dimensions=None):
 							"weight": float(item.get("weight", 0))
 						})
 				
-				# If only one item, use larger dimensions to visualize correctly
-				if len(packing_items) == 1:
-					# Increase container dimensions by a factor to create visible space
-					factor = 1.5  # 50% larger to well visualize the item inside
-					item_dims = packing_items[0]
-					bin_dimensions = {
-						"length": item_dims["length"] * factor,
-						"width": item_dims["width"] * factor,
-						"height": item_dims["height"] * factor,
-						"volume": item_dims["length"] * item_dims["width"] * item_dims["height"] * (factor**3)
-					}
-				else:
-					# Calculate optimal dimensions using bin packing algorithm
-					optimal_dimensions = rule.calculate_optimal_packing(packing_items)
+				# Check if all items are flat and identical (like books)
+				all_identical = True
+				is_flat = False
+				first_item = None
+				
+				if len(packing_items) > 1:
+					first_item = packing_items[0]
+					first_length = float(first_item.get("length", 0))
+					first_width = float(first_item.get("width", 0))
+					first_height = float(first_item.get("height", 0))
 					
-					# If we have maximum dimensions defined by constraints
-					if current_group and max_length > 0 and max_width > 0 and max_height > 0:
-						# ALWAYS use the dimensions of the constraints as container dimensions
-						bin_dimensions = {
-							"length": float(max_length),
-							"width": float(max_width),
-							"height": float(max_height),
-							"volume": float(max_length) * float(max_width) * float(max_height)
-						}
-						shipping_info["constraint_name"] = current_group
-					else:
-						# Otherwise, use the dimensions calculated by the algorithm
-						bin_dimensions = optimal_dimensions
+					# Check if item is flat (height much smaller than length/width)
+					if first_height > 0 and (first_length / first_height > 5 or first_width / first_height > 5):
+						is_flat = True
+					
+					# Check if all items have the same dimensions
+					for item in packing_items[1:]:
+						length = float(item.get("length", 0))
+						width = float(item.get("width", 0))
+						height = float(item.get("height", 0))
+						
+						if (length != first_length or width != first_width or height != first_height):
+							all_identical = False
+							break
+				
+				# For identical flat items (like books), stack them vertically
+				if is_flat and all_identical and first_item:
+					item_length = float(first_item.get("length", 0))
+					item_width = float(first_item.get("width", 0))
+					item_height = float(first_item.get("height", 0))
+					
+					# Stack them vertically
+					stacked_height = item_height * len(packing_items)
+					
+					# Create a bin that just fits the stacked items
+					bin_dimensions = {
+						"length": item_length,
+						"width": item_width,
+						"height": stacked_height,
+						"volume": item_length * item_width * stacked_height
+					}
+					
+					# Adjust positions to show stacked books
+					for i, item in enumerate(packing_items):
+						item["position"] = [0, 0, i * item_height]
+				else:
+					# For mixed items or non-flat items, use standard calculation
+					optimal_dimensions = rule.calculate_optimal_packing(packing_items)
+					bin_dimensions = optimal_dimensions
 		
 		# Generate visualization with additional information
 		result = generate_packing_visualization(items_data, bin_dimensions)
