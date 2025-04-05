@@ -576,7 +576,10 @@ erpnext.PointOfSale.ItemCart = class {
 	update_item_html(item, remove_item) {
 		const $item = this.get_cart_item(item);
 		//// Add trigger
-		$(document).trigger("item_added_to_cart", [item]);
+		const customEvent = new CustomEvent("item_added_to_cart_custom", {
+			detail: item
+		});
+		this.$cart_items_wrapper[0].dispatchEvent(customEvent);
 
 		if (remove_item) {
 			$item && $item.next().remove() && $item.remove();
