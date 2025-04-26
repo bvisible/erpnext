@@ -23,7 +23,54 @@
  "quick_lists": [],
  "restrict_to_domain": "Gestion",
  "roles": [],
- "sequence_id": 18.0,
- "shortcuts": [],
+ "sequence_id": 5.0,
+ "shortcuts": [
+  {
+   "color": "Green",
+   "format": "{} Available",
+   "label": "Item",
+   "link_to": "Item",
+   "stats_filter": "{\n    \"disabled\": 0\n}",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Learn Procurement",
+   "type": "URL",
+   "url": "https://school.frappe.io/lms/courses/procurement?utm_source=in_app"
+  },
+  {
+   "color": "Yellow",
+   "format": "{} Pending",
+   "label": "Material Request",
+   "link_to": "Material Request",
+   "stats_filter": "{\n    \"company\": [\"like\", '%' + frappe.defaults.get_global_default(\"company\") + '%'],\n    \"status\": \"Pending\"\n}",
+   "type": "DocType"
+  },
+  {
+   "color": "Yellow",
+   "format": "{}  To Receive",
+   "label": "Purchase Order",
+   "link_to": "Purchase Order",
+   "stats_filter": "{\n    \"company\": [\"like\", '%' + frappe.defaults.get_global_default(\"company\") + '%'],\n    \"status\":[\"in\", [\"To Receive\", \"To Receive and Bill\"]]\n}",
+   "type": "DocType"
+  },
+  {
+   "label": "Purchase Analytics",
+   "link_to": "Purchase Analytics",
+   "type": "Report"
+  },
+  {
+   "label": "Purchase Order Analysis",
+   "link_to": "Purchase Order Analysis",
+   "type": "Report"
+  },
+  {
+   "label": "Dashboard",
+   "link_to": "Buying",
+   "type": "Dashboard"
+  }
+ ],
  "title": "Buying"
 }

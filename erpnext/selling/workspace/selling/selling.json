@@ -702,11 +702,9 @@
   {
    "color": "Yellow",
    "doc_view": "List",
-   "format": "{} Open",
-   "label": "Sales Invoice",
-   "link_to": "Sales Invoice",
-   "stats_filter": "[[\"Sales Invoice\",\"outstanding_amount\",\">\",0,false],[\"Sales Invoice\",\"docstatus\",\"<\",\"2\",false]]",
-   "type": "DocType"
+   "label": "Learn Sales Management",
+   "type": "URL",
+   "url": "https://school.frappe.io/lms/courses/sales-management-course?utm_source=in_app"
   },
   {
    "doc_view": "",
@@ -763,5 +761,6 @@
    "type": "Dashboard"
   }
  ],
- "title": "Selling"
+ "title": "Selling",
+ "type": "Workspace"
 }
