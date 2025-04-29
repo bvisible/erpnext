@@ -595,12 +595,8 @@ def apply_pricing_rule_on_transaction(doc):
 								coupon = frappe.get_doc("Coupon Code", doc.get("coupon_code"))
 
 							if coupon and coupon.coupon_type == "Gift Card":
-								# Si c'est un Gift Card, on définit condition_met à True pour sortir
-								# de la boucle principale après cette itération
+								# if it's a gift card coupon, set condition_met to True
 								condition_met = True
-								# Ne pas appliquer de remise
-								doc.set(field, 0)
-								# Sortir de la boucle des champs
 								break
 							elif doc.get("coupon_code"):
 								# coupon code based pricing rule
