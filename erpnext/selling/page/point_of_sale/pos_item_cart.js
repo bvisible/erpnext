@@ -696,18 +696,24 @@ erpnext.PointOfSale.ItemCart = class {
 
 		function get_description_html() {
 			if (item_data.description) {
-				if (item_data.description.indexOf("<div>") != -1) {
+				//// Remove all HTML tags from the description
+				let clean_description = item_data.description;
+				if (typeof clean_description === 'string' && clean_description.indexOf("<") != -1) {
 					try {
-						item_data.description = $(item_data.description).text();
+						// Create a temporary element to extract the text properly
+						const temp = document.createElement("div");
+						temp.innerHTML = clean_description;
+						clean_description = temp.textContent || temp.innerText || "";
 					} catch (error) {
-						item_data.description = item_data.description
-							.replace(/<div>/g, " ")
-							.replace(/<\/div>/g, " ")
-							.replace(/ +/g, " ");
+						// Fallback: remove all HTML tags
+						clean_description = clean_description
+							.replace(/<[^>]*>/g, " ")
+							.replace(/ +/g, " ")
+							.trim();
 					}
 				}
-				item_data.description = frappe.ellipsis(item_data.description, 45);
-				return `<div class="item-desc">${item_data.description}</div>`;
+				clean_description = frappe.ellipsis(clean_description, 45);
+				return `<div class="item-desc">${clean_description}</div>`;
 			}
 			return ``;
 		}
