@@ -216,14 +216,48 @@ erpnext.PointOfSale.PastOrderSummary = class {
 
 	print_receipt() {
 		const frm = this.events.get_frm();
-		frappe.utils.print(
-			this.doc.doctype,
-			this.doc.name,
-			frm.pos_print_format,
-			this.doc.letter_head,
-			this.doc.language || frappe.boot.lang
-		);
-	}
+		
+		//// Get pos profil config
+		frappe.call({
+			method: "erpnext.selling.page.point_of_sale.point_of_sale.get_pos_profile_data",
+			args: { pos_profile: cur_pos.pos_profile },
+			callback: ({ message: profile }) => {
+				//// Check if a CloudPRNT printer is configured
+				if(profile.cloudprnt_printer) {
+					//// Use CloudPRNT for printing
+					frappe.call({
+						method: 'cloudprnt.api.print_pos_invoice',
+						args: {
+							invoice_name: this.doc.name,
+							printer: profile.cloudprnt_printer_name
+						},
+						callback: function(r) {
+							if (r.message && r.message.success) {
+								frappe.show_alert({
+									message: __('Ticket sent to CloudPRNT printer'),
+									indicator: 'green'
+								}, 5);
+							} else {
+								frappe.show_alert({
+									message: __('Error during printing: ') + (r.message ? r.message.message : ''),
+									indicator: 'red'
+								}, 5);
+							}
+						}
+					});
+				} else {
+					//// Use standard printing if no CloudPRNT printer is configured
+					frappe.utils.print(
+						this.doc.doctype,
+						this.doc.name,
+						frm.pos_print_format,
+						this.doc.letter_head,
+						this.doc.language || frappe.boot.lang
+					);
+				}
+			},
+		});
+	} 
 
 	attach_shortcuts() {
 		const ctrl_label = frappe.utils.is_mac() ? "⌘" : "Ctrl";
