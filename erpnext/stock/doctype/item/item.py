@@ -279,13 +279,22 @@ class Item(Document):
 
 		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 
+		#//// Start of custom code
+		# If warehouse is set directly on the item (from quick entry form), use it instead
+		custom_warehouse = getattr(self, "warehouse", None) or getattr(self, "default_warehouse", None)
+		#//// End of custom code
+
 		# default warehouse, or Stores
 		for default in self.item_defaults or [
 			frappe._dict({"company": frappe.defaults.get_defaults().company})
 		]:
-			default_warehouse = default.default_warehouse or frappe.db.get_single_value(
+			#//// Start of custom code
+			# Prioritize the custom warehouse if available
+			default_warehouse = custom_warehouse or default.default_warehouse or frappe.db.get_single_value(
 				"Stock Settings", "default_warehouse"
 			)
+			#//// End of custom code
+
 			if default_warehouse:
 				warehouse_company = frappe.db.get_value("Warehouse", default_warehouse, "company")
 
