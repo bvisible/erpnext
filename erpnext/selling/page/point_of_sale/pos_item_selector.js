@@ -466,7 +466,7 @@ erpnext.PointOfSale.ItemSelector = class {
 	filter_items({ search_term = "" } = {}) {
 		const selling_price_list = this.events.get_frm().doc.selling_price_list;
 		//// if search term is empty, disable auto add item
-		if (search_term === "") this.auto_add_item = false;
+		if (search_term !== "") this.auto_add_item = true;
 
 		if (search_term) {
 			search_term = search_term.toLowerCase();
