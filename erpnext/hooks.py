@@ -13,7 +13,7 @@ app_logo_url = "/assets/erpnext/images/erpnext-logo.svg"
 add_to_apps_screen = [
 	{
 		"name": "erpnext",
-		"logo": "/assets/frappe/images/frappe-framework-logo.svg",
+		"logo": "/assets/frappe/images/icon-logiciel-erp-gestion-business-app.jpg",
 		"title": "Neoffice",
 		"route": "/app/home",
 		"has_permission": "erpnext.check_app_permission",
