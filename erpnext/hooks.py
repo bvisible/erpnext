@@ -14,7 +14,7 @@ add_to_apps_screen = [
 	{
 		"name": "erpnext",
 		"logo": "/assets/frappe/images/frappe-framework-logo.svg",
-		"title": "ERP",
+		"title": "Neoffice",
 		"route": "/app/home",
 		"has_permission": "erpnext.check_app_permission",
 	}
