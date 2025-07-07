@@ -697,6 +697,22 @@ def get_expense_account(doctype, txt, searchfield, start, page_len, filters):
 	if filters.get("company"):
 		condition += "and tabAccount.company = %(company)s"
 
+	#//// START MODIFICATION - Allow all accounts for Purchase Invoice Item
+	# Get reference doctype to know where the call comes from
+	reference_doctype = frappe.form_dict.get('reference_doctype', '')
+	
+	# If call comes from Purchase Invoice Item, return all accounts
+	if reference_doctype == "Purchase Invoice Item":
+		return frappe.db.sql(
+			f"""select tabAccount.name from `tabAccount`
+			where tabAccount.is_group=0
+				and tabAccount.docstatus!=2
+				and tabAccount.{searchfield} LIKE %(txt)s
+				{condition} {get_match_cond(doctype)}""",
+			{"company": filters.get("company", ""), "txt": "%" + txt + "%"},
+		)
+	#//// END MODIFICATION
+
 	return frappe.db.sql(
 		f"""select tabAccount.name from `tabAccount`
 		where (tabAccount.report_type = "Profit and Loss"
