@@ -46,6 +46,15 @@ def create_customer_or_supplier():
 		return
 
 	# //// Check if the customer/supplier already exists
+	# First check via Portal User (most reliable)
+	existing_portal_user = frappe.db.get_value("Portal User", 
+		{"user": user, "parenttype": doctype}, 
+		"parent")
+	
+	if existing_portal_user:
+		return frappe.get_doc(doctype, existing_portal_user)
+	
+	# Then check via Contact
 	existing_party = None
 	contact_name = frappe.db.get_value("Contact", {"email_id": user})
 
@@ -54,12 +63,45 @@ def create_customer_or_supplier():
 		for link in contact.links:
 			if link.link_doctype == doctype:
 				existing_party = frappe.get_doc(doctype, link.link_name)
+				# Link to Portal User if not already linked
+				if not frappe.db.exists("Portal User", {"parent": existing_party.name, "user": user}):
+					existing_party.append("portal_users", {"user": user})
+					existing_party.flags.ignore_permissions = True
+					existing_party.save()
 				return existing_party
 
-	# //// Create a new entity
-	party = frappe.new_doc(doctype)
+	# //// Before creating, check if a customer with the same name already exists
 	fullname = frappe.utils.get_fullname(user)
-
+	
+	if doctype == "Customer":
+		# Check if a customer with this name already exists
+		existing_by_name = frappe.db.get_value("Customer", 
+			{"customer_name": fullname}, 
+			"name")
+		
+		if existing_by_name:
+			# Customer with this name exists, link it to the user instead of creating a duplicate
+			existing_customer = frappe.get_doc("Customer", existing_by_name)
+			
+			# Link to Portal User if not already linked
+			if not frappe.db.exists("Portal User", {"parent": existing_by_name, "user": user}):
+				existing_customer.append("portal_users", {"user": user})
+				existing_customer.flags.ignore_permissions = True
+				existing_customer.flags.ignore_mandatory = True
+				existing_customer.save()
+			
+			# Create/update contact if needed
+			if not contact_name:
+				try:
+					create_party_contact("Customer", fullname, user, existing_customer.name)
+				except:
+					pass
+			
+			return existing_customer
+	
+	# //// Create a new entity only if none exists
+	party = frappe.new_doc(doctype)
+	
 	# //// Configuration based on the document type
 	if doctype == "Customer":
 		# //// Get the default currency
@@ -86,9 +128,40 @@ def create_customer_or_supplier():
 			"supplier_type": "Individual",
 		})
 
+	# Check if a customer with this name already exists before inserting
+	if doctype == "Customer":
+		existing = frappe.db.get_value("Customer", {"customer_name": fullname}, "name")
+		if existing:
+			# Customer with this name already exists, use it instead of creating duplicate
+			existing_customer = frappe.get_doc("Customer", existing)
+			if not frappe.db.exists("Portal User", {"parent": existing, "user": user}):
+				existing_customer.append("portal_users", {"user": user})
+				existing_customer.flags.ignore_permissions = True
+				existing_customer.save()
+			return existing_customer
+	
 	party.flags.ignore_mandatory = True
 	try:
 		party.insert(ignore_permissions=True)
+	except frappe.DuplicateEntryError as e:
+		# If we get a duplicate error, it means a customer with this name already exists
+		# This can happen due to race conditions or naming series issues
+		if doctype == "Customer":
+			# Try to find the existing customer
+			existing = frappe.get_all("Customer",
+				filters=[["customer_name", "=", fullname]],
+				fields=["name"],
+				limit=1)
+			if existing:
+				existing_customer = frappe.get_doc("Customer", existing[0].name)
+				# Link to user if not already linked
+				if not frappe.db.exists("Portal User", {"parent": existing[0].name, "user": user}):
+					existing_customer.append("portal_users", {"user": user})
+					existing_customer.flags.ignore_permissions = True
+					existing_customer.save()
+				return existing_customer
+		frappe.log_error("Error inserting party (duplicate)", f"Duplicate error inserting {doctype}: {str(e)}")
+		return None
 	except Exception as e:
 		frappe.log_error("Error inserting party", f"Error inserting {doctype}: {str(e)}")
 		return None

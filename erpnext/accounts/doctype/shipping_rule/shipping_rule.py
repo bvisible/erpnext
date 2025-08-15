@@ -263,6 +263,11 @@ class ShippingRule(Document):
 						item_weight = flt(getattr(item_doc, 'weight_per_unit', 0) or 0) * qty
 						item_weight_uom = getattr(item_doc, 'weight_uom', None)
 						
+						# If no weight is set, use a minimal default weight (100g per item)
+						if item_weight == 0:
+							item_weight = 0.1 * qty  # 100g per item in kg
+							item_weight_uom = "Kg"
+						
 						# Convert weight to shipping rule's UOM if needed
 						if item_weight_uom and item_weight_uom != self.weight_uom:
 							try:
@@ -309,6 +314,24 @@ class ShippingRule(Document):
 					
 					# If no item doc or no dimensions found, try to get from item row
 					else:
+						# Get weight directly from item row if available
+						item_weight = flt(getattr(item, 'weight_per_unit', 0) or 0) * qty
+						item_weight_uom = getattr(item, 'weight_uom', None)
+						
+						# If no weight is set, use a minimal default weight (100g per item)
+						if item_weight == 0:
+							item_weight = 0.1 * qty  # 100g per item in kg
+							item_weight_uom = "Kg"
+						
+						# Convert weight to shipping rule's UOM if needed
+						if item_weight_uom and item_weight_uom != self.weight_uom:
+							try:
+								item_weight = self.convert_to_uom(item_weight, item_weight_uom, self.weight_uom)
+							except Exception as e:
+								frappe.log_error("ShippingRule_Constraints",f"Error converting weight unit from item row: {str(e)}")
+						
+						total_weight += item_weight
+						
 						# Get dimensions directly from the item row if available
 						item_length = flt(getattr(item, 'length', 0) or 0)
 						item_width = flt(getattr(item, 'width', 0) or 0)
@@ -343,7 +366,7 @@ class ShippingRule(Document):
 									"length": item_length,
 									"width": item_width,
 									"height": item_height,
-									"weight": item_weight/qty if qty > 0 else 0
+									"weight": item_weight/qty if qty > 0 else item_weight
 								})
 			
 			# Calculate optimized packing if we have items
@@ -453,385 +476,238 @@ class ShippingRule(Document):
 
 	@classmethod
 	def calculate_optimal_packing(cls, packing_items):
-		"""Calculate optimal 3D arrangement of items using py3dbp bin packing algorithm
+		"""Calculate optimal 3D arrangement of items
 		
-		Args:
-			packing_items (list): List of items with dimensions
-		
-		Returns:
-			dict: Optimal packing dimensions
+		Handles:
+		1. Multiple identical items (stacking/grid arrangement)
+		2. Very small items that fit in empty spaces
+		3. Mixed size items
 		"""
-		try:
-			# Import py3dbp library
-			from py3dbp import Packer, Bin, Item
+		if not packing_items:
+			return {"length": 0, "width": 0, "height": 0, "volume": 0}
+		
+		# Group items by dimensions
+		item_groups = {}
+		for item in packing_items:
+			l = float(item.get("length", 0) or 0)
+			w = float(item.get("width", 0) or 0)
+			h = float(item.get("height", 0) or 0)
+			if l > 0 and w > 0 and h > 0:
+				key = (l, w, h)
+				if key not in item_groups:
+					item_groups[key] = []
+				item_groups[key].append(item)
+		
+		if not item_groups:
+			return {"length": 0, "width": 0, "height": 0, "volume": 0}
+		
+		# Handle single group of identical items
+		if len(item_groups) == 1:
+			dims, items = list(item_groups.items())[0]
+			l, w, h = dims
+			count = len(items)
 			
-			# If no items with dimensions, return default values
-			if not packing_items:
+			if count == 1:
+				# Single item
 				return {
-					"length": 0, 
-					"width": 0, 
-					"height": 0, 
-					"volume": 0
-				}
-				
-			# Analyze items to determine if they're all identical (like multiple books)
-			all_identical = True
-			first_item = None
-			
-			if len(packing_items) > 1:
-				first_item = packing_items[0]
-				first_item_dims = (
-					float(first_item.get("length", 0) or 0),
-					float(first_item.get("width", 0) or 0),
-					float(first_item.get("height", 0) or 0)
-				)
-				
-				for item in packing_items[1:]:
-					item_dims = (
-						float(item.get("length", 0) or 0),
-						float(item.get("width", 0) or 0),
-						float(item.get("height", 0) or 0)
-					)
-					
-					if item_dims != first_item_dims:
-						all_identical = False
-						break
-			else:
-				all_identical = False
-			
-			# For books and similar flat objects, determine if they are flat (one dimension is much smaller)
-			items_are_flat = False
-			if all_identical and first_item:
-				length = float(first_item.get("length", 0) or 0)
-				width = float(first_item.get("width", 0) or 0)
-				height = float(first_item.get("height", 0) or 0)
-				
-				if height > 0 and (length / height > 5 or width / height > 5):
-					items_are_flat = True
-			
-			# For identical flat items like books, prefer vertical stacking
-			if all_identical and items_are_flat:
-				# Extract dimensions from the first item (they're all the same)
-				length = float(first_item.get("length", 0) or 0)
-				width = float(first_item.get("width", 0) or 0)
-				height = float(first_item.get("height", 0) or 0)
-				total_weight = sum(float(item.get("weight", 0) or 0) for item in packing_items)
-				
-				# Stack them vertically (height increases)
-				stacked_height = height * len(packing_items)
-				
-				result = {
-					"length": length,
-					"width": width,
-					"height": stacked_height,
-					"volume": length * width * stacked_height
-				}
-				
-				return result
-				
-			# If not stacking identical flat items, use the standard 3D packing algorithm
-			# Create a virtual packing bin with large dimensions
-			# We use this to find the optimal arrangement, not to validate constraints
-			max_dim = 1000000  # A very large dimension to ensure all items can fit
-			virtual_bin = Bin('VirtualContainer', max_dim, max_dim, max_dim, max_dim)
-			
-			# Initialize the packer
-			packer = Packer()
-			packer.add_bin(virtual_bin)
-			
-			# Add all items to the packer
-			items_added = 0
-			for i, item in enumerate(packing_items):
-				# Extract dimensions from the item dictionary
-				length = float(item.get("length", 0) or 0)
-				width = float(item.get("width", 0) or 0)
-				height = float(item.get("height", 0) or 0)
-				weight = float(item.get("weight", 0) or 0)
-				
-				# Skip invalid items
-				if length <= 0 or width <= 0 or height <= 0:
-					continue
-				
-				# Create an item for py3dbp
-				item_id = f"Item_{i}"
-				packing_item = Item(item_id, length, width, height, weight)
-				
-				# Allow rotation for better packing
-				# This will try different orientations of the item
-				packing_item.position = [0, 0, 0]  # Default position
-				
-				# Enable rotation for better packing
-				packing_item.can_rotate = True
-				
-				# For books, it is very important to allow stacking
-				# That's why we enable all possible rotations
-				packing_item.rotation_type = 0  # Allow all rotations (default value in py3dbp)
-				
-				# Add item to the packer
-				packer.add_item(packing_item)
-				items_added += 1
-						
-			# Run the packing algorithm
-			# This will arrange items in the virtual container
-			if items_added == 0:
-				return {
-					"length": 0, 
-					"width": 0, 
-					"height": 0, 
-					"volume": 0
-				}
-				
-			packer.pack(bigger_first=True)
-			
-			# Get the packed bin
-			packed_bin = packer.bins[0]
-			
-			# If no items were packed (could happen if all items have invalid dimensions)
-			if not packed_bin.items:
-				return {
-					"length": 0, 
-					"width": 0, 
-					"height": 0, 
-					"volume": 0
+					"length": l,
+					"width": w,
+					"height": h,
+					"volume": l * w * h
 				}
 			
-			# Calculate the maximum dimensions used by the packed items
-			max_x = max_y = max_z = 0
-			for item in packed_bin.items:
-				# Get position and dimensions
-				pos = item.position
-				dim = item.get_dimension()
-				
-				# Calculate the furthest point in each dimension
-				max_x = max(max_x, float(pos[0]) + float(dim[0]))
-				max_y = max(max_y, float(pos[1]) + float(dim[1]))
-				max_z = max(max_z, float(pos[2]) + float(dim[2]))
+			# Multiple identical items - find best arrangement
+			# For shipping, prefer arrangements that fit standard box sizes
+			# Avoid extreme dimensions (too tall, too long, etc.)
+			best_arrangement = None
+			best_score = float('inf')
 			
-			# Identify the smallest dimension - probably height for books
-			dimensions_sorted = sorted([max_x, max_y, max_z])
+			# Try various arrangements
+			arrangements = []
 			
-			# For books or flat objects, we reorder the dimensions 
-			# to make the height the smallest dimension
-			# and length > width
-			if len(packing_items) == 1:
-				# For a single item, we respect the original dimensions
-				# because it might be important for dimension constraints
-				result = {
-					"length": max_x,
-					"width": max_y,
-					"height": max_z,
-					"volume": max_x * max_y * max_z
-				}
-				return result
-			else:
-				# For multiple items, we reorder the dimensions
-				# The smallest dimension (index 0) becomes the height
-				# The other two become length and width (with length >= width)
-				height = dimensions_sorted[0]
-				width = dimensions_sorted[1]
-				length = dimensions_sorted[2]
-				
-				# We use the dimensions calculated by py3dbp instead of artificially multiplying
-				# because the algorithm has already determined the optimal placement (side by side or stacked)
-				result = {
-					"length": length,
-					"width": width,
-					"height": height,
-					"volume": length * width * height
-				}
-				return result
-			
-		except ImportError as e:			
-			# If no items with dimensions, return default values
-			if not packing_items:
-				return {
-					"length": 0, 
-					"width": 0, 
-					"height": 0, 
-					"volume": 0
-				}
-			
-			# Detect identical flat items (like books)
-			all_identical = True
-			first_item = None
-			
-			if len(packing_items) > 1:
-				first_item = packing_items[0]
-				first_item_dims = (
-					float(first_item.get("length", 0) or 0),
-					float(first_item.get("width", 0) or 0),
-					float(first_item.get("height", 0) or 0)
-				)
-				
-				for item in packing_items[1:]:
-					item_dims = (
-						float(item.get("length", 0) or 0),
-						float(item.get("width", 0) or 0),
-						float(item.get("height", 0) or 0)
-					)
-					
-					if item_dims != first_item_dims:
-						all_identical = False
-						break
-			else:
-				all_identical = False
-			
-			# For books and similar flat objects, determine if they are flat (one dimension is much smaller)
-			items_are_flat = False
-			if all_identical and first_item:
-				length = float(first_item.get("length", 0) or 0)
-				width = float(first_item.get("width", 0) or 0)
-				height = float(first_item.get("height", 0) or 0)
-				
-				if height > 0 and (length / height > 5 or width / height > 5):
-					items_are_flat = True
-			
-			# For identical flat items like books, prefer vertical stacking
-			if all_identical and items_are_flat:
-				# Extract dimensions from the first item (they're all the same)
-				length = float(first_item.get("length", 0) or 0)
-				width = float(first_item.get("width", 0) or 0)
-				height = float(first_item.get("height", 0) or 0)
-				total_weight = sum(float(item.get("weight", 0) or 0) for item in packing_items)
-				
-				# Stack them vertically (height increases)
-				stacked_height = height * len(packing_items)
-				
-				result = {
-					"length": length,
-					"width": width,
-					"height": stacked_height,
-					"volume": length * width * stacked_height
-				}
-				
-				return result
-			
-			# Sort items by volume (largest first) for better packing
-			packing_items.sort(key=lambda x: 
-				float(x.get("length", 0) or 0) * 
-				float(x.get("width", 0) or 0) * 
-				float(x.get("height", 0) or 0), 
-				reverse=True
-			)
-			
-			# Group items by dimensions while preserving orientation
-			grouped_items = {}
-			for item in packing_items:
-				# Use original dimensions to preserve orientation, safely handling None values
-				l = float(item.get("length", 0) or 0)
-				w = float(item.get("width", 0) or 0)
-				h = float(item.get("height", 0) or 0)
-				
-				# Skip invalid dimensions
-				if l <= 0 or w <= 0 or h <= 0:
-					continue
-					
-				item_key = (l, w, h)
-				
-				if item_key not in grouped_items:
-					grouped_items[item_key] = []
-				grouped_items[item_key].append(item)
-			
-			# Simplified bin packing - stack similar items
-			packings = []
-			for dims, items in grouped_items.items():
-				# Keep original orientations
-				l, w, h = dims
-				
-				# How many items in this group
-				count = len(items)
-				
-				# For a single item, just use its dimensions directly
-				if count == 1:
-					packings.append({
-						"length": l,
-						"width": w,
+			# Option 1: Single layer grid arrangements
+			for rows in range(1, min(count + 1, 10)):  # Limit to reasonable grid sizes
+				cols = (count + rows - 1) // rows  # Equivalent to math.ceil(count / rows)
+				if cols * rows >= count:
+					arr = {
+						"length": l * cols,
+						"width": w * rows,
 						"height": h,
-						"items": 1,
-						"volume": l * w * h,
-						"type": "single"
-					})
-					continue
-				
-				# Generate possible stacking arrangements
-				# Option 1: Stack vertically (on top of each other)
-				vert_stack = {
-					"length": l,
-					"width": w,
-					"height": h * count,
-					"items": count,
-					"volume": l * w * h * count,
-					"type": "vertical"
-				}
-				
-				# Option 2: Arrange horizontally in length
-				length_stack = {
-					"length": l * count,
-					"width": w,
-					"height": h,
-					"items": count,
-					"volume": l * w * h * count,
-					"type": "length"
-				}
-				
-				# Option 3: Arrange horizontally in width
-				width_stack = {
-					"length": l,
-					"width": w * count,
-					"height": h,
-					"items": count,
-					"volume": l * w * h * count,
-					"type": "width"
-				}
-				
-				# For flat items like books, prioritize vertical stacking
-				if h > 0 and (l / h > 5 or w / h > 5):
-					packings.append(vert_stack)
-				else:
-					# Add all options for this group
-					packings.extend([vert_stack, length_stack, width_stack])
+						"config": f"{rows}x{cols}x1"
+					}
+					arrangements.append(arr)
 			
-			# Find the most compact arrangement (minimize the max of length, width, height)
-			if packings:
-				# IMPORTANT: For single items, we must prioritize original dimensions to avoid
-				# breaking shipping rules validation
-				single_item_packings = [p for p in packings if p.get("type") == "single"]
-				if single_item_packings:
-					best_packing = single_item_packings[0]
-				elif len(packings) == 1:
-					# If only one option, use it
-					best_packing = packings[0]
-				else:
-					# First, prioritize vertical stacking for flat items like books
-					vertical_packings = [p for p in packings if p.get("type") == "vertical" and p not in single_item_packings]
-					if vertical_packings and all(p.get("height", 0) <= 5 for p in vertical_packings):
-						# Use vertical stacking if the resulting height is reasonable (5 units or less)
-						best_packing = vertical_packings[0]
-					else:
-						# Otherwise sort by maximum dimension
-						packings.sort(key=lambda x: max(x["length"], x["width"], x["height"]))
-						best_packing = packings[0]
+			# Option 2: Multi-layer arrangements (stacking grids)
+			for layers in range(2, min(count + 1, 5)):  # 2-4 layers max
+				items_per_layer = (count + layers - 1) // layers
+				# Find best grid for each layer - sqrt approximation
+				best_rows = 1
+				while best_rows * best_rows < items_per_layer:
+					best_rows += 1
+				if best_rows * best_rows > items_per_layer:
+					best_rows -= 1
+				best_cols = (items_per_layer + best_rows - 1) // best_rows
 				
-				return best_packing
-			else:
-				return {
-					"length": 0,
-					"width": 0,
-					"height": 0,
-					"volume": 0
+				arr = {
+					"length": l * best_cols,
+					"width": w * best_rows,
+					"height": h * layers,
+					"config": f"{best_rows}x{best_cols}x{layers}"
 				}
-		except Exception as e:
-			# Try to extract as much information as possible
-			error_details = {
-				"error": str(e),
-				"packing_items": packing_items[:5] if packing_items else []  # First 5 items for brevity
-			}			
-			return {
-				"length": 0, 
-				"width": 0, 
-				"height": 0, 
-				"volume": 0
-			}
+				arrangements.append(arr)
+			
+			# Evaluate each arrangement
+			for arr in arrangements:
+				# Calculate a score that penalizes extreme dimensions
+				# Prefer balanced dimensions close to standard shipping sizes
+				max_dim = max(arr["length"], arr["width"], arr["height"])
+				min_dim = min(arr["length"], arr["width"], arr["height"])
+				
+				# Penalize if any dimension exceeds common limits
+				penalty = 0
+				if arr["length"] > 120:  # Common max length
+					penalty += (arr["length"] - 120) * 2
+				if arr["width"] > 80:  # Common max width
+					penalty += (arr["width"] - 80) * 2
+				if arr["height"] > 60:  # Common max height
+					penalty += (arr["height"] - 60) * 3  # Height penalty higher
+				
+				# Score based on max dimension + penalty + imbalance
+				imbalance = max_dim / min_dim if min_dim > 0 else float('inf')
+				score = max_dim + penalty + imbalance * 10
+				
+				if score < best_score:
+					best_score = score
+					best_arrangement = arr
+			
+			# Remove config info before returning
+			if "config" in best_arrangement:
+				del best_arrangement["config"]
+			
+			best_arrangement["volume"] = l * w * h * count
+			return best_arrangement
+		
+		# Handle mixed items
+		# Find the largest item group by total volume
+		largest_group = None
+		largest_volume = 0
+		
+		for dims, items in item_groups.items():
+			l, w, h = dims
+			total_vol = l * w * h * len(items)
+			if total_vol > largest_volume:
+				largest_volume = total_vol
+				largest_group = (dims, items)
+		
+		# Calculate optimal arrangement for the largest group
+		l, w, h = largest_group[0]
+		count = len(largest_group[1])
+		
+		# Initialize result dimensions
+		result_length = l
+		result_width = w
+		result_height = h
+		
+		# Use same logic as for single group to find best arrangement
+		if count > 1:
+			# Find best arrangement for multiple items
+			best_arrangement = None
+			best_score = float('inf')
+			
+			# Try various arrangements
+			arrangements = []
+			
+			# Option 1: Single layer grid arrangements
+			for rows in range(1, min(count + 1, 10)):
+				cols = (count + rows - 1) // rows  # Equivalent to math.ceil(count / rows)
+				if cols * rows >= count:
+					arr = {
+						"length": l * cols,
+						"width": w * rows,
+						"height": h
+					}
+					arrangements.append(arr)
+			
+			# Option 2: Multi-layer arrangements
+			for layers in range(2, min(count + 1, 5)):
+				items_per_layer = (count + layers - 1) // layers  # Equivalent to math.ceil
+				# Calculate sqrt approximation for best_rows
+				best_rows = 1
+				while best_rows * best_rows < items_per_layer:
+					best_rows += 1
+				if best_rows * best_rows > items_per_layer:
+					best_rows -= 1
+				best_cols = (items_per_layer + best_rows - 1) // best_rows
+				
+				arr = {
+					"length": l * best_cols,
+					"width": w * best_rows,
+					"height": h * layers
+				}
+				arrangements.append(arr)
+			
+			# Evaluate each arrangement
+			for arr in arrangements:
+				max_dim = max(arr["length"], arr["width"], arr["height"])
+				min_dim = min(arr["length"], arr["width"], arr["height"])
+				
+				# Penalize extreme dimensions
+				penalty = 0
+				if arr["length"] > 120:
+					penalty += (arr["length"] - 120) * 2
+				if arr["width"] > 80:
+					penalty += (arr["width"] - 80) * 2
+				if arr["height"] > 60:
+					penalty += (arr["height"] - 60) * 3
+				
+				imbalance = max_dim / min_dim if min_dim > 0 else float('inf')
+				score = max_dim + penalty + imbalance * 10
+				
+				if score < best_score:
+					best_score = score
+					best_arrangement = arr
+			
+			result_length = best_arrangement["length"]
+			result_width = best_arrangement["width"]
+			result_height = best_arrangement["height"]
+		
+		# Check other groups
+		largest_l, largest_w, largest_h = largest_group[0]
+		
+		for dims, items in item_groups.items():
+			if dims == largest_group[0]:
+				continue
+			
+			l, w, h = dims
+			count = len(items)
+			
+			# Check if items are very small (< 10% of largest in all dimensions)
+			if (l <= largest_l * 0.1 and 
+				w <= largest_w * 0.1 and 
+				h <= largest_h * 0.1):
+				# Very small items - fit in empty space
+				continue
+			
+			# Otherwise, need to accommodate these items
+			# Simple approach: expand dimensions as needed
+			if count > 1:
+				# Multiple items of this size - stack them
+				item_height = h * count
+			else:
+				item_height = h
+			
+			result_length = max(result_length, l)
+			result_width = max(result_width, w)
+			result_height = max(result_height, item_height)
+		
+		total_volume = sum(l*w*h*len(items) for (l,w,h), items in item_groups.items())
+		
+		return {
+			"length": result_length,
+			"width": result_width,
+			"height": result_height,
+			"volume": total_volume
+		}
 
 	def convert_to_uom(self, value, from_uom, to_uom):
 		"""Convert value from one UOM to another
