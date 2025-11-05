@@ -179,6 +179,7 @@ frappe.ui.form.on("Stock Entry", {
 				inspection_type: "Incoming",
 				reference_type: frm.doc.doctype,
 				reference_name: frm.doc.name,
+				child_row_reference: row.doc.name,
 				item_code: row.doc.item_code,
 				description: row.doc.description,
 				item_serial_no: row.doc.serial_no ? row.doc.serial_no.split("\n")[0] : null,
@@ -194,6 +195,7 @@ frappe.ui.form.on("Stock Entry", {
 				filters: {
 					item_code: d.item_code,
 					reference_name: doc.name,
+					child_row_reference: d.name,
 				},
 			};
 		});
@@ -462,6 +464,7 @@ frappe.ui.form.on("Stock Entry", {
 							docstatus: 1,
 							purpose: "Material Transfer",
 							add_to_transit: 1,
+							per_transferred: ["<", 100],
 						},
 					});
 				},
@@ -536,7 +539,7 @@ frappe.ui.form.on("Stock Entry", {
 		const item = locals[cdt][cdn];
 		item.transfer_qty = flt(item.qty) * flt(item.conversion_factor);
 
-		const args = {
+		let args = {
 			item_code: item.item_code,
 			posting_date: frm.doc.posting_date,
 			posting_time: frm.doc.posting_time,
@@ -549,6 +552,10 @@ frappe.ui.form.on("Stock Entry", {
 			voucher_no: item.name,
 			allow_zero_valuation: 1,
 		};
+
+		if (item.batch_no && frm.doc.purpose == "Material Receipt") {
+			args.qty = Math.abs(args.qty) * -1;
+		}
 
 		if (item.item_code || item.serial_no) {
 			frappe.call({
@@ -820,9 +827,28 @@ frappe.ui.form.on("Stock Entry", {
 			refresh_field("process_loss_qty");
 		}
 	},
+
+	set_fg_completed_qty(frm) {
+		let fg_completed_qty = 0;
+
+		frm.doc.items.forEach((item) => {
+			if (item.is_finished_item) {
+				fg_completed_qty += flt(item.qty);
+			}
+		});
+
+		frm.doc.fg_completed_qty = fg_completed_qty;
+		frm.refresh_field("fg_completed_qty");
+	},
 });
 
 frappe.ui.form.on("Stock Entry Detail", {
+	items_add(frm, cdt, cdn) {
+		let item = frappe.get_doc(cdt, cdn);
+		if (item.is_finished_item) {
+			frm.events.set_fg_completed_qty(frm);
+		}
+	},
 	set_basic_rate_manually(frm, cdt, cdn) {
 		let row = locals[cdt][cdn];
 		frm.fields_dict.items.grid.update_docfield_property(
@@ -834,6 +860,10 @@ frappe.ui.form.on("Stock Entry Detail", {
 
 	qty(frm, cdt, cdn) {
 		frm.events.set_basic_rate(frm, cdt, cdn);
+		let item = frappe.get_doc(cdt, cdn);
+		if (item.is_finished_item) {
+			frm.events.set_fg_completed_qty(frm);
+		}
 	},
 
 	conversion_factor(frm, cdt, cdn) {
@@ -950,6 +980,16 @@ frappe.ui.form.on("Stock Entry Detail", {
 	},
 
 	batch_no(frm, cdt, cdn) {
+		let row = locals[cdt][cdn];
+
+		if (row.batch_no) {
+			frappe.model.set_value(cdt, cdn, {
+				use_serial_batch_fields: 1,
+				serial_and_batch_bundle: "",
+			});
+		}
+
+		frm.events.set_basic_rate(frm, cdt, cdn);
 		validate_sample_quantity(frm, cdt, cdn);
 	},
 
@@ -990,6 +1030,13 @@ frappe.ui.form.on("Landed Cost Taxes and Charges", {
 erpnext.stock.StockEntry = class StockEntry extends erpnext.stock.StockController {
 	setup() {
 		var me = this;
+
+		this.barcode_scanner = new erpnext.utils.BarcodeScanner({
+			frm: this.frm,
+			warehouse_field: (doc) => {
+				return doc.purpose === "Material Receipt" ? "t_warehouse" : "s_warehouse";
+			},
+		});
 
 		this.setup_posting_date_time_check();
 
@@ -1074,6 +1121,13 @@ erpnext.stock.StockEntry = class StockEntry extends erpnext.stock.StockControlle
 	serial_no(doc, cdt, cdn) {
 		var item = frappe.get_doc(cdt, cdn);
 
+		if (item.serial_no) {
+			frappe.model.set_value(cdt, cdn, {
+				use_serial_batch_fields: 1,
+				serial_and_batch_bundle: "",
+			});
+		}
+
 		if (item?.serial_no) {
 			// Replace all occurences of comma with line feed
 			item.serial_no = item.serial_no.replace(/,/g, "\n");
@@ -1111,8 +1165,7 @@ erpnext.stock.StockEntry = class StockEntry extends erpnext.stock.StockControlle
 
 	scan_barcode() {
 		frappe.flags.dialog_set = false;
-		const barcode_scanner = new erpnext.utils.BarcodeScanner({ frm: this.frm });
-		barcode_scanner.process_scan();
+		this.barcode_scanner.process_scan();
 	}
 
 	on_submit() {

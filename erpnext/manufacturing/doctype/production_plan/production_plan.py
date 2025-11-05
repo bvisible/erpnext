@@ -724,6 +724,9 @@ class ProductionPlan(Document):
 		if not wo_list:
 			frappe.msgprint(_("No Work Orders were created"))
 
+		if not po_list:
+			frappe.msgprint(_("No Purchase Orders were created"))
+
 	def make_work_order_for_finished_goods(self, wo_list, default_warehouses):
 		items_data = self.get_production_items()
 
@@ -748,10 +751,18 @@ class ProductionPlan(Document):
 			work_order_data = {
 				"wip_warehouse": default_warehouses.get("wip_warehouse"),
 				"fg_warehouse": default_warehouses.get("fg_warehouse"),
+				"scrap_warehouse": default_warehouses.get("scrap_warehouse"),
 				"company": self.get("company"),
 			}
 
+			if flt(row.qty) <= flt(row.ordered_qty):
+				continue
+
 			self.prepare_data_for_sub_assembly_items(row, work_order_data)
+
+			if work_order_data.get("qty") <= 0:
+				continue
+
 			work_order = self.create_work_order(work_order_data)
 			if work_order:
 				wo_list.append(work_order)
@@ -770,6 +781,8 @@ class ProductionPlan(Document):
 		]:
 			if row.get(field):
 				wo_data[field] = row.get(field)
+
+		wo_data["qty"] = flt(row.get("qty")) - flt(row.get("ordered_qty"))
 
 		wo_data.update(
 			{
@@ -1175,6 +1188,7 @@ def get_exploded_items(item_details, company, bom_no, include_non_stock_items, p
 			item.purchase_uom,
 			item_uom.conversion_factor,
 			item.safety_stock,
+			bom.item.as_("main_bom_item"),
 		)
 		.where(
 			(bei.docstatus < 2)
@@ -1242,6 +1256,7 @@ def get_subitems(
 			item_default.default_warehouse,
 			item.purchase_uom,
 			item_uom.conversion_factor,
+			bom.item.as_("main_bom_item"),
 		)
 		.where(
 			(bom.name == bom_no)
@@ -1355,6 +1370,7 @@ def get_material_request_items(
 			"sales_order": sales_order,
 			"description": row.get("description"),
 			"uom": row.get("purchase_uom") or row.get("stock_uom"),
+			"main_bom_item": row.get("main_bom_item"),
 		}
 
 
@@ -1530,6 +1546,7 @@ def get_items_for_material_requests(doc, warehouses=None, get_parent_warehouse_d
 	include_safety_stock = doc.get("include_safety_stock")
 
 	so_item_details = frappe._dict()
+	existing_sub_assembly_items = set()
 
 	sub_assembly_items = defaultdict(int)
 	if doc.get("skip_available_sub_assembly_item") and doc.get("sub_assembly_items"):
@@ -1563,7 +1580,7 @@ def get_items_for_material_requests(doc, warehouses=None, get_parent_warehouse_d
 					item_details = {}
 					if doc.get("sub_assembly_items"):
 						item_details = get_raw_materials_of_sub_assembly_items(
-							so_item_details[doc.get("sales_order")].keys() if so_item_details else [],
+							existing_sub_assembly_items,
 							item_details,
 							company,
 							bom_no,
@@ -1619,7 +1636,7 @@ def get_items_for_material_requests(doc, warehouses=None, get_parent_warehouse_d
 				}
 			)
 
-		sales_order = doc.get("sales_order")
+		sales_order = data.get("sales_order")
 
 		for item_code, details in item_details.items():
 			so_item_details.setdefault(sales_order, frappe._dict())
@@ -1768,6 +1785,7 @@ def get_sub_assembly_items(
 							continue
 						else:
 							stock_qty = stock_qty - _bin_dict.projected_qty
+							sub_assembly_items.append(d.item_code)
 			elif warehouse:
 				bin_details.setdefault(d.item_code, get_bin_details(d, company, for_warehouse=warehouse))
 
@@ -1808,7 +1826,7 @@ def get_sub_assembly_items(
 
 
 def set_default_warehouses(row, default_warehouses):
-	for field in ["wip_warehouse", "fg_warehouse"]:
+	for field in ["wip_warehouse", "fg_warehouse", "scrap_warehouse"]:
 		if not row.get(field):
 			row[field] = default_warehouses.get(field)
 
@@ -1825,7 +1843,7 @@ def get_reserved_qty_for_production_plan(item_code, warehouse):
 		frappe.qb.from_(table)
 		.inner_join(child)
 		.on(table.name == child.parent)
-		.select(Sum(child.required_bom_qty))
+		.select(Sum(child.quantity * child.conversion_factor))
 		.where(
 			(table.docstatus == 1)
 			& (child.item_code == item_code)
@@ -1915,6 +1933,7 @@ def get_raw_materials_of_sub_assembly_items(
 			item.purchase_uom,
 			item_uom.conversion_factor,
 			item.safety_stock,
+			bom.item.as_("main_bom_item"),
 		)
 		.where(
 			(bei.docstatus == 1)
@@ -1940,6 +1959,7 @@ def get_raw_materials_of_sub_assembly_items(
 				sub_assembly_items,
 				planned_qty=planned_qty,
 			)
+			existing_sub_assembly_items.add(item.item_code)
 		else:
 			if not item.conversion_factor and item.purchase_uom:
 				item.conversion_factor = get_uom_conversion_factor(item.item_code, item.purchase_uom)
@@ -1976,6 +1996,9 @@ def sales_order_query(doctype=None, txt=None, searchfield=None, start=None, page
 
 	if filters.get("sales_orders"):
 		query = query.where(so_table.name.isin(filters.get("sales_orders")))
+
+	if filters.get("item_code"):
+		query = query.where(table.item_code == filters.get("item_code"))
 
 	if txt:
 		query = query.where(table.parent.like(f"%{txt}%"))

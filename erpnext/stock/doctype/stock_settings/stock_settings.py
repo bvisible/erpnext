@@ -64,6 +64,7 @@ class StockSettings(Document):
 		stock_frozen_upto_days: DF.Int
 		stock_uom: DF.Link | None
 		update_existing_price_list_rate: DF.Check
+		update_price_list_based_on: DF.Literal["Rate", "Price List Rate"]
 		use_naming_series: DF.Check
 		use_serial_batch_fields: DF.Check
 		valuation_method: DF.Literal["FIFO", "Moving Average", "LIFO"]
@@ -104,6 +105,7 @@ class StockSettings(Document):
 		self.validate_clean_description_html()
 		self.validate_pending_reposts()
 		self.validate_stock_reservation()
+		self.validate_auto_insert_price_list_rate_if_missing()
 		self.change_precision_for_for_sales()
 		self.change_precision_for_purchase()
 
@@ -119,7 +121,11 @@ class StockSettings(Document):
 				)
 
 	def cant_change_valuation_method(self):
-		previous_valuation_method = self.get_doc_before_save().get("valuation_method")
+		doc_before_save = self.get_doc_before_save()
+		if not doc_before_save:
+			return
+
+		previous_valuation_method = doc_before_save.get("valuation_method")
 
 		if previous_valuation_method and previous_valuation_method != self.valuation_method:
 			# check if there are any stock ledger entries against items
@@ -213,6 +219,23 @@ class StockSettings(Document):
 							frappe.bold(_("Stock Reservation"))
 						)
 					)
+
+	def validate_auto_insert_price_list_rate_if_missing(self):
+		if (
+			self.auto_insert_price_list_rate_if_missing
+			and self.has_value_changed("auto_insert_price_list_rate_if_missing")
+			and frappe.get_single_value("Selling Settings", "fallback_to_default_price_list")
+		):
+			selling_meta = frappe.get_meta("Selling Settings")
+			frappe.msgprint(
+				_(
+					"You have enabled {0} and {1} in {2}. This can lead to prices from the default price list being inserted in the transaction price list."
+				).format(
+					"<i>{}</i>".format(_(self.meta.get_label("auto_insert_price_list_rate_if_missing"))),
+					"<i>{}</i>".format(_(selling_meta.get_label("fallback_to_default_price_list"))),
+					frappe.bold(_("Selling Settings")),
+				)
+			)
 
 	def on_update(self):
 		self.toggle_warehouse_field_for_inter_warehouse_transfer()

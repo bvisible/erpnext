@@ -8,6 +8,7 @@ from frappe.query_builder import Criterion, Tuple
 from frappe.query_builder.functions import IfNull
 from frappe.utils import getdate, nowdate
 from frappe.utils.nestedset import get_descendants_of
+from pypika.terms import LiteralValue
 
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 	get_accounting_dimensions,
@@ -15,7 +16,7 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 )
 
 TREE_DOCTYPES = frozenset(
-	["Customer Group", "Terrirtory", "Supplier Group", "Sales Partner", "Sales Person", "Cost Center"]
+	["Customer Group", "Territory", "Supplier Group", "Sales Partner", "Sales Person", "Cost Center"]
 )
 
 
@@ -77,13 +78,12 @@ class PartyLedgerSummaryReport:
 
 		from frappe.desk.reportview import build_match_conditions
 
-		query, params = query.walk()
 		match_conditions = build_match_conditions(party_type)
 
 		if match_conditions:
-			query += "and" + match_conditions
+			query = query.where(LiteralValue(match_conditions))
 
-		party_details = frappe.db.sql(query, params, as_dict=True)
+		party_details = query.run(as_dict=True)
 
 		for row in party_details:
 			self.parties.append(row.party)
@@ -144,10 +144,10 @@ class PartyLedgerSummaryReport:
 		if self.party_naming_by == "Naming Series":
 			columns.append(
 				{
-					"label": _(self.filters.party_type + "Name"),
+					"label": _(self.filters.party_type + " Name"),
 					"fieldtype": "Data",
 					"fieldname": "party_name",
-					"width": 110,
+					"width": 150,
 				}
 			)
 
@@ -252,12 +252,13 @@ class PartyLedgerSummaryReport:
 		self.party_data = frappe._dict({})
 		for gle in self.gl_entries:
 			party_details = self.party_details.get(gle.party)
+			party_name = party_details.get(f"{scrub(self.filters.party_type)}_name", "")
 			self.party_data.setdefault(
 				gle.party,
 				frappe._dict(
 					{
 						**party_details,
-						"party_name": gle.party,
+						"party_name": party_name,
 						"opening_balance": 0,
 						"invoiced_amount": 0,
 						"paid_amount": 0,
@@ -274,12 +275,25 @@ class PartyLedgerSummaryReport:
 			if gle.posting_date < self.filters.from_date or gle.is_opening == "Yes":
 				self.party_data[gle.party].opening_balance += amount
 			else:
-				if amount > 0:
-					self.party_data[gle.party].invoiced_amount += amount
-				elif gle.voucher_no in self.return_invoices:
-					self.party_data[gle.party].return_amount -= amount
+				# Cache the party data reference to avoid repeated dictionary lookups
+				party_data = self.party_data[gle.party]
+
+				# Check if this is a direct return invoice (most specific condition first)
+				if gle.voucher_no in self.return_invoices:
+					party_data.return_amount -= amount
+				# Check if this entry is against a return invoice
+				elif gle.against_voucher in self.return_invoices:
+					# For entries against return invoices, positive amounts are payments
+					if amount > 0:
+						party_data.paid_amount -= amount
+					else:
+						party_data.invoiced_amount += amount
+				# Normal transaction logic
 				else:
-					self.party_data[gle.party].paid_amount -= amount
+					if amount > 0:
+						party_data.invoiced_amount += amount
+					else:
+						party_data.paid_amount -= amount
 
 		out = []
 		for party, row in self.party_data.items():
@@ -288,7 +302,7 @@ class PartyLedgerSummaryReport:
 				or row.invoiced_amount
 				or row.paid_amount
 				or row.return_amount
-				or row.closing_amount
+				or row.closing_balance  # Fixed typo from closing_amount to closing_balance
 			):
 				total_party_adjustment = sum(
 					amount for amount in self.party_adjustment_details.get(party, {}).values()
@@ -312,6 +326,7 @@ class PartyLedgerSummaryReport:
 				gle.party,
 				gle.voucher_type,
 				gle.voucher_no,
+				gle.against_voucher,  # For handling returned invoices (Credit/Debit Notes)
 				gle.debit,
 				gle.credit,
 				gle.is_opening,
@@ -404,7 +419,9 @@ class PartyLedgerSummaryReport:
 		gl = qb.DocType("GL Entry")
 		query = (
 			qb.from_(gl)
-			.select(gl.voucher_type, gl.voucher_no)
+			.select(
+				gl.posting_date, gl.account, gl.party, gl.voucher_type, gl.voucher_no, gl.debit, gl.credit
+			)
 			.where(
 				(gl.docstatus < 2)
 				& (gl.is_cancelled == 0)
@@ -455,9 +472,16 @@ class PartyLedgerSummaryReport:
 
 
 def get_children(doctype, value):
-	children = get_descendants_of(doctype, value)
+	if not isinstance(value, list):
+		value = [d.strip() for d in value.strip().split(",") if d]
 
-	return [value, *children]
+	all_children = []
+
+	for d in value:
+		all_children += get_descendants_of(doctype, value)
+		all_children.append(d)
+
+	return list(set(all_children))
 
 
 def execute(filters=None):

@@ -85,9 +85,10 @@ class Employee(NestedSet):
 		self.reset_employee_emails_cache()
 
 	def update_user_permissions(self):
-		if not has_permission("User Permission", ptype="write") or (
-			not self.has_value_changed("user_id") and not self.has_value_changed("create_user_permission")
-		):
+		if not self.has_value_changed("user_id") and not self.has_value_changed("create_user_permission"):
+			return
+
+		if not has_permission("User Permission", ptype="write", raise_exception=False):
 			return
 
 		employee_user_permission_exists = frappe.db.exists(

@@ -20,6 +20,7 @@
   "accounting_dimensions_section",
   "cost_center",
   "dimension_col_break",
+  "project",
   "shipping_amount_section",
   "calculate_based_on",
   "show_constraint_group",
@@ -209,6 +210,12 @@
    "depends_on": "eval:doc.calculate_based_on==='Multiple Constraints'",
    "fieldname": "section_break_vgym",
    "fieldtype": "Section Break"
+  },
+  {
+    "fieldname": "project",
+    "fieldtype": "Link",
+    "label": "Project",
+    "options": "Project"
   }
  ],
  "icon": "fa fa-truck",

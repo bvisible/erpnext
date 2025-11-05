@@ -23,6 +23,14 @@ frappe.ui.form.on("Job Card", {
 			};
 		});
 
+		frm.set_query("item_code", "scrap_items", () => {
+			return {
+				filters: {
+					disabled: 0,
+				},
+			};
+		});
+
 		frm.set_indicator_formatter("sub_operation", function (doc) {
 			if (doc.status == "Pending") {
 				return "red";
@@ -51,9 +59,13 @@ frappe.ui.form.on("Job Card", {
 			let excess_transfer_allowed = frm.doc.__onload.job_card_excess_transfer;
 
 			if (to_request || excess_transfer_allowed) {
-				frm.add_custom_button(__("Material Request"), () => {
-					frm.trigger("make_material_request");
-				});
+				frm.add_custom_button(
+					__("Material Request"),
+					() => {
+						frm.trigger("make_material_request");
+					},
+					__("Create")
+				);
 			}
 
 			// check if any row has untransferred materials
@@ -61,9 +73,13 @@ frappe.ui.form.on("Job Card", {
 			let to_transfer = frm.doc.items.some((row) => row.transferred_qty < row.required_qty);
 
 			if (to_transfer || excess_transfer_allowed) {
-				frm.add_custom_button(__("Material Transfer"), () => {
-					frm.trigger("make_stock_entry");
-				}).addClass("btn-primary");
+				frm.add_custom_button(
+					__("Material Transfer"),
+					() => {
+						frm.trigger("make_stock_entry");
+					},
+					__("Create")
+				);
 			}
 		}
 
@@ -392,7 +408,7 @@ frappe.ui.form.on("Job Card", {
 		function updateStopwatch(increment) {
 			var hours = Math.floor(increment / 3600);
 			var minutes = Math.floor((increment - hours * 3600) / 60);
-			var seconds = increment - hours * 3600 - minutes * 60;
+			var seconds = Math.floor(increment - hours * 3600 - minutes * 60);
 
 			$(section)
 				.find(".hours")
@@ -415,7 +431,7 @@ frappe.ui.form.on("Job Card", {
 		frm.dashboard.refresh();
 		const timer = `
 			<div class="stopwatch" style="font-weight:bold;margin:0px 13px 0px 2px;
-				color:#545454;font-size:18px;display:inline-block;vertical-align:text-bottom;>
+				color:#545454;font-size:18px;display:inline-block;vertical-align:text-bottom;">
 				<span class="hours">00</span>
 				<span class="colon">:</span>
 				<span class="minutes">00</span>
@@ -425,18 +441,32 @@ frappe.ui.form.on("Job Card", {
 
 		var section = frm.toolbar.page.add_inner_message(timer);
 
-		let currentIncrement = frm.doc.current_time || 0;
+		let currentIncrement = frm.events.get_current_time(frm);
 		if (frm.doc.started_time || frm.doc.current_time) {
 			if (frm.doc.status == "On Hold") {
 				updateStopwatch(currentIncrement);
 			} else {
-				currentIncrement += moment(frappe.datetime.now_datetime()).diff(
-					moment(frm.doc.started_time),
-					"seconds"
-				);
 				initialiseTimer();
 			}
 		}
+	},
+
+	get_current_time(frm) {
+		let current_time = 0;
+
+		frm.doc.time_logs.forEach((d) => {
+			if (d.to_time) {
+				if (d.time_in_mins) {
+					current_time += flt(d.time_in_mins, 2) * 60;
+				} else {
+					current_time += get_seconds_diff(d.to_time, d.from_time);
+				}
+			} else {
+				current_time += get_seconds_diff(frappe.datetime.now_datetime(), d.from_time);
+			}
+		});
+
+		return current_time;
 	},
 
 	hide_timer: function (frm) {
@@ -503,3 +533,7 @@ frappe.ui.form.on("Job Card Time Log", {
 		frm.set_value("started_time", "");
 	},
 });
+
+function get_seconds_diff(d1, d2) {
+	return moment(d1).diff(d2, "seconds");
+}

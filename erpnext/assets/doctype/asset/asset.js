@@ -72,6 +72,12 @@ frappe.ui.form.on("Asset", {
 				filters: { item_code: doc.item_code },
 			};
 		});
+
+		if (frm.doc.docstatus == 1) {
+			frm.custom_make_buttons = {
+				"Asset Capitalization": "Asset Capitalization",
+			};
+		}
 	},
 
 	refresh: function (frm) {
@@ -658,10 +664,6 @@ frappe.ui.form.on("Asset", {
 					} else {
 						frm.set_value("purchase_invoice_item", data.purchase_invoice_item);
 					}
-
-					let is_editable = !data.is_multiple_items; // if multiple items, then fields should be read-only
-					frm.set_df_property("gross_purchase_amount", "read_only", is_editable);
-					frm.set_df_property("asset_quantity", "read_only", is_editable);
 				}
 			},
 		});
@@ -788,17 +790,33 @@ frappe.ui.form.on("Asset Finance Book", {
 });
 
 erpnext.asset.scrap_asset = function (frm) {
-	frappe.confirm(__("Do you really want to scrap this asset?"), function () {
-		frappe.call({
-			args: {
-				asset_name: frm.doc.name,
+	var scrap_dialog = new frappe.ui.Dialog({
+		title: __("Enter date to scrap asset"),
+		fields: [
+			{
+				label: __("Select the date"),
+				fieldname: "scrap_date",
+				fieldtype: "Date",
+				reqd: 1,
 			},
-			method: "erpnext.assets.doctype.asset.depreciation.scrap_asset",
-			callback: function (r) {
-				cur_frm.reload_doc();
-			},
-		});
+		],
+		size: "medium",
+		primary_action_label: "Submit",
+		primary_action(values) {
+			frappe.call({
+				args: {
+					asset_name: frm.doc.name,
+					scrap_date: values.scrap_date,
+				},
+				method: "erpnext.assets.doctype.asset.depreciation.scrap_asset",
+				callback: function (r) {
+					frm.reload_doc();
+					scrap_dialog.hide();
+				},
+			});
+		},
 	});
+	scrap_dialog.show();
 };
 
 erpnext.asset.restore_asset = function (frm) {

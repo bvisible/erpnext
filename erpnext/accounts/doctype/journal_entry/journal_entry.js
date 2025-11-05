@@ -1487,7 +1487,7 @@ frappe.ui.form.on("Journal Entry", {
 						to_date: moment(frm.doc.modified).format("YYYY-MM-DD"),
 						company: frm.doc.company,
 						finance_book: frm.doc.finance_book,
-						group_by: "",
+						categorize_by: "",
 						show_cancelled_entries: frm.doc.docstatus === 2,
 					};
 					frappe.set_route("query-report", "General Ledger");
@@ -1647,6 +1647,7 @@ frappe.ui.form.on("Journal Entry", {
 		        frm.set_df_property("is_vat_excluded", "hidden", 0);
 		    }
 		});
+		erpnext.utils.set_letter_head(frm);
 	},
 
 	voucher_type: function (frm) {

@@ -98,19 +98,40 @@ class AssetDepreciationSchedule(Document):
 				)
 
 	def on_submit(self):
+		self.validate_asset()
 		self.db_set("status", "Active")
 
-	def before_cancel(self):
+	def validate_asset(self):
+		asset = frappe.get_doc("Asset", self.asset)
+		if not asset.calculate_depreciation:
+			frappe.throw(
+				_("Asset {0} is not set to calculate depreciation.").format(
+					get_link_to_form("Asset", self.asset)
+				)
+			)
+		if asset.docstatus != 1:
+			frappe.throw(
+				_("Asset {0} is not submitted. Please submit the asset before proceeding.").format(
+					get_link_to_form("Asset", self.asset)
+				)
+			)
+
+	def on_cancel(self):
+		self.db_set("status", "Cancelled")
 		if not self.flags.should_not_cancel_depreciation_entries:
 			self.cancel_depreciation_entries()
 
 	def cancel_depreciation_entries(self):
 		for d in self.get("depreciation_schedule"):
 			if d.journal_entry:
+				je_status = frappe.db.get_value("Journal Entry", d.journal_entry, "docstatus")
+				if je_status == 0:
+					frappe.throw(
+						_(
+							"Cannot cancel Asset Depreciation Schedule {0} as it has a draft journal entry {1}."
+						).format(self.name, d.journal_entry)
+					)
 				frappe.get_doc("Journal Entry", d.journal_entry).cancel()
-
-	def on_cancel(self):
-		self.db_set("status", "Cancelled")
 
 	def update_shift_depr_schedule(self):
 		if not self.shift_based or self.docstatus != 0:
@@ -255,8 +276,10 @@ class AssetDepreciationSchedule(Document):
 		value_after_depreciation,
 	):
 		asset_doc.validate_asset_finance_books(row)
-
-		if not value_after_depreciation:
+		if (
+			not value_after_depreciation
+			and not asset_doc.flags.decrease_in_asset_value_due_to_value_adjustment
+		):
 			value_after_depreciation = _get_value_after_depreciation_for_making_schedule(asset_doc, row)
 		row.value_after_depreciation = value_after_depreciation
 
@@ -346,6 +369,10 @@ class AssetDepreciationSchedule(Document):
 					original_schedule_date=schedule_date,
 				)
 				depreciation_amount = flt(depreciation_amount, asset_doc.precision("gross_purchase_amount"))
+
+				if depreciation_amount > row.value_after_depreciation - row.expected_value_after_useful_life:
+					depreciation_amount = row.value_after_depreciation - row.expected_value_after_useful_life
+
 				if depreciation_amount > 0:
 					self.add_depr_schedule_row(date_of_disposal, depreciation_amount, n)
 
@@ -433,7 +460,7 @@ class AssetDepreciationSchedule(Document):
 				continue
 			depreciation_amount = flt(depreciation_amount, asset_doc.precision("gross_purchase_amount"))
 			value_after_depreciation = flt(
-				value_after_depreciation - flt(depreciation_amount),
+				flt(value_after_depreciation) - flt(depreciation_amount),
 				asset_doc.precision("gross_purchase_amount"),
 			)
 
@@ -631,6 +658,7 @@ def _get_pro_rata_amt(
 		total_days = get_total_days(original_schedule_date or to_date, 12)
 	else:
 		total_days = get_total_days(original_schedule_date or to_date, row.frequency_of_depreciation)
+
 	return (depreciation_amount * flt(days)) / flt(total_days), days, months
 
 
@@ -1068,8 +1096,6 @@ def make_new_active_asset_depr_schedules_and_cancel_current_ones(
 			)
 
 		new_asset_depr_schedule_doc = frappe.copy_doc(current_asset_depr_schedule_doc)
-		if asset_doc.flags.decrease_in_asset_value_due_to_value_adjustment and not value_after_depreciation:
-			value_after_depreciation = row.value_after_depreciation - difference_amount
 
 		if asset_doc.flags.increase_in_asset_value_due_to_repair and row.depreciation_method in (
 			"Written Down Value",

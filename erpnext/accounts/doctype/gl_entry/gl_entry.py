@@ -7,7 +7,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.model.meta import get_field_precision
 from frappe.model.naming import set_name_from_naming_options
-from frappe.utils import flt, fmt_money, now
+from frappe.utils import create_batch, flt, fmt_money, now
 
 import erpnext
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
@@ -131,18 +131,20 @@ class GLEntry(Document):
 
 		if not self.is_cancelled and not (self.party_type and self.party):
 			account_type = frappe.get_cached_value("Account", self.account, "account_type")
-			if account_type == "Receivable":
-				frappe.throw(
-					_("{0} {1}: Customer is required against Receivable account {2}").format(
-						self.voucher_type, self.voucher_no, self.account
+
+			if not frappe.flags.party_not_required:  # skipping validation if party is not required
+				if account_type == "Receivable":
+					frappe.throw(
+						_("{0} {1}: Customer is required against Receivable account {2}").format(
+							self.voucher_type, self.voucher_no, self.account
+						)
 					)
-				)
-			elif account_type == "Payable":
-				frappe.throw(
-					_("{0} {1}: Supplier is required against Payable account {2}").format(
-						self.voucher_type, self.voucher_no, self.account
+				elif account_type == "Payable":
+					frappe.throw(
+						_("{0} {1}: Supplier is required against Payable account {2}").format(
+							self.voucher_type, self.voucher_no, self.account
+						)
 					)
-				)
 
 		# Zero value transaction is not allowed
 		if not (
@@ -251,7 +253,7 @@ class GLEntry(Document):
 			)
 
 	def validate_cost_center(self):
-		if not self.cost_center:
+		if not self.cost_center or self.is_cancelled:
 			return
 
 		is_group, company = frappe.get_cached_value("Cost Center", self.cost_center, ["is_group", "company"])
@@ -311,7 +313,7 @@ def validate_balance_type(account, adv_adj=False):
 		if balance_must_be:
 			balance = frappe.db.sql(
 				"""select sum(debit) - sum(credit)
-				from `tabGL Entry` where account = %s""",
+				from `tabGL Entry` where is_cancelled = 0 and account = %s""",
 				account,
 			)[0][0]
 
@@ -451,12 +453,20 @@ def rename_gle_sle_docs():
 def rename_temporarily_named_docs(doctype):
 	"""Rename temporarily named docs using autoname options"""
 	docs_to_rename = frappe.get_all(doctype, {"to_rename": "1"}, order_by="creation", limit=50000)
-	for doc in docs_to_rename:
-		oldname = doc.name
-		set_name_from_naming_options(frappe.get_meta(doctype).autoname, doc)
-		newname = doc.name
-		frappe.db.sql(
-			f"UPDATE `tab{doctype}` SET name = %s, to_rename = 0, modified = %s where name = %s",
-			(newname, now(), oldname),
-			auto_commit=True,
-		)
+	autoname = frappe.get_meta(doctype).autoname
+
+	for batch in create_batch(docs_to_rename, 100):
+		for doc in batch:
+			oldname = doc.name
+			set_name_from_naming_options(autoname, doc)
+			newname = doc.name
+			frappe.db.sql(
+				f"UPDATE `tab{doctype}` SET name = %s, to_rename = 0, modified = %s where name = %s",
+				(newname, now(), oldname),
+			)
+
+			for hook_type in ("on_gle_rename", "on_sle_rename"):
+				for hook in frappe.get_hooks(hook_type):
+					frappe.call(hook, newname=newname, oldname=oldname)
+
+		frappe.db.commit()
