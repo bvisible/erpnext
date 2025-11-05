@@ -1001,7 +1001,6 @@
   {
    "collapsible": 1,
    "collapsible_depends_on": "paid_amount",
-   "depends_on": "eval:doc.is_paid===1||(doc.advances && doc.advances.length>0)",
    "fieldname": "payments_section",
    "fieldtype": "Section Break",
    "label": "Payments"
@@ -1635,7 +1634,7 @@
  "idx": 204,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-14 11:39:04.564610",
+ "modified": "2025-11-04 17:30:16.310197",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice",
@@ -1690,6 +1689,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "search_fields": "posting_date, supplier, bill_no, base_grand_total, outstanding_amount",
  "show_name_in_global_search": 1,
  "sort_field": "modified",

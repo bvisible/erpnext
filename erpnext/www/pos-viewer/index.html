@@ -1,0 +1,290 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("POS Viewer") }}{% endblock %}
+
+{% block head_include %}
+	<!-- intl-tel-input CSS -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.12/build/css/intlTelInput.css">
+	<style>{% include "erpnext/www/pos-viewer/index.css" %}</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="pos-viewer-container">
+	<!-- Authentication Modal -->
+	<div id="auth-modal" class="modal-overlay" style="display: none;">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h3>{{ _("Connection") }}</h3>
+				<p class="text-muted">{{ _("Enter your password to access the display") }}</p>
+			</div>
+			<div class="modal-body">
+				<div class="form-group">
+					<label for="api-key-input">{{ _("Password") }}</label>
+					<input
+						type="password"
+						id="api-key-input"
+						class="form-control"
+						placeholder="{{ _('Your password') }}"
+						autocomplete="off"
+					>
+				</div>
+				<div id="auth-error" class="alert alert-danger" style="display: none;"></div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-primary btn-lg" id="auth-submit-btn">
+					<span class="btn-text">{{ _("Connect") }}</span>
+					<span class="btn-loading" style="display: none;">
+						<span class="spinner-border spinner-border-sm"></span>
+						{{ _("Connecting...") }}
+					</span>
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Main Content -->
+	<div id="main-content" style="display: none;">
+		<!-- Header Toggle Button -->
+		<button type="button" class="header-toggle-btn" id="header-toggle-btn" title="{{ _('Toggle Header') }}">
+			<svg class="icon icon-sm">
+				<use href="#icon-chevron-down"></use>
+			</svg>
+		</button>
+
+		<!-- Header -->
+		<div class="pos-viewer-header" id="pos-viewer-header">
+			<div class="header-left">
+				<h2>{{ _("POS Cart Viewer") }}</h2>
+				<div id="connection-status" class="connection-badge disconnected">
+					<span class="status-dot"></span>
+					<span class="status-text">{{ _("Disconnected") }}</span>
+				</div>
+			</div>
+			<div class="header-right">
+				<div class="pos-profile-selector">
+						<select id="pos-profile-select" class="form-control">
+						<option value="">{{ _("Loading...") }}</option>
+					</select>
+				</div>
+				<div class="user-info">
+						<button type="button" class="btn btn-sm btn-secondary btn-icon-only" id="logout-btn" title="{{ _('Disconnect') }}">
+						<svg class="icon icon-sm">
+							<use href="#icon-log-out"></use>
+						</svg>
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Cart Display Area -->
+		<div class="cart-container">
+			<div class="cart-header">
+				<div class="customer-info">
+					<h4>{{ _("Customer") }}</h4>
+					<div id="customer-display" class="customer-name">
+						{{ _("No customer selected") }}
+					</div>
+				</div>
+				<div class="cart-actions">
+					<button type="button" class="btn btn-success" id="create-customer-btn">
+						<svg class="icon icon-sm">
+							<use href="#icon-plus"></use>
+						</svg>
+						{{ _("Créer un compte") }}
+					</button>
+				</div>
+			</div>
+
+			<div class="cart-body">
+				<div id="cart-items-list" class="cart-items-list">
+					<!-- Cart items will be rendered here -->
+					<div class="empty-cart-message">
+						<svg class="icon icon-xxl text-muted">
+							<use href="#icon-shopping-cart"></use>
+						</svg>
+						<p class="text-muted">{{ _("No items in cart") }}</p>
+						<p class="text-muted small">{{ _("Add items in POS to see them here") }}</p>
+					</div>
+				</div>
+
+				<div class="cart-totals" id="cart-totals" style="display: none;">
+					<div class="total-row">
+						<span class="total-label">{{ _("Total Qty") }}:</span>
+						<span class="total-value" id="total-qty">0</span>
+					</div>
+					<div class="total-row">
+						<span class="total-label">{{ _("Net Total") }}:</span>
+						<span class="total-value" id="net-total">0.00</span>
+					</div>
+					<div class="total-row">
+						<span class="total-label">{{ _("Taxes") }}:</span>
+						<span class="total-value" id="total-taxes">0.00</span>
+					</div>
+					<div class="total-row discount-row" id="discount-row" style="display: none;">
+						<span class="total-label">{{ _("Discount") }}:</span>
+						<span class="total-value" id="discount-amount">0.00</span>
+					</div>
+					<div class="total-row grand-total-row">
+						<span class="total-label">{{ _("Grand Total") }}:</span>
+						<span class="total-value grand-total" id="grand-total">0.00</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- No POS Session Message -->
+		<div id="no-session-message" class="alert alert-info" style="display: none;">
+			<h4>{{ _("No Active POS Session") }}</h4>
+			<p>{{ _("Please open a POS session in ERPNext to view the cart here.") }}</p>
+		</div>
+	</div>
+
+	<!-- Create Customer Modal -->
+	<div id="customer-modal" class="modal-overlay" style="display: none;">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h3>{{ _("Create New Customer") }}</h3>
+				<button type="button" class="close-modal" id="close-customer-modal">
+					<svg class="icon icon-sm">
+						<use href="#icon-x"></use>
+					</svg>
+				</button>
+			</div>
+			<div class="modal-body">
+				<form id="customer-form">
+					<!-- Customer Type Switch -->
+					<div class="form-group">
+						<label>{{ _("Customer Type") }}</label>
+						<div class="customer-type-switch">
+							<label class="type-option">
+								<input type="radio" name="customer-type" value="Individual" checked>
+								<span class="type-label">{{ _("Individual") }}</span>
+							</label>
+							<label class="type-option">
+								<input type="radio" name="customer-type" value="Company">
+								<span class="type-label">{{ _("Company") }}</span>
+							</label>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label for="customer-name" id="customer-name-label">{{ _("Full Name") }} <span class="text-danger">*</span></label>
+						<input
+							type="text"
+							id="customer-name"
+							class="form-control"
+							required
+							placeholder="{{ _('Full name') }}"
+						>
+					</div>
+					<div class="form-group">
+						<label for="customer-email">{{ _("Email") }}</label>
+						<input
+							type="email"
+							id="customer-email"
+							class="form-control"
+							placeholder="customer@example.com"
+						>
+					</div>
+					<div class="form-group">
+						<label for="customer-mobile">{{ _("Mobile Number") }}</label>
+						<input
+							type="tel"
+							id="customer-mobile"
+							class="form-control"
+							placeholder="+1234567890"
+						>
+					</div>
+					<div class="form-group">
+						<label for="customer-address">{{ _("Address Line 1") }}</label>
+						<input
+							type="text"
+							id="customer-address"
+							class="form-control"
+							placeholder="{{ _('Street address') }}"
+						>
+					</div>
+					<div class="row">
+						<div class="col-md-6">
+							<div class="form-group">
+								<label for="customer-city">{{ _("City") }}</label>
+								<input
+									type="text"
+									id="customer-city"
+									class="form-control"
+									placeholder="{{ _('City') }}"
+								>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="form-group">
+								<label for="customer-pincode">{{ _("Postal Code") }}</label>
+								<input
+									type="text"
+									id="customer-pincode"
+									class="form-control"
+									placeholder="{{ _('Postal code') }}"
+								>
+							</div>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="customer-country">{{ _("Country") }}</label>
+						<input
+							type="text"
+							id="customer-country"
+							class="form-control"
+							placeholder="{{ _('Country') }}"
+						>
+					</div>
+					<div id="customer-error" class="alert alert-danger" style="display: none;"></div>
+					<div id="customer-success" class="alert alert-success" style="display: none;"></div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" id="cancel-customer-btn">
+					{{ _("Cancel") }}
+				</button>
+				<button type="button" class="btn btn-primary" id="save-customer-btn">
+					<span class="btn-text">{{ _("Create Customer") }}</span>
+					<span class="btn-loading" style="display: none;">
+						<span class="spinner-border spinner-border-sm"></span>
+						{{ _("Creating...") }}
+					</span>
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- SVG Icons -->
+<svg style="display: none;">
+	<symbol id="icon-log-out" viewBox="0 0 24 24">
+		<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+		<polyline points="16 17 21 12 16 7"></polyline>
+		<line x1="21" y1="12" x2="9" y2="12"></line>
+	</symbol>
+	<symbol id="icon-plus" viewBox="0 0 24 24">
+		<line x1="12" y1="5" x2="12" y2="19"></line>
+		<line x1="5" y1="12" x2="19" y2="12"></line>
+	</symbol>
+	<symbol id="icon-shopping-cart" viewBox="0 0 24 24">
+		<circle cx="9" cy="21" r="1"></circle>
+		<circle cx="20" cy="21" r="1"></circle>
+		<path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+	</symbol>
+	<symbol id="icon-x" viewBox="0 0 24 24">
+		<line x1="18" y1="6" x2="6" y2="18"></line>
+		<line x1="6" y1="6" x2="18" y2="18"></line>
+	</symbol>
+	<symbol id="icon-chevron-down" viewBox="0 0 24 24">
+		<polyline points="6 9 12 15 18 9"></polyline>
+	</symbol>
+</svg>
+{% endblock %}
+
+{% block script %}
+	<!-- intl-tel-input JS -->
+	<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.12/build/js/intlTelInput.min.js"></script>
+	<script>{% include "erpnext/www/pos-viewer/index.js" %}</script>
+{% endblock %}

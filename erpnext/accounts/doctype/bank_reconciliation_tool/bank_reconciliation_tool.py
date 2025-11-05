@@ -521,7 +521,12 @@ def subtract_allocations(gl_account, vouchers):
 		if amount := get_allocated_amount(voucher_allocated_amounts, voucher, gl_account):
 			voucher["paid_amount"] -= amount
 
-		copied.append(voucher)
+		# Custom: Filter out vouchers with paid_amount <= 0 to prevent vouchers with 0.00 amount
+		# from appearing in Mint/ERPNext Bank Reconciliation UI
+		# This occurs when get_allocated_amount() incorrectly calculates allocations
+		# when accounting dimensions (project, cost_center) differ between journal entry lines
+		if voucher["paid_amount"] > 0:
+			copied.append(voucher)
 	return copied
 
 

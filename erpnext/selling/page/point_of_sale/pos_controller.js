@@ -730,6 +730,41 @@ erpnext.PointOfSale.Controller = class {
 	update_cart_html(item_row, remove_item) {
 		this.cart.update_item_html(item_row, remove_item);
 		this.cart.update_totals_section(this.frm);
+
+		// Publish real-time event for external POS viewer
+		if (this.pos_opening) {
+			const cart_data = {
+				pos_opening_entry: this.pos_opening,
+				customer: this.frm.doc.customer,
+				customer_name: this.frm.doc.customer_name,
+				posting_date: this.frm.doc.posting_date,
+				posting_time: this.frm.doc.posting_time,
+				currency: this.frm.doc.currency,
+				items: this.frm.doc.items,
+				total_qty: this.frm.doc.total_qty,
+				total: this.frm.doc.total,
+				net_total: this.frm.doc.net_total,
+				total_taxes_and_charges: this.frm.doc.total_taxes_and_charges,
+				discount_amount: this.frm.doc.discount_amount,
+				grand_total: this.frm.doc.grand_total,
+				rounded_total: this.frm.doc.rounded_total,
+				timestamp: new Date().toISOString()
+			};
+
+			// Send to cache for POS viewer
+			frappe.call({
+				method: 'erpnext.www.pos-viewer.index.update_cart_data',
+				args: {
+					pos_opening_entry: this.pos_opening,
+					cart_data: JSON.stringify(cart_data)
+				},
+				freeze: false,
+				async: true
+			});
+
+			// Also publish via WebSocket (if available)
+			frappe.realtime.publish(`pos_cart_updated_${this.pos_opening}`, cart_data);
+		}
 	}
 
 	check_serial_batch_selection_needed(item_row) {
