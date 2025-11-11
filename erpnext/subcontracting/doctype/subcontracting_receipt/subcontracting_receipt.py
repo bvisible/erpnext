@@ -599,7 +599,7 @@ class SubcontractingReceipt(SubcontractingController):
 
 		for item in self.items:
 			if flt(item.rate) and flt(item.qty):
-				if warehouse_account.get(item.warehouse):
+				if warehouse_account and warehouse_account.get(item.warehouse):
 					stock_value_diff = frappe.db.get_value(
 						"Stock Ledger Entry",
 						{
