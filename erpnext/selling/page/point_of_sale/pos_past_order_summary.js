@@ -209,6 +209,13 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		});
 
 		this.$summary_container.on("click", ".email-btn", () => {
+			////
+			let content = __("Hello {0},\n\nThank you for your purchase.\nPlease find attached the receipt.\n\nBest regards,\n{1}", [
+				this.doc.customer || "",
+				this.doc.owner || "",
+			]);
+			this.email_dialog.fields_dict.content.set_value(content);
+			////
 			this.email_dialog.fields_dict.email_id.set_value(this.customer_email);
 			this.email_dialog.show();
 		});
@@ -295,7 +302,6 @@ erpnext.PointOfSale.PastOrderSummary = class {
 	send_email() {
 		const frm = this.events.get_frm();
 		const recipients = this.email_dialog.get_values().email_id;
-		//// maybe conflict v14: __("Hello {0},<br><br>Thank you for your purchase.<br><br>Please find attached the receipt.", [doc.customer_name])
 		const content = this.email_dialog.get_values().content;
 		const doc = this.doc || frm.doc;
 		const print_format = frm.pos_print_format;
@@ -329,6 +335,8 @@ erpnext.PointOfSale.PastOrderSummary = class {
 								indicator: 'green'
 							});
 						}
+						//// clear fields after sending email
+						this.email_dialog.set_values({ email_id: "", content: "" });
 						this.email_dialog.hide();
 					} else {
 						frappe.msgprint(__("There were errors while sending email. Please try again."));
