@@ -607,6 +607,12 @@ erpnext.PointOfSale.Controller = class {
 	async on_cart_update(args) {
 		frappe.dom.freeze();
 		let item_row = undefined;
+
+		//// if this.frm.doc.set_warehouse is not set yet, then set it from pos profile settings
+		if (!this.frm.doc.set_warehouse) {
+			this.frm.doc.set_warehouse = this.settings.warehouse;
+		}
+
 		try {
 			let { field, value, item } = args;
 			item_row = this.get_item_from_frm(item);
