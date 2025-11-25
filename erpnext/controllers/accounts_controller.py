@@ -1567,16 +1567,23 @@ class AccountsController(TransactionBase):
 			self.get("net_total") * self.conversion_rate, self.precision("net_total")
 		)
 
-		credit_or_debit = "credit" if self.doctype == "Purchase Invoice" else "debit"
 		against = self.supplier if self.doctype == "Purchase Invoice" else self.customer
 
+		# Fix: handle negative precision_loss correctly by using abs() and choosing the right side
+		# For Purchase Invoice: positive loss = credit, negative loss = debit
+		# For Sales Invoice: positive loss = debit, negative loss = credit
 		if precision_loss:
+			if self.doctype == "Purchase Invoice":
+				credit_or_debit = "credit" if precision_loss > 0 else "debit"
+			else:
+				credit_or_debit = "debit" if precision_loss > 0 else "credit"
+
 			gl_entries.append(
 				self.get_gl_dict(
 					{
 						"account": round_off_account,
 						"against": against,
-						credit_or_debit: precision_loss,
+						credit_or_debit: abs(precision_loss),
 						"cost_center": round_off_cost_center
 						if self.use_company_roundoff_cost_center
 						else self.cost_center or round_off_cost_center,
