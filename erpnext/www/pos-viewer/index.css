@@ -448,7 +448,8 @@
 	padding: 16px;
 	display: flex;
 	flex-direction: column;
-	height: 100%;
+	flex: 1;
+	min-height: 0;
 	overflow: hidden;
 }
 
@@ -1334,8 +1335,11 @@ a img[alt="Edit in Builder"] {
 }
 
 /* Make cart-items-list fill full height when showing ads */
-.cart-items-list:has(.ads-slider-container) {
+.cart-items-list.showing-ads {
 	position: relative;
 	flex: 1;
-	min-height: 0;
+	min-height: 400px;
+	overflow: hidden;
+	margin-bottom: 0;
+	padding-right: 0;
 }

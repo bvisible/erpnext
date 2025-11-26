@@ -609,6 +609,9 @@ class POSViewer {
 	renderAdsSlider(container) {
 		if (!this.inAppAds || this.inAppAds.length === 0) return;
 
+		// Add showing-ads class to container for proper height
+		container.classList.add('showing-ads');
+
 		// Build slides HTML
 		let slidesHTML = '';
 		let dotsHTML = '';
@@ -661,6 +664,11 @@ class POSViewer {
 		if (this.adsSliderInterval) {
 			clearInterval(this.adsSliderInterval);
 			this.adsSliderInterval = null;
+		}
+		// Remove showing-ads class from container
+		const container = document.getElementById('cart-items-list');
+		if (container) {
+			container.classList.remove('showing-ads');
 		}
 	}
 
