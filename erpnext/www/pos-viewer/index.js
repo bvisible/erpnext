@@ -450,10 +450,15 @@ class POSViewer {
 			cartContainer.classList.remove('no-animation');
 		}
 
+		// Get cart header element
+		const cartHeader = document.querySelector('.cart-header');
+
 		if (!cart || !cart.items || cart.items.length === 0) {
 			// Show ads slider if we have ads, otherwise show empty cart message
 			if (this.inAppAds && this.inAppAds.length > 0) {
 				this.renderAdsSlider(itemsList);
+				// Hide cart header when showing ads
+				if (cartHeader) cartHeader.style.display = 'none';
 			} else {
 				itemsList.innerHTML = `
 					<div class="empty-cart-message">
@@ -464,12 +469,15 @@ class POSViewer {
 						<p class="text-muted small">${__('Add items in POS to see them here')}</p>
 					</div>
 				`;
+				// Show cart header for empty cart message
+				if (cartHeader) cartHeader.style.display = '';
 			}
 			totalsDiv.style.display = 'none';
-			customerDisplay.textContent = __('No customer selected');
-			customerDisplay.classList.remove('selected');
 			return;
 		}
+
+		// Show cart header when cart has items
+		if (cartHeader) cartHeader.style.display = '';
 
 		// Stop ads slider when cart has items
 		this.stopAdsSlider();

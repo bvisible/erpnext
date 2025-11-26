@@ -430,5 +430,22 @@ def get_in_app_ads():
 		order_by="creation asc"
 	)
 
+	# Convert private file URLs to accessible URLs
+	for ad in ads:
+		if ad.image:
+			# Get the file doc to get the public URL
+			file_url = ad.image
+			if file_url.startswith("/private/"):
+				# Get file document and check if it exists
+				file_doc = frappe.get_all(
+					"File",
+					filters={"file_url": file_url},
+					fields=["name", "file_url", "is_private"],
+					limit=1
+				)
+				if file_doc:
+					# Use the file URL directly - Frappe handles authentication
+					ad["image"] = file_url
+
 	return ads
 
