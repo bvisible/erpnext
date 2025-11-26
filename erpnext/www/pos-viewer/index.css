@@ -483,8 +483,9 @@
 
 /* Cart Item - Receipt Style */
 .cart-item {
-	display: grid;
-	grid-template-columns: 50px 1fr auto auto;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
 	gap: 12px;
 	padding: 10px 14px;
 	margin-bottom: 6px;
@@ -492,7 +493,6 @@
 	border-radius: 4px;
 	background-color: #fafafa;
 	font-family: 'Courier New', monospace;
-	align-items: center;
 }
 
 .cart-item:last-child {
@@ -502,6 +502,7 @@
 .item-image {
 	width: 50px;
 	height: 50px;
+	min-width: 50px;
 	border-radius: 3px;
 	overflow: hidden;
 	background-color: #fff;
@@ -524,6 +525,7 @@
 	gap: 2px;
 	min-width: 0;
 	overflow: hidden;
+	flex: 1;
 }
 
 .item-name {
@@ -550,10 +552,11 @@
 	flex-direction: column;
 	align-items: flex-end;
 	justify-content: center;
-	justify-self: end;
 	gap: 2px;
 	white-space: nowrap;
 	text-align: right;
+	flex-shrink: 0;
+	min-width: 90px;
 }
 
 .item-quantity {
@@ -595,7 +598,8 @@
 	font-weight: 700;
 	color: #2e3338;
 	white-space: nowrap;
-	justify-self: end;
+	flex-shrink: 0;
+	min-width: 100px;
 }
 
 /* Cart Totals - Receipt Style */
@@ -696,13 +700,13 @@
 /* Responsive Design */
 @media (max-width: 1024px) {
 	.cart-item {
-		grid-template-columns: 60px 1fr 120px 80px;
 		gap: 10px;
 	}
 
 	.item-image {
 		width: 60px;
 		height: 60px;
+		min-width: 60px;
 	}
 
 	.item-amount {
