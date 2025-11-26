@@ -484,8 +484,8 @@
 /* Cart Item - Receipt Style */
 .cart-item {
 	display: grid;
-	grid-template-columns: 50px 1fr 100px 110px;
-	gap: 10px;
+	grid-template-columns: 50px minmax(150px, 1fr) 110px 120px;
+	gap: 8px;
 	padding: 8px 12px;
 	margin-bottom: 6px;
 	border: 1px solid #e0e0e0;
@@ -557,9 +557,11 @@
 }
 
 .item-quantity {
-	display: inline-block;
+	display: flex;
+	justify-content: flex-end;
 	font-size: 11px;
 	white-space: nowrap;
+	width: 100%;
 }
 
 .qty-label {
@@ -569,12 +571,16 @@
 .qty-value {
 	font-weight: 600;
 	color: #2e3338;
+	min-width: 20px;
+	text-align: right;
 }
 
 .item-rate {
-	display: inline-block;
+	display: flex;
+	justify-content: flex-end;
 	font-size: 11px;
 	white-space: nowrap;
+	width: 100%;
 }
 
 .rate-label {
