@@ -12,6 +12,10 @@ class POSViewer {
 		this.realtimeConnected = false;
 		this.pollingInterval = null;
 		this.currentCart = null;
+		this.previousCartItemCount = 0; // Track previous cart state for transitions
+		this.isPolling = false; // Flag to disable animations during polling
+		this.thankYouVisible = false; // Track if thank you message is shown
+		this.hasReceivedItemsBefore = false; // Only show thank you if we had items before in this session
 		this.currency = 'CHF'; // Default currency
 		this.country = 'Switzerland'; // Default country
 		this.phoneInput = null; // intl-tel-input instance
@@ -372,15 +376,54 @@ class POSViewer {
 	async loadCart() {
 		if (!this.posOpeningEntry) return;
 
+		this.isPolling = true; // Flag to disable animations during polling
+
 		try {
+			// Get current cart
 			const cart = await this.callMethod('erpnext.www.pos-viewer.index.get_current_cart', {
 				pos_opening_entry: this.posOpeningEntry
 			});
+
+			// Calculate current item count
+			const currentItemCount = (cart && cart.items) ? cart.items.length : 0;
+
+			// Handle sale_completed signal - ONLY show thank you if we had items in this session
+			if (cart && cart.sale_completed) {
+				if (this.hasReceivedItemsBefore) {
+					this.hasReceivedItemsBefore = false; // Reset for next sale
+					this.showThankYouMessage();
+					this.currentCart = null;
+					this.previousCartItemCount = 0;
+					return;
+				} else {
+					// No items seen yet in this session, just show empty cart
+					this.renderCart({items: []});
+					return;
+				}
+			}
+
+			// Track if we've received items in this session
+			if (currentItemCount > 0) {
+				this.hasReceivedItemsBefore = true;
+			}
+
+			// Update previous count for next comparison
+			this.previousCartItemCount = currentItemCount;
+
+			// Mark initial load as complete after first successful load
+			this.isInitialLoad = false;
 
 			this.currentCart = cart;
 			this.renderCart(cart);
 		} catch (error) {
 			console.error('Error loading cart:', error);
+			// On error during initial load, just mark as loaded
+			if (this.isInitialLoad) {
+				this.isInitialLoad = false;
+				this.renderCart(null);
+			}
+		} finally {
+			this.isPolling = false;
 		}
 	}
 
@@ -388,6 +431,17 @@ class POSViewer {
 		const itemsList = document.getElementById('cart-items-list');
 		const totalsDiv = document.getElementById('cart-totals');
 		const customerDisplay = document.getElementById('customer-display');
+		const cartContainer = document.querySelector('.cart-container');
+
+		// Hide thank you message if showing cart
+		this.hideThankYouMessage();
+
+		// Add/remove no-animation class based on polling state
+		if (this.isPolling && cartContainer) {
+			cartContainer.classList.add('no-animation');
+		} else if (cartContainer) {
+			cartContainer.classList.remove('no-animation');
+		}
 
 		if (!cart || !cart.items || cart.items.length === 0) {
 			itemsList.innerHTML = `
@@ -471,6 +525,104 @@ class POSViewer {
 	formatCurrency(amount) {
 		if (!amount) return `${this.currency} 0.00`;
 		return `${this.currency} ${parseFloat(amount).toFixed(2)}`;
+	}
+
+	showThankYouMessage() {
+		// Don't show if already visible
+		if (this.thankYouVisible) return;
+
+		this.thankYouVisible = true;
+
+		const itemsList = document.getElementById('cart-items-list');
+		const totalsDiv = document.getElementById('cart-totals');
+		const customerDisplay = document.getElementById('customer-display');
+
+		// Hide totals and clear customer
+		if (totalsDiv) totalsDiv.style.display = 'none';
+		if (customerDisplay) {
+			customerDisplay.textContent = '';
+			customerDisplay.classList.remove('selected');
+		}
+
+		// Show thank you message
+		if (itemsList) {
+			itemsList.innerHTML = `
+				<div class="thank-you-message">
+					<div class="thank-you-icon">🎉</div>
+					<h2 class="thank-you-title">${__('Merci pour votre achat!')}</h2>
+					<p class="thank-you-subtitle">${__('Thank you for your purchase!')}</p>
+				</div>
+			`;
+		}
+
+		// Trigger confetti animation
+		this.triggerConfetti();
+
+		// Auto-hide after 8 seconds
+		setTimeout(() => {
+			this.hideThankYouMessage();
+		}, 8000);
+	}
+
+	hideThankYouMessage() {
+		this.thankYouVisible = false;
+	}
+
+	triggerConfetti() {
+		// Check if confetti library is loaded
+		if (typeof confetti === 'function') {
+			// Fire confetti from both sides
+			const count = 200;
+			const defaults = {
+				origin: { y: 0.7 },
+				zIndex: 9999
+			};
+
+			function fire(particleRatio, opts) {
+				confetti({
+					...defaults,
+					...opts,
+					particleCount: Math.floor(count * particleRatio)
+				});
+			}
+
+			// Left side
+			fire(0.25, {
+				spread: 26,
+				startVelocity: 55,
+				origin: { x: 0.1, y: 0.7 }
+			});
+
+			// Center
+			fire(0.2, {
+				spread: 60,
+				origin: { x: 0.5, y: 0.7 }
+			});
+
+			// Right side
+			fire(0.25, {
+				spread: 26,
+				startVelocity: 55,
+				origin: { x: 0.9, y: 0.7 }
+			});
+
+			// More confetti with different colors
+			fire(0.1, {
+				spread: 120,
+				startVelocity: 25,
+				decay: 0.92,
+				scalar: 1.2,
+				origin: { x: 0.5, y: 0.5 }
+			});
+
+			fire(0.1, {
+				spread: 120,
+				startVelocity: 45,
+				origin: { x: 0.5, y: 0.6 }
+			});
+		} else {
+			console.log('Confetti library not loaded');
+		}
 	}
 
 	showCustomerModal() {

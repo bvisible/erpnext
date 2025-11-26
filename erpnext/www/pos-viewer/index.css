@@ -1177,3 +1177,78 @@ a img[alt="Edit in Builder"] {
 		font-size: 28px;
 	}
 }
+
+/* ===== THANK YOU MESSAGE STYLES ===== */
+.thank-you-message {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 60px 20px;
+	text-align: center;
+	min-height: 400px;
+	animation: thankYouFadeIn 0.5s ease-out;
+}
+
+@keyframes thankYouFadeIn {
+	from {
+		opacity: 0;
+		transform: scale(0.9);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+.thank-you-icon {
+	font-size: 80px;
+	margin-bottom: 20px;
+	animation: thankYouBounce 1s ease-in-out infinite;
+}
+
+@keyframes thankYouBounce {
+	0%, 100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-15px);
+	}
+}
+
+.thank-you-title {
+	font-size: 36px;
+	font-weight: 700;
+	color: #28a745;
+	margin: 0 0 12px 0;
+	text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.thank-you-subtitle {
+	font-size: 20px;
+	color: #6c757d;
+	margin: 0;
+}
+
+/* ===== NO ANIMATION MODE ===== */
+/* Disable all animations and transitions when polling */
+.cart-container.no-animation,
+.cart-container.no-animation * {
+	animation: none !important;
+	transition: none !important;
+}
+
+.cart-container.no-animation .cart-item {
+	animation: none !important;
+}
+
+/* Ensure cart items don't jump during refresh */
+.cart-item {
+	transform: none;
+	will-change: auto;
+}
+
+/* Smooth but fast transition for cart updates (not polling) */
+.cart-container:not(.no-animation) .cart-item {
+	transition: opacity 0.15s ease-out, background-color 0.15s ease-out;
+}

@@ -150,10 +150,19 @@ def update_cart_data(pos_opening_entry, cart_data):
 def get_current_cart(pos_opening_entry):
 	"""
 	Get current cart data from cache.
-	Returns cart data if available, None otherwise.
+	Returns cart data if available, empty cart otherwise.
+	Also checks for sale_completed signal and includes it in response.
 	"""
 	if not frappe.has_permission("POS Invoice", "read"):
 		frappe.throw(_("Insufficient permissions to read POS Invoice"))
+
+	# Check if sale was completed (separate signal key)
+	signal_key = f"pos_sale_completed_{pos_opening_entry}"
+	sale_completed = frappe.cache().get_value(signal_key)
+	if sale_completed:
+		# Clear the signal after reading
+		frappe.cache().delete_value(signal_key)
+		return {"sale_completed": True, "items": []}
 
 	# Try to get cart data from cache first
 	cache_key = f"pos_cart_{pos_opening_entry}"
@@ -163,55 +172,58 @@ def get_current_cart(pos_opening_entry):
 		return cart_data
 
 	# Fallback: try to get from database (saved draft invoice)
-	pos_opening = frappe.get_doc("POS Opening Entry", pos_opening_entry)
+	try:
+		pos_opening = frappe.get_doc("POS Opening Entry", pos_opening_entry)
 
-	invoices = frappe.get_all(
-		"POS Invoice",
-		filters={
-			"pos_profile": pos_opening.pos_profile,
-			"docstatus": 0,  # Draft only
-		},
-		fields=["name"],
-		order_by="modified desc",
-		limit=1,
-	)
+		invoices = frappe.get_all(
+			"POS Invoice",
+			filters={
+				"pos_profile": pos_opening.pos_profile,
+				"docstatus": 0,  # Draft only
+			},
+			fields=["name"],
+			order_by="modified desc",
+			limit=1,
+		)
 
-	if not invoices:
-		return None
+		if not invoices:
+			return {"items": [], "empty": True}
 
-	# Get full invoice details
-	invoice = frappe.get_doc("POS Invoice", invoices[0].name)
+		# Get full invoice details
+		invoice = frappe.get_doc("POS Invoice", invoices[0].name)
 
-	# Get item images for display
-	items_with_images = []
-	for item in invoice.items:
-		item_dict = item.as_dict()
-		# Get item image if available
-		image = frappe.db.get_value("Item", item.item_code, "image")
-		item_dict["image"] = image
-		items_with_images.append(item_dict)
+		# Get item images for display
+		items_with_images = []
+		for item in invoice.items:
+			item_dict = item.as_dict()
+			# Get item image if available
+			image = frappe.db.get_value("Item", item.item_code, "image")
+			item_dict["image"] = image
+			items_with_images.append(item_dict)
 
-	return {
-		"name": invoice.name,
-		"customer": invoice.customer,
-		"customer_name": frappe.db.get_value("Customer", invoice.customer, "customer_name")
-		if invoice.customer
-		else None,
-		"posting_date": invoice.posting_date,
-		"posting_time": invoice.posting_time,
-		"currency": invoice.currency,
-		"items": items_with_images,
-		"total_qty": invoice.total_qty,
-		"total": invoice.total,
-		"net_total": invoice.net_total,
-		"total_taxes_and_charges": invoice.total_taxes_and_charges,
-		"discount_amount": invoice.discount_amount,
-		"grand_total": invoice.grand_total,
-		"rounded_total": invoice.rounded_total,
-		"outstanding_amount": invoice.outstanding_amount,
-		"paid_amount": invoice.paid_amount,
-		"change_amount": invoice.change_amount,
-	}
+		return {
+			"name": invoice.name,
+			"customer": invoice.customer,
+			"customer_name": frappe.db.get_value("Customer", invoice.customer, "customer_name")
+			if invoice.customer
+			else None,
+			"posting_date": invoice.posting_date,
+			"posting_time": invoice.posting_time,
+			"currency": invoice.currency,
+			"items": items_with_images,
+			"total_qty": invoice.total_qty,
+			"total": invoice.total,
+			"net_total": invoice.net_total,
+			"total_taxes_and_charges": invoice.total_taxes_and_charges,
+			"discount_amount": invoice.discount_amount,
+			"grand_total": invoice.grand_total,
+			"rounded_total": invoice.rounded_total,
+			"outstanding_amount": invoice.outstanding_amount,
+			"paid_amount": invoice.paid_amount,
+			"change_amount": invoice.change_amount,
+		}
+	except Exception:
+		return {"items": [], "empty": True}
 
 
 @frappe.whitelist()
@@ -334,7 +346,7 @@ def trigger_twint_payment(pos_opening_entry, order_uuid, qr_code, pairing_token,
 def get_twint_payment(pos_opening_entry):
 	"""
 	Get current Twint payment data for POS Viewer.
-	Returns payment data if a Twint payment is active, None otherwise.
+	Returns payment data if a Twint payment is active, empty dict otherwise.
 	"""
 	if not frappe.has_permission("POS Invoice", "read"):
 		frappe.throw(_("Insufficient permissions to read payment data"))
@@ -342,7 +354,7 @@ def get_twint_payment(pos_opening_entry):
 	cache_key = f"pos_twint_payment_{pos_opening_entry}"
 	payment_data = frappe.cache().get_value(cache_key)
 
-	return payment_data
+	return payment_data or {}
 
 
 @frappe.whitelist()
@@ -358,3 +370,25 @@ def clear_twint_payment(pos_opening_entry):
 	frappe.cache().delete_value(cache_key)
 
 	return {"success": True}
+
+
+@frappe.whitelist()
+def clear_cart_data(pos_opening_entry, sale_completed=False):
+	"""
+	Clear cart data from cache.
+	Called when a new sale is started or sale is completed.
+	If sale_completed=True, signals the viewer to show thank you message via a separate key.
+	"""
+	if not frappe.has_permission("POS Invoice", "write"):
+		frappe.throw(_("Insufficient permissions to clear cart"))
+
+	cache_key = f"pos_cart_{pos_opening_entry}"
+	frappe.cache().delete_value(cache_key)
+
+	if sale_completed:
+		# Set a separate short-lived flag for sale completion (5 seconds only)
+		signal_key = f"pos_sale_completed_{pos_opening_entry}"
+		frappe.cache().set_value(signal_key, True, expires_in_sec=5)
+
+	return {"success": True}
+

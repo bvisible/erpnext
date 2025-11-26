@@ -528,12 +528,28 @@ erpnext.PointOfSale.Controller = class {
 	make_new_invoice() {
 		return frappe.run_serially([
 			() => frappe.dom.freeze(),
+			() => this.clear_pos_viewer_cart(true), // Signal sale completed
 			() => this.make_sales_invoice_frm(),
 			() => this.set_pos_profile_data(),
 			() => this.set_pos_profile_status(),
 			() => this.cart.load_invoice(),
 			() => frappe.dom.unfreeze(),
 		]);
+	}
+
+	clear_pos_viewer_cart(sale_completed = false) {
+		// Clear POS Viewer cart when starting a new sale
+		if (this.pos_opening) {
+			frappe.call({
+				method: 'erpnext.www.pos-viewer.index.clear_cart_data',
+				args: {
+					pos_opening_entry: this.pos_opening,
+					sale_completed: sale_completed
+				},
+				freeze: false,
+				async: true
+			});
+		}
 	}
 
 	make_sales_invoice_frm() {
