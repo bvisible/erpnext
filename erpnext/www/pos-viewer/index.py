@@ -321,6 +321,8 @@ def create_customer(customer_name, email=None, mobile_no=None, address_line1=Non
 					"customer": customer.name,
 					"customer_name": customer.customer_name,
 				},
+				doctype="POS Opening Entry",
+				docname=pos_opening_entry,
 				after_commit=True
 			)
 
