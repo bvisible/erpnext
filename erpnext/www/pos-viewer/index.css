@@ -484,10 +484,9 @@
 /* Cart Item - Receipt Style */
 .cart-item {
 	display: grid;
-	grid-template-columns: 45px 1fr auto auto;
-	grid-template-rows: auto;
-	gap: 8px;
-	padding: 6px;
+	grid-template-columns: 50px 1fr 150px 90px;
+	gap: 12px;
+	padding: 8px;
 	margin-bottom: 6px;
 	border: 1px solid #e0e0e0;
 	border-radius: 4px;
@@ -501,8 +500,8 @@
 }
 
 .item-image {
-	width: 45px;
-	height: 45px;
+	width: 50px;
+	height: 50px;
 	border-radius: 3px;
 	overflow: hidden;
 	background-color: #fff;
@@ -510,6 +509,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	flex-shrink: 0;
 }
 
 .item-image img {
@@ -521,33 +521,42 @@
 .item-details {
 	display: flex;
 	flex-direction: column;
-	gap: 1px;
+	gap: 2px;
+	min-width: 0;
+	overflow: hidden;
 }
 
 .item-name {
-	font-size: 12px;
+	font-size: 13px;
 	font-weight: 600;
 	color: #2e3338;
-	line-height: 1.1;
+	line-height: 1.2;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .item-code {
-	font-size: 10px;
+	font-size: 11px;
 	color: #6c757d;
 	line-height: 1.1;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .item-qty-price {
 	display: flex;
-	flex-direction: row;
-	align-items: center;
-	gap: 8px;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 2px;
 	white-space: nowrap;
+	text-align: right;
 }
 
 .item-quantity {
 	display: inline-block;
-	font-size: 10px;
+	font-size: 11px;
 	white-space: nowrap;
 }
 
@@ -562,7 +571,7 @@
 
 .item-rate {
 	display: inline-block;
-	font-size: 10px;
+	font-size: 11px;
 	white-space: nowrap;
 }
 
@@ -576,9 +585,10 @@
 
 .item-amount {
 	text-align: right;
-	font-size: 13px;
+	font-size: 16px;
 	font-weight: 700;
 	color: #2e3338;
+	white-space: nowrap;
 }
 
 /* Cart Totals - Receipt Style */
@@ -679,8 +689,8 @@
 /* Responsive Design */
 @media (max-width: 1024px) {
 	.cart-item {
-		grid-template-columns: 60px 1fr;
-		gap: 12px;
+		grid-template-columns: 60px 1fr 120px 80px;
+		gap: 10px;
 	}
 
 	.item-image {
@@ -688,16 +698,8 @@
 		height: 60px;
 	}
 
-	.item-quantity,
-	.item-rate {
-		grid-column: 2;
-		justify-self: start;
-	}
-
 	.item-amount {
-		grid-column: 2;
-		justify-self: end;
-		font-size: 20px;
+		font-size: 15px;
 	}
 }
 
