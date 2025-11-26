@@ -318,12 +318,19 @@ def create_customer(customer_name, email=None, mobile_no=None, address_line1=Non
 		if pos_opening_entry:
 			# Get the user from POS Opening Entry to send the event to them
 			pos_user = frappe.db.get_value("POS Opening Entry", pos_opening_entry, "user")
+			event_name = f"customer_created_{pos_opening_entry}"
+			message_data = {
+				"customer": customer.name,
+				"customer_name": customer.customer_name,
+			}
+			# Log for debugging
+			frappe.log_error(
+				title="POS Viewer Realtime Debug",
+				message=f"Publishing event: {event_name}\nUser: {pos_user}\nMessage: {message_data}"
+			)
 			frappe.publish_realtime(
-				event=f"customer_created_{pos_opening_entry}",
-				message={
-					"customer": customer.name,
-					"customer_name": customer.customer_name,
-				},
+				event=event_name,
+				message=message_data,
 				user=pos_user
 			)
 
