@@ -169,6 +169,32 @@ erpnext.PointOfSale.Controller = class {
 				});
 			}
 		});
+
+		// Listen for customer created from POS Viewer
+		frappe.realtime.on(`customer_created_${this.pos_opening}`, (data) => {
+			this.show_customer_created_notification(data);
+		});
+	}
+
+	show_customer_created_notification(data) {
+		const me = this;
+		frappe.show_alert({
+			message: __("New customer created: {0}", [data.customer_name]),
+			indicator: "blue",
+		}, 10);
+
+		frappe.confirm(
+			__("A new customer <b>{0}</b> has been created from the customer display.<br><br>Do you want to select this customer for the current sale?", [data.customer_name]),
+			() => {
+				// User clicked "Yes"
+				if (me.cart && me.cart.customer_field) {
+					me.cart.customer_field.set_value(data.customer);
+				}
+			},
+			() => {
+				// User clicked "No" - do nothing
+			}
+		);
 	}
 
 	set_opening_entry_status() {

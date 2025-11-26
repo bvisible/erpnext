@@ -254,9 +254,10 @@ def get_last_completed_invoice_name(pos_opening_entry):
 
 
 @frappe.whitelist()
-def create_customer(customer_name, email=None, mobile_no=None, address_line1=None, city=None, pincode=None, country=None, customer_type="Individual"):
+def create_customer(customer_name, email=None, mobile_no=None, address_line1=None, city=None, pincode=None, country=None, customer_type="Individual", pos_opening_entry=None):
 	"""
 	Create a new customer with optional contact and address details.
+	If pos_opening_entry is provided, notifies the POS via realtime event.
 	"""
 	if not frappe.has_permission("Customer", "create"):
 		frappe.throw(_("Insufficient permissions to create Customer"))
@@ -311,6 +312,17 @@ def create_customer(customer_name, email=None, mobile_no=None, address_line1=Non
 			address.insert(ignore_permissions=True)
 
 		frappe.db.commit()
+
+		# Notify the POS about the new customer via realtime
+		if pos_opening_entry:
+			frappe.publish_realtime(
+				event=f"customer_created_{pos_opening_entry}",
+				message={
+					"customer": customer.name,
+					"customer_name": customer.customer_name,
+				},
+				after_commit=True
+			)
 
 		return {
 			"success": True,

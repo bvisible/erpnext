@@ -812,7 +812,8 @@ class POSViewer {
 				city: city || null,
 				pincode: pincode || null,
 				country: country || null,
-				customer_type: customerType
+				customer_type: customerType,
+				pos_opening_entry: this.posOpeningEntry || null
 			});
 
 			if (response.success) {
