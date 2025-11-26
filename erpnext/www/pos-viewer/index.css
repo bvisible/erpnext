@@ -1300,7 +1300,7 @@ a img[alt="Edit in Builder"] {
 .ads-slide img {
 	width: 100%;
 	height: 100%;
-	object-fit: cover;
+	object-fit: contain;
 }
 
 /* Slider Navigation Dots */
