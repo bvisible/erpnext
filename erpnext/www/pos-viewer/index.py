@@ -315,14 +315,15 @@ def create_customer(customer_name, email=None, mobile_no=None, address_line1=Non
 
 		# Notify the POS about the new customer via realtime
 		if pos_opening_entry:
+			# Get the user from POS Opening Entry to send the event to them
+			pos_user = frappe.db.get_value("POS Opening Entry", pos_opening_entry, "user")
 			frappe.publish_realtime(
 				event=f"customer_created_{pos_opening_entry}",
 				message={
 					"customer": customer.name,
 					"customer_name": customer.customer_name,
 				},
-				doctype="POS Opening Entry",
-				docname=pos_opening_entry,
+				user=pos_user,
 				after_commit=True
 			)
 
