@@ -376,6 +376,9 @@ class POSViewer {
 	async loadCart() {
 		if (!this.posOpeningEntry) return;
 
+		// Don't poll while thank you message is displayed
+		if (this.thankYouVisible) return;
+
 		this.isPolling = true; // Flag to disable animations during polling
 
 		try {
@@ -389,12 +392,11 @@ class POSViewer {
 			const lastCompletedInvoice = cart ? cart.last_completed_invoice : null;
 
 			// Check if a new sale was completed:
-			// - Cart is now empty (or has no items)
-			// - There's a completed invoice we haven't seen yet
-			// - We previously had items in the cart
-			if (currentItemCount === 0 && lastCompletedInvoice &&
+			// A new invoice exists that we haven't seen yet
+			// (Don't require empty cart - cashier may have already started adding items)
+			if (lastCompletedInvoice &&
 				lastCompletedInvoice !== this.lastSeenInvoice &&
-				this.previousCartItemCount > 0) {
+				this.lastSeenInvoice !== null) {
 				// New sale completed! Show thank you message
 				this.lastSeenInvoice = lastCompletedInvoice;
 				this.showThankYouMessage();

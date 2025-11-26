@@ -232,12 +232,14 @@ def get_last_completed_invoice_name(pos_opening_entry):
 		pos_opening = frappe.get_doc("POS Opening Entry", pos_opening_entry)
 
 		# Find the last submitted POS Invoice for this session
+		# Filter by pos_profile, user (owner), and created after session start
 		invoices = frappe.get_all(
 			"POS Invoice",
 			filters={
 				"pos_profile": pos_opening.pos_profile,
 				"docstatus": 1,  # Submitted only
-				"posting_date": pos_opening.posting_date,
+				"owner": pos_opening.user,
+				"creation": [">=", pos_opening.period_start_date],
 			},
 			fields=["name"],
 			order_by="modified desc",
