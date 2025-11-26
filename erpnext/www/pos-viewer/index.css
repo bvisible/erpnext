@@ -451,6 +451,7 @@
 	flex: 1;
 	min-height: 0;
 	overflow: hidden;
+	position: relative; /* Contains absolute positioned ads slider */
 }
 
 /* Cart Items List */

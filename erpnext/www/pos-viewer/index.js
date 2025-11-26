@@ -457,8 +457,8 @@ class POSViewer {
 			// Show ads slider if we have ads, otherwise show empty cart message
 			if (this.inAppAds && this.inAppAds.length > 0) {
 				this.renderAdsSlider(itemsList);
-				// Hide cart header when showing ads
-				if (cartHeader) cartHeader.style.display = 'none';
+				// Keep cart header visible when showing ads (for customer creation button)
+				if (cartHeader) cartHeader.style.display = '';
 			} else {
 				itemsList.innerHTML = `
 					<div class="empty-cart-message">
