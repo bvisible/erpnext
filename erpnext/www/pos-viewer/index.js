@@ -15,7 +15,7 @@ class POSViewer {
 		this.previousCartItemCount = 0; // Track previous cart state for transitions
 		this.isPolling = false; // Flag to disable animations during polling
 		this.thankYouVisible = false; // Track if thank you message is shown
-		this.hasReceivedItemsBefore = false; // Only show thank you if we had items before in this session
+		this.lastSeenInvoice = null; // Track last completed invoice to detect new sales
 		this.currency = 'CHF'; // Default currency
 		this.country = 'Switzerland'; // Default country
 		this.phoneInput = null; // intl-tel-input instance
@@ -386,42 +386,35 @@ class POSViewer {
 
 			// Calculate current item count
 			const currentItemCount = (cart && cart.items) ? cart.items.length : 0;
+			const lastCompletedInvoice = cart ? cart.last_completed_invoice : null;
 
-			// Handle sale_completed signal - ONLY show thank you if we had items in this session
-			if (cart && cart.sale_completed) {
-				if (this.hasReceivedItemsBefore) {
-					this.hasReceivedItemsBefore = false; // Reset for next sale
-					this.showThankYouMessage();
-					this.currentCart = null;
-					this.previousCartItemCount = 0;
-					return;
-				} else {
-					// No items seen yet in this session, just show empty cart
-					this.renderCart({items: []});
-					return;
-				}
+			// Check if a new sale was completed:
+			// - Cart is now empty (or has no items)
+			// - There's a completed invoice we haven't seen yet
+			// - We previously had items in the cart
+			if (currentItemCount === 0 && lastCompletedInvoice &&
+				lastCompletedInvoice !== this.lastSeenInvoice &&
+				this.previousCartItemCount > 0) {
+				// New sale completed! Show thank you message
+				this.lastSeenInvoice = lastCompletedInvoice;
+				this.showThankYouMessage();
+				this.currentCart = null;
+				this.previousCartItemCount = 0;
+				return;
 			}
 
-			// Track if we've received items in this session
-			if (currentItemCount > 0) {
-				this.hasReceivedItemsBefore = true;
+			// Update last seen invoice if we have one (for initial load)
+			if (lastCompletedInvoice && !this.lastSeenInvoice) {
+				this.lastSeenInvoice = lastCompletedInvoice;
 			}
 
 			// Update previous count for next comparison
 			this.previousCartItemCount = currentItemCount;
 
-			// Mark initial load as complete after first successful load
-			this.isInitialLoad = false;
-
 			this.currentCart = cart;
 			this.renderCart(cart);
 		} catch (error) {
 			console.error('Error loading cart:', error);
-			// On error during initial load, just mark as loaded
-			if (this.isInitialLoad) {
-				this.isInitialLoad = false;
-				this.renderCart(null);
-			}
 		} finally {
 			this.isPolling = false;
 		}
