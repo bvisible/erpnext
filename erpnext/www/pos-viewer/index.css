@@ -484,9 +484,9 @@
 /* Cart Item - Receipt Style */
 .cart-item {
 	display: grid;
-	grid-template-columns: 50px minmax(150px, 1fr) 110px 120px;
-	gap: 8px;
-	padding: 8px 12px;
+	grid-template-columns: 50px 1fr auto auto;
+	gap: 12px;
+	padding: 10px 14px;
 	margin-bottom: 6px;
 	border: 1px solid #e0e0e0;
 	border-radius: 4px;
@@ -553,7 +553,7 @@
 	gap: 2px;
 	white-space: nowrap;
 	text-align: right;
-	width: 100%;
+	min-width: 90px;
 }
 
 .item-quantity {
@@ -561,7 +561,6 @@
 	justify-content: flex-end;
 	font-size: 11px;
 	white-space: nowrap;
-	width: 100%;
 }
 
 .qty-label {
@@ -571,7 +570,7 @@
 .qty-value {
 	font-weight: 600;
 	color: #2e3338;
-	min-width: 20px;
+	min-width: 24px;
 	text-align: right;
 }
 
@@ -580,7 +579,6 @@
 	justify-content: flex-end;
 	font-size: 11px;
 	white-space: nowrap;
-	width: 100%;
 }
 
 .rate-label {
@@ -597,7 +595,7 @@
 	font-weight: 700;
 	color: #2e3338;
 	white-space: nowrap;
-	width: 100%;
+	min-width: 110px;
 }
 
 /* Cart Totals - Receipt Style */
