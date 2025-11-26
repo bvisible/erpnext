@@ -484,9 +484,9 @@
 /* Cart Item - Receipt Style */
 .cart-item {
 	display: grid;
-	grid-template-columns: 50px 1fr 150px 90px;
-	gap: 12px;
-	padding: 8px;
+	grid-template-columns: 50px 1fr 100px 110px;
+	gap: 10px;
+	padding: 8px 12px;
 	margin-bottom: 6px;
 	border: 1px solid #e0e0e0;
 	border-radius: 4px;
@@ -549,9 +549,11 @@
 	display: flex;
 	flex-direction: column;
 	align-items: flex-end;
+	justify-content: center;
 	gap: 2px;
 	white-space: nowrap;
 	text-align: right;
+	width: 100%;
 }
 
 .item-quantity {
@@ -589,6 +591,7 @@
 	font-weight: 700;
 	color: #2e3338;
 	white-space: nowrap;
+	width: 100%;
 }
 
 /* Cart Totals - Receipt Style */
