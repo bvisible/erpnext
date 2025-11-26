@@ -24,6 +24,9 @@ class POSViewer {
 		this.twintCheckInterval = null; // Twint payment check interval
 		this.headerAutoHideTimer = null; // Auto-hide timer for header
 		this.headerVisible = false; // Header visibility state
+		this.inAppAds = []; // In-App Ads for slider
+		this.currentAdIndex = 0; // Current ad being displayed
+		this.adsSliderInterval = null; // Auto-rotate ads interval
 
 		// LocalStorage keys
 		this.STORAGE_KEY_API = 'pos_viewer_api_key';
@@ -148,6 +151,7 @@ class POSViewer {
 				this.hideAuthModal();
 				this.displayUserInfo(response);
 				await this.loadPOSProfiles();
+				await this.loadInAppAds();
 			} else {
 				this.showError(errorDiv, response.message || 'Incorrect password');
 			}
@@ -170,6 +174,7 @@ class POSViewer {
 				this.hideAuthModal();
 				this.displayUserInfo(response);
 				await this.loadPOSProfiles();
+				await this.loadInAppAds();
 			} else {
 				// Invalid credentials, clear and show auth
 				this.logout();
@@ -446,20 +451,28 @@ class POSViewer {
 		}
 
 		if (!cart || !cart.items || cart.items.length === 0) {
-			itemsList.innerHTML = `
-				<div class="empty-cart-message">
-					<svg class="icon icon-xxl text-muted">
-						<use href="#icon-shopping-cart"></use>
-					</svg>
-					<p class="text-muted">No items in cart</p>
-					<p class="text-muted small">Add items in POS to see them here</p>
-				</div>
-			`;
+			// Show ads slider if we have ads, otherwise show empty cart message
+			if (this.inAppAds && this.inAppAds.length > 0) {
+				this.renderAdsSlider(itemsList);
+			} else {
+				itemsList.innerHTML = `
+					<div class="empty-cart-message">
+						<svg class="icon icon-xxl text-muted">
+							<use href="#icon-shopping-cart"></use>
+						</svg>
+						<p class="text-muted">${__('No items in cart')}</p>
+						<p class="text-muted small">${__('Add items in POS to see them here')}</p>
+					</div>
+				`;
+			}
 			totalsDiv.style.display = 'none';
-			customerDisplay.textContent = 'No customer selected';
+			customerDisplay.textContent = __('No customer selected');
 			customerDisplay.classList.remove('selected');
 			return;
 		}
+
+		// Stop ads slider when cart has items
+		this.stopAdsSlider();
 
 		// Update currency if available
 		if (cart.currency) {
@@ -568,6 +581,98 @@ class POSViewer {
 
 	hideThankYouMessage() {
 		this.thankYouVisible = false;
+	}
+
+	// =====================
+	// In-App Ads Slider
+	// =====================
+
+	async loadInAppAds() {
+		try {
+			const ads = await this.callMethod('erpnext.www.pos-viewer.index.get_in_app_ads', {});
+			this.inAppAds = ads || [];
+			this.currentAdIndex = 0;
+		} catch (error) {
+			console.error('Error loading in-app ads:', error);
+			this.inAppAds = [];
+		}
+	}
+
+	renderAdsSlider(container) {
+		if (!this.inAppAds || this.inAppAds.length === 0) return;
+
+		// Build slides HTML
+		let slidesHTML = '';
+		let dotsHTML = '';
+
+		this.inAppAds.forEach((ad, index) => {
+			const isActive = index === this.currentAdIndex ? 'active' : '';
+			slidesHTML += `
+				<div class="ads-slide ${isActive}" data-index="${index}">
+					<img src="${ad.image}" alt="${ad.ad_name || ''}">
+				</div>
+			`;
+			dotsHTML += `<div class="ads-slider-dot ${isActive}" data-index="${index}"></div>`;
+		});
+
+		container.innerHTML = `
+			<div class="ads-slider-container">
+				<div class="ads-slider">
+					${slidesHTML}
+				</div>
+				${this.inAppAds.length > 1 ? `<div class="ads-slider-dots">${dotsHTML}</div>` : ''}
+			</div>
+		`;
+
+		// Add click handlers for dots
+		container.querySelectorAll('.ads-slider-dot').forEach(dot => {
+			dot.addEventListener('click', (e) => {
+				const index = parseInt(e.target.dataset.index);
+				this.goToSlide(index);
+			});
+		});
+
+		// Start auto-rotation if more than one ad
+		if (this.inAppAds.length > 1) {
+			this.startAdsSlider();
+		}
+	}
+
+	startAdsSlider() {
+		// Clear existing interval if any
+		this.stopAdsSlider();
+
+		// Rotate every 5 seconds
+		this.adsSliderInterval = setInterval(() => {
+			this.nextSlide();
+		}, 5000);
+	}
+
+	stopAdsSlider() {
+		if (this.adsSliderInterval) {
+			clearInterval(this.adsSliderInterval);
+			this.adsSliderInterval = null;
+		}
+	}
+
+	nextSlide() {
+		const nextIndex = (this.currentAdIndex + 1) % this.inAppAds.length;
+		this.goToSlide(nextIndex);
+	}
+
+	goToSlide(index) {
+		// Update current index
+		this.currentAdIndex = index;
+
+		// Update slides
+		document.querySelectorAll('.ads-slide').forEach((slide, i) => {
+			slide.classList.toggle('active', i === index);
+		});
+
+		// Update dots
+		document.querySelectorAll('.ads-slider-dot').forEach((dot, i) => {
+			dot.classList.toggle('active', i === index);
+		});
 	}
 
 	triggerConfetti() {

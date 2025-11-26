@@ -413,3 +413,22 @@ def clear_cart_data(pos_opening_entry, sale_completed=False):
 
 	return {"success": True}
 
+
+@frappe.whitelist()
+def get_in_app_ads():
+	"""
+	Get all enabled In-App Ads for display in POS Viewer.
+	Returns list of ads with name and image URL.
+	"""
+	if not frappe.has_permission("POS Invoice", "read"):
+		frappe.throw(_("Insufficient permissions"))
+
+	ads = frappe.get_all(
+		"In-App Ads",
+		filters={"enabled": 1},
+		fields=["ad_name", "image"],
+		order_by="creation asc"
+	)
+
+	return ads
+
