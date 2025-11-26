@@ -399,6 +399,13 @@ class POSViewer {
 				this.lastSeenInvoice !== null) {
 				// New sale completed! Show thank you message
 				this.lastSeenInvoice = lastCompletedInvoice;
+
+				// Clear the cart cache on server side
+				this.callMethod('erpnext.www.pos-viewer.index.clear_cart_data', {
+					pos_opening_entry: this.posOpeningEntry,
+					sale_completed: true
+				}).catch(err => console.error('Error clearing cart cache:', err));
+
 				this.showThankYouMessage();
 				this.currentCart = null;
 				this.previousCartItemCount = 0;
