@@ -311,8 +311,10 @@ def create_customer(customer_name, email=None, mobile_no=None, address_line1=Non
 			address.append("links", {"link_doctype": "Customer", "link_name": customer.name})
 			address.insert(ignore_permissions=True)
 
+		frappe.db.commit()
+
 		# Notify the POS about the new customer via realtime
-		# Must be BEFORE commit since we use after_commit=True
+		# Must be AFTER commit to ensure data is persisted
 		if pos_opening_entry:
 			# Get the user from POS Opening Entry to send the event to them
 			pos_user = frappe.db.get_value("POS Opening Entry", pos_opening_entry, "user")
@@ -322,11 +324,8 @@ def create_customer(customer_name, email=None, mobile_no=None, address_line1=Non
 					"customer": customer.name,
 					"customer_name": customer.customer_name,
 				},
-				user=pos_user,
-				after_commit=True
+				user=pos_user
 			)
-
-		frappe.db.commit()
 
 		return {
 			"success": True,
