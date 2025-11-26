@@ -613,24 +613,25 @@ class POSViewer {
 		let slidesHTML = '';
 		let dotsHTML = '';
 
-		this.inAppAds.forEach((ad, index) => {
-			const isActive = index === this.currentAdIndex ? 'active' : '';
-			slidesHTML += `
-				<div class="ads-slide ${isActive}" data-index="${index}">
-					<img src="${ad.image}" alt="${ad.ad_name || ''}">
-				</div>
-			`;
-			dotsHTML += `<div class="ads-slider-dot ${isActive}" data-index="${index}"></div>`;
-		});
+		for (let i = 0; i < this.inAppAds.length; i++) {
+			const ad = this.inAppAds[i];
+			const isActive = i === this.currentAdIndex ? 'active' : '';
+			const altText = ad.ad_name || '';
+			slidesHTML += '<div class="ads-slide ' + isActive + '" data-index="' + i + '">' +
+				'<img src="' + ad.image + '" alt="' + altText + '">' +
+				'</div>';
+			dotsHTML += '<div class="ads-slider-dot ' + isActive + '" data-index="' + i + '"></div>';
+		}
 
-		container.innerHTML = `
-			<div class="ads-slider-container">
-				<div class="ads-slider">
-					${slidesHTML}
-				</div>
-				${this.inAppAds.length > 1 ? `<div class="ads-slider-dots">${dotsHTML}</div>` : ''}
-			</div>
-		`;
+		let dotsContainer = '';
+		if (this.inAppAds.length > 1) {
+			dotsContainer = '<div class="ads-slider-dots">' + dotsHTML + '</div>';
+		}
+
+		container.innerHTML = '<div class="ads-slider-container">' +
+			'<div class="ads-slider">' + slidesHTML + '</div>' +
+			dotsContainer +
+			'</div>';
 
 		// Add click handlers for dots
 		container.querySelectorAll('.ads-slider-dot').forEach(dot => {
