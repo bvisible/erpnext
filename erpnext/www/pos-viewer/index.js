@@ -864,7 +864,10 @@ class POSViewer {
 				const formData = new FormData();
 				formData.append('cmd', method);
 				for (const [key, value] of Object.entries(args)) {
-					formData.append(key, value);
+					// Skip null and undefined values to avoid sending "null" string
+					if (value !== null && value !== undefined) {
+						formData.append(key, value);
+					}
 				}
 
 				const response = await fetch('/', {
