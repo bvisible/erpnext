@@ -167,7 +167,7 @@ class PurchaseInvoice(BuyingController):
 		shipping_address: DF.Link | None
 		shipping_address_display: DF.SmallText | None
 		shipping_rule: DF.Link | None
-		status: DF.Literal["", "Draft", "Return", "Debit Note Issued", "Submitted", "Paid", "Partly Paid", "Unpaid", "Overdue", "Cancelled", "Internal Transfer"]
+		status: DF.Literal["", "Draft", "Return", "Debit Note Issued", "Submitted", "Paid", "Partly Paid", "Unpaid", "Overdue", "Cancelled", "Internal Transfer", "In Payment Run"]
 		subscription: DF.Link | None
 		supplied_items: DF.Table[PurchaseReceiptItemSupplied]
 		supplier: DF.Link
@@ -1973,6 +1973,8 @@ class PurchaseInvoice(BuyingController):
 			elif self.docstatus == 1:
 				if self.is_internal_transfer():
 					self.status = "Internal Transfer"
+				elif self.get("is_proposed") and outstanding_amount > 0:
+					self.status = "In Payment Run"
 				elif is_overdue(self, total):
 					self.status = "Overdue"
 				elif 0 < outstanding_amount < total:
