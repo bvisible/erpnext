@@ -650,6 +650,17 @@ class Subscription(Document):
 			order_by="from_date asc",
 		)
 
+	def is_new_subscription(self) -> bool:
+		"""
+		Returns True if this subscription has never generated any invoice yet.
+		This is used to allow invoice generation for new subscriptions even if
+		the posting date is after the current_invoice_start date.
+		"""
+		return not frappe.db.exists(
+			self.invoice_document_type,
+			{"subscription": self.name, "docstatus": ("<", 2)}
+		)
+
 	@staticmethod
 	def is_paid(invoice: Document) -> bool:
 		"""
