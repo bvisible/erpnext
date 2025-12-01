@@ -11,6 +11,14 @@ frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm
 	render_dialog() {
 		this.mandatory = this.mandatory.concat(this.get_variant_fields());
 		super.render_dialog();
+
+		// Set default currency from system settings
+		if (this.dialog && this.dialog.fields_dict.default_currency) {
+			const default_currency = frappe.defaults.get_default("currency");
+			if (default_currency) {
+				this.dialog.set_value("default_currency", default_currency);
+			}
+		}
 	}
 
 	insert() {
