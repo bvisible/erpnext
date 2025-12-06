@@ -830,10 +830,27 @@ erpnext.PointOfSale.Controller = class {
 								d._submitted = true;
 								// Read price directly from input (handles keyboard input that didn't trigger 'input' event)
 								const input_val = $price_input.val().replace(/,/g, '.');
-								const price = flt(input_val) || 0;
-								if (price > 0) {
+								const entered_rate = flt(input_val) || 0;
+								if (entered_rate > 0) {
 									d.hide();
-									me.update_item_in_cart(item, null, null, price);
+									// Use same logic as primary_action button
+									const new_item_with_rate = {
+										item_code, batch_no,
+										rate: entered_rate,
+										uom,
+										[field]: value,
+										stock_uom
+									};
+									new_item_with_rate["use_serial_batch_fields"] = 1;
+									new_item_with_rate["warehouse"] = me.settings.warehouse;
+
+									const item_row = me.frm.add_child("items", new_item_with_rate);
+									me.trigger_new_item_events(item_row).then(() => {
+										// Force the entered rate after backend recalculation
+										frappe.model.set_value(item_row.doctype, item_row.name, 'rate', entered_rate);
+										me.update_cart_html(item_row);
+										frappe.dom.unfreeze();
+									});
 								} else {
 									frappe.show_alert({
 										message: __("Please enter a price greater than 0"),
