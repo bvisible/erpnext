@@ -446,6 +446,9 @@ erpnext.PointOfSale.ItemSelector = class {
 			const selector_is_visible = this.$component.is(":visible");
 			if (!selector_is_visible || this.search_field.get_value() === "") return;
 
+			// Don't trigger item click if a dialog is open (e.g., price entry dialog)
+			if (cur_dialog) return;
+
 			if (this.items.length == 1) {
 				this.$items_container.find(".item-wrapper").click();
 				frappe.utils.play_sound("submit");
