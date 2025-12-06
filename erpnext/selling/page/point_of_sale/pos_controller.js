@@ -779,15 +779,8 @@ erpnext.PointOfSale.Controller = class {
 						</div>
 					`);
 
-					// Get input element and set focus after dialog is fully rendered
+					// Get input element
 					const $price_input = d.$wrapper.find('.price-input');
-					d.$wrapper.on('shown.bs.modal', function() {
-						$price_input.focus().select();
-					});
-					// Also try immediate focus with longer delay as fallback
-					setTimeout(() => {
-						$price_input.focus().select();
-					}, 300);
 
 					// Function to update display from string
 					const updateDisplay = () => {
@@ -795,9 +788,47 @@ erpnext.PointOfSale.Controller = class {
 						$price_input.val(d.price_value.toFixed(2));
 					};
 
-					// Handle direct keyboard input
+					// Set focus using Frappe dialog's onshow event and multiple fallback attempts
+					d.onshow = function() {
+						// Multiple attempts to ensure focus works
+						$price_input[0].focus();
+						$price_input[0].select();
+						setTimeout(() => {
+							$price_input[0].focus();
+							$price_input[0].select();
+						}, 100);
+						setTimeout(() => {
+							$price_input[0].focus();
+							$price_input[0].select();
+						}, 300);
+					};
+					// Trigger onshow now since dialog is already shown
+					d.onshow();
+
+					// Block non-numeric keys at keypress level (allows only numbers, period, comma)
+					$price_input.on('keypress', function(e) {
+						// Allow Enter to submit
+						if (e.which === 13) {
+							d.get_primary_btn().click();
+							return false;
+						}
+						// Allow: backspace, delete, tab, escape, enter
+						if ([8, 9, 27, 46].includes(e.which)) {
+							return true;
+						}
+						// Allow: numbers (48-57), period (46), comma (44)
+						const char = String.fromCharCode(e.which);
+						if (!/[0-9.,]/.test(char)) {
+							e.preventDefault();
+							return false;
+						}
+						return true;
+					});
+
+					// Handle direct keyboard input - sanitize on input
 					$price_input.on('input', function() {
-						let val = $(this).val().replace(/[^0-9.]/g, '');
+						// Allow numbers, period and comma; convert comma to period
+						let val = $(this).val().replace(/,/g, '.').replace(/[^0-9.]/g, '');
 						// Only allow one decimal point
 						const parts = val.split('.');
 						if (parts.length > 2) {
@@ -807,6 +838,7 @@ erpnext.PointOfSale.Controller = class {
 						if (parts.length === 2 && parts[1].length > 2) {
 							val = parts[0] + '.' + parts[1].substring(0, 2);
 						}
+						$(this).val(val);
 						d.price_string = val;
 						d.price_value = flt(val) || 0;
 					});
@@ -814,13 +846,6 @@ erpnext.PointOfSale.Controller = class {
 					// Format on blur
 					$price_input.on('blur', function() {
 						$(this).val(d.price_value.toFixed(2));
-					});
-
-					// Handle Enter key
-					$price_input.on('keypress', function(e) {
-						if (e.which === 13) {
-							d.get_primary_btn().click();
-						}
 					});
 
 					// Handle numpad clicks
