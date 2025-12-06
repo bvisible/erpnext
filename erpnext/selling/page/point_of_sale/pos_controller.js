@@ -810,17 +810,13 @@ erpnext.PointOfSale.Controller = class {
 					// Trigger onshow now since dialog is already shown
 					d.onshow();
 
-					// Stop all keyboard events from propagating outside the dialog
-					d.$wrapper.on('keydown keypress keyup', function(e) {
-						e.stopPropagation();
-					});
-
 					// Block non-numeric keys at keypress level (allows only numbers, period, comma)
 					$price_input.on('keypress', function(e) {
 						// Allow Enter to submit
 						if (e.which === 13) {
 							e.preventDefault();
 							e.stopPropagation();
+							e.stopImmediatePropagation();
 							d.get_primary_btn().click();
 							return false;
 						}
@@ -858,6 +854,12 @@ erpnext.PointOfSale.Controller = class {
 					// Format on blur
 					$price_input.on('blur', function() {
 						$(this).val(d.price_value.toFixed(2));
+					});
+
+					// Stop keyboard events from propagating to item list behind the dialog
+					d.$wrapper.find('.modal-content').on('keydown keypress keyup', function(e) {
+						// Only stop propagation, don't prevent default behavior
+						e.stopPropagation();
 					});
 
 					// Handle numpad clicks
