@@ -819,7 +819,9 @@ erpnext.PointOfSale.Controller = class {
 							// Direct call to submit instead of clicking button
 							if (!d._submitted) {
 								d._submitted = true;
-								const price = d.price_value;
+								// Read price directly from input (handles keyboard input that didn't trigger 'input' event)
+								const input_val = $price_input.val().replace(/,/g, '.');
+								const price = flt(input_val) || 0;
 								if (price > 0) {
 									d.hide();
 									me.update_item_in_cart(item, null, null, price);
@@ -873,11 +875,15 @@ erpnext.PointOfSale.Controller = class {
 						$(this).val(d.price_value.toFixed(2));
 					});
 
-					// Stop Enter key from propagating to item list behind the dialog
+					// Stop Enter key from triggering default dialog behavior and propagating
 					// Use capture phase via native event listener for maximum interception
 					d.$wrapper[0].addEventListener('keydown', function(e) {
 						if (e.which === 13 || e.keyCode === 13) {
+							// Stop all propagation to prevent:
+							// 1. Frappe dialog's default Enter behavior (clicking primary button)
+							// 2. Item list behind the dialog from receiving the event
 							e.stopPropagation();
+							e.stopImmediatePropagation();
 						}
 					}, true); // true = capture phase
 
