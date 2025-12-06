@@ -810,18 +810,35 @@ erpnext.PointOfSale.Controller = class {
 					// Trigger onshow now since dialog is already shown
 					d.onshow();
 
-					// Block non-numeric keys at keypress level (allows only numbers, period, comma)
-					$price_input.on('keypress', function(e) {
-						// Allow Enter to submit
-						if (e.which === 13) {
+					// Handle Enter key on keydown (fires before keypress)
+					$price_input.on('keydown', function(e) {
+						if (e.which === 13 || e.keyCode === 13) {
 							e.preventDefault();
 							e.stopPropagation();
 							e.stopImmediatePropagation();
-							d.get_primary_btn().click();
+							// Direct call to submit instead of clicking button
+							if (!d._submitted) {
+								d._submitted = true;
+								const price = d.price_value;
+								if (price > 0) {
+									d.hide();
+									me.update_item_in_cart(item, null, null, price);
+								} else {
+									frappe.show_alert({
+										message: __("Please enter a price greater than 0"),
+										indicator: "orange"
+									});
+									d._submitted = false;
+								}
+							}
 							return false;
 						}
+					});
+
+					// Block non-numeric keys at keypress level (allows only numbers, period, comma)
+					$price_input.on('keypress', function(e) {
 						// Allow: backspace, delete, tab, escape, enter
-						if ([8, 9, 27, 46].includes(e.which)) {
+						if ([8, 9, 13, 27, 46].includes(e.which)) {
 							return true;
 						}
 						// Allow: numbers (48-57), period (46), comma (44)
@@ -856,11 +873,13 @@ erpnext.PointOfSale.Controller = class {
 						$(this).val(d.price_value.toFixed(2));
 					});
 
-					// Stop keyboard events from propagating to item list behind the dialog
-					d.$wrapper.find('.modal-content').on('keydown keypress keyup', function(e) {
-						// Only stop propagation, don't prevent default behavior
-						e.stopPropagation();
-					});
+					// Stop Enter key from propagating to item list behind the dialog
+					// Use capture phase via native event listener for maximum interception
+					d.$wrapper[0].addEventListener('keydown', function(e) {
+						if (e.which === 13 || e.keyCode === 13) {
+							e.stopPropagation();
+						}
+					}, true); // true = capture phase
 
 					// Handle numpad clicks
 					$numpad_container.on('click', '.numpad-btn', function() {
