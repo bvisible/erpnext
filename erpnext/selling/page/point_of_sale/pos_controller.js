@@ -779,11 +779,15 @@ erpnext.PointOfSale.Controller = class {
 						</div>
 					`);
 
-					// Get input element and set focus
+					// Get input element and set focus after dialog is fully rendered
 					const $price_input = d.$wrapper.find('.price-input');
+					d.$wrapper.on('shown.bs.modal', function() {
+						$price_input.focus().select();
+					});
+					// Also try immediate focus with longer delay as fallback
 					setTimeout(() => {
 						$price_input.focus().select();
-					}, 100);
+					}, 300);
 
 					// Function to update display from string
 					const updateDisplay = () => {
