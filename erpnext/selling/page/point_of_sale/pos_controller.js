@@ -692,6 +692,10 @@ erpnext.PointOfSale.Controller = class {
 				if (!item_code) return;
 
 				if (rate == undefined || rate == 0) {
+					// Prevent multiple dialogs from opening for the same item
+					if (this._price_dialog_open) return;
+					this._price_dialog_open = true;
+
 					//// Show dialog with numpad to enter price for zero-rate items
 					const me = this;
 					const currency = me.frm.doc.currency;
@@ -761,6 +765,11 @@ erpnext.PointOfSale.Controller = class {
 					// Initialize price value
 					d.price_value = 0;
 					d.price_string = "";
+
+					// Reset flag when dialog is closed (by any means)
+					d.onhide = () => {
+						me._price_dialog_open = false;
+					};
 
 					// Create numpad after dialog is shown
 					d.show();
