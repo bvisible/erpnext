@@ -691,18 +691,12 @@ erpnext.PointOfSale.Controller = class {
 
 				if (!item_code) return;
 
-				console.log('[POS DEBUG] item_selected called:', { item_code, rate, _price_dialog_open: this._price_dialog_open, timestamp: Date.now() });
-				console.trace('[POS DEBUG] item_selected stack trace');
-
 				if (rate == undefined || rate == 0) {
 					// Prevent multiple dialogs from opening for the same item
-					console.log('[POS DEBUG] Zero rate item, checking dialog flag:', this._price_dialog_open);
 					if (this._price_dialog_open) {
-						console.log('[POS DEBUG] Dialog already open, RETURNING EARLY');
 						return;
 					}
 					this._price_dialog_open = true;
-					console.log('[POS DEBUG] Dialog flag set to true, creating dialog');
 
 					//// Show dialog with numpad to enter price for zero-rate items
 					const me = this;
@@ -733,20 +727,15 @@ erpnext.PointOfSale.Controller = class {
 						],
 						primary_action_label: __('Add to Cart'),
 						primary_action: () => {
-							console.log('[POS DEBUG] PRIMARY_ACTION called, _submitted:', d._submitted, 'timestamp:', Date.now());
-							console.trace('[POS DEBUG] primary_action stack trace');
 							// Prevent double submission
 							if (d._submitted) {
-								console.log('[POS DEBUG] PRIMARY_ACTION blocked - already submitted');
 								return;
 							}
 							d._submitted = true;
-							console.log('[POS DEBUG] PRIMARY_ACTION proceeding with submission');
 
 							// Get value from input field or from numpad
 							const input_val = d.$wrapper.find('.price-input').val();
 							const entered_rate = flt(input_val || d.price_value || 0);
-							console.log('[POS DEBUG] PRIMARY_ACTION entered_rate:', entered_rate);
 							if (entered_rate > 0) {
 								d.hide();
 								// Create new item with the entered rate and add directly
@@ -760,15 +749,12 @@ erpnext.PointOfSale.Controller = class {
 								new_item_with_rate["use_serial_batch_fields"] = 1;
 								new_item_with_rate["warehouse"] = me.settings.warehouse;
 
-								console.log('[POS DEBUG] PRIMARY_ACTION adding item to cart:', new_item_with_rate);
 								const item_row = me.frm.add_child("items", new_item_with_rate);
-								console.log('[POS DEBUG] PRIMARY_ACTION item_row created:', item_row.name);
 								me.trigger_new_item_events(item_row).then(() => {
 									// Force the entered rate after backend recalculation
 									frappe.model.set_value(item_row.doctype, item_row.name, 'rate', entered_rate);
 									me.update_cart_html(item_row);
 									frappe.dom.unfreeze();
-									console.log('[POS DEBUG] PRIMARY_ACTION complete');
 								});
 							} else {
 								d._submitted = false;
@@ -839,21 +825,16 @@ erpnext.PointOfSale.Controller = class {
 
 					// Handle Enter key on keydown (fires before keypress)
 					$price_input.on('keydown', function(e) {
-						console.log('[POS DEBUG] KEYDOWN event, keyCode:', e.which, 'timestamp:', Date.now());
 						if (e.which === 13 || e.keyCode === 13) {
-							console.log('[POS DEBUG] ENTER KEY pressed in input, _submitted:', d._submitted);
-							console.trace('[POS DEBUG] Enter key stack trace');
 							e.preventDefault();
 							e.stopPropagation();
 							e.stopImmediatePropagation();
 							// Direct call to submit instead of clicking button
 							if (!d._submitted) {
 								d._submitted = true;
-								console.log('[POS DEBUG] ENTER KEY proceeding with submission');
 								// Read price directly from input (handles keyboard input that didn't trigger 'input' event)
 								const input_val = $price_input.val().replace(/,/g, '.');
 								const entered_rate = flt(input_val) || 0;
-								console.log('[POS DEBUG] ENTER KEY entered_rate:', entered_rate);
 								if (entered_rate > 0) {
 									d.hide();
 									// Use same logic as primary_action button
@@ -867,15 +848,12 @@ erpnext.PointOfSale.Controller = class {
 									new_item_with_rate["use_serial_batch_fields"] = 1;
 									new_item_with_rate["warehouse"] = me.settings.warehouse;
 
-									console.log('[POS DEBUG] ENTER KEY adding item to cart:', new_item_with_rate);
 									const item_row = me.frm.add_child("items", new_item_with_rate);
-									console.log('[POS DEBUG] ENTER KEY item_row created:', item_row.name);
 									me.trigger_new_item_events(item_row).then(() => {
 										// Force the entered rate after backend recalculation
 										frappe.model.set_value(item_row.doctype, item_row.name, 'rate', entered_rate);
 										me.update_cart_html(item_row);
 										frappe.dom.unfreeze();
-										console.log('[POS DEBUG] ENTER KEY complete');
 									});
 								} else {
 									frappe.show_alert({
@@ -884,8 +862,6 @@ erpnext.PointOfSale.Controller = class {
 									});
 									d._submitted = false;
 								}
-							} else {
-								console.log('[POS DEBUG] ENTER KEY blocked - already submitted');
 							}
 							return false;
 						}

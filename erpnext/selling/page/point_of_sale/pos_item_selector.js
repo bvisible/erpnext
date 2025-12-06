@@ -382,8 +382,6 @@ erpnext.PointOfSale.ItemSelector = class {
 		});
 
 		this.$component.on("click", ".item-wrapper", function () {
-			console.log('[POS DEBUG] ITEM CLICK handler fired, timestamp:', Date.now());
-			console.trace('[POS DEBUG] Item click stack trace');
 			const $item = $(this);
 			const item_code = unescape($item.attr("data-item-code"));
 			let batch_no = unescape($item.attr("data-batch-no"));
@@ -399,7 +397,6 @@ erpnext.PointOfSale.ItemSelector = class {
 			rate = rate === "undefined" ? undefined : rate;
 			stock_uom = stock_uom === "undefined" ? undefined : stock_uom;
 
-			console.log('[POS DEBUG] ITEM CLICK calling item_selected with:', { item_code, rate });
 			me.events.item_selected({
 				field: "qty",
 				value: "+1",
@@ -446,22 +443,17 @@ erpnext.PointOfSale.ItemSelector = class {
 
 		// for selecting the last filtered item on search
 		frappe.ui.keys.on("enter", () => {
-			console.log('[POS DEBUG] GLOBAL ENTER KEY handler fired, timestamp:', Date.now());
 			const selector_is_visible = this.$component.is(":visible");
-			console.log('[POS DEBUG] GLOBAL ENTER: selector_is_visible:', selector_is_visible, 'search_value:', this.search_field.get_value(), 'cur_dialog:', !!cur_dialog, 'items.length:', this.items?.length);
 			if (!selector_is_visible || this.search_field.get_value() === "") {
-				console.log('[POS DEBUG] GLOBAL ENTER: returning early (not visible or empty search)');
 				return;
 			}
 
 			// Don't trigger item click if a dialog is open (e.g., price entry dialog)
 			if (cur_dialog) {
-				console.log('[POS DEBUG] GLOBAL ENTER: returning early (cur_dialog exists)');
 				return;
 			}
 
 			if (this.items.length == 1) {
-				console.log('[POS DEBUG] GLOBAL ENTER: triggering item click');
 				this.$items_container.find(".item-wrapper").click();
 				frappe.utils.play_sound("submit");
 				this.set_search_value("");
