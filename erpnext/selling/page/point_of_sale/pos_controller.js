@@ -705,8 +705,11 @@ erpnext.PointOfSale.Controller = class {
 								options: `
 									<div class="price-input-container" style="text-align: center; margin-bottom: 15px;">
 										<div style="font-size: 12px; color: var(--gray-600); margin-bottom: 5px;">${__('This item has no price. Please enter the selling price.')}</div>
-										<div class="price-display" style="font-size: 32px; font-weight: bold; padding: 15px; background: var(--gray-100); border-radius: 8px;">
-											${currency} <span class="price-value">0.00</span>
+										<div class="price-display" style="font-size: 32px; font-weight: bold; padding: 15px; background: var(--gray-100); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+											<span style="margin-right: 8px;">${currency}</span>
+											<input type="text" class="price-input" value="0.00"
+												style="font-size: 32px; font-weight: bold; border: none; background: transparent; width: 120px; text-align: center; outline: none;"
+												inputmode="decimal" autocomplete="off">
 										</div>
 									</div>
 								`
@@ -718,7 +721,9 @@ erpnext.PointOfSale.Controller = class {
 						],
 						primary_action_label: __('Add to Cart'),
 						primary_action: () => {
-							const entered_rate = flt(d.price_value || 0);
+							// Get value from input field or from numpad
+							const input_val = d.$wrapper.find('.price-input').val();
+							const entered_rate = flt(input_val || d.price_value || 0);
 							if (entered_rate > 0) {
 								d.hide();
 								// Create new item with the entered rate and add directly
@@ -770,17 +775,56 @@ erpnext.PointOfSale.Controller = class {
 							<button class="btn btn-default numpad-btn" data-value="3" style="height: 50px; font-size: 18px; font-weight: bold;">3</button>
 							<button class="btn btn-default numpad-btn" data-value="." style="height: 50px; font-size: 18px; font-weight: bold;">.</button>
 							<button class="btn btn-default numpad-btn" data-value="0" style="height: 50px; font-size: 18px; font-weight: bold;">0</button>
-							<button class="btn btn-danger numpad-btn" data-value="delete" style="height: 50px; font-size: 16px;"><i class="fa fa-backspace"></i></button>
+							<button class="btn btn-danger numpad-btn" data-value="clear" style="height: 50px; font-size: 22px; font-weight: bold;">×</button>
 						</div>
 					`);
+
+					// Get input element and set focus
+					const $price_input = d.$wrapper.find('.price-input');
+					setTimeout(() => {
+						$price_input.focus().select();
+					}, 100);
+
+					// Function to update display from string
+					const updateDisplay = () => {
+						d.price_value = flt(d.price_string) || 0;
+						$price_input.val(d.price_value.toFixed(2));
+					};
+
+					// Handle direct keyboard input
+					$price_input.on('input', function() {
+						let val = $(this).val().replace(/[^0-9.]/g, '');
+						// Only allow one decimal point
+						const parts = val.split('.');
+						if (parts.length > 2) {
+							val = parts[0] + '.' + parts.slice(1).join('');
+						}
+						// Limit to 2 decimal places
+						if (parts.length === 2 && parts[1].length > 2) {
+							val = parts[0] + '.' + parts[1].substring(0, 2);
+						}
+						d.price_string = val;
+						d.price_value = flt(val) || 0;
+					});
+
+					// Format on blur
+					$price_input.on('blur', function() {
+						$(this).val(d.price_value.toFixed(2));
+					});
+
+					// Handle Enter key
+					$price_input.on('keypress', function(e) {
+						if (e.which === 13) {
+							d.get_primary_btn().click();
+						}
+					});
 
 					// Handle numpad clicks
 					$numpad_container.on('click', '.numpad-btn', function() {
 						const btn_value = $(this).data('value');
-						const $price_display = d.$wrapper.find('.price-value');
 
-						if (btn_value === 'delete') {
-							d.price_string = d.price_string.slice(0, -1);
+						if (btn_value === 'clear') {
+							d.price_string = "";
 						} else if (btn_value === '.') {
 							// Only add decimal if not already present
 							if (!d.price_string.includes('.')) {
@@ -795,8 +839,8 @@ erpnext.PointOfSale.Controller = class {
 							d.price_string += btn_value;
 						}
 
-						d.price_value = flt(d.price_string) || 0;
-						$price_display.text(d.price_value.toFixed(2));
+						updateDisplay();
+						$price_input.focus();
 					});
 
 					return;
