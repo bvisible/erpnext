@@ -721,6 +721,10 @@ erpnext.PointOfSale.Controller = class {
 						],
 						primary_action_label: __('Add to Cart'),
 						primary_action: () => {
+							// Prevent double submission
+							if (d._submitted) return;
+							d._submitted = true;
+
 							// Get value from input field or from numpad
 							const input_val = d.$wrapper.find('.price-input').val();
 							const entered_rate = flt(input_val || d.price_value || 0);
@@ -745,6 +749,7 @@ erpnext.PointOfSale.Controller = class {
 									frappe.dom.unfreeze();
 								});
 							} else {
+								d._submitted = false;
 								frappe.show_alert({
 									message: __("Price must be greater than zero."),
 									indicator: "red"
