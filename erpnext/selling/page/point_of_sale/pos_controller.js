@@ -875,17 +875,20 @@ erpnext.PointOfSale.Controller = class {
 						$(this).val(d.price_value.toFixed(2));
 					});
 
-					// Stop Enter key from triggering default dialog behavior and propagating
-					// Use capture phase via native event listener for maximum interception
-					d.$wrapper[0].addEventListener('keydown', function(e) {
+					// Disable Frappe's default Enter key handling for this dialog
+					// by removing the primary button's data-hotkey attribute and preventing default
+					d.$wrapper.find('.btn-primary-dark').removeAttr('data-hotkey');
+
+					// Block Enter key at dialog level to prevent any unwanted behavior
+					d.$wrapper.on('keydown', function(e) {
 						if (e.which === 13 || e.keyCode === 13) {
-							// Stop all propagation to prevent:
-							// 1. Frappe dialog's default Enter behavior (clicking primary button)
-							// 2. Item list behind the dialog from receiving the event
-							e.stopPropagation();
-							e.stopImmediatePropagation();
+							// Only allow our input handler to process Enter
+							if (!$(e.target).hasClass('price-input')) {
+								e.preventDefault();
+								e.stopPropagation();
+							}
 						}
-					}, true); // true = capture phase
+					});
 
 					// Handle numpad clicks
 					$numpad_container.on('click', '.numpad-btn', function() {
