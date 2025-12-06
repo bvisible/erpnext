@@ -692,14 +692,44 @@ erpnext.PointOfSale.Controller = class {
 				if (!item_code) return;
 
 				if (rate == undefined || rate == 0) {
-					frappe.show_alert({
-						message: __("Price is not set for the item."),
-						indicator: "orange",
-					});
-					//// frappe.utils.play_sound("error");
-					//// return;
-					this.item_details.toggle_component(true);
-					////
+					//// Show dialog to enter price for zero-rate items
+					const me = this;
+					frappe.prompt({
+						fieldname: 'rate',
+						label: __('Enter Price'),
+						fieldtype: 'Currency',
+						reqd: 1,
+						description: __('This item has no price. Please enter the selling price.')
+					}, (values) => {
+						if (flt(values.rate) > 0) {
+							// Create new item with the entered rate and add directly
+							const entered_rate = flt(values.rate);
+							const new_item_with_rate = {
+								item_code, batch_no,
+								rate: entered_rate,
+								uom,
+								[field]: value,
+								stock_uom
+							};
+							new_item_with_rate["use_serial_batch_fields"] = 1;
+							new_item_with_rate["warehouse"] = me.settings.warehouse;
+
+							const item_row = me.frm.add_child("items", new_item_with_rate);
+							me.trigger_new_item_events(item_row).then(() => {
+								// Force the entered rate after backend recalculation
+								frappe.model.set_value(item_row.doctype, item_row.name, 'rate', entered_rate);
+								me.update_cart_html(item_row);
+								frappe.dom.unfreeze();
+							});
+						} else {
+							frappe.show_alert({
+								message: __("Price must be greater than zero."),
+								indicator: "red"
+							});
+							frappe.dom.unfreeze();
+						}
+					}, __('Set Item Price'), __('Add to Cart'));
+					return;
 				}
 				const new_item = { item_code, batch_no, rate, uom, [field]: value, stock_uom };
 

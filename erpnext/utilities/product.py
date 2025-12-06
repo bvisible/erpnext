@@ -7,7 +7,7 @@ from frappe.utils import cint, flt, fmt_money
 from erpnext.accounts.doctype.pricing_rule.pricing_rule import get_pricing_rule_for_item
 import json #//// added
 
-def get_price(item_code, price_list, customer_group, company, qty=1, party=None, from_pos=False): #//// added , from_pos=False
+def get_price(item_code, price_list, customer_group, company, qty=1, party=None, from_pos=False, warehouse=None): #//// added , from_pos=False, warehouse=None
 	template_item_code = frappe.db.get_value("Item", item_code, "variant_of")
 
 	if price_list:
@@ -40,6 +40,10 @@ def get_price(item_code, price_list, customer_group, company, qty=1, party=None,
 					"doctype": "Quotation",
 				}
 			)
+
+			#//// added: pass warehouse to match Pricing Rules with warehouse filter
+			if warehouse:
+				pricing_rule_dict["warehouse"] = warehouse
 
 			if party and party.doctype == "Customer":
 				pricing_rule_dict.update({"customer": party.name})

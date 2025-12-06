@@ -237,6 +237,18 @@ erpnext.PointOfSale.Payment = class {
 				return;
 			}
 
+			//// Block if all items have zero rate (no real products with value)
+			const has_non_zero_rate_item = items.some(item => flt(item.rate) > 0);
+			const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? doc.grand_total : doc.rounded_total;
+			if (flt(grand_total) <= 0 && !has_non_zero_rate_item) {
+				frappe.show_alert({
+					message: __("Cannot complete order: all items have zero price."),
+					indicator: "red"
+				});
+				frappe.utils.play_sound("error");
+				return;
+			}
+
 			this.events.submit_invoice();
 		});
 
