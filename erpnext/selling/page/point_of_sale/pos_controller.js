@@ -692,43 +692,113 @@ erpnext.PointOfSale.Controller = class {
 				if (!item_code) return;
 
 				if (rate == undefined || rate == 0) {
-					//// Show dialog to enter price for zero-rate items
+					//// Show dialog with numpad to enter price for zero-rate items
 					const me = this;
-					frappe.prompt({
-						fieldname: 'rate',
-						label: __('Enter Price'),
-						fieldtype: 'Currency',
-						reqd: 1,
-						description: __('This item has no price. Please enter the selling price.')
-					}, (values) => {
-						if (flt(values.rate) > 0) {
-							// Create new item with the entered rate and add directly
-							const entered_rate = flt(values.rate);
-							const new_item_with_rate = {
-								item_code, batch_no,
-								rate: entered_rate,
-								uom,
-								[field]: value,
-								stock_uom
-							};
-							new_item_with_rate["use_serial_batch_fields"] = 1;
-							new_item_with_rate["warehouse"] = me.settings.warehouse;
+					const currency = me.frm.doc.currency;
 
-							const item_row = me.frm.add_child("items", new_item_with_rate);
-							me.trigger_new_item_events(item_row).then(() => {
-								// Force the entered rate after backend recalculation
-								frappe.model.set_value(item_row.doctype, item_row.name, 'rate', entered_rate);
-								me.update_cart_html(item_row);
-								frappe.dom.unfreeze();
-							});
-						} else {
-							frappe.show_alert({
-								message: __("Price must be greater than zero."),
-								indicator: "red"
-							});
-							frappe.dom.unfreeze();
+					const d = new frappe.ui.Dialog({
+						title: __('Set Item Price'),
+						fields: [
+							{
+								fieldtype: 'HTML',
+								fieldname: 'price_display',
+								options: `
+									<div class="price-input-container" style="text-align: center; margin-bottom: 15px;">
+										<div style="font-size: 12px; color: var(--gray-600); margin-bottom: 5px;">${__('This item has no price. Please enter the selling price.')}</div>
+										<div class="price-display" style="font-size: 32px; font-weight: bold; padding: 15px; background: var(--gray-100); border-radius: 8px;">
+											${currency} <span class="price-value">0.00</span>
+										</div>
+									</div>
+								`
+							},
+							{
+								fieldtype: 'HTML',
+								fieldname: 'numpad_container'
+							}
+						],
+						primary_action_label: __('Add to Cart'),
+						primary_action: () => {
+							const entered_rate = flt(d.price_value || 0);
+							if (entered_rate > 0) {
+								d.hide();
+								// Create new item with the entered rate and add directly
+								const new_item_with_rate = {
+									item_code, batch_no,
+									rate: entered_rate,
+									uom,
+									[field]: value,
+									stock_uom
+								};
+								new_item_with_rate["use_serial_batch_fields"] = 1;
+								new_item_with_rate["warehouse"] = me.settings.warehouse;
+
+								const item_row = me.frm.add_child("items", new_item_with_rate);
+								me.trigger_new_item_events(item_row).then(() => {
+									// Force the entered rate after backend recalculation
+									frappe.model.set_value(item_row.doctype, item_row.name, 'rate', entered_rate);
+									me.update_cart_html(item_row);
+									frappe.dom.unfreeze();
+								});
+							} else {
+								frappe.show_alert({
+									message: __("Price must be greater than zero."),
+									indicator: "red"
+								});
+							}
 						}
-					}, __('Set Item Price'), __('Add to Cart'));
+					});
+
+					// Initialize price value
+					d.price_value = 0;
+					d.price_string = "";
+
+					// Create numpad after dialog is shown
+					d.show();
+
+					// Build numpad in the container
+					const $numpad_container = d.$wrapper.find('[data-fieldname="numpad_container"]');
+					$numpad_container.html(`
+						<div class="pos-numpad-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 280px; margin: 0 auto;">
+							<button class="btn btn-default numpad-btn" data-value="7" style="height: 50px; font-size: 18px; font-weight: bold;">7</button>
+							<button class="btn btn-default numpad-btn" data-value="8" style="height: 50px; font-size: 18px; font-weight: bold;">8</button>
+							<button class="btn btn-default numpad-btn" data-value="9" style="height: 50px; font-size: 18px; font-weight: bold;">9</button>
+							<button class="btn btn-default numpad-btn" data-value="4" style="height: 50px; font-size: 18px; font-weight: bold;">4</button>
+							<button class="btn btn-default numpad-btn" data-value="5" style="height: 50px; font-size: 18px; font-weight: bold;">5</button>
+							<button class="btn btn-default numpad-btn" data-value="6" style="height: 50px; font-size: 18px; font-weight: bold;">6</button>
+							<button class="btn btn-default numpad-btn" data-value="1" style="height: 50px; font-size: 18px; font-weight: bold;">1</button>
+							<button class="btn btn-default numpad-btn" data-value="2" style="height: 50px; font-size: 18px; font-weight: bold;">2</button>
+							<button class="btn btn-default numpad-btn" data-value="3" style="height: 50px; font-size: 18px; font-weight: bold;">3</button>
+							<button class="btn btn-default numpad-btn" data-value="." style="height: 50px; font-size: 18px; font-weight: bold;">.</button>
+							<button class="btn btn-default numpad-btn" data-value="0" style="height: 50px; font-size: 18px; font-weight: bold;">0</button>
+							<button class="btn btn-danger numpad-btn" data-value="delete" style="height: 50px; font-size: 16px;"><i class="fa fa-backspace"></i></button>
+						</div>
+					`);
+
+					// Handle numpad clicks
+					$numpad_container.on('click', '.numpad-btn', function() {
+						const btn_value = $(this).data('value');
+						const $price_display = d.$wrapper.find('.price-value');
+
+						if (btn_value === 'delete') {
+							d.price_string = d.price_string.slice(0, -1);
+						} else if (btn_value === '.') {
+							// Only add decimal if not already present
+							if (!d.price_string.includes('.')) {
+								d.price_string += d.price_string ? '.' : '0.';
+							}
+						} else {
+							// Limit decimal places to 2
+							const parts = d.price_string.split('.');
+							if (parts.length === 2 && parts[1].length >= 2) {
+								return; // Don't add more digits after 2 decimal places
+							}
+							d.price_string += btn_value;
+						}
+
+						d.price_value = flt(d.price_string) || 0;
+						$price_display.text(d.price_value.toFixed(2));
+					});
+
 					return;
 				}
 				const new_item = { item_code, batch_no, rate, uom, [field]: value, stock_uom };
