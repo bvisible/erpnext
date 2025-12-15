@@ -767,10 +767,12 @@ def get_stock_availability(item_code, warehouse):
 
 	if frappe.db.get_value("Item", item_code, "is_stock_item"):
 		is_stock_item = True
-		bin_qty = get_bin_qty(item_code, warehouse)
+		bin_qty, reserved_qty = get_bin_qty(item_code, warehouse)
 		pos_sales_qty = get_pos_reserved_qty(item_code, warehouse)
+		# Available = actual - reserved (Sales Order) - POS reserved
+		available_qty = bin_qty - reserved_qty - pos_sales_qty
 
-		return bin_qty - pos_sales_qty, is_stock_item, is_negative_stock_allowed(item_code=item_code)
+		return available_qty, is_stock_item, is_negative_stock_allowed(item_code=item_code)
 	else:
 		is_stock_item = True
 		if frappe.db.exists("Product Bundle", {"name": item_code, "disabled": 0}):
@@ -786,9 +788,11 @@ def get_bundle_availability(bundle_item_code, warehouse):
 
 	bundle_bin_qty = 1000000
 	for item in product_bundle.items:
-		item_bin_qty = get_bin_qty(item.item_code, warehouse)
+		item_bin_qty, item_reserved_qty = get_bin_qty(item.item_code, warehouse)
+		# Available = actual - reserved (Sales Order)
+		item_available = item_bin_qty - item_reserved_qty
 
-		max_available_bundles = item_bin_qty / item.qty
+		max_available_bundles = item_available / item.qty
 		if bundle_bin_qty > max_available_bundles and frappe.get_value(
 			"Item", item.item_code, "is_stock_item"
 		):
@@ -799,15 +803,18 @@ def get_bundle_availability(bundle_item_code, warehouse):
 
 
 def get_bin_qty(item_code, warehouse):
-	bin_qty = frappe.db.sql(
-		"""select actual_qty from `tabBin`
+	"""Get actual_qty and reserved_qty from Bin."""
+	bin_data = frappe.db.sql(
+		"""select actual_qty, reserved_qty from `tabBin`
 		where item_code = %s and warehouse = %s
 		limit 1""",
 		(item_code, warehouse),
 		as_dict=1,
 	)
 
-	return bin_qty[0].actual_qty or 0 if bin_qty else 0
+	if bin_data:
+		return bin_data[0].actual_qty or 0, bin_data[0].reserved_qty or 0
+	return 0, 0
 
 
 def get_pos_reserved_qty(item_code, warehouse):
