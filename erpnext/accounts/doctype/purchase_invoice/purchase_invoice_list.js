@@ -16,6 +16,7 @@ frappe.listview_settings["Purchase Invoice"] = {
 		"on_hold",
 		"represents_company",
 		"is_internal_supplier",
+		"is_proposed",
 	],
 	get_indicator(doc) {
 		if (doc.status == "Debit Note Issued") {
@@ -30,6 +31,11 @@ frappe.listview_settings["Purchase Invoice"] = {
 			}
 		}
 
+		// Check is_proposed first (status may not be synced)
+		if (cint(doc.is_proposed) && flt(doc.outstanding_amount) > 0 && doc.docstatus == 1) {
+			return [__("In Payment Run"), "blue", "is_proposed,=,1"];
+		}
+
 		const status_colors = {
 			Unpaid: "orange",
 			Paid: "green",
@@ -37,6 +43,7 @@ frappe.listview_settings["Purchase Invoice"] = {
 			Overdue: "red",
 			"Partly Paid": "yellow",
 			"Internal Transfer": "darkgrey",
+			"In Payment Run": "blue",
 		};
 
 		if (status_colors[doc.status]) {
