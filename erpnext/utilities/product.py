@@ -51,9 +51,10 @@ def get_price(item_code, price_list, customer_group, company, qty=1, party=None,
 			pricing_rule = get_pricing_rule_for_item(pricing_rule_dict)
 			price_obj = price[0]
 
+			# Store original price as MRP before any discount is applied
+			mrp = price_obj.price_list_rate or 0
+
 			if pricing_rule:
-				# price without any rules applied
-				mrp = price_obj.price_list_rate or 0
 
 				if pricing_rule.pricing_rule_for == "Discount Percentage":
 					price_obj.discount_percent = pricing_rule.discount_percentage
@@ -91,6 +92,7 @@ def get_price(item_code, price_list, customer_group, company, qty=1, party=None,
 					price_obj["price_list_rate"], currency=price_obj["currency"]
 				)
 				if mrp != price_obj["price_list_rate"]:
+					price_obj["mrp"] = mrp
 					price_obj["formatted_mrp"] = fmt_money(mrp, currency=price_obj["currency"])
 
 				price_obj["currency_symbol"] = (
