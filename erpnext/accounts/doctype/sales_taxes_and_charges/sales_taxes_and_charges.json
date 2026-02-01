@@ -33,7 +33,7 @@
  ],
  "fields": [
   {
-   "columns": 2,
+   "columns": 1,
    "fieldname": "charge_type",
    "fieldtype": "Select",
    "in_list_view": 1,
@@ -53,7 +53,7 @@
   },
   {
    "allow_on_submit": 1,
-   "columns": 2,
+   "columns": 3,
    "fieldname": "account_head",
    "fieldtype": "Link",
    "in_list_view": 1,

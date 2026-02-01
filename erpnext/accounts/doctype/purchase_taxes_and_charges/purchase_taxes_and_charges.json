@@ -56,7 +56,7 @@
    "reqd": 1
   },
   {
-   "columns": 2,
+   "columns": 1,
    "default": "On Net Total",
    "fieldname": "charge_type",
    "fieldtype": "Select",
@@ -91,7 +91,7 @@
   },
   {
    "allow_on_submit": 1,
-   "columns": 2,
+   "columns": 3,
    "fieldname": "account_head",
    "fieldtype": "Link",
    "in_list_view": 1,
