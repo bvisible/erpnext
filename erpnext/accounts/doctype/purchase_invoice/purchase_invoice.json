@@ -842,7 +842,7 @@
    "read_only": 1
   },
   {
-   "collapsible": 1,
+   "collapsible": 0,
    "fieldname": "section_break_44",
    "fieldtype": "Section Break",
    "label": "Additional Discount"

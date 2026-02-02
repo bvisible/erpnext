@@ -1074,7 +1074,7 @@
    "options": "Cost Center"
   },
   {
-   "collapsible": 1,
+   "collapsible": 0,
    "fieldname": "section_break_49",
    "fieldtype": "Section Break",
    "hide_days": 1,
