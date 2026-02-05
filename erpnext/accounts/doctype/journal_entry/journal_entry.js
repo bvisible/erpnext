@@ -789,40 +789,52 @@ erpnext.journal_entry_utils.findVatRow = function(frm, sourceRow, vatAccount) {
     return null;
 };
 
-// Function to retrieve the VAT accounting method for a company
-erpnext.journal_entry_utils.getCompanyVatMethod = function(companyName, callback) {
+// Function to retrieve full VAT info for a company (is_vat_company + vat_accounting_method)
+erpnext.journal_entry_utils.getCompanyVatInfo = function(companyName, callback) {
     if (!companyName) {
-        if (typeof callback === 'function') callback(null);
+        if (typeof callback === 'function') callback({ isVatCompany: false, vatMethod: null });
         return;
     }
-    
+
     // Check if we already have this information in cache
-    if (erpnext.journal_entry_utils._vatMethodCache && 
-        erpnext.journal_entry_utils._vatMethodCache[companyName] && 
-        erpnext.journal_entry_utils._vatMethodCache[companyName].timestamp > Date.now() - 3600000) { // Cache valid for 1 hour
-        
+    if (erpnext.journal_entry_utils._vatInfoCache &&
+        erpnext.journal_entry_utils._vatInfoCache[companyName] &&
+        erpnext.journal_entry_utils._vatInfoCache[companyName].timestamp > Date.now() - 3600000) { // Cache valid for 1 hour
+
         if (typeof callback === 'function') {
-            callback(erpnext.journal_entry_utils._vatMethodCache[companyName].value);
+            callback(erpnext.journal_entry_utils._vatInfoCache[companyName].value);
         }
         return;
     }
-    
+
     // Initialize cache if needed
-    if (!erpnext.journal_entry_utils._vatMethodCache) {
-        erpnext.journal_entry_utils._vatMethodCache = {};
+    if (!erpnext.journal_entry_utils._vatInfoCache) {
+        erpnext.journal_entry_utils._vatInfoCache = {};
     }
-    
-    frappe.db.get_value("Company", companyName, ["vat_accounting_method"], (result) => {
-        const vatMethod = result && result.vat_accounting_method ? result.vat_accounting_method : null;
-        
+
+    frappe.db.get_value("Company", companyName, ["is_vat_company", "vat_accounting_method"], (result) => {
+        const vatInfo = {
+            isVatCompany: result && result.is_vat_company ? true : false,
+            vatMethod: result && result.vat_accounting_method ? result.vat_accounting_method : null
+        };
+
         // Store in cache
-        erpnext.journal_entry_utils._vatMethodCache[companyName] = {
-            value: vatMethod,
+        erpnext.journal_entry_utils._vatInfoCache[companyName] = {
+            value: vatInfo,
             timestamp: Date.now()
         };
-       
+
         if (typeof callback === 'function') {
-            callback(vatMethod);
+            callback(vatInfo);
+        }
+    });
+};
+
+// Function to retrieve the VAT accounting method for a company (legacy - uses getCompanyVatInfo internally)
+erpnext.journal_entry_utils.getCompanyVatMethod = function(companyName, callback) {
+    erpnext.journal_entry_utils.getCompanyVatInfo(companyName, (vatInfo) => {
+        if (typeof callback === 'function') {
+            callback(vatInfo.vatMethod);
         }
     });
 };
@@ -1396,8 +1408,13 @@ frappe.ui.form.on("Journal Entry", {
 		frappe.provide("erpnext.journal_entry_utils");
 		
 		// Check the VAT accounting method to hide/show relevant fields
-		erpnext.journal_entry_utils.getCompanyVatMethod(frm.doc.company, (vatMethod) => {
-		    if (vatMethod && vatMethod.includes("Flat")) {
+		erpnext.journal_entry_utils.getCompanyVatInfo(frm.doc.company, (vatInfo) => {
+		    if (!vatInfo.isVatCompany) {
+		        // Non-VAT company: hide fields and disable calculation
+		        frm.set_df_property("disable_calculation", "hidden", 1);
+		        frm.set_df_property("is_vat_excluded", "hidden", 1);
+		        frm.set_value("disable_calculation", 1);
+		    } else if (vatInfo.vatMethod && vatInfo.vatMethod.includes("Flat")) {
 		        frm.set_df_property("disable_calculation", "hidden", 1);
 		        frm.set_df_property("is_vat_excluded", "hidden", 1);
 		        frm.set_value("disable_calculation", 1);
@@ -1406,7 +1423,7 @@ frappe.ui.form.on("Journal Entry", {
 		        frm.set_df_property("is_vat_excluded", "hidden", 0);
 		    }
 		});
-		
+
 		frm.doc.accounts = frm.doc.accounts || [];
 		frm.doc.accounts.forEach(row => {
 		    if (erpnext.journal_entry_utils && erpnext.journal_entry_utils.setupVatListener) {
@@ -1420,11 +1437,17 @@ frappe.ui.form.on("Journal Entry", {
 	refresh: function (frm) {
 		erpnext.toggle_naming_series();
 		
-		erpnext.journal_entry_utils.getCompanyVatMethod(frm.doc.company, (vatMethod) => {
-		    if (vatMethod && vatMethod.includes("Flat")) {
+		erpnext.journal_entry_utils.getCompanyVatInfo(frm.doc.company, (vatInfo) => {
+		    if (!vatInfo.isVatCompany) {
+		        // Non-VAT company: hide fields and disable calculation
 		        frm.set_df_property("disable_calculation", "hidden", 1);
 		        frm.set_df_property("is_vat_excluded", "hidden", 1);
-		        // Force the value only if the document has not been submitted
+		        if (frm.doc.docstatus === 0) {
+		            frm.set_value("disable_calculation", 1);
+		        }
+		    } else if (vatInfo.vatMethod && vatInfo.vatMethod.includes("Flat")) {
+		        frm.set_df_property("disable_calculation", "hidden", 1);
+		        frm.set_df_property("is_vat_excluded", "hidden", 1);
 		        if (frm.doc.docstatus === 0) {
 		            frm.set_value("disable_calculation", 1);
 		        }
@@ -1637,8 +1660,13 @@ frappe.ui.form.on("Journal Entry", {
 
 		erpnext.accounts.dimensions.update_dimension(frm, frm.doctype);
 		
-		erpnext.journal_entry_utils.getCompanyVatMethod(frm.doc.company, (vatMethod) => {
-		    if (vatMethod && vatMethod.includes("Flat")) {
+		erpnext.journal_entry_utils.getCompanyVatInfo(frm.doc.company, (vatInfo) => {
+		    if (!vatInfo.isVatCompany) {
+		        // Non-VAT company: hide fields and disable calculation
+		        frm.set_df_property("disable_calculation", "hidden", 1);
+		        frm.set_df_property("is_vat_excluded", "hidden", 1);
+		        frm.set_value("disable_calculation", 1);
+		    } else if (vatInfo.vatMethod && vatInfo.vatMethod.includes("Flat")) {
 		        frm.set_df_property("disable_calculation", "hidden", 1);
 		        frm.set_df_property("is_vat_excluded", "hidden", 1);
 		        frm.set_value("disable_calculation", 1);
@@ -2150,28 +2178,31 @@ $.extend(erpnext.journal_entry, {
                                         "disable_calculation": template_doc.disable_calculation,
                                     });
                                     
-                                    // Vérifier la méthode de comptabilisation TVA de la société
-                                    erpnext.journal_entry_utils.getCompanyVatMethod(frm.doc.company, (vatMethod) => {
-                                        // Si c'est "Flat-rate taxation", masquer le champ is_vat_excluded et forcer disable_calculation
-                                        if (vatMethod && vatMethod.includes("Flat")) {
-                                            console.log("[DEBUG] quick_entry: méthode de comptabilisation TVA 'Flat-rate', masquage des options TVA");
+                                    // Check company VAT info
+                                    erpnext.journal_entry_utils.getCompanyVatInfo(frm.doc.company, (vatInfo) => {
+                                        // If company is not subject to VAT, hide ALL VAT fields
+                                        if (!vatInfo.isVatCompany) {
+                                            cur_dialog.set_df_property("disable_calculation", "hidden", 1);
+                                            cur_dialog.set_df_property("is_vat_excluded", "hidden", 1);
+                                        } else if (vatInfo.vatMethod && vatInfo.vatMethod.includes("Flat")) {
+                                            // If flat-rate taxation, keep existing behavior
                                             cur_dialog.set_value("disable_calculation", 1);
                                             cur_dialog.set_value("is_vat_excluded", 0);
                                             cur_dialog.set_df_property("is_vat_excluded", "hidden", 1);
                                             cur_dialog.set_df_property("disable_calculation", "read_only", 1);
                                         } else {
-                                            // Comportement normal pour les autres méthodes
+                                            // Normal behavior for other methods
                                             cur_dialog.set_df_property("is_vat_excluded", "hidden", 0);
                                             cur_dialog.set_df_property("disable_calculation", "read_only", 0);
-                                            
-                                            // Mettre à jour l'état de is_vat_excluded en fonction de disable_calculation
+
+                                            // Update is_vat_excluded state based on disable_calculation
                                             const disableCalc = template_doc.disable_calculation;
                                             if (disableCalc) {
                                                 cur_dialog.set_value("is_vat_excluded", 0);
                                                 cur_dialog.set_df_property("is_vat_excluded", "read_only", 1);
                                             } else {
                                                 cur_dialog.set_df_property("is_vat_excluded", "read_only", 0);
-                                                // Définir is_vat_excluded seulement si disable_calculation n'est pas activé
+                                                // Set is_vat_excluded only if disable_calculation is not enabled
                                                 cur_dialog.set_value("is_vat_excluded", template_doc.is_vat_excluded || 0);
                                             }
                                         }
@@ -2199,9 +2230,10 @@ $.extend(erpnext.journal_entry, {
                             cur_dialog.set_value("is_vat_excluded", 0);
                             cur_dialog.set_df_property("is_vat_excluded", "read_only", 1);
                         } else {
-                            // Check VAT method first before allowing editing
-                            erpnext.journal_entry_utils.getCompanyVatMethod(frm.doc.company, (vatMethod) => {
-                                if (!vatMethod || !vatMethod.includes("Flat")) {
+                            // Check VAT info first before allowing editing
+                            erpnext.journal_entry_utils.getCompanyVatInfo(frm.doc.company, (vatInfo) => {
+                                // Only allow editing if company is subject to VAT and not flat-rate
+                                if (vatInfo.isVatCompany && (!vatInfo.vatMethod || !vatInfo.vatMethod.includes("Flat"))) {
                                     cur_dialog.set_df_property("is_vat_excluded", "read_only", 0);
                                 }
                             });
@@ -2285,14 +2317,19 @@ $.extend(erpnext.journal_entry, {
             dialog.hide();
         });
 
-        // Check VAT calculation method on dialog load
-        erpnext.journal_entry_utils.getCompanyVatMethod(frm.doc.company, (vatMethod) => {
-            if (vatMethod && vatMethod.includes("Flat")) {
+        // Check VAT info on dialog load
+        erpnext.journal_entry_utils.getCompanyVatInfo(frm.doc.company, (vatInfo) => {
+            // If company is not subject to VAT, hide ALL VAT fields
+            if (!vatInfo.isVatCompany) {
+                dialog.set_df_property("disable_calculation", "hidden", 1);
+                dialog.set_df_property("is_vat_excluded", "hidden", 1);
+            } else if (vatInfo.vatMethod && vatInfo.vatMethod.includes("Flat")) {
+                // If flat-rate taxation, keep existing behavior
                 dialog.set_value("disable_calculation", 1);
                 dialog.set_df_property("disable_calculation", "read_only", 1);
                 dialog.set_df_property("is_vat_excluded", "hidden", 1);
             }
-            
+
             // Show dialog after verification
             dialog.show();
         });
