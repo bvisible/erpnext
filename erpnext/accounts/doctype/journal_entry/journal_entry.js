@@ -2182,6 +2182,7 @@ $.extend(erpnext.journal_entry, {
                                     erpnext.journal_entry_utils.getCompanyVatInfo(frm.doc.company, (vatInfo) => {
                                         // If company is not subject to VAT, hide ALL VAT fields
                                         if (!vatInfo.isVatCompany) {
+                                            cur_dialog.set_value("disable_calculation", 1);
                                             cur_dialog.set_df_property("disable_calculation", "hidden", 1);
                                             cur_dialog.set_df_property("is_vat_excluded", "hidden", 1);
                                         } else if (vatInfo.vatMethod && vatInfo.vatMethod.includes("Flat")) {
@@ -2321,6 +2322,7 @@ $.extend(erpnext.journal_entry, {
         erpnext.journal_entry_utils.getCompanyVatInfo(frm.doc.company, (vatInfo) => {
             // If company is not subject to VAT, hide ALL VAT fields
             if (!vatInfo.isVatCompany) {
+                dialog.set_value("disable_calculation", 1);
                 dialog.set_df_property("disable_calculation", "hidden", 1);
                 dialog.set_df_property("is_vat_excluded", "hidden", 1);
             } else if (vatInfo.vatMethod && vatInfo.vatMethod.includes("Flat")) {
