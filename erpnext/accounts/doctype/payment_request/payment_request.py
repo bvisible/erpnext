@@ -409,24 +409,27 @@ class PaymentRequest(Document):
 
 		return payment_entry
 
-	def send_email(self):
-		"""send email with payment link"""
-		email_args = {
-			"recipients": self.email_to,
-			"sender": None,
-			"subject": self.subject,
-			"message": self.get_message(),
-			"now": True,
-			"attachments": [
+	def send_email(self, recipients=None, subject=None, message=None):
+		"""send email with reference document (Sales Order/Invoice) attached"""
+		ref_print_format = self.print_format or frappe.db.get_value(
+			"DocType", self.reference_doctype, "default_print_format"
+		)
+
+		frappe.sendmail(
+			recipients=recipients or self.email_to,
+			sender=None,
+			subject=subject or self.subject,
+			message=message or self.get_message(),
+			now=True,
+			attachments=[
 				frappe.attach_print(
 					self.reference_doctype,
 					self.reference_name,
 					file_name=self.reference_name,
-					print_format=self.print_format,
+					print_format=ref_print_format,
 				)
 			],
-		}
-		enqueue(method=frappe.sendmail, queue="short", timeout=300, is_async=True, **email_args)
+		)
 
 	def get_message(self):
 		"""return message with payment gateway link"""
@@ -820,8 +823,10 @@ def get_print_format_list(ref_doctype):
 
 
 @frappe.whitelist(allow_guest=True)
-def resend_payment_email(docname):
-	return frappe.get_doc("Payment Request", docname).send_email()
+def resend_payment_email(docname, recipients=None, subject=None, message=None):
+	return frappe.get_doc("Payment Request", docname).send_email(
+		recipients=recipients, subject=subject, message=message
+	)
 
 
 @frappe.whitelist()

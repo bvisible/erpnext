@@ -40,19 +40,63 @@ frappe.ui.form.on("Payment Request", "refresh", function (frm) {
 		!frm.doc.__islocal &&
 		frm.doc.docstatus == 1
 	) {
-		////renamed button from Resend Payment Email
 		frm.add_custom_button(__('Send by Email'), function(){
-			frappe.call({
-				method: "erpnext.accounts.doctype.payment_request.payment_request.resend_payment_email",
-				args: { docname: frm.doc.name },
-				freeze: true,
-				freeze_message: __("Sending"),
-				callback: function (r) {
-					if (!r.exc) {
-						frappe.msgprint(__("Message Sent"));
-					}
+			// Show email dialog with pre-filled fields
+			let d = new frappe.ui.Dialog({
+				title: __('Send Payment Request by Email'),
+				size: 'large',
+				fields: [
+					{
+						fieldname: 'recipients',
+						fieldtype: 'Data',
+						label: __('To'),
+						default: frm.doc.email_to,
+						reqd: 1,
+					},
+					{
+						fieldname: 'subject',
+						fieldtype: 'Data',
+						label: __('Subject'),
+						default: frm.doc.subject,
+						reqd: 1,
+					},
+					{
+						fieldname: 'message',
+						fieldtype: 'Text Editor',
+						label: __('Message'),
+						default: frm.doc.message,
+					},
+					{
+						fieldname: 'attachments_info',
+						fieldtype: 'HTML',
+						options: '<div style="margin-top:10px; padding:10px; background:#f5f5f5; border-radius:4px; font-size:12px;">'
+							+ '<strong>' + __('Attachments') + ' :</strong><br>'
+							+ '📎 ' + (frm.doc.reference_name || '') + ' (' + __(frm.doc.reference_doctype || '') + ')'
+							+ '</div>',
+					},
+				],
+				primary_action_label: __('Send'),
+				primary_action: function(values) {
+					d.hide();
+					frappe.call({
+						method: "erpnext.accounts.doctype.payment_request.payment_request.resend_payment_email",
+						args: {
+							docname: frm.doc.name,
+							recipients: values.recipients,
+							subject: values.subject,
+							message: values.message,
+						},
+						freeze: true,
+						freeze_message: __("Sending"),
+						callback: function (r) {
+							if (!r.exc) {
+								frappe.msgprint(__("Message Sent"));
+							}
+						},
+					});
 				},
 			});
+			d.show();
 		});
 	}
 
