@@ -822,6 +822,13 @@ def get_print_format_list(ref_doctype):
 	return {"print_format": print_format_list}
 
 
+@frappe.whitelist()
+def get_rendered_message(docname):
+	"""Return the rendered message for the Payment Request email dialog."""
+	pr = frappe.get_doc("Payment Request", docname)
+	return pr.get_message()
+
+
 @frappe.whitelist(allow_guest=True)
 def resend_payment_email(docname, recipients=None, subject=None, message=None):
 	return frappe.get_doc("Payment Request", docname).send_email(

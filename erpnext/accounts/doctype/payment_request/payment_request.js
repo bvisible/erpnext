@@ -41,40 +41,47 @@ frappe.ui.form.on("Payment Request", "refresh", function (frm) {
 		frm.doc.docstatus == 1
 	) {
 		frm.add_custom_button(__('Send by Email'), function(){
-			// Show email dialog with pre-filled fields
-			let d = new frappe.ui.Dialog({
-				title: __('Send Payment Request by Email'),
-				size: 'large',
-				fields: [
-					{
-						fieldname: 'recipients',
-						fieldtype: 'Data',
-						label: __('To'),
-						default: frm.doc.email_to,
-						reqd: 1,
-					},
-					{
-						fieldname: 'subject',
-						fieldtype: 'Data',
-						label: __('Subject'),
-						default: frm.doc.subject,
-						reqd: 1,
-					},
-					{
-						fieldname: 'message',
-						fieldtype: 'Text Editor',
-						label: __('Message'),
-						default: frm.doc.message,
-					},
-					{
-						fieldname: 'attachments_info',
-						fieldtype: 'HTML',
-						options: '<div style="margin-top:10px; padding:10px; background:#f5f5f5; border-radius:4px; font-size:12px;">'
-							+ '<strong>' + __('Attachments') + ' :</strong><br>'
-							+ '📎 ' + (frm.doc.reference_name || '') + ' (' + __(frm.doc.reference_doctype || '') + ')'
-							+ '</div>',
-					},
-				],
+			// Render the message template server-side before showing
+			// Render message server-side via get_message
+			frappe.call({
+				method: 'erpnext.accounts.doctype.payment_request.payment_request.get_rendered_message',
+				args: { docname: frm.doc.name },
+				callback: function(r) {
+					let rendered_message = r.message || frm.doc.message || '';
+
+					let d = new frappe.ui.Dialog({
+						title: __('Send Payment Request by Email'),
+						size: 'large',
+						fields: [
+							{
+								fieldname: 'recipients',
+								fieldtype: 'Data',
+								label: __('To'),
+								default: frm.doc.email_to,
+								reqd: 1,
+							},
+							{
+								fieldname: 'subject',
+								fieldtype: 'Data',
+								label: __('Subject'),
+								default: frm.doc.subject,
+								reqd: 1,
+							},
+							{
+								fieldname: 'message',
+								fieldtype: 'Text Editor',
+								label: __('Message'),
+								default: rendered_message,
+							},
+							{
+								fieldname: 'attachments_info',
+								fieldtype: 'HTML',
+								options: '<div style="margin-top:10px; padding:10px; background:#f5f5f5; border-radius:4px; font-size:12px;">'
+									+ '<strong>' + __('Attachments') + ' :</strong><br>'
+									+ '📎 ' + (frm.doc.reference_name || '') + ' (' + __(frm.doc.reference_doctype || '') + ')'
+									+ '</div>',
+							},
+						],
 				primary_action_label: __('Send'),
 				primary_action: function(values) {
 					d.hide();
@@ -97,6 +104,8 @@ frappe.ui.form.on("Payment Request", "refresh", function (frm) {
 				},
 			});
 			d.show();
+				}
+			});
 		});
 	}
 
