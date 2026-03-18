@@ -144,8 +144,39 @@
    "label": "Ensure Delivery Based on Produced Serial No"
   },
   {
+   "default": "0",
+   "fetch_from": "item_code.is_stock_item",
+   "fieldname": "is_stock_item",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Is Stock Item",
+   "print_hide": 1,
+   "report_hide": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "1",
+   "depends_on": "eval:doc.is_stock_item",
+   "fieldname": "reserve_stock",
+   "fieldtype": "Check",
+   "label": "Reserve Stock",
+   "print_hide": 1,
+   "report_hide": 1
+  },
+  {
    "fieldname": "col_break1",
    "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "columns": 1,
+   "depends_on": "eval: !parent.skip_delivery_note",
+   "fieldname": "delivery_date",
+   "fieldtype": "Date",
+   "in_list_view": 0,
+   "label": "Delivery Date",
+   "no_copy": 1,
+   "print_hide": 1
   },
   {
    "fieldname": "item_name",
@@ -176,15 +207,32 @@
    "width": "300px"
   },
   {
-   "allow_on_submit": 1,
-   "columns": 1,
-   "depends_on": "eval: !parent.skip_delivery_note",
-   "fieldname": "delivery_date",
-   "fieldtype": "Date",
-   "in_list_view": 0,
-   "label": "Delivery Date",
-   "no_copy": 1,
-   "print_hide": 1
+   "fieldname": "item_group",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Item Group",
+   "oldfieldname": "item_group",
+   "oldfieldtype": "Link",
+   "options": "Item Group",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "brand",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Brand Name",
+   "oldfieldname": "brand",
+   "oldfieldtype": "Link",
+   "options": "Brand",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "image_section",
+   "fieldtype": "Section Break",
+   "label": "Image"
   },
   {
    "fetch_from": "item_code.image",
@@ -261,6 +309,18 @@
    "no_copy": 1,
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "depends_on": "eval: doc.stock_reserved_qty",
+   "fieldname": "stock_reserved_qty",
+   "fieldtype": "Float",
+   "label": "Stock Reserved Qty (in Stock UOM)",
+   "no_copy": 1,
+   "non_negative": 1,
+   "print_hide": 1,
+   "read_only": 1,
+   "report_hide": 1
   },
   {
    "fieldname": "section_break_16",
@@ -350,6 +410,12 @@
    "options": "currency"
   },
   {
+   "fieldname": "distributed_discount_amount",
+   "fieldtype": "Currency",
+   "label": "Distributed Discount Amount",
+   "options": "currency"
+  },
+  {
    "depends_on": "eval:doc.margin_type && doc.price_list_rate && doc.margin_rate_or_amount",
    "fieldname": "base_rate_with_margin",
    "fieldtype": "Currency",
@@ -390,6 +456,13 @@
    "width": "100px"
   },
   {
+   "fieldname": "item_tax_template",
+   "fieldtype": "Link",
+   "label": "Item Tax Template",
+   "options": "Item Tax Template",
+   "print_hide": 1
+  },
+  {
    "fieldname": "col_break3",
    "fieldtype": "Column Break"
   },
@@ -426,11 +499,28 @@
    "read_only": 1
   },
   {
+   "depends_on": "eval: doc.uom != doc.stock_uom",
+   "fieldname": "stock_uom_rate",
+   "fieldtype": "Currency",
+   "label": "Rate of Stock UOM",
+   "no_copy": 1,
+   "options": "currency",
+   "read_only": 1
+  },
+  {
    "default": "0",
    "fieldname": "is_free_item",
    "fieldtype": "Check",
    "label": "Is Free Item",
    "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "item_code.grant_commission",
+   "fieldname": "grant_commission",
+   "fieldtype": "Check",
+   "label": "Grant Commission",
    "read_only": 1
   },
   {
@@ -472,6 +562,35 @@
    "options": "Company:company:default_currency",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "billed_amt",
+   "fieldtype": "Currency",
+   "label": "Billed Amt",
+   "no_copy": 1,
+   "options": "currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "valuation_rate",
+   "fieldtype": "Currency",
+   "label": "Valuation Rate",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
+   "read_only": 1,
+   "report_hide": 1
+  },
+  {
+   "fieldname": "gross_profit",
+   "fieldtype": "Currency",
+   "label": "Gross Profit",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
+   "read_only": 1,
+   "report_hide": 1
   },
   {
    "collapsible": 1,
@@ -566,55 +685,22 @@
    "search_index": 1
   },
   {
-   "fieldname": "brand",
-   "fieldtype": "Link",
+   "fieldname": "quotation_item",
+   "fieldtype": "Data",
    "hidden": 1,
-   "label": "Brand Name",
-   "oldfieldname": "brand",
-   "oldfieldtype": "Link",
-   "options": "Brand",
-   "print_hide": 1,
+   "label": "quotation_item",
+   "no_copy": 1,
    "read_only": 1
   },
   {
-   "fieldname": "item_group",
-   "fieldtype": "Link",
-   "hidden": 1,
-   "label": "Item Group",
-   "oldfieldname": "item_group",
-   "oldfieldtype": "Link",
-   "options": "Item Group",
-   "print_hide": 1,
-   "read_only": 1
+   "fieldname": "col_break4",
+   "fieldtype": "Column Break"
   },
   {
-   "fieldname": "billed_amt",
-   "fieldtype": "Currency",
-   "label": "Billed Amt",
-   "no_copy": 1,
-   "options": "currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "valuation_rate",
-   "fieldtype": "Currency",
-   "label": "Valuation Rate",
-   "no_copy": 1,
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1,
-   "report_hide": 1
-  },
-  {
-   "fieldname": "gross_profit",
-   "fieldtype": "Currency",
-   "label": "Gross Profit",
-   "no_copy": 1,
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1,
-   "report_hide": 1
+   "default": "0",
+   "fieldname": "against_blanket_order",
+   "fieldtype": "Check",
+   "label": "Against Blanket Order"
   },
   {
    "depends_on": "eval:doc.against_blanket_order",
@@ -634,8 +720,51 @@
    "read_only": 1
   },
   {
-   "fieldname": "col_break4",
+   "fieldname": "available_quantity_section",
+   "fieldtype": "Section Break",
+   "label": "Available Quantity"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "actual_qty",
+   "fieldtype": "Float",
+   "label": "Qty (Warehouse)",
+   "no_copy": 1,
+   "print_hide": 1,
+   "print_width": "70px",
+   "read_only": 1,
+   "width": "70px"
+  },
+  {
+   "fieldname": "column_break_jpky",
    "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "company_total_stock",
+   "fieldtype": "Float",
+   "label": "Qty (Company)",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "manufacturing_section_section",
+   "fieldtype": "Section Break",
+   "label": "Manufacturing Section"
+  },
+  {
+   "fieldname": "bom_no",
+   "fieldtype": "Link",
+   "label": "BOM No",
+   "no_copy": 1,
+   "options": "BOM",
+   "print_hide": 1
+  },
+  {
+   "fieldname": "planning_section",
+   "fieldtype": "Section Break",
+   "label": "Planning"
   },
   {
    "allow_on_submit": 1,
@@ -651,74 +780,12 @@
    "width": "70px"
   },
   {
-   "allow_on_submit": 1,
-   "fieldname": "actual_qty",
-   "fieldtype": "Float",
-   "label": "Qty (Warehouse)",
-   "no_copy": 1,
-   "print_hide": 1,
-   "print_width": "70px",
-   "read_only": 1,
-   "width": "70px"
-  },
-  {
    "fieldname": "ordered_qty",
    "fieldtype": "Float",
    "label": "Ordered Qty",
    "no_copy": 1,
    "print_hide": 1,
    "read_only": 1
-  },
-  {
-   "fieldname": "delivered_qty",
-   "fieldtype": "Float",
-   "label": "Delivered Qty",
-   "no_copy": 1,
-   "oldfieldname": "delivered_qty",
-   "oldfieldtype": "Currency",
-   "print_hide": 1,
-   "print_width": "100px",
-   "read_only": 1,
-   "width": "100px"
-  },
-  {
-   "fieldname": "work_order_qty",
-   "fieldtype": "Float",
-   "label": "Work Order Qty",
-   "no_copy": 1,
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "depends_on": "returned_qty",
-   "fieldname": "returned_qty",
-   "fieldtype": "Float",
-   "label": "Returned Qty",
-   "no_copy": 1,
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "section_break_63",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "item_tax_template",
-   "fieldtype": "Link",
-   "label": "Item Tax Template",
-   "options": "Item Tax Template",
-   "print_hide": 1
-  },
-  {
-   "allow_on_submit": 1,
-   "default": "0",
-   "fieldname": "page_break",
-   "fieldtype": "Check",
-   "label": "Page Break",
-   "oldfieldname": "page_break",
-   "oldfieldtype": "Check",
-   "print_hide": 1,
-   "report_hide": 1
   },
   {
    "description": "For Production",
@@ -736,6 +803,37 @@
    "width": "50px"
   },
   {
+   "fieldname": "production_plan_qty",
+   "fieldtype": "Float",
+   "label": "Production Plan Qty",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_69",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "work_order_qty",
+   "fieldtype": "Float",
+   "label": "Work Order Qty",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "delivered_qty",
+   "fieldtype": "Float",
+   "label": "Delivered Qty",
+   "no_copy": 1,
+   "oldfieldname": "delivered_qty",
+   "oldfieldtype": "Currency",
+   "print_hide": 1,
+   "print_width": "100px",
+   "read_only": 1,
+   "width": "100px"
+  },
+  {
    "description": "For Production",
    "fieldname": "produced_qty",
    "fieldtype": "Float",
@@ -748,6 +846,48 @@
    "read_only": 1,
    "report_hide": 1,
    "width": "50px"
+  },
+  {
+   "depends_on": "returned_qty",
+   "fieldname": "returned_qty",
+   "fieldtype": "Float",
+   "label": "Returned Qty",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "picked_qty",
+   "fieldtype": "Float",
+   "label": "Picked Qty (in Stock UOM)",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "shopping_cart_section",
+   "fieldtype": "Section Break",
+   "label": "Shopping Cart"
+  },
+  {
+   "fieldname": "additional_notes",
+   "fieldtype": "Text",
+   "label": "Additional Notes"
+  },
+  {
+   "fieldname": "section_break_63",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "page_break",
+   "fieldtype": "Check",
+   "label": "Page Break",
+   "oldfieldname": "page_break",
+   "oldfieldtype": "Check",
+   "print_hide": 1,
+   "report_hide": 1
   },
   {
    "fieldname": "item_tax_rate",
@@ -773,78 +913,15 @@
    "report_hide": 1
   },
   {
-   "fieldname": "planning_section",
-   "fieldtype": "Section Break",
-   "label": "Planning"
-  },
-  {
-   "fieldname": "column_break_69",
-   "fieldtype": "Column Break"
-  },
-  {
-   "collapsible": 1,
-   "fieldname": "image_section",
-   "fieldtype": "Section Break",
-   "label": "Image"
-  },
-  {
-   "collapsible": 1,
-   "fieldname": "shopping_cart_section",
-   "fieldtype": "Section Break",
-   "label": "Shopping Cart"
-  },
-  {
-   "fieldname": "additional_notes",
-   "fieldtype": "Text",
-   "label": "Additional Notes"
-  },
-  {
-   "default": "0",
-   "fieldname": "against_blanket_order",
-   "fieldtype": "Check",
-   "label": "Against Blanket Order"
-  },
-  {
-   "fieldname": "bom_no",
-   "fieldtype": "Link",
-   "label": "BOM No",
-   "no_copy": 1,
-   "options": "BOM",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "manufacturing_section_section",
-   "fieldtype": "Section Break",
-   "label": "Manufacturing Section"
-  },
-  {
-   "depends_on": "eval: doc.uom != doc.stock_uom",
-   "fieldname": "stock_uom_rate",
-   "fieldtype": "Currency",
-   "label": "Rate of Stock UOM",
-   "no_copy": 1,
-   "options": "currency",
-   "read_only": 1
-  },
-  {
-   "default": "0",
-   "fetch_from": "item_code.grant_commission",
-   "fieldname": "grant_commission",
-   "fieldtype": "Check",
-   "label": "Grant Commission",
-   "read_only": 1
-  },
-  {
-   "fieldname": "picked_qty",
-   "fieldtype": "Float",
-   "label": "Picked Qty (in Stock UOM)",
-   "no_copy": 1,
-   "read_only": 1
-  },
-  {
    "fieldname": "inter_transfer_reference_section",
    "fieldtype": "Section Break",
    "label": "Inter Transfer Reference"
+  },
+  {
+   "fieldname": "material_request",
+   "fieldtype": "Link",
+   "label": "Material Request",
+   "options": "Material Request"
   },
   {
    "fieldname": "purchase_order",
@@ -860,93 +937,16 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "purchase_order_item",
-   "fieldtype": "Data",
-   "label": "Purchase Order Item",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "quotation_item",
-   "fieldtype": "Data",
-   "hidden": 1,
-   "label": "quotation_item",
-   "no_copy": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "material_request",
-   "fieldtype": "Link",
-   "label": "Material Request",
-   "options": "Material Request"
-  },
-  {
    "fieldname": "material_request_item",
    "fieldtype": "Data",
    "label": "Material Request Item"
   },
   {
-   "allow_on_submit": 1,
-   "default": "1",
-   "depends_on": "eval:doc.is_stock_item",
-   "fieldname": "reserve_stock",
-   "fieldtype": "Check",
-   "label": "Reserve Stock",
-   "print_hide": 1,
-   "report_hide": 1
-  },
-  {
-   "default": "0",
-   "depends_on": "eval: doc.stock_reserved_qty",
-   "fieldname": "stock_reserved_qty",
-   "fieldtype": "Float",
-   "label": "Stock Reserved Qty (in Stock UOM)",
-   "no_copy": 1,
-   "non_negative": 1,
-   "print_hide": 1,
-   "read_only": 1,
-   "report_hide": 1
-  },
-  {
-   "fieldname": "production_plan_qty",
-   "fieldtype": "Float",
-   "label": "Production Plan Qty",
-   "no_copy": 1,
-   "read_only": 1
-  },
-  {
-   "default": "0",
-   "fetch_from": "item_code.is_stock_item",
-   "fieldname": "is_stock_item",
-   "fieldtype": "Check",
-   "hidden": 1,
-   "label": "Is Stock Item",
-   "print_hide": 1,
-   "report_hide": 1
-  },
-  {
-   "fieldname": "distributed_discount_amount",
-   "fieldtype": "Currency",
-   "label": "Distributed Discount Amount",
-   "options": "currency"
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "company_total_stock",
-   "fieldtype": "Float",
-   "label": "Qty (Company)",
-   "no_copy": 1,
+   "fieldname": "purchase_order_item",
+   "fieldtype": "Data",
+   "label": "Purchase Order Item",
    "print_hide": 1,
    "read_only": 1
-  },
-  {
-   "fieldname": "column_break_jpky",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "available_quantity_section",
-   "fieldtype": "Section Break",
-   "label": "Available Quantity"
   },
   {
    "collapsible": 1,
