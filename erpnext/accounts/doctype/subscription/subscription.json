@@ -86,6 +86,7 @@
   {
    "fieldname": "current_invoice_start",
    "fieldtype": "Date",
+   "in_list_view": 1,
    "label": "Next Invoice Start Date",
    "no_copy": 1,
    "read_only": 1
@@ -93,6 +94,7 @@
   {
    "fieldname": "current_invoice_end",
    "fieldtype": "Date",
+   "in_list_view": 1,
    "label": "Next Invoice End Date",
    "no_copy": 1,
    "read_only": 1

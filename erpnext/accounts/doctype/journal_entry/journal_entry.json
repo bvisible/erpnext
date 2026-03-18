@@ -78,6 +78,7 @@
    "fieldname": "title",
    "fieldtype": "Data",
    "hidden": 1,
+   "in_list_view": 1,
    "label": "Title",
    "no_copy": 1,
    "print_hide": 1
@@ -166,6 +167,7 @@
    "fieldname": "cheque_no",
    "fieldtype": "Data",
    "in_global_search": 1,
+   "in_list_view": 0,
    "label": "Reference Number",
    "mandatory_depends_on": "eval:doc.voucher_type == \"Bank Entry\"",
    "no_copy": 1,
@@ -300,6 +302,7 @@
    "fieldname": "remark",
    "fieldtype": "Small Text",
    "in_global_search": 1,
+   "in_list_view": 1,
    "label": "Remark",
    "no_copy": 1,
    "oldfieldname": "remark",

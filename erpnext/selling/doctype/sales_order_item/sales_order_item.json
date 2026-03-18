@@ -116,7 +116,7 @@
  "fields": [
   {
    "bold": 1,
-   "columns": 2,
+   "columns": 1,
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_global_search": 1,
@@ -165,8 +165,10 @@
    "label": "Description"
   },
   {
+   "columns": 2,
    "fieldname": "description",
    "fieldtype": "Text Editor",
+   "in_list_view": 1,
    "label": "Description",
    "oldfieldname": "description",
    "oldfieldtype": "Small Text",
@@ -179,7 +181,7 @@
    "depends_on": "eval: !parent.skip_delivery_note",
    "fieldname": "delivery_date",
    "fieldtype": "Date",
-   "in_list_view": 1,
+   "in_list_view": 0,
    "label": "Delivery Date",
    "no_copy": 1,
    "print_hide": 1
@@ -217,9 +219,11 @@
    "width": "100px"
   },
   {
+   "columns": 1,
    "depends_on": "eval:doc.uom != doc.stock_uom",
    "fieldname": "stock_uom",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Stock UOM",
    "oldfieldname": "stock_uom",
    "oldfieldtype": "Data",
@@ -233,6 +237,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "columns": 1,
    "fieldname": "uom",
    "fieldtype": "Link",
    "label": "UOM",
@@ -262,8 +267,10 @@
    "fieldtype": "Section Break"
   },
   {
+   "columns": 1,
    "fieldname": "price_list_rate",
    "fieldtype": "Currency",
+   "in_list_view": 1,
    "label": "Price List Rate",
    "oldfieldname": "ref_rate",
    "oldfieldtype": "Currency",
@@ -321,9 +328,11 @@
    "fieldtype": "Column Break"
   },
   {
+   "columns": 1,
    "depends_on": "price_list_rate",
    "fieldname": "discount_percentage",
    "fieldtype": "Percent",
+   "in_list_view": 1,
    "label": "Discount (%) on Price List Rate with Margin",
    "oldfieldname": "adj_rate",
    "oldfieldtype": "Float",
@@ -332,9 +341,11 @@
    "width": "70px"
   },
   {
+   "columns": 1,
    "depends_on": "price_list_rate",
    "fieldname": "discount_amount",
    "fieldtype": "Currency",
+   "in_list_view": 1,
    "label": "Discount Amount",
    "options": "currency"
   },
@@ -522,6 +533,7 @@
    "depends_on": "eval:doc.delivered_by_supplier!=1",
    "fieldname": "warehouse",
    "fieldtype": "Link",
+   "in_list_view": 0,
    "label": "Delivery Warehouse",
    "oldfieldname": "reserved_warehouse",
    "oldfieldtype": "Link",

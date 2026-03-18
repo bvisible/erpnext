@@ -70,6 +70,7 @@
   {
    "fieldname": "template_title",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Template Title",
    "reqd": 1,
    "unique": 1

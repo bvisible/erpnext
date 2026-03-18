@@ -50,7 +50,7 @@
   {
    "fieldname": "default_price_list",
    "fieldtype": "Link",
-   "in_list_view": 1,
+   "in_list_view": 0,
    "label": "Default Price List",
    "options": "Price List"
   },

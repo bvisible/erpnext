@@ -29,6 +29,7 @@
    "bold": 1,
    "fieldname": "payment_term_name",
    "fieldtype": "Data",
+   "in_list_view": 0,
    "label": "Payment Term Name",
    "unique": 1
   },
@@ -41,6 +42,7 @@
   {
    "fieldname": "mode_of_payment",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Mode of Payment",
    "options": "Mode of Payment"
   },

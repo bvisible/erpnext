@@ -27,6 +27,7 @@
   {
    "fieldname": "type",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Type",
    "options": "Cash\nBank\nGeneral\nPhone"
