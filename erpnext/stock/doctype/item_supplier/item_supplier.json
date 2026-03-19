@@ -10,6 +10,7 @@
  ],
  "fields": [
   {
+   "columns": 2,
    "fieldname": "supplier",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -18,6 +19,7 @@
    "reqd": 1
   },
   {
+   "columns": 2,
    "fieldname": "supplier_part_no",
    "fieldtype": "Data",
    "in_global_search": 1,
