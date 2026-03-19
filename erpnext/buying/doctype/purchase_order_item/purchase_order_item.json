@@ -455,6 +455,7 @@
    "label": "Warehouse Settings"
   },
   {
+   "columns": 1,
    "fieldname": "warehouse",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -697,7 +698,7 @@
    "print_hide": 1
   },
   {
-   "columns": 2,
+   "columns": 1,
    "fieldname": "item_tax_template",
    "fieldtype": "Link",
    "in_list_view": 1,
