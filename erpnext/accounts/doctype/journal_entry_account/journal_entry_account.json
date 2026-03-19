@@ -229,7 +229,7 @@
    "columns": 2,
    "fieldname": "user_remark",
    "fieldtype": "Small Text",
-   "in_list_view": 2,
+   "in_list_view": 1,
    "label": "User Remark",
    "no_copy": 1,
    "print_hide": 1
