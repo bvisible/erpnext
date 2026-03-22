@@ -42,7 +42,7 @@
  "fields": [
   {
    "bold": 1,
-   "columns": 2,
+   "columns": 3,
    "fieldname": "account",
    "fieldtype": "Link",
    "in_global_search": 1,
@@ -82,7 +82,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "columns": 2,
+   "columns": 1,
    "fieldname": "party_type",
    "fieldtype": "Link",
    "in_list_view": 1,
