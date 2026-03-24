@@ -36,7 +36,6 @@ def before_tests():
 			}
 		)
 
-	frappe.db.sql("delete from `tabItem Price`")
 
 	_enable_all_roles_for_admin()
 
