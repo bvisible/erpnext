@@ -36,6 +36,8 @@ def before_tests():
 			}
 		)
 
+	# DISABLED: mass DELETE wipes production data when tests run on shared DB
+	# frappe.db.sql("delete from `tabItem Price`")
 
 	_enable_all_roles_for_admin()
 
