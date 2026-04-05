@@ -27,6 +27,7 @@
  ],
  "fields": [
   {
+   "columns": 2,
    "fieldname": "company",
    "fieldtype": "Link",
    "ignore_user_permissions": 1,
@@ -36,6 +37,7 @@
    "reqd": 1
   },
   {
+   "columns": 2,
    "fieldname": "default_warehouse",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -76,6 +78,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "columns": 2,
    "fieldname": "expense_account",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -98,6 +101,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "columns": 2,
    "fieldname": "income_account",
    "fieldtype": "Link",
    "in_list_view": 1,
