@@ -13,6 +13,7 @@
  ],
  "fields": [
   {
+   "columns": 2,
    "fieldname": "item_tax_template",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -23,6 +24,7 @@
    "reqd": 1
   },
   {
+   "columns": 2,
    "fieldname": "tax_category",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -32,18 +34,21 @@
    "options": "Tax Category"
   },
   {
+   "columns": 2,
    "fieldname": "valid_from",
    "fieldtype": "Date",
    "in_list_view": 1,
    "label": "Valid From"
   },
   {
+   "columns": 2,
    "fieldname": "maximum_net_rate",
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Maximum Net Rate"
   },
   {
+   "columns": 2,
    "fieldname": "minimum_net_rate",
    "fieldtype": "Float",
    "in_list_view": 1,
