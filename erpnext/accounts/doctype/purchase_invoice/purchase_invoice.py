@@ -960,7 +960,7 @@ class PurchaseInvoice(BuyingController):
 
 		#//// added block
 		company = frappe.defaults.get_global_default("company")
-		flat_rate = frappe.db.get_value("Company", company, "vat_accounting_method") == "Flat-rate taxation"
+		flat_rate = frappe.db.get_single_value("Neoffice Company Settings", "vat_accounting_method") == "Flat-rate taxation"
 		wanted_vat = []
 		for tax in self.get("taxes"):
 			tax_code = frappe.db.get_value("Account", tax.account_head, "tax_code")
@@ -1399,7 +1399,7 @@ class PurchaseInvoice(BuyingController):
 		valuation_tax = {}
 
 		company = frappe.defaults.get_global_default("company") #//// added
-		flat_rate = frappe.db.get_value("Company", company, "vat_accounting_method") == "Flat-rate taxation" #//// added
+		flat_rate = frappe.db.get_single_value("Neoffice Company Settings", "vat_accounting_method") == "Flat-rate taxation" #//// added
 		for tax in self.get("taxes"):
 			#//// added if
 			if flat_rate and frappe.db.get_value("Account", tax.account_head, "tax_code"):

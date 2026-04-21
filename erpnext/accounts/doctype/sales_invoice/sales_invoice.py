@@ -1307,7 +1307,7 @@ class SalesInvoice(SellingController):
 			frappe.db.get_single_value("Selling Settings", "enable_discount_accounting")
 		)
 		company = frappe.defaults.get_global_default("company") #//// added
-		flat_rate = frappe.db.get_value("Company", company, "vat_accounting_method") == "Flat-rate taxation" #//// added
+		flat_rate = frappe.db.get_single_value("Neoffice Company Settings", "vat_accounting_method") == "Flat-rate taxation" #//// added
 
 		for tax in self.get("taxes"):
 			amount, base_amount = self.get_tax_amounts(tax, enable_discount_accounting)
@@ -1372,7 +1372,7 @@ class SalesInvoice(SellingController):
 
 		#//// added block
 		company = frappe.defaults.get_global_default("company")
-		flat_rate = frappe.db.get_value("Company", company, "vat_accounting_method") == "Flat-rate taxation"
+		flat_rate = frappe.db.get_single_value("Neoffice Company Settings", "vat_accounting_method") == "Flat-rate taxation"
 		wanted_vat = []
 		for tax in self.get("taxes"):
 			tax_code = frappe.db.get_value("Account", tax.account_head, "tax_code")
