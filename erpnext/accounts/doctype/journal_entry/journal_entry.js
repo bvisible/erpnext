@@ -812,8 +812,8 @@ erpnext.journal_entry_utils.getCompanyVatInfo = function(companyName, callback) 
         erpnext.journal_entry_utils._vatInfoCache = {};
     }
 
-    // is_vat_company still on Company, vat_accounting_method moved to Neoffice Company Settings
-    frappe.db.get_value("Company", companyName, "is_vat_company", (result) => {
+    // is_vat_company moved to Neoffice Company Settings, vat_accounting_method also there
+    frappe.db.get_value("Neoffice Company Settings", companyName, "is_vat_company", (result) => {
         const vatInfo = {
             isVatCompany: result && result.is_vat_company ? true : false,
             vatMethod: null
