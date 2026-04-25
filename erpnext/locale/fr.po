@@ -52318,7 +52318,7 @@ msgstr "Valider cet ordre de fabrication pour continuer son traitement."
 #. Option for the 'Status' (Select) field in DocType 'Material Request'
 #. Option for the 'Status' (Select) field in DocType 'Shipment'
 msgid "Submitted"
-msgstr "Valider"
+msgstr "Validé"
 
 #: erpnext/accounts/doctype/process_subscription/process_subscription.json
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.json
