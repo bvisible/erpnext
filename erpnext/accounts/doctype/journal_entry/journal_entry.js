@@ -2154,190 +2154,209 @@ $.extend(erpnext.journal_entry, {
 	},
 
 	quick_entry: function(frm) {
-        console.log("Quick entry");
         var naming_series_options = frm.fields_dict.naming_series.df.options;
         var naming_series_default =
             frm.fields_dict.naming_series.df.default || naming_series_options.split("\n")[0];
 
-        var dialog = new frappe.ui.Dialog({
-            title: __("Quick Journal Entry"),
-            fields: [{
-                    fieldtype: "Link",
-                    label: __("Template"),
-                    fieldname: "template",
-                    options: "Journal Entry Template",
-                    onchange: function() {
-                        frappe.call({
-                            method: "frappe.client.get",
-                            args: {
-                                doctype: "Journal Entry Template",
-                                name: cur_dialog.get_value("template"),
-                            },
-                            callback(r) {
-                                if (r.message) {
-                                    var template_doc = r.message;
-                                    cur_dialog.set_values({
-                                        "credit_or_debit": template_doc.credit_or_debit,
-                                        "totalization": template_doc.default_amount,
-                                        "user_remark": template_doc.user_remark,
-                                        "disable_calculation": template_doc.disable_calculation,
-                                    });
-                                    
-                                    // Check company VAT info
-                                    erpnext.journal_entry_utils.getCompanyVatInfo(frm.doc.company, (vatInfo) => {
-                                        // If company is not subject to VAT, hide ALL VAT fields
-                                        if (!vatInfo.isVatCompany) {
-                                            cur_dialog.set_value("disable_calculation", 1);
-                                            cur_dialog.set_df_property("disable_calculation", "hidden", 1);
-                                            cur_dialog.set_df_property("is_vat_excluded", "hidden", 1);
-                                        } else if (vatInfo.vatMethod && vatInfo.vatMethod.includes("Flat")) {
-                                            // If flat-rate taxation, keep existing behavior
-                                            cur_dialog.set_value("disable_calculation", 1);
-                                            cur_dialog.set_value("is_vat_excluded", 0);
-                                            cur_dialog.set_df_property("is_vat_excluded", "hidden", 1);
-                                            cur_dialog.set_df_property("disable_calculation", "read_only", 1);
-                                        } else {
-                                            // Normal behavior for other methods
-                                            cur_dialog.set_df_property("is_vat_excluded", "hidden", 0);
-                                            cur_dialog.set_df_property("disable_calculation", "read_only", 0);
+        const company = frm.doc.company;
 
-                                            // Update is_vat_excluded state based on disable_calculation
-                                            const disableCalc = template_doc.disable_calculation;
-                                            if (disableCalc) {
-                                                cur_dialog.set_value("is_vat_excluded", 0);
-                                                cur_dialog.set_df_property("is_vat_excluded", "read_only", 1);
-                                            } else {
-                                                cur_dialog.set_df_property("is_vat_excluded", "read_only", 0);
-                                                // Set is_vat_excluded only if disable_calculation is not enabled
-                                                cur_dialog.set_value("is_vat_excluded", template_doc.is_vat_excluded || 0);
-                                            }
-                                        }
-                                    });
-                                }
-                            }
-                        });
+        // ── Helper: apply VAT visibility rules ──
+        function _applyVatRules(dlg, vatInfo, tplDoc) {
+            if (!vatInfo.isVatCompany) {
+                dlg.set_value("disable_calculation", 1);
+                dlg.set_df_property("disable_calculation", "hidden", 1);
+                dlg.set_df_property("is_vat_excluded", "hidden", 1);
+            } else if (vatInfo.vatMethod && vatInfo.vatMethod.includes("Flat")) {
+                dlg.set_value("disable_calculation", 1);
+                dlg.set_value("is_vat_excluded", 0);
+                dlg.set_df_property("is_vat_excluded", "hidden", 1);
+                dlg.set_df_property("disable_calculation", "read_only", 1);
+            } else {
+                dlg.set_df_property("is_vat_excluded", "hidden", 0);
+                dlg.set_df_property("disable_calculation", "read_only", 0);
+                if (tplDoc) {
+                    if (tplDoc.disable_calculation) {
+                        dlg.set_value("is_vat_excluded", 0);
+                        dlg.set_df_property("is_vat_excluded", "read_only", 1);
+                    } else {
+                        dlg.set_df_property("is_vat_excluded", "read_only", 0);
+                        dlg.set_value("is_vat_excluded", tplDoc.is_vat_excluded || 0);
                     }
-                },
-                {
-                    fieldtype: "Select",
-                    fieldname: "credit_or_debit",
-                    label: __("Credit / Debit"),
-                    options: "Credit\nDebit",
-                    reqd: 1
-                },
-                {
-                    fieldtype: "Check",
-                    fieldname: "disable_calculation",
-                    label: __("Disable Automatic calculation"),
-                    onchange: function() {
-                        // If disable_calculation is checked, uncheck and disable is_vat_excluded
-                        const disableCalc = cur_dialog.get_value("disable_calculation");
-                        if (disableCalc) {
-                            cur_dialog.set_value("is_vat_excluded", 0);
-                            cur_dialog.set_df_property("is_vat_excluded", "read_only", 1);
-                        } else {
-                            // Check VAT info first before allowing editing
-                            erpnext.journal_entry_utils.getCompanyVatInfo(frm.doc.company, (vatInfo) => {
-                                // Only allow editing if company is subject to VAT and not flat-rate
-                                if (vatInfo.isVatCompany && (!vatInfo.vatMethod || !vatInfo.vatMethod.includes("Flat"))) {
-                                    cur_dialog.set_df_property("is_vat_excluded", "read_only", 0);
-                                }
-                            });
-                        }
-                    }
-                },
-                {
-                    fieldtype: "Check",
-                    fieldname: "is_vat_excluded",
-                    label: __("Amount without tax")
-                },
-                {
-                    fieldtype: "Currency",
-                    fieldname: "totalization",
-                    label: __("Amount"),
-                    reqd: 1
-                },
-                {
-                    fieldtype: "Date",
-                    fieldname: "posting_date",
-                    label: __("Date"),
-                    reqd: 1,
-                    default: localStorage.getItem('je_last_posting_date') || frm.doc.posting_date
-                },
-                {
-                    fieldtype: "Small Text",
-                    fieldname: "user_remark",
-                    label: __("User Remark")
-                },
-            ],
-
-            secondary_action_label: __("Submit & Create New"),
-            secondary_action: function() {
-                var values = dialog.get_values();
-                
-                // Check if totalization is 0 or negative
-                if (values.totalization <= 0) {
-                    frappe.throw(__("Amount cannot be zero or negative"));
-                    return;
                 }
-                
-                // Save posting date
-                if (values.posting_date) {
-                    localStorage.setItem('je_last_posting_date', values.posting_date);
-                }
-                
-                // Use the utility function
-                erpnext.journal_entry_utils.processQuickEntry(frm, values, true, true);
-                
-                dialog.hide();
             }
-        });
-
-        /**
-         * Populates a journal entry row with the specified values
-         * @param {string} dt - Document type (doctype)
-         * @param {string} dn - Document name
-         * @param {Array} values - Values to set for fields
-         */
-        function populate_row(dt, dn, values) {
-            return erpnext.journal_entry_utils.populateRow(dt, dn, values);
         }
 
-        dialog.set_primary_action(__("Save"), function() {
-            var values = dialog.get_values();
-            
-            // Check if totalization is 0 or negative
+        // ── Helper: fill account fields from template ──
+        function _fillTemplateAccounts(dlg, tplDoc) {
+            let counterparty = "";
+            let totalizationAcc = "";
+            if (tplDoc.accounting_entry_counterparty) {
+                for (const acc of tplDoc.accounting_entry_counterparty) {
+                    if (acc.account) { counterparty = acc.account; break; }
+                }
+            }
+            if (tplDoc.accounting_entry_totalization) {
+                for (const acc of tplDoc.accounting_entry_totalization) {
+                    if (acc.account) { totalizationAcc = acc.account; break; }
+                }
+            }
+            if (!counterparty || !totalizationAcc) {
+                for (const acc of (tplDoc.accounts || [])) {
+                    if (acc.credit_or_debit === "Debit" && !counterparty) counterparty = acc.account;
+                    else if (acc.credit_or_debit === "Credit" && !totalizationAcc) totalizationAcc = acc.account;
+                }
+            }
+            if (counterparty) dlg.set_value("counterparty_account", counterparty);
+            if (totalizationAcc) dlg.set_value("totalization_account", totalizationAcc);
+        }
+
+        // ── Helper: submit handler ──
+        function _handleSubmit(dlg, createNew, submitDoc) {
+            var values = dlg.get_values();
             if (values.totalization <= 0) {
                 frappe.throw(__("Amount cannot be zero or negative"));
                 return;
             }
-            
-            // Save posting date
             if (values.posting_date) {
                 localStorage.setItem('je_last_posting_date', values.posting_date);
             }
-            
-            // Use the utility function
-            erpnext.journal_entry_utils.processQuickEntry(frm, values, false, false);
-            
-            dialog.hide();
+            erpnext.journal_entry_utils.processQuickEntry(frm, values, createNew, submitDoc);
+            dlg.hide();
+        }
+
+        // ── Build fields ──
+        let fields = [];
+
+        // Section 1: Header (2 columns)
+        fields.push({ fieldtype: "Section Break", fieldname: "qje_header" });
+
+        // Left: Credit/Debit + Amount
+        fields.push({
+            fieldtype: "Select",
+            fieldname: "credit_or_debit",
+            label: __("Credit / Debit"),
+            options: "Debit\nCredit",
+            reqd: 1,
+            description: __("Debit for expenses, Credit for income"),
+        });
+        fields.push({
+            fieldtype: "Currency",
+            fieldname: "totalization",
+            label: __("Amount"),
+            reqd: 1,
+        });
+
+        fields.push({ fieldtype: "Column Break" });
+
+        // Right: Date + (empty space to balance)
+        fields.push({
+            fieldtype: "Date",
+            fieldname: "posting_date",
+            label: __("Date"),
+            reqd: 1,
+            default: localStorage.getItem('je_last_posting_date') || frm.doc.posting_date,
+        });
+
+        // Section 1b: Checkboxes (2 columns)
+        fields.push({ fieldtype: "Section Break", fieldname: "qje_checks", hide_border: 1 });
+
+        fields.push({
+            fieldtype: "Check",
+            fieldname: "disable_calculation",
+            label: __("Disable Automatic calculation"),
+            onchange: function() {
+                const disableCalc = cur_dialog.get_value("disable_calculation");
+                if (disableCalc) {
+                    cur_dialog.set_value("is_vat_excluded", 0);
+                    cur_dialog.set_df_property("is_vat_excluded", "read_only", 1);
+                } else {
+                    erpnext.journal_entry_utils.getCompanyVatInfo(company, (vatInfo) => {
+                        if (vatInfo.isVatCompany && (!vatInfo.vatMethod || !vatInfo.vatMethod.includes("Flat"))) {
+                            cur_dialog.set_df_property("is_vat_excluded", "read_only", 0);
+                        }
+                    });
+                }
+            },
+        });
+        fields.push({ fieldtype: "Column Break" });
+        fields.push({
+            fieldtype: "Check",
+            fieldname: "is_vat_excluded",
+            label: __("Amount without tax"),
+        });
+
+        // Section 2: Template + accounts | Remarks
+        fields.push({ fieldtype: "Section Break", fieldname: "qje_details" });
+
+        fields.push({
+            fieldtype: "Link",
+            label: __("Journal Entry Template"),
+            fieldname: "template",
+            options: "Journal Entry Template",
+            onchange: function() {
+                const tpl = cur_dialog && cur_dialog.get_value("template");
+                if (!tpl) return;
+                frappe.call({
+                    method: "frappe.client.get",
+                    args: { doctype: "Journal Entry Template", name: tpl },
+                    callback(r) {
+                        if (!r.message || !cur_dialog) return;
+                        const tplDoc = r.message;
+                        cur_dialog.set_values({
+                            credit_or_debit: tplDoc.credit_or_debit,
+                            totalization: tplDoc.default_amount || cur_dialog.get_value("totalization"),
+                            user_remark: cur_dialog.get_value("user_remark") || tplDoc.user_remark || "",
+                            disable_calculation: tplDoc.disable_calculation || 0,
+                        });
+                        _fillTemplateAccounts(cur_dialog, tplDoc);
+                        erpnext.journal_entry_utils.getCompanyVatInfo(company, (vatInfo) => {
+                            _applyVatRules(cur_dialog, vatInfo, tplDoc);
+                        });
+                    },
+                });
+            },
+        });
+        fields.push({
+            fieldname: "counterparty_account",
+            fieldtype: "Link",
+            label: __("Expense / Income Account"),
+            options: "Account",
+            get_query: () => ({ filters: { company: company, is_group: 0 } }),
+        });
+        fields.push({
+            fieldname: "totalization_account",
+            fieldtype: "Link",
+            label: __("Bank / Cash Account"),
+            options: "Account",
+            get_query: () => ({ filters: { company: company, is_group: 0 } }),
+        });
+
+        fields.push({ fieldtype: "Column Break" });
+
+        fields.push({
+            fieldtype: "Small Text",
+            fieldname: "user_remark",
+            label: __("User Remark"),
+        });
+
+        // ── Create dialog ──
+        var dialog = new frappe.ui.Dialog({
+            title: __("Quick Journal Entry"),
+            fields: fields,
+            size: "large",
+            secondary_action_label: __("Submit & Create New"),
+            secondary_action: function() {
+                _handleSubmit(dialog, true, true);
+            },
+        });
+
+        dialog.set_primary_action(__("Save"), function() {
+            _handleSubmit(dialog, false, false);
         });
 
         // Check VAT info on dialog load
-        erpnext.journal_entry_utils.getCompanyVatInfo(frm.doc.company, (vatInfo) => {
-            // If company is not subject to VAT, hide ALL VAT fields
-            if (!vatInfo.isVatCompany) {
-                dialog.set_value("disable_calculation", 1);
-                dialog.set_df_property("disable_calculation", "hidden", 1);
-                dialog.set_df_property("is_vat_excluded", "hidden", 1);
-            } else if (vatInfo.vatMethod && vatInfo.vatMethod.includes("Flat")) {
-                // If flat-rate taxation, keep existing behavior
-                dialog.set_value("disable_calculation", 1);
-                dialog.set_df_property("disable_calculation", "read_only", 1);
-                dialog.set_df_property("is_vat_excluded", "hidden", 1);
-            }
-
-            // Show dialog after verification
+        erpnext.journal_entry_utils.getCompanyVatInfo(company, (vatInfo) => {
+            _applyVatRules(dialog, vatInfo, null);
             dialog.show();
         });
     },
