@@ -1065,8 +1065,8 @@ erpnext.journal_entry_utils.continueQuickEntry = function(frm, values, createNew
                             const templateDoc = r.message;
                             const totalizationDoc = templateDoc.accounting_entry_totalization[0];
                             
-                            // Define minimal values
-                            frappe.model.set_value(row.doctype, row.name, 'account', totalizationDoc.account);
+                            // Define minimal values — use dialog override if available
+                            frappe.model.set_value(row.doctype, row.name, 'account', values.totalization_account || totalizationDoc.account);
                             if (totalizationDoc.party_type) {
                                 frappe.model.set_value(row.doctype, row.name, 'party_type', totalizationDoc.party_type);
                             }
@@ -1089,7 +1089,7 @@ erpnext.journal_entry_utils.continueQuickEntry = function(frm, values, createNew
                                 const counterpartyInfo = templateDoc.accounting_entry_counterparty[0];
                                 const counterpartyRow = frm.add_child('accounts');
                                 
-                                frappe.model.set_value(counterpartyRow.doctype, counterpartyRow.name, 'account', counterpartyInfo.account);
+                                frappe.model.set_value(counterpartyRow.doctype, counterpartyRow.name, 'account', values.counterparty_account || counterpartyInfo.account);
                                 if (counterpartyInfo.party_type) {
                                     frappe.model.set_value(counterpartyRow.doctype, counterpartyRow.name, 'party_type', counterpartyInfo.party_type);
                                 }
@@ -1198,25 +1198,29 @@ erpnext.journal_entry_utils.createBasicEntryRows = function(frm, values) {
 erpnext.journal_entry_utils.processTemplateBasedEntry = function(frm, values, templateDoc, submitDoc, createNew) {
     // Preparation - clear and set base values
     frm.clear_table("accounts");
-    
+
     if (templateDoc.voucher_type) {
         frm.set_value("voucher_type", templateDoc.voucher_type);
     }
-    
+
     // Configuration
     const debit = values.credit_or_debit == "Debit" ? values.totalization : 0;
     const credit = values.credit_or_debit == "Credit" ? values.totalization : 0;
-    
-    // Add the main row
+
+    // Account overrides from dialog (user may have changed them)
+    const totalizationAccountOverride = values.totalization_account || null;
+    const counterpartyAccountOverride = values.counterparty_account || null;
+
+    // Add the main row (totalization = bank/cash)
     if (templateDoc.accounting_entry_totalization && templateDoc.accounting_entry_totalization.length > 0) {
         const totalizationDoc = templateDoc.accounting_entry_totalization[0];
         const totalizationRow = frm.fields_dict.accounts.grid.add_new_row();
-        
+
         this.populateRow(
             totalizationRow.doctype,
             totalizationRow.name,
             [
-                totalizationDoc.account,
+                totalizationAccountOverride || totalizationDoc.account,
                 totalizationDoc.party_type,
                 totalizationDoc.party,
                 debit,
@@ -1225,24 +1229,28 @@ erpnext.journal_entry_utils.processTemplateBasedEntry = function(frm, values, te
             ]
         );
     }
-    
-    // Add the counterparty rows
+
+    // Add the counterparty rows (expense/income)
     if (templateDoc.accounting_entry_counterparty && templateDoc.accounting_entry_counterparty.length > 0) {
         const uniqueCounterparty = templateDoc.accounting_entry_counterparty.length == 1;
         const amount = uniqueCounterparty ? values.totalization : (values.totalization / templateDoc.accounting_entry_counterparty.length);
-        
+
         templateDoc.accounting_entry_counterparty.forEach((counterparty, index) => {
             const counterpartyRow = frm.fields_dict.accounts.grid.add_new_row();
-            
-            // Create the row based on the mode (debit/credit)
+
             const counterpartyDebit = values.credit_or_debit == "Credit" ? amount : 0;
             const counterpartyCredit = values.credit_or_debit == "Debit" ? amount : 0;
-            
+
+            // Use override only for the first counterparty row (single override)
+            const accountToUse = (index === 0 && counterpartyAccountOverride)
+                ? counterpartyAccountOverride
+                : counterparty.account;
+
             this.populateRow(
                 counterpartyRow.doctype,
                 counterpartyRow.name,
                 [
-                    counterparty.account,
+                    accountToUse,
                     counterparty.party_type,
                     counterparty.party,
                     counterpartyDebit,
@@ -1252,7 +1260,7 @@ erpnext.journal_entry_utils.processTemplateBasedEntry = function(frm, values, te
             );
         });
     }
-    
+
     refresh_field("accounts");
     this.finishQuickEntry(frm, submitDoc, createNew);
 };
@@ -2227,66 +2235,8 @@ $.extend(erpnext.journal_entry, {
         // ── Build fields ──
         let fields = [];
 
-        // Section 1: Header (2 columns)
+        // Section 1: Template + Date (2 columns) — Template first for natural flow
         fields.push({ fieldtype: "Section Break", fieldname: "qje_header" });
-
-        // Left: Credit/Debit + Amount
-        fields.push({
-            fieldtype: "Select",
-            fieldname: "credit_or_debit",
-            label: __("Credit / Debit"),
-            options: "Debit\nCredit",
-            reqd: 1,
-            description: __("Debit for expenses, Credit for income"),
-        });
-        fields.push({
-            fieldtype: "Currency",
-            fieldname: "totalization",
-            label: __("Amount"),
-            reqd: 1,
-        });
-
-        fields.push({ fieldtype: "Column Break" });
-
-        // Right: Date + (empty space to balance)
-        fields.push({
-            fieldtype: "Date",
-            fieldname: "posting_date",
-            label: __("Date"),
-            reqd: 1,
-            default: localStorage.getItem('je_last_posting_date') || frm.doc.posting_date,
-        });
-
-        // Section 1b: Checkboxes (2 columns)
-        fields.push({ fieldtype: "Section Break", fieldname: "qje_checks", hide_border: 1 });
-
-        fields.push({
-            fieldtype: "Check",
-            fieldname: "disable_calculation",
-            label: __("Disable Automatic calculation"),
-            onchange: function() {
-                const disableCalc = cur_dialog.get_value("disable_calculation");
-                if (disableCalc) {
-                    cur_dialog.set_value("is_vat_excluded", 0);
-                    cur_dialog.set_df_property("is_vat_excluded", "read_only", 1);
-                } else {
-                    erpnext.journal_entry_utils.getCompanyVatInfo(company, (vatInfo) => {
-                        if (vatInfo.isVatCompany && (!vatInfo.vatMethod || !vatInfo.vatMethod.includes("Flat"))) {
-                            cur_dialog.set_df_property("is_vat_excluded", "read_only", 0);
-                        }
-                    });
-                }
-            },
-        });
-        fields.push({ fieldtype: "Column Break" });
-        fields.push({
-            fieldtype: "Check",
-            fieldname: "is_vat_excluded",
-            label: __("Amount without tax"),
-        });
-
-        // Section 2: Template + accounts | Remarks
-        fields.push({ fieldtype: "Section Break", fieldname: "qje_details" });
 
         fields.push({
             fieldtype: "Link",
@@ -2316,6 +2266,65 @@ $.extend(erpnext.journal_entry, {
                 });
             },
         });
+
+        fields.push({ fieldtype: "Column Break" });
+
+        fields.push({
+            fieldtype: "Date",
+            fieldname: "posting_date",
+            label: __("Date"),
+            reqd: 1,
+            default: localStorage.getItem('je_last_posting_date') || frm.doc.posting_date,
+        });
+
+        // Section 2: Credit/Debit + Amount (2 columns)
+        fields.push({ fieldtype: "Section Break", fieldname: "qje_amounts" });
+
+        fields.push({
+            fieldtype: "Select",
+            fieldname: "credit_or_debit",
+            label: __("Credit / Debit"),
+            options: "Debit\nCredit",
+            reqd: 1,
+            description: __("Debit for expenses, Credit for income"),
+        });
+        fields.push({
+            fieldtype: "Currency",
+            fieldname: "totalization",
+            label: __("Amount"),
+            reqd: 1,
+        });
+
+        fields.push({ fieldtype: "Column Break" });
+
+        // Checkboxes on the right column
+        fields.push({
+            fieldtype: "Check",
+            fieldname: "disable_calculation",
+            label: __("Disable Automatic calculation"),
+            onchange: function() {
+                const disableCalc = cur_dialog.get_value("disable_calculation");
+                if (disableCalc) {
+                    cur_dialog.set_value("is_vat_excluded", 0);
+                    cur_dialog.set_df_property("is_vat_excluded", "read_only", 1);
+                } else {
+                    erpnext.journal_entry_utils.getCompanyVatInfo(company, (vatInfo) => {
+                        if (vatInfo.isVatCompany && (!vatInfo.vatMethod || !vatInfo.vatMethod.includes("Flat"))) {
+                            cur_dialog.set_df_property("is_vat_excluded", "read_only", 0);
+                        }
+                    });
+                }
+            },
+        });
+        fields.push({
+            fieldtype: "Check",
+            fieldname: "is_vat_excluded",
+            label: __("Amount without tax"),
+        });
+
+        // Section 3: Accounts + Remarks (2 columns)
+        fields.push({ fieldtype: "Section Break", fieldname: "qje_details" });
+
         fields.push({
             fieldname: "counterparty_account",
             fieldtype: "Link",
