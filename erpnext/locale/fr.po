@@ -17862,10 +17862,6 @@ msgstr "Revenu direct"
 msgid "Disable"
 msgstr "Désactiver"
 
-#: erpnext/accounts/doctype/journal_entry/journal_entry.js:2226
-msgid "Disable Automatic calculation"
-msgstr "Désactiver le calcul automatique"
-
 #. Label of a Check field in DocType 'Manufacturing Settings'
 #: erpnext/manufacturing/doctype/manufacturing_settings/manufacturing_settings.json
 msgid "Disable Capacity Planning"
@@ -62554,3 +62550,6 @@ msgstr "Compte charge / produit"
 
 msgid "Optional. Link this entry to a project to track expenses."
 msgstr "Optionnel. Lier cette écriture à un projet pour suivre les dépenses."
+
+msgid "Without VAT"
+msgstr "Sans TVA"

@@ -2278,8 +2278,7 @@ $.extend(erpnext.journal_entry, {
             },
         });
 
-        // Section 2: Credit/Debit
-        fields.push({ fieldtype: "Section Break", fieldname: "qje_amounts" });
+        fields.push({ fieldtype: "Column Break" });
 
         fields.push({
             fieldtype: "Select",
@@ -2290,7 +2289,7 @@ $.extend(erpnext.journal_entry, {
             description: __("Debit for income, Credit for expenses"),
         });
 
-        // Section 2b: Date | Checkboxes
+        // Section 2: Date | Checkboxes
         fields.push({ fieldtype: "Section Break", fieldname: "qje_date_checks", hide_border: 1 });
 
         fields.push({
@@ -2306,7 +2305,7 @@ $.extend(erpnext.journal_entry, {
         fields.push({
             fieldtype: "Check",
             fieldname: "disable_calculation",
-            label: __("Disable Automatic calculation"),
+            label: __("Without VAT"),
             onchange: function() {
                 const disableCalc = cur_dialog.get_value("disable_calculation");
                 if (disableCalc) {
