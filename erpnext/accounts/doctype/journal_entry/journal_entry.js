@@ -2278,17 +2278,7 @@ $.extend(erpnext.journal_entry, {
             },
         });
 
-        fields.push({ fieldtype: "Column Break" });
-
-        fields.push({
-            fieldtype: "Date",
-            fieldname: "posting_date",
-            label: __("Date"),
-            reqd: 1,
-            default: localStorage.getItem('je_last_posting_date') || frm.doc.posting_date,
-        });
-
-        // Section 2: Credit/Debit + Amount + Reference | Checkboxes
+        // Section 2: Credit/Debit
         fields.push({ fieldtype: "Section Break", fieldname: "qje_amounts" });
 
         fields.push({
@@ -2299,16 +2289,34 @@ $.extend(erpnext.journal_entry, {
             reqd: 1,
             description: __("Debit for income, Credit for expenses"),
         });
+
+        // Section 2b: Amount | Reference (side by side)
+        fields.push({ fieldtype: "Section Break", fieldname: "qje_amount_ref", hide_border: 1 });
+
         fields.push({
             fieldtype: "Currency",
             fieldname: "totalization",
             label: __("Amount"),
             reqd: 1,
         });
+
+        fields.push({ fieldtype: "Column Break" });
+
         fields.push({
             fieldtype: "Data",
             fieldname: "reference_no",
             label: __("Reference"),
+        });
+
+        // Section 2c: Date | Checkboxes
+        fields.push({ fieldtype: "Section Break", fieldname: "qje_date_checks" });
+
+        fields.push({
+            fieldtype: "Date",
+            fieldname: "posting_date",
+            label: __("Date"),
+            reqd: 1,
+            default: localStorage.getItem('je_last_posting_date') || frm.doc.posting_date,
         });
 
         fields.push({ fieldtype: "Column Break" });
