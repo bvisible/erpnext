@@ -2286,7 +2286,7 @@ $.extend(erpnext.journal_entry, {
             label: __("Credit / Debit"),
             options: "Debit\nCredit",
             reqd: 1,
-            description: __("Debit for expenses, Credit for income"),
+            description: __("Debit for income, Credit for expenses"),
         });
         fields.push({
             fieldtype: "Currency",
