@@ -2305,9 +2305,6 @@ $.extend(erpnext.journal_entry, {
             label: __("Amount"),
             reqd: 1,
         });
-
-        fields.push({ fieldtype: "Column Break" });
-
         fields.push({
             fieldtype: "Data",
             fieldname: "reference_no",
