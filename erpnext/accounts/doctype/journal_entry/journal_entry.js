@@ -2290,26 +2290,8 @@ $.extend(erpnext.journal_entry, {
             description: __("Debit for income, Credit for expenses"),
         });
 
-        // Section 2b: Amount | Reference (side by side)
-        fields.push({ fieldtype: "Section Break", fieldname: "qje_amount_ref", hide_border: 1 });
-
-        fields.push({
-            fieldtype: "Currency",
-            fieldname: "totalization",
-            label: __("Amount"),
-            reqd: 1,
-        });
-
-        fields.push({ fieldtype: "Column Break" });
-
-        fields.push({
-            fieldtype: "Data",
-            fieldname: "reference_no",
-            label: __("Reference"),
-        });
-
-        // Section 2c: Date | Checkboxes
-        fields.push({ fieldtype: "Section Break", fieldname: "qje_date_checks" });
+        // Section 2b: Date | Checkboxes
+        fields.push({ fieldtype: "Section Break", fieldname: "qje_date_checks", hide_border: 1 });
 
         fields.push({
             fieldtype: "Date",
@@ -2343,6 +2325,24 @@ $.extend(erpnext.journal_entry, {
             fieldtype: "Check",
             fieldname: "is_vat_excluded",
             label: __("Amount without tax"),
+        });
+
+        // Section 2c: Amount | Reference (side by side)
+        fields.push({ fieldtype: "Section Break", fieldname: "qje_amount_ref", hide_border: 1 });
+
+        fields.push({
+            fieldtype: "Currency",
+            fieldname: "totalization",
+            label: __("Amount"),
+            reqd: 1,
+        });
+
+        fields.push({ fieldtype: "Column Break" });
+
+        fields.push({
+            fieldtype: "Data",
+            fieldname: "reference_no",
+            label: __("Reference"),
         });
 
         // Section 3: Accounts + Remarks (2 columns)
