@@ -998,7 +998,7 @@ erpnext.journal_entry_utils.populateRow = function(dt, dn, values) {
             return Promise.reject("Invalid parameters");
         }
     
-        const fields = ["account", "party_type", "party", "debit_in_account_currency", "credit_in_account_currency", "user_remark"];
+        const fields = ["account", "party_type", "party", "debit_in_account_currency", "credit_in_account_currency", "user_remark", "cost_center", "project"];
         const actions = [];
         
         // Create a promise for each field to set
@@ -1021,9 +1021,15 @@ erpnext.journal_entry_utils.processQuickEntry = function(frm, values, createNew,
     // Prepare the form
     frm.set_value("posting_date", values.posting_date);
     frm.set_value("user_remark", values.user_remark);
-    
+
+    // Reference (cheque_no in Journal Entry)
+    if (values.reference_no) {
+        frm.set_value("cheque_no", values.reference_no);
+        frm.set_value("cheque_date", values.posting_date);
+    }
+
     // Define specific VAT flags
-    frm.set_value("is_vat_excluded", values.is_vat_excluded === 1 ? 1 : 0); // Check if VAT is excluded
+    frm.set_value("is_vat_excluded", values.is_vat_excluded === 1 ? 1 : 0);
     frm.set_value("disable_calculation", values.disable_calculation || 0);
     
     // Clear the table if only one row exists
@@ -1210,6 +1216,8 @@ erpnext.journal_entry_utils.processTemplateBasedEntry = function(frm, values, te
     // Account overrides from dialog (user may have changed them)
     const totalizationAccountOverride = values.totalization_account || null;
     const counterpartyAccountOverride = values.counterparty_account || null;
+    const costCenter = values.cost_center || null;
+    const project = values.project || null;
 
     // Add the main row (totalization = bank/cash)
     if (templateDoc.accounting_entry_totalization && templateDoc.accounting_entry_totalization.length > 0) {
@@ -1225,7 +1233,9 @@ erpnext.journal_entry_utils.processTemplateBasedEntry = function(frm, values, te
                 totalizationDoc.party,
                 debit,
                 credit,
-                totalizationDoc.user_remark
+                totalizationDoc.user_remark,
+                null, // cost_center — bank lines don't carry cost center
+                null, // project — bank lines don't carry project
             ]
         );
     }
@@ -1241,7 +1251,6 @@ erpnext.journal_entry_utils.processTemplateBasedEntry = function(frm, values, te
             const counterpartyDebit = values.credit_or_debit == "Credit" ? amount : 0;
             const counterpartyCredit = values.credit_or_debit == "Debit" ? amount : 0;
 
-            // Use override only for the first counterparty row (single override)
             const accountToUse = (index === 0 && counterpartyAccountOverride)
                 ? counterpartyAccountOverride
                 : counterparty.account;
@@ -1255,7 +1264,9 @@ erpnext.journal_entry_utils.processTemplateBasedEntry = function(frm, values, te
                     counterparty.party,
                     counterpartyDebit,
                     counterpartyCredit,
-                    counterparty.user_remark
+                    counterparty.user_remark,
+                    costCenter,
+                    project,
                 ]
             );
         });
@@ -2235,7 +2246,7 @@ $.extend(erpnext.journal_entry, {
         // ── Build fields ──
         let fields = [];
 
-        // Section 1: Template + Date (2 columns) — Template first for natural flow
+        // Section 1: Template | Date
         fields.push({ fieldtype: "Section Break", fieldname: "qje_header" });
 
         fields.push({
@@ -2277,7 +2288,7 @@ $.extend(erpnext.journal_entry, {
             default: localStorage.getItem('je_last_posting_date') || frm.doc.posting_date,
         });
 
-        // Section 2: Credit/Debit + Amount (2 columns)
+        // Section 2: Credit/Debit + Amount + Reference | Checkboxes
         fields.push({ fieldtype: "Section Break", fieldname: "qje_amounts" });
 
         fields.push({
@@ -2294,10 +2305,14 @@ $.extend(erpnext.journal_entry, {
             label: __("Amount"),
             reqd: 1,
         });
+        fields.push({
+            fieldtype: "Data",
+            fieldname: "reference_no",
+            label: __("Reference"),
+        });
 
         fields.push({ fieldtype: "Column Break" });
 
-        // Checkboxes on the right column
         fields.push({
             fieldtype: "Check",
             fieldname: "disable_calculation",
@@ -2346,6 +2361,37 @@ $.extend(erpnext.journal_entry, {
             fieldtype: "Small Text",
             fieldname: "user_remark",
             label: __("User Remark"),
+        });
+
+        // Section 4: Cost Center + Project (2 columns)
+        fields.push({ fieldtype: "Section Break", fieldname: "qje_footer" });
+
+        fields.push({
+            fieldname: "cost_center",
+            fieldtype: "Link",
+            label: __("Cost Center"),
+            options: "Cost Center",
+            get_query: () => ({ filters: { company: company, is_group: 0 } }),
+        });
+
+        fields.push({ fieldtype: "Column Break" });
+
+        fields.push({
+            fieldname: "project",
+            fieldtype: "Link",
+            label: __("Project"),
+            options: "Project",
+            description: __("Optional. Link this entry to a project to track expenses."),
+            get_query: () => ({ filters: { is_active: "Yes", status: "Open", company: company } }),
+            onchange: function() {
+                const proj = cur_dialog.get_value("project");
+                if (!proj) return;
+                frappe.db.get_value("Project", proj, "cost_center", (r) => {
+                    if (r && r.cost_center && !cur_dialog.get_value("cost_center")) {
+                        cur_dialog.set_value("cost_center", r.cost_center);
+                    }
+                });
+            },
         });
 
         // ── Create dialog ──
