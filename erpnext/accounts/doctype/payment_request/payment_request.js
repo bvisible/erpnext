@@ -78,7 +78,7 @@ frappe.ui.form.on("Payment Request", "refresh", function (frm) {
 								fieldtype: 'HTML',
 								options: '<div style="margin-top:10px; padding:10px; background:#f5f5f5; border-radius:4px; font-size:12px;">'
 									+ '<strong>' + __('Attachments') + ' :</strong><br>'
-									+ '📎 ' + (frm.doc.reference_name || '') + ' (' + __(frm.doc.reference_doctype || '') + ')'
+									+ '<span class="pr-email-attachments">📎 ' + (frm.doc.reference_name || '') + ' (' + __(frm.doc.reference_doctype || '') + ')</span>'
 									+ '</div>',
 							},
 						],
@@ -104,6 +104,22 @@ frappe.ui.form.on("Payment Request", "refresh", function (frm) {
 				},
 			});
 			d.show();
+
+			// Neoffice: replace the placeholder with the real attachment list
+			// (reference document + linked delivery note(s)).
+			frappe.call({
+				method: 'neoffice_theme.override_doctype.payment_request.get_payment_email_attachments',
+				args: { docname: frm.doc.name },
+				callback: function (ar) {
+					if (ar.message && ar.message.length) {
+						d.$wrapper.find('.pr-email-attachments').html(
+							ar.message.map(function (a) {
+								return '📎 ' + (a.name || '') + ' (' + __(a.doctype || '') + ')';
+							}).join('<br>')
+						);
+					}
+				},
+			});
 				}
 			});
 		});
