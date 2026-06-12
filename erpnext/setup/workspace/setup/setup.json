@@ -1,0 +1,880 @@
+{
+ "charts": [],
+ "content": "[{\"id\": \"wouV4PB4i4\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Quick Access</b></span>\", \"col\": 12}}, {\"id\": \"cANxvabcqS\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Projects Settings\", \"col\": 3}}, {\"id\": \"7uvWt8u1oH\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Accounts Settings\", \"col\": 3}}, {\"id\": \"B6UZGeRWr5\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Stock Settings\", \"col\": 3}}, {\"id\": \"faKvKyO4y7\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"HR Settings\", \"col\": 3}}, {\"id\": \"kDKq9-00Zt\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Selling Settings\", \"col\": 3}}, {\"id\": \"OMMSxRhNs8\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Buying Settings\", \"col\": 3}}, {\"id\": \"-dQ8t4M5e8\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Support Settings\", \"col\": 3}}, {\"id\": \"t-jyystp_w\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Portal Settings\", \"col\": 3}}, {\"id\": \"q5D0-A23XI\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Domain Settings\", \"col\": 3}}, {\"id\": \"4w53EO7J5w\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Manufacturing Settings\", \"col\": 3}}, {\"id\": \"VOGjpt26iz\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CRM Settings\", \"col\": 3}}, {\"id\": \"rwuuNOkKQh\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"Sf5p4XopOG\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Menu</b></span>\", \"col\": 12}}, {\"id\": \"WMXwMQJf78\", \"type\": \"card\", \"data\": {\"card_name\": \"Users\", \"col\": 4}}, {\"id\": \"thwEfRftUy\", \"type\": \"card\", \"data\": {\"card_name\": \"Basic setting\", \"col\": 4}}, {\"id\": \"gN9ferwv1a\", \"type\": \"card\", \"data\": {\"card_name\": \"Email / Notifications\", \"col\": 4}}, {\"id\": \"NpKSnESVoy\", \"type\": \"card\", \"data\": {\"card_name\": \"Settings\", \"col\": 4}}, {\"id\": \"UuimvYHrjN\", \"type\": \"card\", \"data\": {\"card_name\": \"Gateway\", \"col\": 4}}, {\"id\": \"Ecib2-OXcO\", \"type\": \"card\", \"data\": {\"card_name\": \"Workflow\", \"col\": 4}}, {\"id\": \"cO61STUvuw\", \"type\": \"card\", \"data\": {\"card_name\": \"Data\", \"col\": 4}}, {\"id\": \"NXTG6clLxm\", \"type\": \"card\", \"data\": {\"card_name\": \"Google\", \"col\": 4}}, {\"id\": \"QsZOrhiysJ\", \"type\": \"card\", \"data\": {\"card_name\": \"Logs\", \"col\": 4}}, {\"id\": \"card_admintools\", \"type\": \"card\", \"data\": {\"card_name\": \"Admin Tools\", \"col\": 4}}]",
+ "creation": "2026-02-03 15:35:06.902740",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "lucide-sliders-horizontal",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Setup",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Workflow",
+   "link_count": 4,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Workflow",
+   "link_count": 0,
+   "link_to": "Workflow",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Workflow State",
+   "link_count": 0,
+   "link_to": "Workflow State",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Workflow Action",
+   "link_count": 0,
+   "link_to": "Workflow Action",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Workflow Action Master",
+   "link_count": 0,
+   "link_to": "Workflow Action Master",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Google",
+   "link_count": 3,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Google Settings",
+   "link_count": 0,
+   "link_to": "Google Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Google Calendar",
+   "link_count": 0,
+   "link_to": "Google Calendar",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Google Contacts",
+   "link_count": 0,
+   "link_to": "Google Contacts",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Users",
+   "link_count": 7,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "User",
+   "link_count": 0,
+   "link_to": "User",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "User Permission",
+   "link_count": 0,
+   "link_to": "User Permission",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Energy Point Settings",
+   "link_count": 0,
+   "link_to": "Energy Point Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Role",
+   "link_count": 0,
+   "link_to": "Role",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Role Permission for Page and Report",
+   "link_count": 0,
+   "link_to": "Role Permission for Page and Report",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Role Profile",
+   "link_count": 0,
+   "link_to": "Role Profile",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Permission Manager",
+   "link_count": 0,
+   "link_to": "permission-manager",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Logs",
+   "link_count": 5,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Access Log",
+   "link_count": 0,
+   "link_to": "Access Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Activity Log",
+   "link_count": 0,
+   "link_to": "Activity Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Console Log",
+   "link_count": 0,
+   "link_to": "Console Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Error Log",
+   "link_count": 0,
+   "link_to": "Error Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "View Log",
+   "link_count": 0,
+   "link_to": "View Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Settings",
+   "link_count": 10,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "System Settings",
+   "link_count": 0,
+   "link_to": "System Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Print Settings",
+   "link_count": 0,
+   "link_to": "Print Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Worksheet Settings",
+   "link_count": 0,
+   "link_to": "Worksheet Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Expenses Receipt Settings",
+   "link_count": 0,
+   "link_to": "Expenses Receipt Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Contract Settings",
+   "link_count": 0,
+   "link_to": "Neoffice Contract Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Global Defaults",
+   "link_count": 0,
+   "link_to": "Global Defaults",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Onboarding Step",
+   "link_count": 0,
+   "link_to": "Onboarding Step",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Form Tour",
+   "link_count": 0,
+   "link_to": "Form Tour",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Currency Exchange",
+   "link_count": 0,
+   "link_to": "Currency Exchange",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Authorization Rule",
+   "link_count": 0,
+   "link_to": "Authorization Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Data",
+   "link_count": 6,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bulk Update",
+   "link_count": 0,
+   "link_to": "Bulk Update",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Import Data",
+   "link_count": 0,
+   "link_to": "Data Import",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Export Data",
+   "link_count": 0,
+   "link_to": "Data Export",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Deleted Documents",
+   "link_count": 0,
+   "link_to": "Deleted Document",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Archives",
+   "link_count": 0,
+   "link_to": "Data Archive",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Rename Tool",
+   "link_count": 0,
+   "link_to": "Rename Tool",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Email / Notifications",
+   "link_count": 7,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Email Account",
+   "link_count": 0,
+   "link_to": "Email Account",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Email Domain",
+   "link_count": 0,
+   "link_to": "Email Domain",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Notification",
+   "link_count": 0,
+   "link_to": "Notification",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Email Template",
+   "link_count": 0,
+   "link_to": "Email Template",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Auto Email Report",
+   "link_count": 0,
+   "link_to": "Auto Email Report",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Notification Settings",
+   "link_count": 0,
+   "link_to": "Notification Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Mail Error",
+   "link_count": 0,
+   "link_to": "mail-errors",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Gateway",
+   "link_count": 14,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Gateway",
+   "link_count": 0,
+   "link_to": "Payment Gateway",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Gateway Account",
+   "link_count": 0,
+   "link_to": "Payment Gateway Account",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stripe Settings",
+   "link_count": 0,
+   "link_to": "Stripe Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stripe Terminal",
+   "link_count": 0,
+   "link_to": "Stripe Terminal",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stripe Location",
+   "link_count": 0,
+   "link_to": "Stripe Location",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stripe Transaction",
+   "link_count": 0,
+   "link_to": "Stripe Transaction",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Wallee Settings",
+   "link_count": 0,
+   "link_to": "Wallee Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Wallee Terminal Configuration",
+   "link_count": 0,
+   "link_to": "Wallee Terminal Configuration",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Wallee Location",
+   "link_count": 0,
+   "link_to": "Wallee Location",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Twint Bridge Settings",
+   "link_count": 0,
+   "link_to": "Twint Bridge Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "PayPal Settings",
+   "link_count": 0,
+   "link_to": "PayPal Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Terminal Setup",
+   "link_count": 0,
+   "link_to": "terminal-setup",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Terminal Wizard",
+   "link_count": 0,
+   "link_to": "payment-terminal-wizard",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "App and Connected Object Access",
+   "link_count": 0,
+   "link_to": "thirdparty-api",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Basic setting",
+   "link_count": 3,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Print Settings",
+   "link_count": 0,
+   "link_to": "Print Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Company Settings",
+   "link_count": 0,
+   "link_to": "Neoffice Company Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CloudPRNT Settings",
+   "link_count": 0,
+   "link_to": "CloudPRNT Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "icon": "tool",
+   "is_query_report": 0,
+   "label": "Admin Tools",
+   "link_count": 8,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CloudPRNT Logs",
+   "link_count": 0,
+   "link_to": "CloudPRNT Logs",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CloudPRNT Print Queue",
+   "link_count": 0,
+   "link_to": "CloudPRNT Print Queue",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sync Manager",
+   "link_count": 0,
+   "link_to": "sync-manager",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Apps Visibility Manager",
+   "link_count": 0,
+   "link_to": "apps-visibility-manager",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Push Notification Tester",
+   "link_count": 0,
+   "link_to": "push-notification-tester",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Product Review",
+   "link_count": 0,
+   "link_to": "product-review",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "WOPI Settings",
+   "link_count": 0,
+   "link_to": "WOPI Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Neoffice Custom Fields",
+   "link_count": 0,
+   "link_to": "Neoffice Custom Fields",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-06-04 12:19:55.147192",
+ "modified_by": "Administrator",
+ "module": "Setup",
+ "name": "Setup",
+ "number_cards": [],
+ "owner": "Administrator",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "Core",
+ "roles": [],
+ "sequence_id": 40.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "icon": "crm",
+   "label": "CRM Settings",
+   "link_to": "CRM Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "icon": "project",
+   "label": "Projects Settings",
+   "link_to": "Projects Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "icon": "accounting",
+   "label": "Accounts Settings",
+   "link_to": "Accounts Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "icon": "buying",
+   "label": "Buying Settings",
+   "link_to": "Buying Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "icon": "stock",
+   "label": "Stock Settings",
+   "link_to": "Stock Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "icon": "support",
+   "label": "Support Settings",
+   "link_to": "Support Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "icon": "hr",
+   "label": "HR Settings",
+   "link_to": "HR Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "icon": "sell",
+   "label": "Selling Settings",
+   "link_to": "Selling Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "icon": "website",
+   "label": "Portal Settings",
+   "link_to": "Portal Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "icon": "setting",
+   "label": "Domain Settings",
+   "link_to": "Domain Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "icon": "organization",
+   "label": "Manufacturing Settings",
+   "link_to": "Manufacturing Settings",
+   "type": "DocType"
+  }
+ ],
+ "title": "Setup"
+}

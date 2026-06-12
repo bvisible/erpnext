@@ -1,30 +1,374 @@
 {
  "charts": [],
- "content": "[{\"id\":\"FpI-eqy-zR\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"Hello\",\"col\":12}},{\"id\":\"OYSDVFfE4z\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Annual Sales\",\"col\":4}},{\"id\":\"rNm_h93jiy\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Annual Purchase\",\"col\":4}},{\"id\":\"522ohMNvr1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Incoming Payment\",\"col\":4}},{\"id\":\"P9OAswCpm8\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"leaderboard\",\"col\":3}},{\"id\":\"OJJsz0Vf5M\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Informations</span>\",\"col\":12}},{\"id\":\"d9qdaeL_xp\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"ToDo\",\"col\":4}},{\"id\":\"GKgXPEJ3GQ\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Calendar\",\"col\":4}},{\"id\":\"McaHWMMxzL\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"Latest news\",\"col\":4}},{\"id\":\"sgPagHkdvd\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Ventes</span>\",\"col\":12}},{\"id\":\"iIIBijg-LD\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Customer\",\"col\":4}},{\"id\":\"Z4nUdbM8N6\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Item\",\"col\":4}},{\"id\":\"XEAr5wQOWP\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Quotation\",\"col\":4}},{\"id\":\"gPlhnbP1Uj\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Sales Order\",\"col\":4}},{\"id\":\"KCwKDGtaCz\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Sales Invoice\",\"col\":4}},{\"id\":\"bkjQ1yVt1i\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Timesheet\",\"col\":4}},{\"id\":\"ABQrRvNBjC\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Achats</span>\",\"col\":12}},{\"id\":\"iKMsI5NymS\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Supplier\",\"col\":4}},{\"id\":\"_5t_28vFAQ\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Purchase Order\",\"col\":4}},{\"id\":\"QRByB_mQ0J\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Purchase Invoice\",\"col\":4}}]",
- "creation": "2020-01-23 13:46:38.833076",
- "custom_blocks": [],
+ "content": "[{\"id\": \"cb_0\", \"type\": \"custom_block\", \"data\": {\"custom_block_name\": \"Hello\", \"col\": 12}}, {\"id\": \"hdr_0\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Applications</b></span>\", \"col\": 12}}, {\"id\": \"sc_0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Drive\", \"col\": 3}}, {\"id\": \"NRXVTTyAiG\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"NeoPOS\", \"col\": 3}}, {\"id\": \"sc_2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Insights\", \"col\": 3}}, {\"id\": \"sc_3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Synk\", \"col\": 3}}, {\"id\": \"hdr_1\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Quick Access</b></span>\", \"col\": 12}}, {\"id\": \"sc_4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Customer\", \"col\": 3}}, {\"id\": \"sc_5\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Quotation\", \"col\": 3}}, {\"id\": \"sc_6\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Order\", \"col\": 3}}, {\"id\": \"sc_7\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Invoice\", \"col\": 3}}, {\"id\": \"sc_8\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Supplier\", \"col\": 3}}, {\"id\": \"sc_9\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Purchase Order\", \"col\": 3}}, {\"id\": \"sc_10\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Purchase Receipt\", \"col\": 3}}, {\"id\": \"sc_11\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Purchase Invoice\", \"col\": 3}}, {\"id\": \"sc_12\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Item\", \"col\": 3}}, {\"id\": \"sc_13\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Bank Reconciliation\", \"col\": 3}}, {\"id\": \"sc_14\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Journal Entry\", \"col\": 3}}, {\"id\": \"jJR7zYAaRl\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Videoconference\", \"col\": 3}}, {\"id\": \"spc_1\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"hdr_2\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Information</b></span>\", \"col\": 12}}, {\"id\": \"ql_0\", \"type\": \"quick_list\", \"data\": {\"quick_list_name\": \"New Customer\", \"col\": 4}}, {\"id\": \"ql_1\", \"type\": \"quick_list\", \"data\": {\"quick_list_name\": \"ToDo\", \"col\": 4}}, {\"id\": \"ql_2\", \"type\": \"quick_list\", \"data\": {\"quick_list_name\": \"Calendar\", \"col\": 4}}]",
+ "creation": "2026-03-10 12:49:55.916780",
+ "custom_blocks": [
+  {
+   "custom_block_name": "Hello",
+   "label": "Hello"
+  }
+ ],
  "docstatus": 0,
  "doctype": "Workspace",
- "for_user": "",
  "hide_custom": 0,
- "icon": "image-view",
+ "icon": "lucide-home",
  "idx": 0,
- "indicator_color": "",
+ "indicator_color": "green",
  "is_hidden": 0,
  "label": "Home",
- "links": [],
- "modified": "2024-05-14 22:31:11.810674",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Chart of Accounts",
+   "link_count": 0,
+   "link_to": "Account",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Company",
+   "link_count": 0,
+   "link_to": "Company",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Customer",
+   "link_count": 0,
+   "link_to": "Customer",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Supplier",
+   "link_count": 0,
+   "link_to": "Supplier",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Item",
+   "link_count": 0,
+   "link_to": "Item",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Warehouse",
+   "link_count": 0,
+   "link_to": "Warehouse",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Brand",
+   "link_count": 0,
+   "link_to": "Brand",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Unit of Measure (UOM)",
+   "link_count": 0,
+   "link_to": "UOM",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stock Reconciliation",
+   "link_count": 0,
+   "link_to": "Stock Reconciliation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Lead",
+   "link_count": 0,
+   "link_to": "Lead",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Customer Group",
+   "link_count": 0,
+   "link_to": "Customer Group",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Territory",
+   "link_count": 0,
+   "link_to": "Territory",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Import Data",
+   "link_count": 0,
+   "link_to": "Data Import",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Opening Invoice Creation Tool",
+   "link_count": 0,
+   "link_to": "Opening Invoice Creation Tool",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Chart of Accounts Importer",
+   "link_count": 0,
+   "link_to": "Chart of Accounts Importer",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Letter Head",
+   "link_count": 0,
+   "link_to": "Letter Head",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Email Account",
+   "link_count": 0,
+   "link_to": "Email Account",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-06-04 12:19:54.918488",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Home",
  "number_cards": [],
  "owner": "Administrator",
- "parent_page": "",
  "public": 1,
- "quick_lists": [],
- "restrict_to_domain": "",
+ "quick_lists": [
+  {
+   "document_type": "Customer",
+   "label": "New Customer",
+   "quick_list_filter": "[[\"Customer\",\"creation\",\"Timespan\",\"last 7 days\",false]]"
+  },
+  {
+   "document_type": "ToDo",
+   "label": "ToDo",
+   "quick_list_filter": "[]"
+  },
+  {
+   "document_type": "Event",
+   "label": "Calendar",
+   "quick_list_filter": "[]"
+  }
+ ],
  "roles": [],
- "sequence_id": 1.0,
- "shortcuts": [],
+ "sequence_id": 0.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "NeoPOS",
+   "type": "URL",
+   "url": "/pos"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Videoconference",
+   "type": "URL",
+   "url": "/meet"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "format": "",
+   "label": "Customer",
+   "link_to": "Customer",
+   "stats_filter": "",
+   "type": "DocType",
+   "url": ""
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "format": "",
+   "label": "Drive",
+   "link_to": "",
+   "stats_filter": "",
+   "type": "URL",
+   "url": "/drive"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "format": "{} Open",
+   "label": "Quotation",
+   "link_to": "Quotation",
+   "stats_filter": "[[\"Quotation\", \"status\", \"in\", [\"Draft\", \"Open\", \"Partially Ordered\"], false]]",
+   "type": "DocType",
+   "url": ""
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "format": "",
+   "label": "Item",
+   "link_to": "Item",
+   "stats_filter": "",
+   "type": "DocType",
+   "url": ""
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "format": "",
+   "label": "Bank Reconciliation",
+   "link_to": "",
+   "stats_filter": "",
+   "type": "URL",
+   "url": "/mint"
+  },
+  {
+   "color": "Yellow",
+   "doc_view": "List",
+   "format": "{}  To Deliver",
+   "label": "Sales Order",
+   "link_to": "Sales Order",
+   "stats_filter": "[[\"Sales Order\",\"status\",\"in\",[\"To Deliver\",\"To Deliver and Bill\"],false]]",
+   "type": "DocType",
+   "url": ""
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "format": "",
+   "label": "Synk",
+   "link_to": "",
+   "stats_filter": "",
+   "type": "URL",
+   "url": "/raven"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "format": "{} Open",
+   "label": "Sales Invoice",
+   "link_to": "Sales Invoice",
+   "stats_filter": "[[\"Sales Invoice\",\"outstanding_amount\",\">\",0,false],[\"Sales Invoice\",\"docstatus\",\"<\",\"2\",false]]",
+   "type": "DocType",
+   "url": ""
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "format": "{} Open",
+   "label": "Journal Entry",
+   "link_to": "Journal Entry",
+   "stats_filter": "[[\"Journal Entry\",\"docstatus\",\"=\",\"0\",false]]",
+   "type": "DocType",
+   "url": ""
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "format": "",
+   "label": "Insights",
+   "link_to": "",
+   "stats_filter": "",
+   "type": "URL",
+   "url": "/insights"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "format": "",
+   "label": "Supplier",
+   "link_to": "Supplier",
+   "stats_filter": "",
+   "type": "DocType",
+   "url": ""
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "format": "{} Open",
+   "label": "Purchase Order",
+   "link_to": "Purchase Order",
+   "stats_filter": "[[\"Purchase Order\",\"status\",\"in\",[\"To Receive\",\"To Receive and Bill\"],false]]",
+   "type": "DocType",
+   "url": ""
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "format": "",
+   "label": "Purchase Receipt",
+   "link_to": "Purchase Receipt",
+   "stats_filter": "",
+   "type": "DocType",
+   "url": ""
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "format": "{} Open",
+   "label": "Purchase Invoice",
+   "link_to": "Purchase Invoice",
+   "stats_filter": "[[\"Purchase Invoice\",\"outstanding_amount\",\">\",0,false],[\"Purchase Invoice\",\"docstatus\",\"<\",\"2\",false]]",
+   "type": "DocType",
+   "url": ""
+  }
+ ],
  "title": "Home"
 }

@@ -1,13 +1,18 @@
 {
- "charts": [],
- "content": "[{\"id\":\"nKKr6fjgjb\",\"type\":\"card\",\"data\":{\"card_name\":\"Ledgers\",\"col\":4}},{\"id\":\"p7NY6MHe2Y\",\"type\":\"card\",\"data\":{\"card_name\":\"Financial Statements\",\"col\":4}},{\"id\":\"3AK1Zf0oew\",\"type\":\"card\",\"data\":{\"card_name\":\"Profitability\",\"col\":4}},{\"id\":\"Q_hBCnSeJY\",\"type\":\"card\",\"data\":{\"card_name\":\"Other Reports\",\"col\":4}}]",
- "creation": "2024-01-05 16:09:16.766939",
+ "charts": [
+  {
+   "chart_name": "Evolution Paiements",
+   "label": "Evolution Paiements"
+  }
+ ],
+ "content": "[{\"id\": \"nKKr6fjgjb\", \"type\": \"card\", \"data\": {\"card_name\": \"General Ledgers\", \"col\": 4}}, {\"id\": \"p7NY6MHe2Y\", \"type\": \"card\", \"data\": {\"card_name\": \"Financial Statements\", \"col\": 4}}, {\"id\": \"3AK1Zf0oew\", \"type\": \"card\", \"data\": {\"card_name\": \"Profitability\", \"col\": 4}}, {\"id\": \"Q_hBCnSeJY\", \"type\": \"card\", \"data\": {\"card_name\": \"Other Reports\", \"col\": 4}}, {\"id\": \"c_vat\", \"type\": \"card\", \"data\": {\"card_name\": \"VAT Reports\", \"col\": 4}}, {\"id\": \"_RDdQyyiLe\", \"type\": \"card\", \"data\": {\"card_name\": \"Sales Partner\", \"col\": 4}}, {\"id\": \"YAnye6PVR-\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Indicators</b></span>\", \"col\": 12}}, {\"id\": \"8uYM7hXYQF\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Paiements du Mois\", \"col\": 4}}, {\"id\": \"aSdcOn5lXq\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Paiements Annuels\", \"col\": 4}}, {\"id\": \"XHQ2R-O77r\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Ecritures Comptables\", \"col\": 4}}, {\"id\": \"lEgphpjh-C\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Cr\\u00e9ances Ouvertes\", \"col\": 4}}, {\"id\": \"Ak_FyvU92w\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Dettes Ouvertes\", \"col\": 4}}, {\"id\": \"MiWait_06i\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Evolution Paiements\", \"col\": 12}}]",
+ "creation": "2026-02-03 15:35:05.801195",
  "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
  "for_user": "",
  "hide_custom": 0,
- "icon": "file",
+ "icon": "lucide-trending-up",
  "idx": 0,
  "indicator_color": "",
  "is_hidden": 0,
@@ -17,7 +22,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Profitability",
-   "link_count": 0,
+   "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -133,7 +138,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Ledgers",
+   "label": "General Ledgers",
    "link_count": 3,
    "link_type": "DocType",
    "onboard": 0,
@@ -175,8 +180,109 @@
   {
    "hidden": 0,
    "is_query_report": 0,
+   "label": "VAT Reports",
+   "link_count": 3,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "VAT Declaration",
+   "link_count": 0,
+   "link_to": "VAT Declaration",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "VAT reconciliation",
+   "link_count": 0,
+   "link_to": "vat_reconciliation",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "VAT Report",
+   "link_count": 0,
+   "link_to": "VAT Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Partner",
+   "link_count": 5,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Partners Commission",
+   "link_count": 0,
+   "link_to": "Sales Partners Commission",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Sales Invoice",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Advanced Sales Partners Commission",
+   "link_count": 0,
+   "link_to": "Advanced Sales Partners Commission",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Sales Invoice",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Advanced Sales Partners Commission Detail",
+   "link_count": 0,
+   "link_to": "Advanced Sales Partners Commission Detail",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Sales Invoice",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Sales Partner Transaction Summary",
+   "link_count": 0,
+   "link_to": "Sales Partner Transaction Summary",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Sales Partner Commission Summary",
+   "link_count": 0,
+   "link_to": "Sales Partner Commission Summary",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
    "label": "Other Reports",
-   "link_count": 7,
+   "link_count": 6,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -199,17 +305,6 @@
    "label": "Payment Period Based On Invoice Date",
    "link_count": 0,
    "link_to": "Payment Period Based On Invoice Date",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "Sales Invoice",
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Sales Partners Commission",
-   "link_count": 0,
-   "link_to": "Sales Partners Commission",
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
@@ -248,30 +343,48 @@
    "type": "Link"
   },
   {
-   "dependencies": "GL Entry",
    "hidden": 0,
    "is_query_report": 1,
-   "label": "UAE VAT 201",
+   "label": "Account Sheets",
    "link_count": 0,
-   "link_to": "UAE VAT 201",
+   "link_to": "Account Sheets",
    "link_type": "Report",
    "onboard": 0,
-   "only_for": "United Arab Emirates",
    "type": "Link"
   }
  ],
- "modified": "2024-01-18 22:13:07.596844",
+ "modified": "2026-06-03 10:44:49.657331",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Financial Reports",
- "number_cards": [],
+ "number_cards": [
+  {
+   "label": "Paiements du Mois",
+   "number_card_name": "Paiements du Mois"
+  },
+  {
+   "label": "Paiements Annuels",
+   "number_card_name": "Paiements Annuels"
+  },
+  {
+   "label": "Ecritures Comptables",
+   "number_card_name": "Ecritures Comptables"
+  },
+  {
+   "label": "Cr\u00e9ances Ouvertes",
+   "number_card_name": "Cr\u00e9ances Ouvertes"
+  },
+  {
+   "label": "Dettes Ouvertes",
+   "number_card_name": "Dettes Ouvertes"
+  }
+ ],
  "owner": "Administrator",
- "parent_page": "Accounting",
  "public": 1,
  "quick_lists": [],
  "restrict_to_domain": "",
  "roles": [],
- "sequence_id": 5.0,
+ "sequence_id": 6.0,
  "shortcuts": [],
  "title": "Financial Reports"
 }

@@ -1,0 +1,346 @@
+{
+ "charts": [],
+ "content": "[{\"id\": \"3FmTTQm9CW\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Quick Access</b></span>\", \"col\": 12}}, {\"id\": \"A1PesCLB3o\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Issue\", \"col\": 3}}, {\"id\": \"28QYsKUl5R\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Maintenance Visit\", \"col\": 3}}, {\"id\": \"mr7YG2dBsA\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Quality Inspection\", \"col\": 3}}, {\"id\": \"gDktF3d00N\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Quality Review\", \"col\": 3}}, {\"id\": \"dBTFWu3Fyi\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Quality Action\", \"col\": 3}}, {\"id\": \"7cDhblznX3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Non Conformance\", \"col\": 3}}, {\"id\": \"2RGff6ULFk\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Subscription\", \"col\": 3}}, {\"id\": \"vlQcVHjX4d\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"7v2AtPcAmp\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Menu</b></span>\", \"col\": 12}}, {\"id\": \"wAtWIEtHlO\", \"type\": \"card\", \"data\": {\"card_name\": \"Support\", \"col\": 4}}, {\"id\": \"CT61qXPjjf\", \"type\": \"card\", \"data\": {\"card_name\": \"Maintenance and Subscriptions\", \"col\": 4}}, {\"id\": \"xzY1XBPeIZ\", \"type\": \"card\", \"data\": {\"card_name\": \"Quality\", \"col\": 4}}]",
+ "creation": "2026-03-09 17:45:17.369321",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "hide_custom": 0,
+ "icon": "lucide-headphones",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Service",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Support",
+   "link_count": 7,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Issue Type",
+   "link_count": 0,
+   "link_to": "Issue Type",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Issue Priority",
+   "link_count": 0,
+   "link_to": "Issue Priority",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Service Level Agreement",
+   "link_count": 0,
+   "link_to": "Service Level Agreement",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Warranty Claim",
+   "link_count": 0,
+   "link_to": "Warranty Claim",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Serial No",
+   "link_count": 0,
+   "link_to": "Serial No",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Support Settings",
+   "link_count": 0,
+   "link_to": "Support Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "First Response Time for Issues",
+   "link_count": 0,
+   "link_to": "First Response Time for Issues",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Issue",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Quality",
+   "link_count": 10,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Quality Goal",
+   "link_count": 0,
+   "link_to": "Quality Goal",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Quality Procedure",
+   "link_count": 0,
+   "link_to": "Quality Procedure",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tree of Procedures",
+   "link_count": 0,
+   "link_to": "Quality Procedure",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Quality Inspection",
+   "link_count": 0,
+   "link_to": "Quality Inspection",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Quality Review",
+   "link_count": 0,
+   "link_to": "Quality Review",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Quality Action",
+   "link_count": 0,
+   "link_to": "Quality Action",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Non Conformance",
+   "link_count": 0,
+   "link_to": "Non Conformance",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Quality Feedback",
+   "link_count": 0,
+   "link_to": "Quality Feedback",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Quality Feedback Template",
+   "link_count": 0,
+   "link_to": "Quality Feedback Template",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Quality Meeting",
+   "link_count": 0,
+   "link_to": "Quality Meeting",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Maintenance and Subscriptions",
+   "link_count": 6,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Maintenance Schedule",
+   "link_count": 0,
+   "link_to": "Maintenance Schedule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Maintenance Visit",
+   "link_count": 0,
+   "link_to": "Maintenance Visit",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Subscription",
+   "link_count": 0,
+   "link_to": "Subscription",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Subscription Plan",
+   "link_count": 0,
+   "link_to": "Subscription Plan",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Subscription Settings",
+   "link_count": 0,
+   "link_to": "Subscription Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Twilio Telephony",
+   "link_count": 0,
+   "link_to": "twilio-telephony",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-05-27 09:46:57.592067",
+ "modified_by": "Administrator",
+ "module": "Support",
+ "name": "Service",
+ "number_cards": [],
+ "owner": "Administrator",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 6.0,
+ "shortcuts": [
+  {
+   "color": "Yellow",
+   "doc_view": "List",
+   "format": "{} Assigned",
+   "label": "Issue",
+   "link_to": "Issue",
+   "stats_filter": "[[\"Issue\",\"_assign\",\"is\",\"set\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "format": "{} Submitted",
+   "label": "Maintenance Visit",
+   "link_to": "Maintenance Visit",
+   "stats_filter": "[[\"Maintenance Visit\",\"status\",\"=\",\"Submitted\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Quality Inspection",
+   "link_to": "Quality Inspection",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "format": "{} Open",
+   "label": "Quality Review",
+   "link_to": "Quality Review",
+   "stats_filter": "{\"status\": \"Open\"}",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "format": "{} Open",
+   "label": "Quality Action",
+   "link_to": "Quality Action",
+   "stats_filter": "{\"status\": \"Open\"}",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "format": "{} Open",
+   "label": "Non Conformance",
+   "link_to": "Non Conformance",
+   "stats_filter": "{\"status\": \"Open\"}",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "Subscription",
+   "link_to": "Subscription",
+   "type": "DocType"
+  }
+ ],
+ "title": "Service"
+}

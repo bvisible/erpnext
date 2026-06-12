@@ -1,550 +1,33 @@
 {
  "charts": [
   {
-   "chart_name": "Profit and Loss",
-   "label": "Profit and Loss"
+   "chart_name": "Evolution Paiements",
+   "label": "Evolution Paiements"
   }
  ],
- "content": "[{\"id\":\"MmUf9abwxg\",\"type\":\"onboarding\",\"data\":{\"onboarding_name\":\"Accounts\",\"col\":12}},{\"id\":\"nDhfcJYbKH\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Profit and Loss\",\"col\":12}},{\"id\":\"VVvJ1lUcfc\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Outgoing Bills\",\"col\":3}},{\"id\":\"Vlj2FZtlHV\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Incoming Bills\",\"col\":3}},{\"id\":\"VVVjQVAhPf\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Incoming Payment\",\"col\":3}},{\"id\":\"DySNdlysIW\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Outgoing Payment\",\"col\":3}},{\"id\":\"9k1rDm2C0l\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"vikWSkNm6_\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Shortcuts</b></span>\",\"col\":12}},{\"id\":\"pMywM0nhlj\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Chart of Accounts\",\"col\":3}},{\"id\":\"_pRdD6kqUG\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Invoice\",\"col\":3}},{\"id\":\"G984SgVRJN\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Invoice\",\"col\":3}},{\"id\":\"1ArNvt9qhz\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Journal Entry\",\"col\":3}},{\"id\":\"F9f4I1viNr\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Payment Entry\",\"col\":3}},{\"id\":\"4IBBOIxfqW\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Accounts Receivable\",\"col\":3}},{\"id\":\"El2anpPaFY\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"General Ledger\",\"col\":3}},{\"id\":\"1nwcM9upJo\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Trial Balance\",\"col\":3}},{\"id\":\"OF9WOi1Ppc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Dashboard\",\"col\":3}},{\"id\":\"iAwpe-Chra\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Learn Accounting\",\"col\":3}},{\"id\":\"B7-uxs8tkU\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"tHb3yxthkR\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"DnNtsmxpty\",\"type\":\"card\",\"data\":{\"card_name\":\"Accounting Masters\",\"col\":4}},{\"id\":\"nKKr6fjgjb\",\"type\":\"card\",\"data\":{\"card_name\":\"Payments\",\"col\":4}},{\"id\":\"KlqilF5R_V\",\"type\":\"card\",\"data\":{\"card_name\":\"Tax Masters\",\"col\":4}},{\"id\":\"jTUy8LB0uw\",\"type\":\"card\",\"data\":{\"card_name\":\"Cost Center and Budgeting\",\"col\":4}},{\"id\":\"Wn2lhs7WLn\",\"type\":\"card\",\"data\":{\"card_name\":\"Multi Currency\",\"col\":4}},{\"id\":\"PAQMqqNkBM\",\"type\":\"card\",\"data\":{\"card_name\":\"Banking\",\"col\":4}},{\"id\":\"kxhoaiqdLq\",\"type\":\"card\",\"data\":{\"card_name\":\"Opening and Closing\",\"col\":4}},{\"id\":\"q0MAlU2j_Z\",\"type\":\"card\",\"data\":{\"card_name\":\"Subscription Management\",\"col\":4}},{\"id\":\"ptm7T6Hwu-\",\"type\":\"card\",\"data\":{\"card_name\":\"Share Management\",\"col\":4}}]",
- "creation": "2020-03-02 15:41:59.515192",
+ "content": "[{\"id\": \"hdr_acces\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Quick Access</b></span>\", \"col\": 12}}, {\"id\": \"sc_01\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Invoice\", \"col\": 3}}, {\"id\": \"sc_02\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Payment Reminder\", \"col\": 3}}, {\"id\": \"sc_03\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Purchase Invoice\", \"col\": 3}}, {\"id\": \"sc_04\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Payment Proposal\", \"col\": 3}}, {\"id\": \"sc_05\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Document Scan\", \"col\": 3}}, {\"id\": \"sc_06\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Journal Entry\", \"col\": 3}}, {\"id\": \"sc_07\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Payment Entry\", \"col\": 3}}, {\"id\": \"sc_08\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"ebics Statement\", \"col\": 3}}, {\"id\": \"sc_09\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Bank Reconciliation\", \"col\": 3}}, {\"id\": \"sc_10\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Trial Balance\", \"col\": 3}}, {\"id\": \"sc_11\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Dashboard\", \"col\": 3}}, {\"id\": \"sp_menu\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"hdr_menu\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Menu</b></span>\", \"col\": 12}}, {\"id\": \"card_gl\", \"type\": \"card\", \"data\": {\"card_name\": \"General Ledger\", \"col\": 4}}, {\"id\": \"card_pay\", \"type\": \"card\", \"data\": {\"card_name\": \"Payments\", \"col\": 4}}, {\"id\": \"card_bank\", \"type\": \"card\", \"data\": {\"card_name\": \"Bank transferts\", \"col\": 4}}, {\"id\": \"V72LCJFniC\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"zxOVFVTeJt\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Workflow</b></span>\", \"col\": 12}}, {\"id\": \"ZVEiJlYJlr\", \"type\": \"paragraph\", \"data\": {\"text\": \"<style>.ce-paragraph.cdx-block.widget:has(svg){background:transparent !important;box-shadow:none !important;border:none !important;border-radius:0 !important;padding:0 !important;}</style><svg viewBox=\\\"0 0 800 180\\\" xmlns=\\\"http://www.w3.org/2000/svg\\\" style=\\\"width:100%;max-width:800px;margin:0 auto;display:block;\\\">\\n<defs><filter id=\\\"accounting-fs\\\" x=\\\"-4%\\\" y=\\\"-4%\\\" width=\\\"112%\\\" height=\\\"120%\\\"><feDropShadow dx=\\\"0\\\" dy=\\\"1\\\" stdDeviation=\\\"3\\\" flood-color=\\\"#000\\\" flood-opacity=\\\"0.06\\\"></feDropShadow></filter></defs>\\n<style>a,a *{text-decoration:none !important}.wb{fill:#fff;stroke:#ddd;stroke-width:1.2;filter:url(#accounting-fs)}.wb:hover{stroke:#888}.wt{font:600 14px/1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;fill:#1a1a2e}.wi{stroke:#555;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;fill:none}.wl{stroke:#bbb;stroke-width:1.4;stroke-dasharray:8 5;fill:none;animation:wd 1.8s linear infinite}.wp{fill:#222}.wa{fill:#bbb}@keyframes wd{to{stroke-dashoffset:-26}}</style>\\n<path id=\\\"accounting-p0\\\" d=\\\"M 195 90.0 L 285 90.0\\\" class=\\\"wl\\\"></path>\\n<polygon points=\\\"277,86.0 277,94.0 285,90.0\\\" class=\\\"wa\\\"></polygon>\\n<circle r=\\\"2.5\\\" class=\\\"wp\\\" opacity=\\\".55\\\"><animateMotion dur=\\\"2s\\\" repeatCount=\\\"indefinite\\\"><mpath href=\\\"#accounting-p0\\\"></mpath></animateMotion></circle>\\n<circle r=\\\"2\\\" class=\\\"wp\\\" opacity=\\\".3\\\"><animateMotion dur=\\\"2s\\\" repeatCount=\\\"indefinite\\\" begin=\\\"1s\\\"><mpath href=\\\"#accounting-p0\\\"></mpath></animateMotion></circle>\\n<path id=\\\"accounting-p1\\\" d=\\\"M 455 90.0 L 545 90.0\\\" class=\\\"wl\\\"></path>\\n<polygon points=\\\"537,86.0 537,94.0 545,90.0\\\" class=\\\"wa\\\"></polygon>\\n<circle r=\\\"2.5\\\" class=\\\"wp\\\" opacity=\\\".55\\\"><animateMotion dur=\\\"2s\\\" repeatCount=\\\"indefinite\\\"><mpath href=\\\"#accounting-p1\\\"></mpath></animateMotion></circle>\\n<circle r=\\\"2\\\" class=\\\"wp\\\" opacity=\\\".3\\\"><animateMotion dur=\\\"2s\\\" repeatCount=\\\"indefinite\\\" begin=\\\"1s\\\"><mpath href=\\\"#accounting-p1\\\"></mpath></animateMotion></circle>\\n<a href=\\\"/app/journal-entry\\\" data-doctype=\\\"Journal Entry\\\" style=\\\"cursor: pointer;\\\"><rect x=\\\"25\\\" y=\\\"55\\\" width=\\\"170\\\" height=\\\"70\\\" rx=\\\"10\\\" class=\\\"wb\\\"></rect><g transform=\\\"translate(101.0,68.0) scale(0.75)\\\" class=\\\"wi\\\"><path d=\\\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\\\"></path><path d=\\\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\\\"></path></g><text x=\\\"110.0\\\" y=\\\"113\\\" class=\\\"wt\\\" text-anchor=\\\"middle\\\">\u00c9criture</text></a>\\n<a href=\\\"/app/payment-entry\\\" data-doctype=\\\"Payment Entry\\\" style=\\\"cursor: pointer;\\\"><rect x=\\\"285\\\" y=\\\"55\\\" width=\\\"170\\\" height=\\\"70\\\" rx=\\\"10\\\" class=\\\"wb\\\"></rect><g transform=\\\"translate(361.0,68.0) scale(0.75)\\\" class=\\\"wi\\\"><rect width=\\\"20\\\" height=\\\"14\\\" x=\\\"2\\\" y=\\\"5\\\" rx=\\\"2\\\"></rect><line x1=\\\"2\\\" x2=\\\"22\\\" y1=\\\"10\\\" y2=\\\"10\\\"></line></g><text x=\\\"370.0\\\" y=\\\"113\\\" class=\\\"wt\\\" text-anchor=\\\"middle\\\">Paiement</text></a>\\n<a href=\\\"/app/bank-reconciliation-tool\\\" data-doctype=\\\"Bank Reconciliation Tool\\\" style=\\\"cursor: pointer;\\\"><rect x=\\\"545\\\" y=\\\"55\\\" width=\\\"170\\\" height=\\\"70\\\" rx=\\\"10\\\" class=\\\"wb\\\"></rect><g transform=\\\"translate(621.0,68.0) scale(0.75)\\\" class=\\\"wi\\\"><circle cx=\\\"18\\\" cy=\\\"18\\\" r=\\\"3\\\"></circle><circle cx=\\\"6\\\" cy=\\\"6\\\" r=\\\"3\\\"></circle><path d=\\\"M6 21V9a9 9 0 0 0 9 9\\\"></path></g><text x=\\\"630.0\\\" y=\\\"113\\\" class=\\\"wt\\\" text-anchor=\\\"middle\\\">Rapprochement</text></a>\\n<text x=\\\"400\\\" y=\\\"150\\\" font-size=\\\"10\\\" fill=\\\"#aaa\\\" font-family=\\\"-apple-system,sans-serif\\\" font-style=\\\"italic\\\" text-anchor=\\\"middle\\\">comptabilit\u00e9</text>\\n</svg>\", \"col\": 12}}, {\"id\": \"VXnZusprLl\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"9eoCmMVyyq\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Indicators</b></span>\", \"col\": 12}}, {\"id\": \"3g_E1NSPmK\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Paiements du Mois\", \"col\": 4}}, {\"id\": \"63Mw-QURcT\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Paiements Annuels\", \"col\": 4}}, {\"id\": \"qhilB0L4nR\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Ecritures Comptables\", \"col\": 4}}, {\"id\": \"6Zth47_ES1\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Cr\u00e9ances Ouvertes\", \"col\": 4}}, {\"id\": \"4_R-dT5CAP\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Dettes Ouvertes\", \"col\": 4}}, {\"id\": \"husAnQ2Zjs\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Evolution Paiements\", \"col\": 12}}]",
+ "creation": "2026-02-03 15:35:05.109913",
  "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
  "for_user": "",
  "hide_custom": 0,
- "icon": "accounting",
- "idx": 0,
- "indicator_color": "",
+ "icon": "lucide-calculator",
+ "idx": 1,
+ "indicator_color": "green",
  "is_hidden": 0,
  "label": "Accounting",
  "links": [
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Multi Currency",
+   "label": "General Ledger",
    "link_count": 0,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Currency",
-   "link_count": 0,
-   "link_to": "Currency",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Currency Exchange",
-   "link_count": 0,
-   "link_to": "Currency Exchange",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Exchange Rate Revaluation",
-   "link_count": 0,
-   "link_to": "Exchange Rate Revaluation",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Subscription Management",
-   "link_count": 0,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Subscription Plan",
-   "link_count": 0,
-   "link_to": "Subscription Plan",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Subscription",
-   "link_count": 0,
-   "link_to": "Subscription",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Subscription Settings",
-   "link_count": 0,
-   "link_to": "Subscription Settings",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Share Management",
-   "link_count": 0,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Shareholder",
-   "link_count": 0,
-   "link_to": "Shareholder",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Share Transfer",
-   "link_count": 0,
-   "link_to": "Share Transfer",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "Share Transfer",
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Share Ledger",
-   "link_count": 0,
-   "link_to": "Share Ledger",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "Share Transfer",
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Share Balance",
-   "link_count": 0,
-   "link_to": "Share Balance",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Cost Center and Budgeting",
-   "link_count": 0,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Chart of Cost Centers",
-   "link_count": 0,
-   "link_to": "Cost Center",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Budget",
-   "link_count": 0,
-   "link_to": "Budget",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Accounting Dimension",
-   "link_count": 0,
-   "link_to": "Accounting Dimension",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "Cost Center",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Cost Center Allocation",
-   "link_count": 0,
-   "link_to": "Cost Center Allocation",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "Cost Center",
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Budget Variance Report",
-   "link_count": 0,
-   "link_to": "Budget Variance Report",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Monthly Distribution",
-   "link_count": 0,
-   "link_to": "Monthly Distribution",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Opening and Closing",
-   "link_count": 0,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Opening Invoice Creation Tool",
-   "link_count": 0,
-   "link_to": "Opening Invoice Creation Tool",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Chart of Accounts Importer",
-   "link_count": 0,
-   "link_to": "Chart of Accounts Importer",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Period Closing Voucher",
-   "link_count": 0,
-   "link_to": "Period Closing Voucher",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Banking",
-   "link_count": 6,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
   },
   {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Bank",
-   "link_count": 0,
-   "link_to": "Bank",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Bank Account",
-   "link_count": 0,
-   "link_to": "Bank Account",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Bank Clearance",
-   "link_count": 0,
-   "link_to": "Bank Clearance",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Bank Reconciliation Tool",
-   "link_count": 0,
-   "link_to": "Bank Reconciliation Tool",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "GL Entry",
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Bank Reconciliation Statement",
-   "link_count": 0,
-   "link_to": "Bank Reconciliation Statement",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Plaid Settings",
-   "link_count": 0,
-   "link_to": "Plaid Settings",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Tax Masters",
-   "link_count": 7,
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Sales Taxes and Charges Template",
-   "link_count": 0,
-   "link_to": "Sales Taxes and Charges Template",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Purchase Taxes and Charges Template",
-   "link_count": 0,
-   "link_to": "Purchase Taxes and Charges Template",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Item Tax Template",
-   "link_count": 0,
-   "link_to": "Item Tax Template",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Tax Category",
-   "link_count": 0,
-   "link_to": "Tax Category",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Tax Rule",
-   "link_count": 0,
-   "link_to": "Tax Rule",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Tax Withholding Category",
-   "link_count": 0,
-   "link_to": "Tax Withholding Category",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Lower Deduction Certificate",
-   "link_count": 0,
-   "link_to": "Lower Deduction Certificate",
-   "link_type": "DocType",
-   "onboard": 0,
-   "only_for": "India",
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Accounting Masters",
-   "link_count": 8,
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Company",
-   "link_count": 0,
-   "link_to": "Company",
-   "link_type": "DocType",
-   "onboard": 1,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Chart of Accounts",
-   "link_count": 0,
-   "link_to": "Account",
-   "link_type": "DocType",
-   "onboard": 1,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Accounts Settings",
-   "link_count": 0,
-   "link_to": "Accounts Settings",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Fiscal Year",
-   "link_count": 0,
-   "link_to": "Fiscal Year",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Accounting Dimension",
-   "link_count": 0,
-   "link_to": "Accounting Dimension",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Finance Book",
-   "link_count": 0,
-   "link_to": "Finance Book",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Accounting Period",
-   "link_count": 0,
-   "link_to": "Accounting Period",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Payment Term",
-   "link_count": 0,
-   "link_to": "Payment Term",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Payments",
-   "link_count": 5,
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Payment Entry",
-   "link_count": 0,
-   "link_to": "Payment Entry",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
    "hidden": 0,
    "is_query_report": 0,
    "label": "Journal Entry",
@@ -555,7 +38,6 @@
    "type": "Link"
   },
   {
-   "dependencies": "",
    "hidden": 0,
    "is_query_report": 0,
    "label": "Journal Entry Template",
@@ -566,11 +48,56 @@
    "type": "Link"
   },
   {
+   "dependencies": "GL Entry",
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Terms and Conditions",
+   "label": "General Ledger",
    "link_count": 0,
-   "link_to": "Terms and Conditions",
+   "link_to": "General Ledger",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "GL Entry",
+   "type": "Link"
+  },
+  {
+   "dependencies": "Sales Invoice",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Customer Ledger Summary",
+   "link_count": 0,
+   "link_to": "Customer Ledger Summary",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Sales Invoice",
+   "type": "Link"
+  },
+  {
+   "dependencies": "Sales Invoice",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Supplier Ledger Summary",
+   "link_count": 0,
+   "link_to": "Supplier Ledger Summary",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Purchase Invoice",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payments",
+   "link_count": 3,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Entry",
+   "link_count": 0,
+   "link_to": "Payment Entry",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -578,75 +105,194 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Mode of Payment",
+   "label": "Payment Reconciliation",
    "link_count": 0,
-   "link_to": "Mode of Payment",
+   "link_to": "Payment Reconciliation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Reminder",
+   "link_count": 0,
+   "link_to": "Payment Reminder",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bank transferts",
+   "link_count": 4,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Proposal",
+   "link_count": 0,
+   "link_to": "Payment Proposal",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Import Payment Entries",
+   "link_count": 0,
+   "link_to": "bankimport",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bank Statement Import",
+   "link_count": 0,
+   "link_to": "Mint Bank Statement Import",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Transaction bancaire",
+   "link_count": 0,
+   "link_to": "Bank Transaction",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
   }
  ],
- "modified": "2024-01-18 22:15:40.941711",
+ "modified": "2026-06-04 12:19:54.235135",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Accounting",
- "number_cards": [],
+ "number_cards": [
+  {
+   "label": "Paiements du Mois",
+   "number_card_name": "Paiements du Mois"
+  },
+  {
+   "label": "Paiements Annuels",
+   "number_card_name": "Paiements Annuels"
+  },
+  {
+   "label": "Ecritures Comptables",
+   "number_card_name": "Ecritures Comptables"
+  },
+  {
+   "label": "Cr\u00e9ances Ouvertes",
+   "number_card_name": "Cr\u00e9ances Ouvertes"
+  },
+  {
+   "label": "Dettes Ouvertes",
+   "number_card_name": "Dettes Ouvertes"
+  }
+ ],
  "owner": "Administrator",
- "parent_page": "",
  "public": 1,
  "quick_lists": [],
- "restrict_to_domain": "Gestion",
+ "restrict_to_domain": "",
  "roles": [],
- "sequence_id": 2.0,
+ "sequence_id": 1.0,
  "shortcuts": [
+  {
+   "color": "Orange",
+   "doc_view": "",
+   "format": "{} Open",
+   "label": "Sales Invoice",
+   "link_to": "Sales Invoice",
+   "stats_filter": "[[\"Sales Invoice\",\"outstanding_amount\",\">\",0,false],[\"Sales Invoice\",\"docstatus\",\"<\",\"2\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "format": "{} Open",
+   "label": "Payment Reminder",
+   "link_to": "Payment Reminder",
+   "stats_filter": "[[\"Payment Reminder\",\"docstatus\",\"=\",\"0\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "",
+   "format": "{} Open",
+   "label": "Purchase Invoice",
+   "link_to": "Purchase Invoice",
+   "stats_filter": "[[\"Purchase Invoice\",\"outstanding_amount\",\">\",0,false],[\"Purchase Invoice\",\"docstatus\",\"<\",\"2\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "format": "{} Open",
+   "label": "Payment Proposal",
+   "link_to": "Payment Proposal",
+   "stats_filter": "[[\"Payment Proposal\",\"docstatus\",\"=\",\"0\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "format": "{} Open",
+   "label": "Document Scan",
+   "link_to": "Document Scan",
+   "stats_filter": "[[\"Document Scan\",\"status\",\"!=\",\"Processed\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "",
+   "format": "{} Open",
+   "label": "Journal Entry",
+   "link_to": "Journal Entry",
+   "stats_filter": "[[\"Journal Entry\",\"docstatus\",\"=\",\"0\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "",
+   "format": "{} Open",
+   "label": "Payment Entry",
+   "link_to": "Payment Entry",
+   "stats_filter": "[[\"Payment Entry\",\"status\",\"=\",\"Draft\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "format": "{} Open",
+   "label": "ebics Statement",
+   "link_to": "ebics Statement",
+   "stats_filter": "[[\"ebics Statement\",\"status\",\"!=\",\"Completed\",false]]",
+   "type": "DocType"
+  },
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "Learn Accounting",
+   "label": "Bank Reconciliation",
    "type": "URL",
-   "url": "https://school.frappe.io/lms/courses/erpnext-accounting?utm_source=in_app"
+   "url": "/mint"
   },
   {
-   "label": "Chart of Accounts",
-   "link_to": "Account",
-   "type": "DocType"
-  },
-  {
-   "label": "Sales Invoice",
-   "link_to": "Sales Invoice",
-   "type": "DocType"
-  },
-  {
-   "label": "Purchase Invoice",
-   "link_to": "Purchase Invoice",
-   "type": "DocType"
-  },
-  {
-   "label": "Journal Entry",
-   "link_to": "Journal Entry",
-   "type": "DocType"
-  },
-  {
-   "label": "Payment Entry",
-   "link_to": "Payment Entry",
-   "type": "DocType"
-  },
-  {
-   "label": "Accounts Receivable",
-   "link_to": "Accounts Receivable",
-   "type": "Report"
-  },
-  {
-   "label": "General Ledger",
-   "link_to": "General Ledger",
-   "type": "Report"
-  },
-  {
+   "doc_view": "",
    "label": "Trial Balance",
    "link_to": "Trial Balance",
+   "report_ref_doctype": "GL Entry",
    "type": "Report"
   },
   {
+   "doc_view": "",
    "label": "Dashboard",
    "link_to": "Accounts",
    "type": "Dashboard"

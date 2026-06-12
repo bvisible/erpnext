@@ -1,0 +1,591 @@
+{
+ "charts": [],
+ "content": "[{\"id\": \"DPxJXo_a-L\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Quick Access</b></span>\", \"col\": 12}}, {\"id\": \"uMh_2JOOiI\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Bank\", \"col\": 3}}, {\"id\": \"H_1kn6BFAr\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Bank Account\", \"col\": 3}}, {\"id\": \"R60C3MHUB8\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"ebics Statement\", \"col\": 3}}, {\"id\": \"4kNmre1l6-\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Bank Settings\", \"col\": 3}}, {\"id\": \"WX0zOoq-w8\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Company Settings\", \"col\": 3}}, {\"id\": \"CL0HKBlRVZ\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Chart of Accounts\", \"col\": 3}}, {\"id\": \"0kPPm0i1q1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Dashboard\", \"col\": 3}}, {\"id\": \"b8wJoyCsQr\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"71tCNuwiQs\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Menu</b></span>\", \"col\": 12}}, {\"id\": \"bkR4DUeYmf\", \"type\": \"card\", \"data\": {\"card_name\": \"Bank\", \"col\": 4}}, {\"id\": \"TlM8Wo7Yfo\", \"type\": \"card\", \"data\": {\"card_name\": \"Company Settings\", \"col\": 4}}, {\"id\": \"TYbK1luIp-\", \"type\": \"card\", \"data\": {\"card_name\": \"Budget\", \"col\": 4}}, {\"id\": \"bTvqbaLOLG\", \"type\": \"card\", \"data\": {\"card_name\": \"Multi Currency\", \"col\": 4}}, {\"id\": \"gJ0ELYsfcz\", \"type\": \"card\", \"data\": {\"card_name\": \"Taxes\", \"col\": 4}}, {\"id\": \"9aWLnfUpGw\", \"type\": \"card\", \"data\": {\"card_name\": \"Bank Settings\", \"col\": 4}}, {\"id\": \"X9lopuk_w9\", \"type\": \"card\", \"data\": {\"card_name\": \"Payment Settings\", \"col\": 4}}]",
+ "creation": "2026-03-09 17:45:17.412204",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "hide_custom": 0,
+ "icon": "lucide-landmark",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Bank and Config",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Budget",
+   "link_count": 7,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Budget",
+   "link_count": 0,
+   "link_to": "Budget",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Accounting Dimension",
+   "link_count": 0,
+   "link_to": "Accounting Dimension",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Cost Center",
+   "link_count": 0,
+   "link_to": "Cost Center",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Finance Book",
+   "link_count": 0,
+   "link_to": "Finance Book",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Cost Center Allocation",
+   "link_count": 0,
+   "link_to": "Cost Center Allocation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Budget Variance Report",
+   "link_count": 0,
+   "link_to": "Budget Variance Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Cost Center",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Monthly Distribution",
+   "link_count": 0,
+   "link_to": "Monthly Distribution",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Multi Currency",
+   "link_count": 4,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Currency",
+   "link_count": 0,
+   "link_to": "Currency",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Currency Exchange",
+   "link_count": 0,
+   "link_to": "Currency Exchange",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Currency Exchange Settings",
+   "link_count": 0,
+   "link_to": "Currency Exchange Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Exchange Rate Revaluation",
+   "link_count": 0,
+   "link_to": "Exchange Rate Revaluation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Taxes",
+   "link_count": 8,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Taxes and Charges Template",
+   "link_count": 0,
+   "link_to": "Sales Taxes and Charges Template",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Purchase Taxes and Charges Template",
+   "link_count": 0,
+   "link_to": "Purchase Taxes and Charges Template",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Item Tax Template",
+   "link_count": 0,
+   "link_to": "Item Tax Template",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tax Category",
+   "link_count": 0,
+   "link_to": "Tax Category",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tax Rule",
+   "link_count": 0,
+   "link_to": "Tax Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Easy Tax and Accounting",
+   "link_count": 0,
+   "link_to": "Easy Tax and Accounting",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tax Withholding Category",
+   "link_count": 0,
+   "link_to": "Tax Withholding Category",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Lower Deduction Certificate",
+   "link_count": 0,
+   "link_to": "Lower Deduction Certificate",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Settings",
+   "link_count": 6,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Gateway Account",
+   "link_count": 0,
+   "link_to": "Payment Gateway Account",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Terms and Conditions",
+   "link_count": 0,
+   "link_to": "Terms and Conditions",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Mode of Payment",
+   "link_count": 0,
+   "link_to": "Mode of Payment",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Term",
+   "link_count": 0,
+   "link_to": "Payment Term",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Terms Template",
+   "link_count": 0,
+   "link_to": "Payment Terms Template",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "WebshopSI Settings",
+   "link_count": 0,
+   "link_to": "WebshopSI Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bank",
+   "link_count": 7,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bank",
+   "link_count": 0,
+   "link_to": "Bank",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bank Account",
+   "link_count": 0,
+   "link_to": "Bank Account",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bank Transaction",
+   "link_count": 0,
+   "link_to": "Bank Transaction",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bank Clearance",
+   "link_count": 0,
+   "link_to": "Bank Clearance",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bank Reconciliation Tool",
+   "link_count": 0,
+   "link_to": "Bank Reconciliation Tool",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bank Reconciliation Statement",
+   "link_count": 0,
+   "link_to": "Bank Reconciliation Statement",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Journal Entry",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bank Statement Import",
+   "link_count": 0,
+   "link_to": "Bank Statement Import",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Company Settings",
+   "link_count": 6,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Company",
+   "link_count": 0,
+   "link_to": "Company",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Account",
+   "link_count": 0,
+   "link_to": "Account",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Accounts Settings",
+   "link_count": 0,
+   "link_to": "Accounts Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Accounting Period",
+   "link_count": 0,
+   "link_to": "Accounting Period",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Company Settings",
+   "link_count": 0,
+   "link_to": "Neoffice Company Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Fiscal Year",
+   "link_count": 0,
+   "link_to": "Fiscal Year",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bank Settings",
+   "link_count": 7,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "ERPNextSwiss Settings",
+   "link_count": 0,
+   "link_to": "ERPNextSwiss Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "ebics Connection",
+   "link_count": 0,
+   "link_to": "ebics Connection",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Twint Bridge Settings",
+   "link_count": 0,
+   "link_to": "Twint Bridge Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "PayPal Settings",
+   "link_count": 0,
+   "link_to": "PayPal Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stripe Settings",
+   "link_count": 0,
+   "link_to": "Stripe Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Plaid Settings",
+   "link_count": 0,
+   "link_to": "Plaid Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Mint Settings",
+   "link_count": 0,
+   "link_to": "Mint Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-06-04 12:19:54.790652",
+ "modified_by": "Administrator",
+ "module": "Accounts",
+ "name": "Bank and Config",
+ "number_cards": [],
+ "owner": "Administrator",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 5.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Bank",
+   "link_to": "Bank",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Bank Account",
+   "link_to": "Bank Account",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "ebics Statement",
+   "link_to": "ebics Statement",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Bank Settings",
+   "type": "URL",
+   "url": "/app/bank_config"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Company Settings",
+   "type": "URL",
+   "url": "/app/company_config"
+  },
+  {
+   "doc_view": "Tree",
+   "label": "Chart of Accounts",
+   "link_to": "Account",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "",
+   "label": "Dashboard",
+   "link_to": "Accounts",
+   "type": "Dashboard"
+  }
+ ],
+ "title": "Bank and Config"
+}

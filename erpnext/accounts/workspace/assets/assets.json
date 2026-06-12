@@ -1,0 +1,322 @@
+{
+ "charts": [],
+ "content": "[{\"id\": \"LeDDKqVh67\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Quick Access</b></span>\", \"col\": 12}}, {\"id\": \"w4vMQcsAlZ\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Asset\", \"col\": 3}}, {\"id\": \"AXfuIVH5yC\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Asset Category\", \"col\": 3}}, {\"id\": \"Mu4upI35cv\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Fixed Asset Register\", \"col\": 3}}, {\"id\": \"TfJ-bFetI4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Dashboard\", \"col\": 3}}, {\"id\": \"fleet_s1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Vehicle\", \"col\": 3}}, {\"id\": \"fleet_s2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Vehicle Log\", \"col\": 3}}, {\"id\": \"BG70VJd1bs\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"haQYpU0nvG\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Menu</b></span>\", \"col\": 12}}, {\"id\": \"2yDkQhGXUI\", \"type\": \"card\", \"data\": {\"card_name\": \"Assets\", \"col\": 4}}, {\"id\": \"c0u3XAe-Nt\", \"type\": \"card\", \"data\": {\"card_name\": \"Maintenance\", \"col\": 4}}, {\"id\": \"_vZGv1WgHF\", \"type\": \"card\", \"data\": {\"card_name\": \"Reports\", \"col\": 4}}, {\"id\": \"fleet_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"fleet_hd\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Fleet</b></span>\", \"col\": 12}}, {\"id\": \"fleet_c1\", \"type\": \"card\", \"data\": {\"card_name\": \"Fleet\", \"col\": 4}}, {\"id\": \"fleet_c2\", \"type\": \"card\", \"data\": {\"card_name\": \"Vehicle References\", \"col\": 4}}]",
+ "creation": "2026-02-03 15:35:05.183124",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "lucide-building-2",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Assets",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Assets",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asset",
+   "link_count": 0,
+   "link_to": "Asset",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Location",
+   "link_count": 0,
+   "link_to": "Location",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asset Category",
+   "link_count": 0,
+   "link_to": "Asset Category",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asset Movement",
+   "link_count": 0,
+   "link_to": "Asset Movement",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Maintenance",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asset Maintenance Team",
+   "link_count": 0,
+   "link_to": "Asset Maintenance Team",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asset Maintenance",
+   "link_count": 0,
+   "link_to": "Asset Maintenance",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asset Maintenance Log",
+   "link_count": 0,
+   "link_to": "Asset Maintenance Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asset Value Adjustment",
+   "link_count": 0,
+   "link_to": "Asset Value Adjustment",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asset Repair",
+   "link_count": 0,
+   "link_to": "Asset Repair",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asset Capitalization",
+   "link_count": 0,
+   "link_to": "Asset Capitalization",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reports",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asset Depreciation Ledger",
+   "link_count": 0,
+   "link_to": "Asset Depreciation Ledger",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Asset",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asset Depreciations and Balances",
+   "link_count": 0,
+   "link_to": "Asset Depreciations and Balances",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Asset",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asset Maintenance",
+   "link_count": 0,
+   "link_to": "Asset Maintenance",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Asset Maintenance",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Fleet",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Vehicle",
+   "link_count": 0,
+   "link_to": "Vehicle",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Vehicle Log",
+   "link_count": 0,
+   "link_to": "Vehicle Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Vehicle References",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Vehicle Type",
+   "link_count": 0,
+   "link_to": "Vehicle Type",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Engine Type",
+   "link_count": 0,
+   "link_to": "Engine Type",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Fuel",
+   "link_count": 0,
+   "link_to": "Fuel",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Gearbox Type",
+   "link_count": 0,
+   "link_to": "Gearbox Type",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bodywork",
+   "link_count": 0,
+   "link_to": "Bodywork",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Insurance",
+   "link_count": 0,
+   "link_to": "Insurance",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-05-27 10:29:19.653378",
+ "modified_by": "Administrator",
+ "module": "Accounts",
+ "name": "Assets",
+ "number_cards": [],
+ "owner": "Administrator",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "Gestion",
+ "roles": [],
+ "sequence_id": 4.0,
+ "shortcuts": [
+  {
+   "label": "Asset",
+   "link_to": "Asset",
+   "type": "DocType"
+  },
+  {
+   "label": "Asset Category",
+   "link_to": "Asset Category",
+   "type": "DocType"
+  },
+  {
+   "label": "Fixed Asset Register",
+   "link_to": "Fixed Asset Register",
+   "report_ref_doctype": "Asset",
+   "type": "Report"
+  },
+  {
+   "label": "Dashboard",
+   "link_to": "Asset",
+   "type": "Dashboard"
+  },
+  {
+   "color": "Blue",
+   "label": "Vehicle",
+   "link_to": "Vehicle",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "label": "Vehicle Log",
+   "link_to": "Vehicle Log",
+   "type": "DocType"
+  }
+ ],
+ "title": "Assets"
+}

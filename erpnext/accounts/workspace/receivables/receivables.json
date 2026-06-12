@@ -1,13 +1,18 @@
 {
- "charts": [],
- "content": "[{\"id\":\"vikWSkNm6_\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Shortcuts</b></span>\",\"col\":12}},{\"id\":\"G984SgVRJN\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Invoice\",\"col\":3}},{\"id\":\"5yHldR0JNk\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"POS Invoice\",\"col\":3}},{\"id\":\"F9f4I1viNr\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Payment Entry\",\"col\":3}},{\"id\":\"1ArNvt9qhz\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Journal Entry\",\"col\":3}},{\"id\":\"4IBBOIxfqW\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Accounts Receivable\",\"col\":3}},{\"id\":\"ILlIxJuexy\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Cost Center\",\"col\":3}},{\"id\":\"B7-uxs8tkU\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"tHb3yxthkR\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"jLgv00c6ek\",\"type\":\"card\",\"data\":{\"card_name\":\"Invoicing\",\"col\":4}},{\"id\":\"npwfXlz0u1\",\"type\":\"card\",\"data\":{\"card_name\":\"Payments\",\"col\":4}},{\"id\":\"am70C27Jrb\",\"type\":\"card\",\"data\":{\"card_name\":\"Dunning\",\"col\":4}},{\"id\":\"xOHTyD8b5l\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
- "creation": "2024-01-05 15:29:21.084241",
+ "charts": [
+  {
+   "chart_name": "Evolution Cr\u00e9ances",
+   "label": "Evolution Cr\u00e9ances"
+  }
+ ],
+ "content": "[{\"id\": \"vikWSkNm6_\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Quick Access</b></span>\", \"col\": 12}}, {\"id\": \"22UZf0OzoI\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Invoice\", \"col\": 3}}, {\"id\": \"frFYPhF2R5\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Partner\", \"col\": 3}}, {\"id\": \"F9f4I1viNr\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Payment Entry\", \"col\": 3}}, {\"id\": \"1ArNvt9qhz\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Journal Entry\", \"col\": 3}}, {\"id\": \"4IBBOIxfqW\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Accounts Receivable\", \"col\": 3}}, {\"id\": \"milZ4lTmYR\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Bank Statement Import\", \"col\": 3}}, {\"id\": \"ILlIxJuexy\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Cost Center\", \"col\": 3}}, {\"id\": \"B7-uxs8tkU\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"tHb3yxthkR\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Menu</b></span>\", \"col\": 12}}, {\"id\": \"jLgv00c6ek\", \"type\": \"card\", \"data\": {\"card_name\": \"Invoicing\", \"col\": 4}}, {\"id\": \"npwfXlz0u1\", \"type\": \"card\", \"data\": {\"card_name\": \"Payments\", \"col\": 4}}, {\"id\": \"xOHTyD8b5l\", \"type\": \"card\", \"data\": {\"card_name\": \"Reports\", \"col\": 4}}, {\"id\": \"ins_h_iqba9f\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Receivables Tracking</b></span>\", \"col\": 12}}, {\"id\": \"O_0x8kmg0U\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Indicators</b></span>\", \"col\": 12}}, {\"id\": \"kLioBF6nJ1\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Cr\\u00e9ances Ce Mois\", \"col\": 4}}, {\"id\": \"bFlzw-Bp0x\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Cr\\u00e9ances Cette Ann\\u00e9e\", \"col\": 4}}, {\"id\": \"Lt4gDqT_mg\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Nb Factures Impay\\u00e9es\", \"col\": 4}}, {\"id\": \"85rYq0CY2W\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Evolution Cr\\u00e9ances\", \"col\": 12}}, {\"id\": \"lYmXoM_OMR\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"o-SqHsdY9H\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Workflow</b></span>\", \"col\": 12}}, {\"id\": \"Y5G1emqDkb\", \"type\": \"paragraph\", \"data\": {\"text\": \"<style>.ce-paragraph.cdx-block.widget:has(svg){background:transparent !important;box-shadow:none !important;border:none !important;border-radius:0 !important;padding:0 !important;}</style><svg viewBox=\\\"0 0 750 180\\\" xmlns=\\\"http://www.w3.org/2000/svg\\\" style=\\\"width:100%;max-width:750px;margin:0 auto;display:block;\\\">\\n<defs><filter id=\\\"receivables-fs\\\" x=\\\"-4%\\\" y=\\\"-4%\\\" width=\\\"112%\\\" height=\\\"120%\\\"><feDropShadow dx=\\\"0\\\" dy=\\\"1\\\" stdDeviation=\\\"3\\\" flood-color=\\\"#000\\\" flood-opacity=\\\"0.06\\\"></feDropShadow></filter></defs>\\n<style>a,a *{text-decoration:none !important}.wb{fill:#fff;stroke:#ddd;stroke-width:1.2;filter:url(#receivables-fs)}.wb:hover{stroke:#888}.wt{font:600 14px/1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;fill:#1a1a2e}.wi{stroke:#555;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;fill:none}.wl{stroke:#bbb;stroke-width:1.4;stroke-dasharray:8 5;fill:none;animation:wd 1.8s linear infinite}.wp{fill:#222}.wa{fill:#bbb}@keyframes wd{to{stroke-dashoffset:-26}}</style>\\n<path id=\\\"receivables-p0\\\" d=\\\"M 195 90.0 L 285 90.0\\\" class=\\\"wl\\\"></path>\\n<polygon points=\\\"277,86.0 277,94.0 285,90.0\\\" class=\\\"wa\\\"></polygon>\\n<circle r=\\\"2.5\\\" class=\\\"wp\\\" opacity=\\\".55\\\"><animateMotion dur=\\\"2s\\\" repeatCount=\\\"indefinite\\\"><mpath href=\\\"#receivables-p0\\\"></mpath></animateMotion></circle>\\n<circle r=\\\"2\\\" class=\\\"wp\\\" opacity=\\\".3\\\"><animateMotion dur=\\\"2s\\\" repeatCount=\\\"indefinite\\\" begin=\\\"1s\\\"><mpath href=\\\"#receivables-p0\\\"></mpath></animateMotion></circle>\\n<path id=\\\"receivables-p1\\\" d=\\\"M 455 90.0 L 545 90.0\\\" class=\\\"wl\\\"></path>\\n<polygon points=\\\"537,86.0 537,94.0 545,90.0\\\" class=\\\"wa\\\"></polygon>\\n<circle r=\\\"2.5\\\" class=\\\"wp\\\" opacity=\\\".55\\\"><animateMotion dur=\\\"2s\\\" repeatCount=\\\"indefinite\\\"><mpath href=\\\"#receivables-p1\\\"></mpath></animateMotion></circle>\\n<circle r=\\\"2\\\" class=\\\"wp\\\" opacity=\\\".3\\\"><animateMotion dur=\\\"2s\\\" repeatCount=\\\"indefinite\\\" begin=\\\"1s\\\"><mpath href=\\\"#receivables-p1\\\"></mpath></animateMotion></circle>\\n<a href=\\\"/app/sales-invoice\\\" data-doctype=\\\"Sales Invoice\\\" style=\\\"cursor: pointer;\\\"><rect x=\\\"25\\\" y=\\\"55\\\" width=\\\"170\\\" height=\\\"70\\\" rx=\\\"10\\\" class=\\\"wb\\\"></rect><g transform=\\\"translate(101.0,68.0) scale(0.75)\\\" class=\\\"wi\\\"><path d=\\\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\\\"></path><path d=\\\"M14 2v4a2 2 0 0 0 2 2h4\\\"></path><path d=\\\"M10 9H8\\\"></path><path d=\\\"M16 13H8\\\"></path><path d=\\\"M16 17H8\\\"></path></g><text x=\\\"110.0\\\" y=\\\"113\\\" class=\\\"wt\\\" text-anchor=\\\"middle\\\">Facture client</text></a>\\n<a href=\\\"/app/payment-entry\\\" data-doctype=\\\"Payment Entry\\\" style=\\\"cursor: pointer;\\\"><rect x=\\\"285\\\" y=\\\"55\\\" width=\\\"170\\\" height=\\\"70\\\" rx=\\\"10\\\" class=\\\"wb\\\"></rect><g transform=\\\"translate(361.0,68.0) scale(0.75)\\\" class=\\\"wi\\\"><rect width=\\\"20\\\" height=\\\"14\\\" x=\\\"2\\\" y=\\\"5\\\" rx=\\\"2\\\"></rect><line x1=\\\"2\\\" x2=\\\"22\\\" y1=\\\"10\\\" y2=\\\"10\\\"></line></g><text x=\\\"370.0\\\" y=\\\"113\\\" class=\\\"wt\\\" text-anchor=\\\"middle\\\">Paiement</text></a>\\n<a href=\\\"/app/bank-reconciliation-tool\\\" data-doctype=\\\"Bank Reconciliation Tool\\\" style=\\\"cursor: pointer;\\\"><rect x=\\\"545\\\" y=\\\"55\\\" width=\\\"170\\\" height=\\\"70\\\" rx=\\\"10\\\" class=\\\"wb\\\"></rect><g transform=\\\"translate(621.0,68.0) scale(0.75)\\\" class=\\\"wi\\\"><circle cx=\\\"18\\\" cy=\\\"18\\\" r=\\\"3\\\"></circle><circle cx=\\\"6\\\" cy=\\\"6\\\" r=\\\"3\\\"></circle><path d=\\\"M6 21V9a9 9 0 0 0 9 9\\\"></path></g><text x=\\\"630.0\\\" y=\\\"113\\\" class=\\\"wt\\\" text-anchor=\\\"middle\\\">Rapprochement</text></a>\\n<text x=\\\"375\\\" y=\\\"150\\\" font-size=\\\"10\\\" fill=\\\"#aaa\\\" font-family=\\\"-apple-system,sans-serif\\\" font-style=\\\"italic\\\" text-anchor=\\\"middle\\\">cr\\u00e9ances clients</text>\\n</svg>\", \"col\": 12}}, {\"id\": \"ExA24bAB-s\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Open Sales Invoice\", \"col\": 4}}, {\"id\": \"POzKw1fWY3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"POS Invoice\", \"col\": 4}}, {\"id\": \"1d_O5Tqb45\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Import payment entries\", \"col\": 4}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"All sales Invoice\", \"col\": 4}}]",
+ "creation": "2026-02-03 15:35:06.621842",
  "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
  "for_user": "",
  "hide_custom": 0,
- "icon": "arrow-right",
+ "icon": "lucide-hand-coins",
  "idx": 0,
  "indicator_color": "",
  "is_hidden": 0,
@@ -16,8 +21,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Invoicing",
-   "link_count": 2,
+   "label": "Reports",
+   "link_count": 6,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -25,28 +30,74 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Sales Invoice",
+   "label": "Accounts Receivable",
    "link_count": 0,
-   "link_to": "Sales Invoice",
-   "link_type": "DocType",
+   "link_to": "Accounts Receivable",
+   "link_type": "Report",
    "onboard": 0,
+   "report_ref_doctype": "Sales Invoice",
    "type": "Link"
   },
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Customer",
+   "label": "Accounts Receivable Summary",
    "link_count": 0,
-   "link_to": "Customer",
-   "link_type": "DocType",
+   "link_to": "Accounts Receivable Summary",
+   "link_type": "Report",
    "onboard": 0,
+   "report_ref_doctype": "Sales Invoice",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Register",
+   "link_count": 0,
+   "link_to": "Sales Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Sales Invoice",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Item-wise Sales Register",
+   "link_count": 0,
+   "link_to": "Item-wise Sales Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Sales Invoice",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Order Analysis",
+   "link_count": 0,
+   "link_to": "Sales Order Analysis",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Sales Order",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Delivered Items To Be Billed",
+   "link_count": 0,
+   "link_to": "Delivered Items To Be Billed",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Sales Invoice",
    "type": "Link"
   },
   {
    "hidden": 0,
    "is_query_report": 0,
    "label": "Payments",
-   "link_count": 4,
+   "link_count": 8,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -94,8 +145,48 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Dunning",
-   "link_count": 2,
+   "label": "Import payment entries",
+   "link_count": 0,
+   "link_to": "bankimport",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Match Payments",
+   "link_count": 0,
+   "link_to": "match_payments",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Reminder",
+   "link_count": 0,
+   "link_to": "Payment Reminder",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stripe Transaction",
+   "link_count": 0,
+   "link_to": "Stripe Transaction",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Invoicing",
+   "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -103,9 +194,9 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Dunning",
+   "label": "Sales Invoice",
    "link_count": 0,
-   "link_to": "Dunning",
+   "link_to": "Sales Invoice",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -113,9 +204,9 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Dunning Type",
+   "label": "Customer Deposit",
    "link_count": 0,
-   "link_to": "Dunning Type",
+   "link_to": "Customer Deposit",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -123,92 +214,83 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Reports",
-   "link_count": 6,
+   "label": "Customer",
+   "link_count": 0,
+   "link_to": "Customer",
    "link_type": "DocType",
    "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "dependencies": "Sales Invoice",
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Accounts Receivable",
-   "link_count": 0,
-   "link_to": "Accounts Receivable",
-   "link_type": "Report",
-   "onboard": 0,
    "type": "Link"
   },
   {
-   "dependencies": "Sales Invoice",
    "hidden": 0,
-   "is_query_report": 1,
-   "label": "Accounts Receivable Summary",
+   "is_query_report": 0,
+   "label": "Data Archive",
    "link_count": 0,
-   "link_to": "Accounts Receivable Summary",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "Sales Invoice",
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Sales Register",
-   "link_count": 0,
-   "link_to": "Sales Register",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "Sales Invoice",
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Item-wise Sales Register",
-   "link_count": 0,
-   "link_to": "Item-wise Sales Register",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "Sales Invoice",
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Sales Order Analysis",
-   "link_count": 0,
-   "link_to": "Sales Order Analysis",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "Sales Invoice",
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Delivered Items To Be Billed",
-   "link_count": 0,
-   "link_to": "Delivered Items To Be Billed",
-   "link_type": "Report",
+   "link_to": "Data Archive",
+   "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
   }
  ],
- "modified": "2024-01-18 22:11:51.474477",
+ "modified": "2026-05-28 19:11:48.104223",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Receivables",
- "number_cards": [],
+ "number_cards": [
+  {
+   "label": "Cr\u00e9ances Ce Mois",
+   "number_card_name": "Cr\u00e9ances Ce Mois"
+  },
+  {
+   "label": "Cr\u00e9ances Cette Ann\u00e9e",
+   "number_card_name": "Cr\u00e9ances Cette Ann\u00e9e"
+  },
+  {
+   "label": "Nb Factures Impay\u00e9es",
+   "number_card_name": "Nb Factures Impay\u00e9es"
+  }
+ ],
  "owner": "Administrator",
- "parent_page": "Accounting",
  "public": 1,
  "quick_lists": [],
  "restrict_to_domain": "",
  "roles": [],
- "sequence_id": 4.0,
+ "sequence_id": 2.0,
  "shortcuts": [
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "format": "{} Open",
+   "label": "Sales Invoice",
+   "link_to": "Sales Invoice",
+   "stats_filter": "[[\"Sales Invoice\",\"outstanding_amount\",\">\",0,false],[\"Sales Invoice\",\"docstatus\",\"<\",\"2\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Bank Statement Import",
+   "link_to": "Mint Bank Statement Import",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Sales Partner",
+   "link_to": "Sales Partner",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "format": "{} Open",
+   "label": "Open Sales Invoice",
+   "link_to": "Sales Invoice",
+   "stats_filter": "[[\"Sales Invoice\",\"outstanding_amount\",\">\",0,false],[\"Sales Invoice\",\"docstatus\",\"<\",\"2\",false]]",
+   "type": "DocType"
+  },
   {
    "color": "Grey",
    "doc_view": "List",
@@ -220,15 +302,22 @@
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "Cost Center",
-   "link_to": "Cost Center",
-   "type": "DocType"
+   "label": "Import payment entries",
+   "link_to": "bankimport",
+   "type": "Page"
   },
   {
    "doc_view": "",
-   "label": "Sales Invoice",
+   "label": "All sales Invoice",
    "link_to": "Sales Invoice",
    "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Cost Center",
+   "link_to": "Cost Center",
    "type": "DocType"
   },
   {
@@ -247,6 +336,7 @@
    "doc_view": "",
    "label": "Accounts Receivable",
    "link_to": "Accounts Receivable",
+   "report_ref_doctype": "Sales Invoice",
    "type": "Report"
   }
  ],

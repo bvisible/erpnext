@@ -1,85 +1,623 @@
 {
- "charts": [],
- "content": "[{\"id\":\"Quu-r9l07a\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Acc\u00e8s rapide</b></span>\",\"col\":12}},{\"id\":\"_q6Ma4VSM_\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item\",\"col\":3}},{\"id\":\"vPcpVhmmOW\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item Group\",\"col\":3}},{\"id\":\"w7wURA_Apz\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Material Request\",\"col\":3}},{\"id\":\"26PRdEGkMn\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock Entry\",\"col\":3}},{\"id\":\"DozOpekenS\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Advanced product list\",\"col\":3}},{\"id\":\"7GkkdV9MFN\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Receipt\",\"col\":3}},{\"id\":\"rBtOWhsEk1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Delivery Note\",\"col\":3}},{\"id\":\"-C4t-5Tr9l\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock Ledger\",\"col\":3}},{\"id\":\"qqxL8lla5t\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock Balance\",\"col\":3}},{\"id\":\"FvmbyP_yOv\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Dashboard\",\"col\":3}},{\"id\":\"iSKKXpMmPj\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"VTmyiCB-mQ\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Menu</b></span>\",\"col\":12}},{\"id\":\"Lkfs04iDtq\",\"type\":\"card\",\"data\":{\"card_name\":\"Items and Pricing\",\"col\":4}},{\"id\":\"h0YKwf9ID-\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Warehouse wise Stock Value\",\"col\":8}},{\"id\":\"zBpG6QSBdy\",\"type\":\"card\",\"data\":{\"card_name\":\"Stock Transactions\",\"col\":4}},{\"id\":\"zFDzltAcjv\",\"type\":\"card\",\"data\":{\"card_name\":\"Serial No and Batch\",\"col\":4}},{\"id\":\"eHL2122evK\",\"type\":\"card\",\"data\":{\"card_name\":\"Tools\",\"col\":4}},{\"id\":\"lnF47-GSqn\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"_EsyLJpo5S\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Rapports</span>\",\"col\":12}},{\"id\":\"4dhZw-jAvr\",\"type\":\"card\",\"data\":{\"card_name\":\"Stock Reports\",\"col\":4}},{\"id\":\"v_HsTH4JXy\",\"type\":\"card\",\"data\":{\"card_name\":\"Other Reports\",\"col\":4}},{\"id\":\"YMhSDHIbsy\",\"type\":\"card\",\"data\":{\"card_name\":\"Key Reports\",\"col\":4}},{\"id\":\"p1iOjtZVyA\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"2A2U9DtHZO\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Options avanc\u00e9es</span>\",\"col\":12}},{\"id\":\"SsHpfbt5af\",\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}}]",
- "creation": "2020-03-02 15:43:10.096528",
+ "charts": [
+  {
+   "chart_name": "Evolution Mouvements Stock",
+   "label": "Evolution Mouvements Stock"
+  }
+ ],
+ "content": "[{\"id\": \"fBYPEHCrAI\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Quick Access</b></span>\", \"col\": 12}}, {\"id\": \"W3eG0ykCF3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Brand\", \"col\": 3}}, {\"id\": \"0UIHFntmME\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Item Group\", \"col\": 3}}, {\"id\": \"1sKqzAVzgW\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Delivery Note\", \"col\": 3}}, {\"id\": \"u-kIYJ4K13\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Item\", \"col\": 3}}, {\"id\": \"WLc3Wsreeu\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Material Request\", \"col\": 3}}, {\"id\": \"5jXYeYgyH6\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Stock Entry\", \"col\": 3}}, {\"id\": \"xuN6RF3wyO\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Purchase Receipt\", \"col\": 3}}, {\"id\": \"FCakHxMIVh\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Stock Ledger\", \"col\": 3}}, {\"id\": \"l_9O1hCMA_\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Stock Balance\", \"col\": 3}}, {\"id\": \"GVjCmgCand\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Dashboard\", \"col\": 3}}, {\"id\": \"CXH-732tm8\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"54iVvMhksc\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Menu</b></span>\", \"col\": 12}}, {\"id\": \"pZp4AlFsLc\", \"type\": \"card\", \"data\": {\"card_name\": \"Items Catalogue\", \"col\": 4}}, {\"id\": \"-naqie2RPU\", \"type\": \"card\", \"data\": {\"card_name\": \"Stock Transactions\", \"col\": 4}}, {\"id\": \"cwGG_EArdU\", \"type\": \"card\", \"data\": {\"card_name\": \"Traceability\", \"col\": 4}}, {\"id\": \"49sih1ZKX2\", \"type\": \"card\", \"data\": {\"card_name\": \"Warehouses & Catalogs\", \"col\": 4}}, {\"id\": \"IcZa06RpcS\", \"type\": \"card\", \"data\": {\"card_name\": \"Tools\", \"col\": 4}}, {\"id\": \"card_catalogue\", \"type\": \"card\", \"data\": {\"card_name\": \"Catalogue\", \"col\": 4}}, {\"id\": \"card_expedsuisse\", \"type\": \"card\", \"data\": {\"card_name\": \"Swiss Shipping\", \"col\": 4}}, {\"id\": \"uimdGyxagC\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"iEDL1S_e72\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Workflow</b></span>\", \"col\": 12}}, {\"id\": \"DCFJ-5Yy4_\", \"type\": \"paragraph\", \"data\": {\"text\": \"<style>.ce-paragraph.cdx-block.widget:has(svg){background:transparent !important;box-shadow:none !important;border:none !important;border-radius:0 !important;padding:0 !important;}</style><svg viewBox=\\\"0 0 950 180\\\" xmlns=\\\"http://www.w3.org/2000/svg\\\" style=\\\"width:100%;max-width:950px;margin:0 auto;display:block;\\\">\\n<defs><filter id=\\\"stock-fs\\\" x=\\\"-4%\\\" y=\\\"-4%\\\" width=\\\"112%\\\" height=\\\"120%\\\"><feDropShadow dx=\\\"0\\\" dy=\\\"1\\\" stdDeviation=\\\"3\\\" flood-color=\\\"#000\\\" flood-opacity=\\\"0.06\\\"></feDropShadow></filter></defs>\\n<style>a,a *{text-decoration:none !important}.wb{fill:#fff;stroke:#ddd;stroke-width:1.2;filter:url(#stock-fs)}.wb:hover{stroke:#888}.wt{font:600 14px/1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;fill:#1a1a2e}.wi{stroke:#555;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;fill:none}.wl{stroke:#bbb;stroke-width:1.4;stroke-dasharray:8 5;fill:none;animation:wd 1.8s linear infinite}.wp{fill:#222}.wa{fill:#bbb}@keyframes wd{to{stroke-dashoffset:-26}}</style>\\n<path id=\\\"stock-p0\\\" d=\\\"M 195 90.0 L 265 90.0\\\" class=\\\"wl\\\"></path>\\n<polygon points=\\\"257,86.0 257,94.0 265,90.0\\\" class=\\\"wa\\\"></polygon>\\n<circle r=\\\"2.5\\\" class=\\\"wp\\\" opacity=\\\".55\\\"><animateMotion dur=\\\"2s\\\" repeatCount=\\\"indefinite\\\"><mpath href=\\\"#stock-p0\\\"></mpath></animateMotion></circle>\\n<circle r=\\\"2\\\" class=\\\"wp\\\" opacity=\\\".3\\\"><animateMotion dur=\\\"2s\\\" repeatCount=\\\"indefinite\\\" begin=\\\"1s\\\"><mpath href=\\\"#stock-p0\\\"></mpath></animateMotion></circle>\\n<path id=\\\"stock-p1\\\" d=\\\"M 435 90.0 L 505 90.0\\\" class=\\\"wl\\\"></path>\\n<polygon points=\\\"497,86.0 497,94.0 505,90.0\\\" class=\\\"wa\\\"></polygon>\\n<circle r=\\\"2.5\\\" class=\\\"wp\\\" opacity=\\\".55\\\"><animateMotion dur=\\\"2s\\\" repeatCount=\\\"indefinite\\\"><mpath href=\\\"#stock-p1\\\"></mpath></animateMotion></circle>\\n<circle r=\\\"2\\\" class=\\\"wp\\\" opacity=\\\".3\\\"><animateMotion dur=\\\"2s\\\" repeatCount=\\\"indefinite\\\" begin=\\\"1s\\\"><mpath href=\\\"#stock-p1\\\"></mpath></animateMotion></circle>\\n<path id=\\\"stock-p2\\\" d=\\\"M 675 90.0 L 745 90.0\\\" class=\\\"wl\\\"></path>\\n<polygon points=\\\"737,86.0 737,94.0 745,90.0\\\" class=\\\"wa\\\"></polygon>\\n<circle r=\\\"2.5\\\" class=\\\"wp\\\" opacity=\\\".55\\\"><animateMotion dur=\\\"2s\\\" repeatCount=\\\"indefinite\\\"><mpath href=\\\"#stock-p2\\\"></mpath></animateMotion></circle>\\n<circle r=\\\"2\\\" class=\\\"wp\\\" opacity=\\\".3\\\"><animateMotion dur=\\\"2s\\\" repeatCount=\\\"indefinite\\\" begin=\\\"1s\\\"><mpath href=\\\"#stock-p2\\\"></mpath></animateMotion></circle>\\n<a href=\\\"/app/material-request\\\" data-doctype=\\\"Material Request\\\" style=\\\"cursor: pointer;\\\"><rect x=\\\"25\\\" y=\\\"55\\\" width=\\\"170\\\" height=\\\"70\\\" rx=\\\"10\\\" class=\\\"wb\\\"></rect><g transform=\\\"translate(101.0,68.0) scale(0.75)\\\" class=\\\"wi\\\"><rect width=\\\"8\\\" height=\\\"4\\\" x=\\\"8\\\" y=\\\"2\\\" rx=\\\"1\\\" ry=\\\"1\\\"></rect><path d=\\\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\\\"></path><path d=\\\"M12 11h4\\\"></path><path d=\\\"M12 16h4\\\"></path><path d=\\\"M8 11h.01\\\"></path><path d=\\\"M8 16h.01\\\"></path></g><text x=\\\"110.0\\\" y=\\\"113\\\" class=\\\"wt\\\" text-anchor=\\\"middle\\\">Demande</text></a>\\n<a href=\\\"/app/purchase-receipt\\\" data-doctype=\\\"Purchase Receipt\\\" style=\\\"cursor: pointer;\\\"><rect x=\\\"265\\\" y=\\\"55\\\" width=\\\"170\\\" height=\\\"70\\\" rx=\\\"10\\\" class=\\\"wb\\\"></rect><g transform=\\\"translate(341.0,68.0) scale(0.75)\\\" class=\\\"wi\\\"><path d=\\\"m16 16 2 2 4-4\\\"></path><path d=\\\"M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14\\\"></path><path d=\\\"m7.5 4.27 9 5.15\\\"></path><path d=\\\"M3.3 7 12 12l8.7-5\\\"></path><path d=\\\"M12 22V12\\\"></path></g><text x=\\\"350.0\\\" y=\\\"113\\\" class=\\\"wt\\\" text-anchor=\\\"middle\\\">R\\u00e9ception</text></a>\\n<a href=\\\"/app/delivery-note\\\" data-doctype=\\\"Delivery Note\\\" style=\\\"cursor: pointer;\\\"><rect x=\\\"505\\\" y=\\\"55\\\" width=\\\"170\\\" height=\\\"70\\\" rx=\\\"10\\\" class=\\\"wb\\\"></rect><g transform=\\\"translate(581.0,68.0) scale(0.75)\\\" class=\\\"wi\\\"><path d=\\\"M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2\\\"></path><path d=\\\"M15 18h6a1 1 0 0 0 1-1v-3.28a1 1 0 0 0-.684-.948l-1.923-.641a1 1 0 0 1-.684-.949V8h1.382a1 1 0 0 1 .894.553l1.448 2.894A1 1 0 0 0 20.382 11H21a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-1\\\"></path><circle cx=\\\"7\\\" cy=\\\"18\\\" r=\\\"2\\\"></circle><circle cx=\\\"17\\\" cy=\\\"18\\\" r=\\\"2\\\"></circle></g><text x=\\\"590.0\\\" y=\\\"113\\\" class=\\\"wt\\\" text-anchor=\\\"middle\\\">Livraison</text></a>\\n<a href=\\\"/app/shipment\\\" data-doctype=\\\"Shipment\\\" style=\\\"cursor: pointer;\\\"><rect x=\\\"745\\\" y=\\\"55\\\" width=\\\"170\\\" height=\\\"70\\\" rx=\\\"10\\\" class=\\\"wb\\\"></rect><g transform=\\\"translate(821.0,68.0) scale(0.75)\\\" class=\\\"wi\\\"><path d=\\\"m7.5 4.27 9 5.15\\\"></path><path d=\\\"M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z\\\"></path><path d=\\\"m3.3 7 8.7 5 8.7-5\\\"></path><path d=\\\"M12 22V12\\\"></path></g><text x=\\\"830.0\\\" y=\\\"113\\\" class=\\\"wt\\\" text-anchor=\\\"middle\\\">Exp\\u00e9dition</text></a>\\n</svg>\", \"col\": 12}}, {\"id\": \"j_xJKjuihv\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Evolution Mouvements Stock\", \"col\": 4}}, {\"id\": \"vxtiggSt8s\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Mouvements Stock Mois\", \"col\": 4}}, {\"id\": \"nrtaMiOzdC\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Valeur Mouvements Ann\\u00e9e\", \"col\": 4}}, {\"id\": \"VS9ufJdhyq\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Livraisons du Mois\", \"col\": 4}}, {\"id\": \"pyteFGW2vE\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Articles en Stock\", \"col\": 4}}]",
+ "creation": "2026-02-03 15:35:06.957430",
  "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
  "for_user": "",
  "hide_custom": 0,
- "icon": "stock",
- "idx": 0,
+ "icon": "lucide-warehouse",
+ "idx": 1,
+ "indicator_color": "green",
  "is_hidden": 0,
  "label": "Stock",
- "links": [],
- "modified": "2024-05-14 22:31:15.341727",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stock Transactions",
+   "link_count": 6,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stock Entry",
+   "link_count": 0,
+   "link_to": "Stock Entry",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Material Request",
+   "link_count": 0,
+   "link_to": "Material Request",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Pick List",
+   "link_count": 0,
+   "link_to": "Pick List",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Delivery Note",
+   "link_count": 0,
+   "link_to": "Delivery Note",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Purchase Receipt",
+   "link_count": 0,
+   "link_to": "Purchase Receipt",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Delivery Trip",
+   "link_count": 0,
+   "link_to": "Delivery Trip",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Traceability",
+   "link_count": 7,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Serial No",
+   "link_count": 0,
+   "link_to": "Serial No",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Batch",
+   "link_count": 0,
+   "link_to": "Batch",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Installation Note",
+   "link_count": 0,
+   "link_to": "Installation Note",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Serial No Service Contract Expiry",
+   "link_count": 0,
+   "link_to": "Serial No Service Contract Expiry",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Serial No",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Serial No Status",
+   "link_count": 0,
+   "link_to": "Serial No Status",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Serial No",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Serial No Warranty Expiry",
+   "link_count": 0,
+   "link_to": "Serial No Warranty Expiry",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Serial No",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Alcohol Type",
+   "link_count": 0,
+   "link_to": "Alcohol Type",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Warehouses & Catalogs",
+   "link_count": 6,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Warehouse",
+   "link_count": 0,
+   "link_to": "Warehouse",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Inventory Dimension",
+   "link_count": 0,
+   "link_to": "Inventory Dimension",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Supplier Catalog",
+   "link_count": 0,
+   "link_to": "Supplier Catalog",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Supplier Catalog Log",
+   "link_count": 0,
+   "link_to": "Supplier Catalog Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Planzer Settings",
+   "link_count": 0,
+   "link_to": "Planzer Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Planzer Log",
+   "link_count": 0,
+   "link_to": "Planzer Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tools",
+   "link_count": 6,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stock Reconciliation",
+   "link_count": 0,
+   "link_to": "Stock Reconciliation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Landed Cost Voucher",
+   "link_count": 0,
+   "link_to": "Landed Cost Voucher",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Packing Slip",
+   "link_count": 0,
+   "link_to": "Packing Slip",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Quality Inspection",
+   "link_count": 0,
+   "link_to": "Quality Inspection",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Quality Inspection Template",
+   "link_count": 0,
+   "link_to": "Quality Inspection Template",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Quick Stock Balance",
+   "link_count": 0,
+   "link_to": "Quick Stock Balance",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "icon": "book",
+   "is_query_report": 0,
+   "label": "Catalogue",
+   "link_count": 4,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Supplier Catalog",
+   "link_count": 0,
+   "link_to": "Supplier Catalog",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Supplier Catalog Log",
+   "link_count": 0,
+   "link_to": "Supplier Catalog Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Catalog Browser",
+   "link_count": 0,
+   "link_to": "supplier-catalog-browser",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Supplier Catalog Wizard",
+   "link_count": 0,
+   "link_to": "supplier-catalog-wizard",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "icon": "truck",
+   "is_query_report": 0,
+   "label": "Swiss Shipping",
+   "link_count": 4,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SwissPost Barcode Settings",
+   "link_count": 0,
+   "link_to": "SwissPost Barcode Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SwissPost Barcode History",
+   "link_count": 0,
+   "link_to": "SwissPost Barcode History",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SwissPost Webstamp Settings",
+   "link_count": 0,
+   "link_to": "SwissPost Webstamp Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SwissPost Webstamp Order",
+   "link_count": 0,
+   "link_to": "SwissPost Webstamp Order",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Items Catalogue",
+   "link_count": 10,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Item",
+   "link_count": 0,
+   "link_to": "Item",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Item Group",
+   "link_count": 0,
+   "link_to": "gourp_item_view_list",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Product Bundle",
+   "link_count": 0,
+   "link_to": "Product Bundle",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Brand",
+   "link_count": 0,
+   "link_to": "Brand",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Item Price",
+   "link_count": 0,
+   "link_to": "Item Price",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Price List",
+   "link_count": 0,
+   "link_to": "Price List",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Shipping Rule",
+   "link_count": 0,
+   "link_to": "Shipping Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Pricing Rule",
+   "link_count": 0,
+   "link_to": "Pricing Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Item Alternative",
+   "link_count": 0,
+   "link_to": "Item Alternative",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Item Manufacturer",
+   "link_count": 0,
+   "link_to": "Item Manufacturer",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-05-27 10:02:56.407994",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock",
- "number_cards": [],
+ "number_cards": [
+  {
+   "label": "Mouvements Stock Mois",
+   "number_card_name": "Mouvements Stock Mois"
+  },
+  {
+   "label": "Valeur Mouvements Ann\u00e9e",
+   "number_card_name": "Valeur Mouvements Ann\u00e9e"
+  },
+  {
+   "label": "Livraisons du Mois",
+   "number_card_name": "Livraisons du Mois"
+  },
+  {
+   "label": "Articles en Stock",
+   "number_card_name": "Articles en Stock"
+  }
+ ],
  "owner": "Administrator",
- "parent_page": "",
  "public": 1,
  "quick_lists": [],
  "restrict_to_domain": "Gestion",
  "roles": [],
- "sequence_id": 7.0,
+ "sequence_id": 10.0,
  "shortcuts": [
   {
-   "color": "Green",
-   "format": "{}  Available",
-   "label": "Item",
-   "link_to": "Item",
-   "stats_filter": "{\n    \"disabled\" : 0\n}",
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Brand",
+   "link_to": "Brand",
    "type": "DocType"
   },
   {
    "color": "Grey",
-   "doc_view": "List",
-   "label": "Learn Inventory Management",
-   "type": "URL",
-   "url": "https://school.frappe.io/lms/courses/inventory-management?utm_source=in_app"
-  },
-  {
-   "color": "Yellow",
-   "format": "{} Pending",
-   "label": "Material Request",
-   "link_to": "Material Request",
-   "stats_filter": "{\n    \"company\": [\"like\", '%' + frappe.defaults.get_global_default(\"company\") + '%'],\n    \"status\": \"Pending\"\n}",
+   "doc_view": "Tree",
+   "label": "Item Group",
+   "link_to": "Item Group",
    "type": "DocType"
   },
   {
+   "color": "Yellow",
+   "doc_view": "",
+   "format": "{} Open",
+   "label": "Delivery Note",
+   "link_to": "Delivery Note",
+   "stats_filter": "[[\"Delivery Note\",\"status\",\"!=\",\"Completed\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "",
+   "format": "{} Available",
+   "label": "Item",
+   "link_to": "Item",
+   "stats_filter": "[[\"Item\",\"disabled\",\"=\",0,false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Yellow",
+   "doc_view": "",
+   "format": "{} Pending",
+   "label": "Material Request",
+   "link_to": "Material Request",
+   "stats_filter": "[[\"Material Request\",\"status\",\"=\",\"Pending\",false]]",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "",
    "label": "Stock Entry",
    "link_to": "Stock Entry",
    "type": "DocType"
   },
   {
    "color": "Yellow",
+   "doc_view": "",
    "format": "{} To Bill",
    "label": "Purchase Receipt",
    "link_to": "Purchase Receipt",
-   "stats_filter": "{\n    \"company\": [\"like\", '%' + frappe.defaults.get_global_default(\"company\") + '%'],\n    \"status\": \"To Bill\"\n}",
+   "stats_filter": "[[\"Purchase Receipt\",\"status\",\"=\",\"To Bill\",false]]",
    "type": "DocType"
   },
   {
-   "color": "Yellow",
-   "format": "{} To Bill",
-   "label": "Delivery Note",
-   "link_to": "Delivery Note",
-   "stats_filter": "{\n    \"company\": [\"like\", '%' + frappe.defaults.get_global_default(\"company\") + '%'],\n    \"status\": \"To Bill\"\n}",
-   "type": "DocType"
-  },
-  {
+   "doc_view": "",
    "label": "Stock Ledger",
    "link_to": "Stock Ledger",
+   "report_ref_doctype": "Stock Ledger Entry",
    "type": "Report"
   },
   {
+   "doc_view": "",
    "label": "Stock Balance",
    "link_to": "Stock Balance",
+   "report_ref_doctype": "Stock Ledger Entry",
    "type": "Report"
   },
   {
+   "doc_view": "",
    "label": "Dashboard",
    "link_to": "Stock",
    "type": "Dashboard"
