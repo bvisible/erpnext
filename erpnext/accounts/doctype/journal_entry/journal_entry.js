@@ -297,8 +297,8 @@ erpnext.journal_entry_utils.repositionVatRows = function(form) {
 
 // Function to process VAT
 erpnext.journal_entry_utils.processTVA = function(frm, row) {
-    // Check if automatic calculations are disabled
-    if (frm.doc.disable_calculation) {
+    // Skip auto-VAT when calculations are disabled or the document is submitted
+    if (frm.doc.disable_calculation || frm.doc.docstatus !== 0) {
         return;
     }
     
@@ -900,8 +900,8 @@ erpnext.journal_entry_utils.setupVatListener = function(frm, row) {
     
     // Watch for account changes
     frappe.model.on(row.doctype, row.name, "account", function(fieldname, value) {
-        // Check if automatic calculations are disabled
-        if (frm.doc.disable_calculation) {
+        // Skip auto-VAT when calculations are disabled or the document is submitted
+        if (frm.doc.disable_calculation || frm.doc.docstatus !== 0) {
             return;
         }
         
@@ -937,8 +937,8 @@ erpnext.journal_entry_utils.setupVatListener = function(frm, row) {
     frappe.model.on(row.doctype, row.name, "debit_in_account_currency", function(fieldname, value) {
         if (row._processing_tax || row._internal_update) return;
         
-        // Check if automatic calculations are disabled
-        if (frm.doc.disable_calculation) {
+        // Skip auto-VAT when calculations are disabled or the document is submitted
+        if (frm.doc.disable_calculation || frm.doc.docstatus !== 0) {
             return;
         }
         
@@ -965,8 +965,8 @@ erpnext.journal_entry_utils.setupVatListener = function(frm, row) {
     frappe.model.on(row.doctype, row.name, "credit_in_account_currency", function(fieldname, value) {
         if (row._processing_tax || row._internal_update) return;
         
-        // Check if automatic calculations are disabled
-        if (frm.doc.disable_calculation) {
+        // Skip auto-VAT when calculations are disabled or the document is submitted
+        if (frm.doc.disable_calculation || frm.doc.docstatus !== 0) {
             return;
         }
         
