@@ -332,10 +332,11 @@ erpnext.journal_entry_utils.processTVA = function(frm, row) {
         row._last_processed_values.account = row.account;
     }
     
-    // Get company VAT method
-    this.getCompanyVatMethod(frm.doc.company, (vatMethod) => {
-        // If it's "Flat-rate taxation", do not add VAT rows
-        if (vatMethod && vatMethod.includes("Flat")) {
+    // Authoritative gate driven by the COMPANY config (Neoffice Company Settings),
+    // not the per-doc "Sans TVA" checkbox: only standard-VAT companies get auto-VAT.
+    // Non-VAT (forfait / non-assujetti) and flat-rate companies never apply VAT.
+    this.getCompanyVatInfo(frm.doc.company, (vatInfo) => {
+        if (!vatInfo.isVatCompany || (vatInfo.vatMethod && vatInfo.vatMethod.includes("Flat"))) {
             row._processing_tax = false;
             return;
         }
