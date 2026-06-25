@@ -1437,11 +1437,15 @@ frappe.ui.form.on("Journal Entry", {
 		        // Non-VAT company: hide fields and disable calculation
 		        frm.set_df_property("disable_calculation", "hidden", 1);
 		        frm.set_df_property("is_vat_excluded", "hidden", 1);
-		        frm.set_value("disable_calculation", 1);
+		        if (frm.doc.docstatus === 0) {
+		            frm.set_value("disable_calculation", 1);
+		        }
 		    } else if (vatInfo.vatMethod && vatInfo.vatMethod.includes("Flat")) {
 		        frm.set_df_property("disable_calculation", "hidden", 1);
 		        frm.set_df_property("is_vat_excluded", "hidden", 1);
-		        frm.set_value("disable_calculation", 1);
+		        if (frm.doc.docstatus === 0) {
+		            frm.set_value("disable_calculation", 1);
+		        }
 		    } else {
 		        frm.set_df_property("disable_calculation", "hidden", 0);
 		        frm.set_df_property("is_vat_excluded", "hidden", 0);
@@ -1689,11 +1693,15 @@ frappe.ui.form.on("Journal Entry", {
 		        // Non-VAT company: hide fields and disable calculation
 		        frm.set_df_property("disable_calculation", "hidden", 1);
 		        frm.set_df_property("is_vat_excluded", "hidden", 1);
-		        frm.set_value("disable_calculation", 1);
+		        if (frm.doc.docstatus === 0) {
+		            frm.set_value("disable_calculation", 1);
+		        }
 		    } else if (vatInfo.vatMethod && vatInfo.vatMethod.includes("Flat")) {
 		        frm.set_df_property("disable_calculation", "hidden", 1);
 		        frm.set_df_property("is_vat_excluded", "hidden", 1);
-		        frm.set_value("disable_calculation", 1);
+		        if (frm.doc.docstatus === 0) {
+		            frm.set_value("disable_calculation", 1);
+		        }
 		    } else {
 		        frm.set_df_property("disable_calculation", "hidden", 0);
 		        frm.set_df_property("is_vat_excluded", "hidden", 0);
