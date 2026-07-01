@@ -1943,7 +1943,11 @@ class SalesInvoice(SellingController):
 				# redeemption should be done against same doctype
 				# also it shouldn't be against itself
 				continue
-			available_points = lp_entry.loyalty_points - flt(redemption_details.get(lp_entry.name))
+			# Neoffice fix (loyalty audit 2026-07): redemption_details holds the SUM of redeemed
+			# points per source entry, which is NEGATIVE. Subtracting it double-counted and made
+			# available_points GROW with each redemption -> unbounded over-redemption, negative
+			# balances, and points 'resurrecting' when redemption entries expired. Add instead.
+			available_points = lp_entry.loyalty_points + flt(redemption_details.get(lp_entry.name))
 			if available_points > points_to_redeem:
 				redeemed_points = points_to_redeem
 			else:
