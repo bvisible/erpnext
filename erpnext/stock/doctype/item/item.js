@@ -572,6 +572,46 @@ $.extend(erpnext.item, {
 		let promises = [];
 		let attr_val_fields = {};
 
+		//// added — existing variants, so already-used attribute values are flagged
+		let existing_variant_map = {}; // {attribute: {attribute_value: count}}
+		let existing_variants_count = 0;
+		function load_existing_variants() {
+			return frappe
+				.call({
+					method: "frappe.client.get_list",
+					args: {
+						doctype: "Item",
+						filters: { variant_of: frm.doc.name },
+						fields: ["name"],
+						limit_page_length: 0,
+					},
+				})
+				.then((r) => {
+					let variants = (r.message || []).map((v) => v.name);
+					existing_variants_count = variants.length;
+					if (!variants.length) return;
+					return frappe
+						.call({
+							method: "frappe.client.get_list",
+							args: {
+								doctype: "Item Variant Attribute",
+								filters: [["parent", "in", variants]],
+								fields: ["attribute", "attribute_value"],
+								limit_page_length: 0,
+								parent: "Item",
+							},
+						})
+						.then((r2) => {
+							(r2.message || []).forEach((row) => {
+								existing_variant_map[row.attribute] = existing_variant_map[row.attribute] || {};
+								let m = existing_variant_map[row.attribute];
+								m[row.attribute_value] = (m[row.attribute_value] || 0) + 1;
+							});
+						});
+				});
+		}
+		////
+
 		function make_fields_from_attribute_values(attr_dict) {
 			let fields = [];
 			Object.keys(attr_dict).forEach((name, i) => {
@@ -580,9 +620,13 @@ $.extend(erpnext.item, {
 				}
 				fields.push({ fieldtype: "Column Break", label: name });
 				attr_dict[name].forEach((value) => {
+					//// added — mark values that already have a variant
+					let used = (existing_variant_map[name] && existing_variant_map[name][value]) || 0;
+					let shown_label = used ? `${value}  ✓ ${__("already created")}` : value;
+					////
 					fields.push({
 						fieldtype: "Check",
-						label: value,
+						label: shown_label, //// was: value
 						fieldname: value,
 						default: 0,
 						onchange: function () {
@@ -630,6 +674,17 @@ $.extend(erpnext.item, {
 						options: `<label class="control-label">
 							${__("Select at least one value from each of the attributes.")}
 						</label>`,
+					},
+					//// added — summary of already-created variants (values checked "✓ already created" below)
+					{
+						fieldtype: "HTML",
+						fieldname: "existing_variants_summary",
+						options: existing_variants_count
+							? `<div class="text-muted" style="margin:2px 0 6px;font-size:12px;">
+									${__("{0} variant(s) already created", [existing_variants_count])} —
+									${__("values marked ✓ already have a variant")}
+							   </div>`
+							: "",
 					},
 					//// added
 					{
@@ -680,6 +735,30 @@ $.extend(erpnext.item, {
 				"margin-bottom",
 				"0px"
 			);
+
+			//// added — per-attribute "select all / none" so generating everywhere is one click
+			me.multiple_variant_dialog.$wrapper.find(".form-column").each((i, col) => {
+				if (i === 0 || i === 1) return; // help/summary + Manage Stock columns
+				let $col = $(col);
+				if ($col.find(".neo-attr-select-all").length) return;
+				let $checks = $col.find(".checkbox input[type='checkbox']");
+				if (!$checks.length) return;
+				let $link = $(
+					`<a href="#" class="neo-attr-select-all text-muted" style="font-size:11px;display:inline-block;margin:2px 0 6px;">${__("Select all")}</a>`
+				);
+				$link.on("click", (e) => {
+					e.preventDefault();
+					let allChecked = $col.find(".checkbox input[type='checkbox']:not(:checked)").length === 0;
+					$col.find(".checkbox input[type='checkbox']").each((j, cb) => {
+						if ($(cb).is(":checked") === allChecked) {
+							$(cb).prop("checked", !allChecked).trigger("change");
+						}
+					});
+					$link.text(allChecked ? __("Select all") : __("Deselect all"));
+				});
+				$col.find(".column-label").after($link);
+			});
+			////
 
 			me.multiple_variant_dialog.disable_primary_action();
 			me.multiple_variant_dialog.clear();
@@ -753,10 +832,12 @@ $.extend(erpnext.item, {
 			}
 		}, this);
 
-		Promise.all(promises).then(() => {
-			let fields = make_fields_from_attribute_values(attr_val_fields);
-			make_and_show_dialog(fields);
-		});
+		Promise.all(promises)
+			.then(load_existing_variants) //// added — flag already-created variants
+			.then(() => {
+				let fields = make_fields_from_attribute_values(attr_val_fields);
+				make_and_show_dialog(fields);
+			});
 	},
 
 	show_single_variant_dialog: function (frm) {
