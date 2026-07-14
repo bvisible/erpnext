@@ -1527,9 +1527,10 @@ frappe.ui.form.on("Journal Entry", {
             }
         }
 		if (frm.doc.docstatus > 0) {
-			frm.add_custom_button(__('Quick Entry'), function() {
-                return erpnext.journal_entry.quick_entry(frm);
-            });
+			// No "Quick Entry" on a submitted / cancelled entry: the form is
+			// read-only, so the quick-entry dialog would only mislead the user
+			// (it can't edit the posted document). Quick Entry stays a draft-only
+			// affordance (added in the docstatus == 0 branch above).
 			frm.add_custom_button(
 				__("Ledger"),
 				function () {
@@ -2182,6 +2183,14 @@ $.extend(erpnext.journal_entry, {
 	},
 
 	quick_entry: function(frm) {
+        // Guard: never stack two Quick Journal Entry dialogs. On a fresh doc
+        // the form `refresh` can fire more than once, and a second dialog
+        // would orphan the first one's Bootstrap backdrop — leaving an
+        // invisible, click-blocking overlay over the whole form (the "forbidden
+        // cursor / can't type in the table until reload" bug). `.display` is
+        // set synchronously by frappe.ui.Dialog.show/hide, so it's race-safe.
+        if (frm._qje_dialog && frm._qje_dialog.display) return;
+
         var naming_series_options = frm.fields_dict.naming_series.df.options;
         var naming_series_default =
             frm.fields_dict.naming_series.df.default || naming_series_options.split("\n")[0];
@@ -2425,10 +2434,18 @@ $.extend(erpnext.journal_entry, {
             _handleSubmit(dialog, false, false);
         });
 
-        // Check VAT info on dialog load
+        frm._qje_dialog = dialog;
+
+        // Show the dialog SYNCHRONOUSLY, then resolve VAT visibility rules in
+        // the async callback. Deferring show() inside getCompanyVatInfo() raced
+        // with the fresh doc's own re-render: the Bootstrap modal/backdrop
+        // lifecycle desynced and orphaned an opacity-0 backdrop (z-index 1040,
+        // pointer-events:auto) over the whole form, so the accounts table could
+        // not be edited until a reload. A synchronous show keeps the modal
+        // lifecycle deterministic.
+        dialog.show();
         erpnext.journal_entry_utils.getCompanyVatInfo(company, (vatInfo) => {
             _applyVatRules(dialog, vatInfo, null);
-            dialog.show();
         });
     },
 
