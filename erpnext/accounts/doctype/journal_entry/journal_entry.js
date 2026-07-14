@@ -5,33 +5,6 @@ frappe.provide("erpnext.accounts");
 frappe.provide("erpnext.journal_entry");
 frappe.provide("erpnext.journal_entry_utils");
 
-// One-time global safety net for orphaned modal backdrops.
-//
-// The Journal Entry form auto-opens a Quick Entry dialog on every new doc. If
-// the SPA route changes while that modal is still mid-transition (e.g. the user
-// creates one entry right after another, or navigates away before the dialog
-// settled), Bootstrap can leak the backdrop: an invisible opacity-0 overlay
-// (z-index 1040, pointer-events:auto) stays over the whole page and makes the
-// accounts table impossible to edit until a manual reload — exactly the
-// "forbidden cursor, refresh fixes it" symptom. After each route change, once
-// no modal is actually shown, purge any leftover backdrop and clear the stray
-// `modal-open` state. Installed once, guarded by a flag on `frappe`.
-if (frappe.router && !frappe._neo_backdrop_guard) {
-    frappe._neo_backdrop_guard = true;
-    frappe.router.on("change", () => {
-        setTimeout(() => {
-            // A freshly opened dialog carries `.show`/`.in`; only purge when
-            // nothing is genuinely displayed (so we never kill a live modal).
-            if (document.querySelector(".modal.show, .modal.in")) return;
-            const backdrops = document.querySelectorAll(".modal-backdrop");
-            if (!backdrops.length) return;
-            backdrops.forEach((b) => b.remove());
-            document.body.classList.remove("modal-open");
-            document.body.style.removeProperty("padding-right");
-        }, 500);
-    });
-}
-
 // Check if the utility functions are available and initialize them
 if (frappe.initialize_journal_entry_utils) {
     frappe.initialize_journal_entry_utils();
@@ -2474,6 +2447,24 @@ $.extend(erpnext.journal_entry, {
         erpnext.journal_entry_utils.getCompanyVatInfo(company, (vatInfo) => {
             _applyVatRules(dialog, vatInfo, null);
         });
+
+        // If the user navigates away before closing this auto-opened dialog
+        // (e.g. creating entries back-to-back), hide it cleanly on the next
+        // route change so Bootstrap tears down its backdrop itself. Without
+        // this the backdrop leaked across the SPA navigation and left an
+        // invisible click-blocking overlay on the next page ("forbidden
+        // cursor, reload fixes it"). `once` auto-unsubscribes, so no listener
+        // build-up; letting Bootstrap own the hide avoids stripping a live
+        // modal's backdrop by hand.
+        if (frappe.router && frappe.router.once) {
+            frappe.router.once("change", function () {
+                try {
+                    if (dialog.display) dialog.hide();
+                } catch (e) {
+                    // ignore — dialog already gone
+                }
+            });
+        }
     },
 
 	account_query: function (frm) {
