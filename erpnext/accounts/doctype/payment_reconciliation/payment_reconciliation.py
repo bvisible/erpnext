@@ -19,6 +19,7 @@ from erpnext.accounts.utils import (
 	QueryPaymentLedger,
 	create_gain_loss_journal,
 	get_outstanding_invoices,
+	get_proposed_invoices,
 	reconcile_against_document,
 )
 from erpnext.controllers.accounts_controller import get_advance_payment_entries_for_regional
@@ -377,7 +378,36 @@ class PaymentReconciliation(Document):
 			non_reconciled_invoices, key=lambda k: k["posting_date"] or getdate(nowdate())
 		)
 
+		self.notify_invoices_in_payment_run()
+
 		self.add_invoice_entries(non_reconciled_invoices)
+
+	def notify_invoices_in_payment_run(self):
+		"""Tell the user which invoices were left out because they are in a payment run.
+
+		Without this the invoices simply vanish from the list and the user has no way of
+		knowing why - which is misleading when a payment run silently fails at the bank.
+		"""
+		proposed = get_proposed_invoices(self.party_type, self.party)
+		if not proposed:
+			return
+
+		still_open = frappe.get_all(
+			"Purchase Invoice",
+			filters={"name": ("in", list(proposed)), "outstanding_amount": ("!=", 0)},
+			pluck="name",
+			order_by="name",
+		)
+		if not still_open:
+			return
+
+		msgprint(
+			_("{0} invoice(s) are excluded because they are already in a payment run: {1}").format(
+				len(still_open), ", ".join(get_link_to_form("Purchase Invoice", d) for d in still_open)
+			),
+			title=_("Invoices in payment run"),
+			indicator="blue",
+		)
 
 	def add_invoice_entries(self, non_reconciled_invoices):
 		# Populate 'invoices' with JVs and Invoices to reconcile against

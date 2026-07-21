@@ -1178,6 +1178,36 @@ def get_held_invoices(party_type, party):
 	return held_invoices
 
 
+def get_proposed_invoices(party_type, party):
+	"""
+	Returns a set of names of Purchase Invoices for the given party that are part of a
+	payment run (custom field `is_proposed`, set by erpnextswiss Payment Proposal).
+
+	Such invoices are already queued for payment at the bank, so they must not be offered
+	for allocation again - reconciling one against a credit note would leave the payment
+	to go through anyway, paying the supplier twice.
+
+	`is_proposed` is provided by erpnextswiss; return an empty set when it is absent.
+	"""
+	proposed_invoices = set()
+
+	if party_type != "Supplier":
+		return proposed_invoices
+
+	if not frappe.db.has_column("Purchase Invoice", "is_proposed"):
+		return proposed_invoices
+
+	pi = qb.DocType("Purchase Invoice")
+	rows = (
+		qb.from_(pi)
+		.select(pi.name)
+		.where((pi.docstatus == 1) & (pi.is_proposed == 1) & (pi.supplier == party))
+		.run(as_dict=True)
+	)
+
+	return set(d["name"] for d in rows)
+
+
 def get_outstanding_invoices(
 	party_type,
 	party,
@@ -1205,6 +1235,7 @@ def get_outstanding_invoices(
 		party_account_type = erpnext.get_party_account_type(party_type)
 
 	held_invoices = get_held_invoices(party_type, party)
+	proposed_invoices = get_proposed_invoices(party_type, party)
 
 	common_filter = common_filter or []
 	common_filter.append(ple.account_type == party_account_type)
@@ -1234,6 +1265,10 @@ def get_outstanding_invoices(
 				and max_outstanding
 				and not (outstanding_amount >= min_outstanding and outstanding_amount <= max_outstanding)
 			):
+				continue
+
+			if d.voucher_type == "Purchase Invoice" and d.voucher_no in proposed_invoices:
+				# already queued for payment at the bank - see get_proposed_invoices()
 				continue
 
 			if not d.voucher_type == "Purchase Invoice" or d.voucher_no not in held_invoices:
