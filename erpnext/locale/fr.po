@@ -62553,3 +62553,9 @@ msgstr "Optionnel. Lier cette écriture à un projet pour suivre les dépenses."
 
 msgid "Without VAT"
 msgstr "Sans TVA"
+
+msgid "Invoices in payment run"
+msgstr "Factures en cours de paiement"
+
+msgid "{0} invoice(s) are excluded because they are already in a payment run: {1}"
+msgstr "{0} facture(s) sont écartées car elles sont déjà en cours de paiement : {1}"
