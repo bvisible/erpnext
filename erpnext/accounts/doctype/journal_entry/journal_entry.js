@@ -1560,7 +1560,19 @@ frappe.ui.form.on("Journal Entry", {
 		}
 
 		if (frm.doc.__islocal) {
-            erpnext.journal_entry.quick_entry(frm);
+			//// Neoffice — upstream only adds the button below; we open the dialog
+			//// on its own because our accountants live in this form. But `refresh`
+			//// fires several times on a fresh doc, and each pass built ANOTHER
+			//// dialog as soon as the previous one had been hidden (submitting the
+			//// quick entry hides it, so the guard on `display` lets the next one
+			//// through). Stacked dialogs orphan each other's Bootstrap backdrop:
+			//// an invisible, click-blocking layer over the whole page — the
+			//// "can't add a line in the table until I reload" bug. Auto-open ONCE
+			//// per document; the button stays for re-opening it on purpose.
+			if (frm._qje_auto_opened_for !== frm.doc.name) {
+				frm._qje_auto_opened_for = frm.doc.name;
+				erpnext.journal_entry.quick_entry(frm);
+			}
 			frm.add_custom_button(__("Quick Entry"), function () {
 				return erpnext.journal_entry.quick_entry(frm);
 			});
