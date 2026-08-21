@@ -739,14 +739,6 @@ frappe.ui.form.on("Sales Invoice", {
 			'Payment Entry': 'Payment'
 		},
 		frm.fields_dict["timesheets"].grid.get_field("time_sheet").get_query = function(doc, cdt, cdn){
-			//// added if
-			if(doc.worksheet) {
-				return{
-					query: "erpnext.projects.doctype.timesheet.timesheet.get_timesheet",
-					filters: {'worksheet': doc.worksheet}
-				}
-			}
-			////
 			return{
 				query: "erpnext.projects.doctype.timesheet.timesheet.get_timesheet",
 				filters: {'project': doc.project}
@@ -974,27 +966,11 @@ frappe.ui.form.on("Sales Invoice", {
 			});
 		}
 	},
-	//// added trigger
-	worksheet: function(frm) {
-		if (frm.doc.worksheet) {
-			frm.events.add_timesheet_data(frm, {
-				worksheet: frm.doc.worksheet
-			});
-		}
-	},
-	////
-
 	async add_timesheet_data(frm, kwargs) {
 		if (kwargs === "Sales Invoice") {
 			// called via frm.trigger()
 			kwargs = Object();
 		}
-
-		//// added if
-		if(!kwargs.hasOwnProperty("worksheet") && frm.doc.worksheet) {
-			kwargs.worksheet = frm.doc.worksheet;
-		}
-		////
 
 		if (!Object.prototype.hasOwnProperty.call(kwargs, "project") && frm.doc.project) {
 			kwargs.project = frm.doc.project;
@@ -1180,13 +1156,6 @@ frappe.ui.form.on("Sales Invoice", {
 								fieldname: "col_break_2",
 							},
 							{
-								"label" : __("Worksheet"),
-								"fieldname": "worksheet",
-								"fieldtype": "Link",
-								"options": "Worksheet",
-								"default": frm.doc.worksheet
-							},
-							{
 								fieldtype: "Section Break",
 								fieldname: "section_break_2",
 							},
@@ -1202,23 +1171,13 @@ frappe.ui.form.on("Sales Invoice", {
 						],
 						primary_action: function () {
 							const data = d.get_values();
-							//// added complete if
-							if(data.worksheet) {
-								frm.events.add_timesheet_data(frm, {
-									from_time: data.from_time,
-									to_time: data.to_time,
-									worksheet: data.worksheet
-								});
-							} else {
-							//// added else condition but not code inside
-								frm.events.add_timesheet_data(frm, {
-									from_time: data.from_time,
-									to_time: data.to_time,
-									project: data.project,
-									item_code: data.item_code,
-								});
-							//// end else + handle timesheet rates
-							}
+							//// added — aggregate pulled timesheets into one billing item per rate
+							frm.events.add_timesheet_data(frm, {
+								from_time: data.from_time,
+								to_time: data.to_time,
+								project: data.project,
+								item_code: data.item_code,
+							});
 							let timesheet_rates = {};
 							setTimeout(function() {
 								frm.doc.timesheets.forEach(function (timesheet) {

@@ -193,10 +193,6 @@ class Timesheet(Document):
 		if not (data.from_time and data.hours):
 			return
 
-		#//// added if
-		if self.worksheet:
-			return
-
 		_to_time = get_datetime(add_to_date(data.from_time, hours=data.hours, as_datetime=True))
 		if abs(time_diff_in_seconds(_to_time, data.to_time)) >= 1:
 			data.to_time = _to_time
@@ -376,11 +372,6 @@ def get_timesheet(doctype, txt, searchfield, start, page_len, filters):
 	condition = ""
 	if filters.get("project"):
 		condition = "and tsd.project = %(project)s"
-
-	#//// added if
-	if filters.get("worksheet"):
-		condition += " and tsd.worksheet = %(worksheet)s"
-	#////
 
 	return frappe.db.sql(
 		f"""select distinct tsd.parent from `tabTimesheet Detail` tsd,
