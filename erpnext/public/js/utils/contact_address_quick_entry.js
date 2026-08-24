@@ -21,7 +21,12 @@ frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm
 		}
 	}
 
-	insert() {
+	//// Neoffice — extracted from insert() so open_doc() can use it too. Upstream
+	//// only renamed the alias fields on insert, so "Edit in full page" carried
+	//// `email_address` onto a Customer that has no such field: the email the
+	//// caller had just typed was dropped on the floor, silently, and the customer
+	//// was created unreachable. Remove when upstream maps them in update_doc().
+	map_alias_fields() {
 		/**
 		 * Using alias fieldnames because the doctype definition define "email_id" and "mobile_no" as readonly fields.
 		 * This results in the fields being "hidden".
@@ -34,11 +39,29 @@ frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm
 		};
 
 		Object.entries(map_field_names).forEach(([fieldname, new_fieldname]) => {
-			this.dialog.doc[new_fieldname] = this.dialog.doc[fieldname];
-			delete this.dialog.doc[fieldname];
+			if (this.dialog.doc[fieldname] !== undefined) {
+				this.dialog.doc[new_fieldname] = this.dialog.doc[fieldname];
+				delete this.dialog.doc[fieldname];
+			}
 		});
+	}
 
+	insert() {
+		this.map_alias_fields(); //// Neoffice — was inline here, see map_alias_fields()
 		return super.insert();
+	}
+
+	//// Neoffice — added. update_doc() copies the dialog values onto the doc under
+	//// their DIALOG names, and upstream renamed the aliases in insert() only — so
+	//// clicking "Edit Full Form" carried `email_address` onto a Customer that has
+	//// no such field: the mandatory email vanished on the way, and the customer
+	//// was created unreachable. Map before handing over. super.open_doc() runs
+	//// update_doc() again and re-adds the alias key, which the server ignores;
+	//// calling super keeps its after_save hook and __run_link_triggers.
+	open_doc(set_hooks) {
+		this.update_doc();
+		this.map_alias_fields();
+		return super.open_doc(set_hooks);
 	}
 
 	get_variant_fields() {
