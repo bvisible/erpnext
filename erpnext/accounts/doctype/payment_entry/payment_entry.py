@@ -2362,6 +2362,13 @@ def get_outstanding_reference_documents(args, validate=False):
 			max_outstanding=args.get("outstanding_amt_less_than"),
 			accounting_dimensions=accounting_dimensions_filter,
 			vouchers=args.get("vouchers") or None,
+			#//// Neoffice — validate=True means we are re-reading the outstanding of
+			#//// references a Payment Entry ALREADY carries (called from
+			#//// validate_allocated_amount_with_latest_data), not offering invoices to
+			#//// choose from. Hiding payment-run
+			#//// invoices here made every Payment Entry created by a Payment Proposal die on
+			#//// "has already been fully paid" — the proposal flags is_proposed itself.
+			exclude_proposed=not validate,
 		)
 
 		outstanding_invoices = split_invoices_based_on_payment_terms(
