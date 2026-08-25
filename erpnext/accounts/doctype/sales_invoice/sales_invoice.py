@@ -2758,14 +2758,34 @@ def update_multi_mode_option(doc, pos_profile):
 	mode_of_payments = [d.mode_of_payment for d in pos_profile.get("payments")]
 	mode_of_payments_info = get_mode_of_payments_info(mode_of_payments, doc.company)
 
+	#//// Neoffice - two different causes used to share one message. The query
+	#//// above filters on `mp.enabled = 1`, so a mode that is merely DISABLED
+	#//// comes back empty and was reported as "missing account" - sending the
+	#//// user to configure an account that is already there, with no way out of
+	#//// the dialog. Seen on osiris: two disabled Payrexx modes still listed on
+	#//// a POS Profile threw this on every single till opening. Name the real
+	#//// cause instead; the account branch below is untouched.
+	disabled_modes = []
+
 	for row in pos_profile.get("payments"):
 		payment_mode = mode_of_payments_info.get(row.mode_of_payment)
 		if not payment_mode:
-			invalid_modes.append(get_link_to_form("Mode of Payment", row.mode_of_payment))
+			if not frappe.db.get_value("Mode of Payment", row.mode_of_payment, "enabled"):
+				disabled_modes.append(get_link_to_form("Mode of Payment", row.mode_of_payment))
+			else:
+				invalid_modes.append(get_link_to_form("Mode of Payment", row.mode_of_payment))
 			continue
 
 		payment_mode.default = row.default
 		append_payment(payment_mode)
+
+	if disabled_modes:
+		frappe.throw(
+			_("Mode of Payment {0} is disabled. Enable it, or remove it from POS Profile {1}.").format(
+				", ".join(disabled_modes), get_link_to_form("POS Profile", pos_profile.get("name"))
+			),
+			title=_("Disabled Mode of Payment"),
+		)
 
 	if invalid_modes:
 		if invalid_modes == 1:
