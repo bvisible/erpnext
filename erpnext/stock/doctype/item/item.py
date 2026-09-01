@@ -183,8 +183,10 @@ class Item(Document):
 			for default in self.item_defaults or [frappe._dict()]:
 				self.add_price(default.default_price_list)
 
-		#//// added if
-		if self.buying_standard_rate:
+		#//// Neoffice — buying_standard_rate is a Neoffice custom field (not in
+		#//// this doctype): read it with .get(), or every Item insert dies in
+		#//// AttributeError on a site without the customization (CI, fresh sites).
+		if self.get("buying_standard_rate"):
 			price_list = frappe.db.get_single_value(
 				"Buying Settings", "buying_price_list"
 			) or frappe.db.get_value("Price List", _("Standard Buying"))
@@ -266,7 +268,7 @@ class Item(Document):
 					"uom": self.stock_uom,
 					"brand": self.brand,
 					"currency": erpnext.get_default_currency(),
-					"price_list_rate": self.standard_rate if not buying else self.buying_standard_rate, #//// added if not buying else self.buying_standard_rate,
+					"price_list_rate": self.standard_rate if not buying else self.get("buying_standard_rate"), #//// added if not buying else buying_standard_rate (custom field, .get())
 				}
 			)
 			item_price.insert()
