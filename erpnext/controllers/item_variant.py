@@ -205,12 +205,15 @@ def create_variant(item, args, use_template_image=False):
 
 	template = frappe.get_doc("Item", item)
 	variant = frappe.new_doc("Item")
-	#//// added 2 if
-	if template.variant_selling_price and not variant.standard_rate:
+	#//// Neoffice — variant_selling_price / variant_buying_price /
+	#//// buying_standard_rate are Neoffice custom fields: .get() reads, or
+	#//// variant creation dies in AttributeError on a site without the
+	#//// customizations (CI runners, fresh sites).
+	if template.get("variant_selling_price") and not variant.standard_rate:
 		variant.standard_rate = template.variant_selling_price
-	if template.variant_buying_price and not variant.buying_standard_rate:
+	if template.get("variant_buying_price") and not variant.get("buying_standard_rate"):
 		variant.buying_standard_rate = template.variant_buying_price
-	#/////
+	#////
 	variant.variant_based_on = "Item Attribute"
 	variant_attributes = []
 

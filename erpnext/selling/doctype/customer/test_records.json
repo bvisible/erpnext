@@ -4,42 +4,48 @@
   "customer_name": "_Test Customer With Template",
   "customer_type": "Individual",
   "doctype": "Customer",
-  "territory": "_Test Territory"
+  "territory": "_Test Territory",
+  "default_currency": "INR"
  },
  {
   "customer_group": "_Test Customer Group",
   "customer_name": "_Test Customer P",
   "customer_type": "Individual",
   "doctype": "Customer",
-  "territory": "_Test Territory"
+  "territory": "_Test Territory",
+  "default_currency": "INR"
  },
  {
   "customer_group": "_Test Customer Group",
   "customer_name": "_Test Customer",
   "customer_type": "Individual",
   "doctype": "Customer",
-  "territory": "_Test Territory"
+  "territory": "_Test Territory",
+  "default_currency": "INR"
  },
  {
   "customer_group": "_Test Customer Group",
   "customer_name": "_Test Customer 1",
   "customer_type": "Individual",
   "doctype": "Customer",
-  "territory": "_Test Territory"
+  "territory": "_Test Territory",
+  "default_currency": "INR"
  },
  {
   "customer_group": "_Test Customer Group",
   "customer_name": "_Test Customer 2",
   "customer_type": "Individual",
   "doctype": "Customer",
-  "territory": "_Test Territory"
+  "territory": "_Test Territory",
+  "default_currency": "INR"
  },
  {
   "customer_group": "_Test Customer Group",
   "customer_name": "_Test Customer 3",
   "customer_type": "Individual",
   "doctype": "Customer",
-  "territory": "_Test Territory"
+  "territory": "_Test Territory",
+  "default_currency": "INR"
  },
  {
   "customer_group": "_Test Customer Group",
@@ -48,10 +54,12 @@
   "doctype": "Customer",
   "territory": "_Test Territory",
   "default_currency": "USD",
-  "accounts": [{
-	  "company": "_Test Company",
-	  "account": "_Test Receivable USD - _TC"
-  }]
+  "accounts": [
+   {
+    "company": "_Test Company",
+    "account": "_Test Receivable USD - _TC"
+   }
+  ]
  },
  {
   "customer_group": "_Test Customer Group",
@@ -59,6 +67,7 @@
   "customer_type": "Individual",
   "doctype": "Customer",
   "territory": "_Test Territory",
-  "tax_category": "_Test Tax Category 1"
+  "tax_category": "_Test Tax Category 1",
+  "default_currency": "INR"
  }
 ]
