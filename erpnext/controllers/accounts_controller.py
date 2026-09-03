@@ -970,6 +970,27 @@ class AccountsController(TransactionBase):
 						args["is_subcontracted"] = self.is_subcontracted
 
 					ret = get_item_details(args, self, for_validate=for_validate, overwrite_warehouse=False)
+
+					#//// Neoffice — a "Discount on Other Item" pricing rule is fetched for
+					#//// the TRIGGER row too (the SQL widens the match and the qty test
+					#//// runs on the trigger), so `ret` carries a discount meant for
+					#//// another row. The desk client skips those values on the trigger
+					#//// (transaction.js, _set_values_for_item_list); this server path
+					#//// copied them onto any new row — a webshop cart discounted the
+					#//// trigger item as well as the offered one. Mirror the client:
+					#//// keep the rule on the row, drop the money.
+					if ret.get("apply_rule_on_other_items"):
+						beneficiaries = json.loads(ret.get("apply_rule_on_other_items")) or []
+						apply_rule_on = ret.get("apply_rule_on") or "item_code"
+						if beneficiaries and item.get(apply_rule_on) not in beneficiaries:
+							for money_field in (
+								"discount_percentage",
+								"discount_amount",
+								"margin_type",
+								"margin_rate_or_amount",
+							):
+								ret.pop(money_field, None)
+
 					for fieldname, value in ret.items():
 						if item.meta.get_field(fieldname) and value is not None:
 							if (
