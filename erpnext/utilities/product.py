@@ -78,7 +78,15 @@ def get_price(item_code, price_list, customer_group, company, qty=1, party=None,
 				if pricing_rule.pricing_rules:
 					valid_from = frappe.db.get_value("Pricing Rule", json.loads(pricing_rule.pricing_rules)[0], "valid_from")
 					valid_upto = frappe.db.get_value("Pricing Rule", json.loads(pricing_rule.pricing_rules)[0], "valid_upto")
-					synchronized_rule = frappe.db.get_value("Pricing Rule", json.loads(pricing_rule.pricing_rules)[0], "synchronized_rule")
+					#//// Neoffice — `synchronized_rule` is a legacy column: no Custom Field defines it any more
+					#//// (it came with the retired shop-sync integration), so it exists only on sites that had it
+					#//// before. A fresh site (CI, a new instance) has no such column and get_value died with
+					#//// OperationalError 1054, taking every priced webshop listing with it. Read it only if present.
+					synchronized_rule = (
+						frappe.db.get_value("Pricing Rule", json.loads(pricing_rule.pricing_rules)[0], "synchronized_rule")
+						if frappe.db.has_column("Pricing Rule", "synchronized_rule")
+						else 0
+					)
 					if valid_from:
 						price[0].valid_from = str(valid_from) + " 00:00:00"
 

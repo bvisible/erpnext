@@ -609,19 +609,9 @@
    "group": "Allowed Items",
    "link_doctype": "Party Specific Item",
    "link_fieldname": "party"
-  },
-  {
-   "group": "Worksheet",
-   "link_doctype": "Worksheet",
-   "link_fieldname": "customer"
-  },
-  {
-   "group": "Worksheet",
-   "link_doctype": "Object",
-   "link_fieldname": "customer"
   }
  ],
- "modified": "2025-03-05 10:01:47.885574",
+ "modified": "2026-09-03 12:36:48.222508",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",

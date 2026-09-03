@@ -138,6 +138,15 @@ class Customer(TransactionBase):
 		self.update_lead_status()
 
 	def validate(self):
+		#//// Neoffice — default_currency is mandatory on our Customer (customer.json, reqd since
+		#//// 2023-11) while upstream leaves it optional. Every programmatic creation — webshop
+		#//// signup, POS quick customer, imports, upstream test fixtures — inserts without one and
+		#//// died on MandatoryError. Fill it from the default company before the mandatory check,
+		#//// so mandatory means "never empty", not "every caller must know".
+		if not self.default_currency:
+			from erpnext import get_default_currency
+
+			self.default_currency = get_default_currency()
 		self.flags.is_new_doc = self.is_new()
 		self.flags.old_lead = self.lead_name
 		validate_party_accounts(self)
