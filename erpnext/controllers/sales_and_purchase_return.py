@@ -1,6 +1,10 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+#//// Neoffice — the ONLY divergence of this 1150-line file from upstream v15.89.0 is its
+#//// missing final newline (a5f79d75b3, 2025-02-26 "update neov2", which stripped it from ten
+#//// files of this lot at once). No code differs — take upstream's side on the last-line
+#//// conflict the merge will report.
 from collections import defaultdict
 
 import frappe

@@ -311,6 +311,12 @@ def get_projectwise_timesheet_data(project=None, parent=None, from_time=None, to
 	if from_time and to_time:
 		condition += "AND CAST(tsd.from_time as DATE) BETWEEN %(from_time)s AND %(to_time)s"
 
+	#//// Neoffice — one column added to the SELECT: the Timesheet Detail billing_rate. Upstream
+	#//// returns the billing amount only, so the Sales Invoice "Get Timesheets" dialog could not
+	#//// group the pulled lines by rate — which is what our invoices bill ("12 h @ 120.00" instead
+	#//// of forty lines). Consumed by append_time_log / the aggregation in sales_invoice.js (marked
+	#//// there). Kept by 0269b590df (2026-08-21) when the neoffice_worksheet branches were removed:
+	#//// the per-rate aggregation never depended on that app.
 	#//// added tsd.billing_rate as billing_rate
 	query = f"""
 		SELECT

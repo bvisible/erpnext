@@ -236,6 +236,11 @@ def item_query(doctype, txt, searchfield, start, page_len, filters, as_dict=Fals
 		# scan description only if items are less than 50000
 		description_cond = "or tabItem.description LIKE %(txt)s"
 
+	#//// Neoffice — the Item link search also matches the SUPPLIER part number (a47ceb00bb,
+	#//// 2024-03-05 "add supplier part ref in item search"): upstream searches item code, item name,
+	#//// the barcode table and (under 50 000 items) the description. Our buyers type the reference
+	#//// printed on the supplier's invoice, which is `Item Supplier.supplier_part_no`.
+	#//// TO REVIEW: the sub-select runs on every keystroke of every Item link field on the site.
 	#//// added or tabItem.item_code IN (select parent from `tabItem Supplier` where supplier_part_no LIKE %(txt)s)
 	return frappe.db.sql(
 		"""select
@@ -708,6 +713,14 @@ def get_expense_account(doctype, txt, searchfield, start, page_len, filters):
 	if filters.get("company"):
 		condition += "and tabAccount.company = %(company)s"
 
+	#//// Neoffice — added early return (e44c5deb5f, 2025-07-07 "Allow all accounts for Purchase
+	#//// Invoice Item"): upstream restricts the expense-account picker to Profit and Loss accounts
+	#//// plus a few account types, which rules out the balance-sheet accounts a Swiss purchase
+	#//// invoice legitimately books to (asset purchases, prepayments). When the request comes from a
+	#//// Purchase Invoice Item, every non-group account of the company is offered instead.
+	#//// TO REVIEW: the caller is identified through `frappe.form_dict`, i.e. the raw HTTP request —
+	#//// so the widening silently does not apply when get_expense_account is called from Python
+	#//// (tests, background jobs), and it depends on the client sending `reference_doctype`.
 	#//// START MODIFICATION - Allow all accounts for Purchase Invoice Item
 	# Get reference doctype to know where the call comes from
 	reference_doctype = frappe.form_dict.get('reference_doctype', '')

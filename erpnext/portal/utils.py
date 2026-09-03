@@ -1,4 +1,6 @@
 import frappe
+#//// Neoffice — import added for the Territory root used when creating a portal Customer below
+#//// (28b1f44368, 2025-04-28 "Fix bug create customer").
 from frappe.utils.nestedset import get_root_of
 
 
@@ -19,6 +21,35 @@ def set_default_role(doc, method):
 			elif link.link_doctype == "Supplier" and "Supplier" not in roles:
 				doc.add_roles("Supplier")
 
+#//// Neoffice ▼▼▼ create_customer_or_supplier is rewritten — +142 / -24 lines against upstream.
+####
+#//// Upstream: if the session user has no party yet (party_exists), create one, blank, with
+#//// ignore_mandatory, then a Contact. On our sites that produced duplicate Customers and
+#//// half-filled records: the webshop signs the shopper in through this same on_session_creation
+#//// hook, and our Customer has mandatory fields upstream's blank insert never fills
+#//// (default_currency is reqd in our customer.json — see selling/doctype/customer/customer.py).
+####
+#//// What ours does instead (28b1f44368, 2025-04-28 "Fix bug create customer"; d62d07f7d4,
+#//// 2025-08-15 "improve customer portal user linking"):
+#////   - looks for an existing party in THREE ways before creating anything — the Portal User
+#////     row, the Contact links, then a Customer with the same full name — and links the user to
+#////     the one it finds (portal_users row) rather than creating a second;
+#////   - fills the new Customer properly: customer_type, Territory root, customer group (from
+#////     Webshop Settings when it defines one) and the company default_currency;
+#////   - honours a `skip_customer_creation` flag on the User, so a caller that creates the
+#////     account itself is not shadowed by this hook;
+#////   - never lets the hook break the login: the insert and the contact creation are wrapped,
+#////     a DuplicateEntryError falls back to linking the existing Customer, and failures are
+#////     logged instead of raised.
+####
+#//// TO REVIEW before the upstream merge:
+#////   - matching a party by CUSTOMER NAME (full name of the user) merges two different people
+#////     who happen to share a name into one Customer record;
+#////   - the same "already exists" check is written three times over, once after party.update();
+#////   - `except Exception` around the insert turns a real failure into a silent None;
+#////   - it reads the `Webshop Settings` single, which the webshop app owns, not erpnext;
+#////   - upstream's party_exists() is now only used by the (unmarked) callers below.
+#//// Resolve this function from the two commits above, not line by line.
 def create_customer_or_supplier():
 	"""Based on the default Role (Customer, Supplier), create a Customer / Supplier.
 	Called on_session_creation hook.
@@ -190,6 +221,8 @@ def create_customer_or_supplier():
 
 	return party
 
+#//// Neoffice ▲▲▲ end of the rewritten create_customer_or_supplier (see its header above).
+#//// create_party_contact itself is upstream's, unchanged.
 def create_party_contact(doctype, fullname, user, party_name):
 	contact = frappe.new_doc("Contact")
 	contact.update({"first_name": fullname, "email_id": user})
@@ -200,6 +233,10 @@ def create_party_contact(doctype, fullname, user, party_name):
 
 
 def party_exists(doctype, user):
+	#//// Neoffice — body unchanged in substance (upstream returns the membership test directly; ours
+	#//// stores it in `result` first). This helper is no longer called by
+	#//// create_customer_or_supplier() above, which does its own three-way lookup. The file also
+	#//// lost its final newline (28b1f44368, 2025-04-28).
 	# //// check if contact exists against party and if it is linked to the doctype
 	contact_name = frappe.db.get_value("Contact", {"email_id": user})
 	if contact_name:

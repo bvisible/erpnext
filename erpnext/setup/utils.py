@@ -36,6 +36,13 @@ def before_tests():
 			}
 		)
 
+	#//// Neoffice — upstream's `frappe.db.sql("delete from \`tabItem Price\`")` is commented out
+	#//// (cdd6e7116b then 6eea69ece2, 2026-03-24). before_tests() runs at the start of every
+	#//// `bench run-tests`, and our instances run tests against the working site: one test run wiped
+	#//// every Item Price of a live shop. Upstream can afford it because it assumes a throw-away
+	#//// test database.
+	#//// TO REVIEW at the merge: keep this disabled, but the real fix is to stop running tests on a
+	#//// site that holds customer data — a fresh-site CI makes the deletion harmless again.
 	# DISABLED: mass DELETE wipes production data when tests run on shared DB
 	# frappe.db.sql("delete from `tabItem Price`")
 
