@@ -42,6 +42,10 @@ class ItemVariantSettings(Document):
 			"barcodes",
 			"has_variants",
 			"attributes",
+			#//// Neoffice — `is_stock_item` added to the set of fields that may NOT be copied from template
+			#//// to variant (3594a46c69, 2023-12-01). Upstream always inherits it, which defeats the
+			#//// "Manage Stock" checkbox we added to the multiple-variant dialog (stock/doctype/item/item.js,
+			#//// marked there): the variants must be able to be non-stock while their template is not.
 			"is_stock_item", #//// added
 		}
 

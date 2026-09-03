@@ -15,6 +15,9 @@
 			<div class="col-sm-1" style="margin-top: 8px;" title="{{ __("Reserved Stock") }}">
 				<a data-name="{{ d.reserved_stock }}">{{ d.reserved_stock }}</a>
 			</div>
+			<!-- //// Neoffice — upstream: <div class="col-sm-3">. Widened to col-sm-4 and right-aligned
+			     //// (a5f79d75b3, 2025-02-26 "update neov2") to make room for the stock summary added at the
+			     //// end of this column (marked below). The upstream markup is kept inline as a comment. -->
 			<!-- //// -->
 			<div class="col-sm-4" style=" text-align: right; "><!--<div class="col-sm-3">-->
 			<!-- //// -->
@@ -43,6 +46,12 @@
 						</span>
 					</span>
 				</span>
+				<!-- //// Neoffice — added block, no upstream equivalent (a5f79d75b3, 2025-02-26 "update neov2";
+				     //// the commit gives no rationale — TO REVIEW). Upstream shows reserved / actual / ordered
+				     //// as inline bar graphs only, which reads as a proportion, not as a number. These four
+				     //// labels spell the figures out and add the SELLABLE total (actual - reserved), the number
+				     //// a seller actually needs. Note the syntax: this template is rendered by frappe.render_
+				     //// template (a JS template), so the `? :` ternaries below are JavaScript, not Jinja. -->
 				<!-- //// -->
 				<span class="label label-info">{{ __("Reserved Stock") }}: {{ (d.total_reserved > 0) ? (d.total_reserved) : 0 }}</span><br>
 				<span class="label label-info">{{ __("Actual Stock") }}: {{ (d.actual_qty > 0) ? (d.actual_qty) : 0 }}</span><br>

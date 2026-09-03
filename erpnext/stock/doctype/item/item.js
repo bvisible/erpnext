@@ -572,6 +572,12 @@ $.extend(erpnext.item, {
 		let promises = [];
 		let attr_val_fields = {};
 
+		//// Neoffice — added, no upstream equivalent (1a94553c0e, 2026-07-08 "flag already-created
+		//// variants + per-attribute select-all"): loads the template's existing variants and the
+		//// attribute values they already use. Upstream's "Select Attribute Values" dialog shows no
+		//// trace of what exists, so users re-ticked everything and regenerated blindly (the backend
+		//// dedupes in silence, which hid the mistake). Consumed by the "✓ already created" labels and
+		//// the summary marked below, and chained onto the promises at the end of this method.
 		//// added — existing variants, so already-used attribute values are flagged
 		let existing_variant_map = {}; // {attribute: {attribute_value: count}}
 		let existing_variants_count = 0;
@@ -620,6 +626,9 @@ $.extend(erpnext.item, {
 				}
 				fields.push({ fieldtype: "Column Break", label: name });
 				attr_dict[name].forEach((value) => {
+					//// Neoffice — upstream sets `label: value`; ours appends "✓ already created" when that
+					//// attribute value already has a variant (1a94553c0e, 2026-07-08). The `fieldname` stays the
+					//// raw value, so get_selected_attributes() is unaffected.
 					//// added — mark values that already have a variant
 					let used = (existing_variant_map[name] && existing_variant_map[name][value]) || 0;
 					let shown_label = used ? `${value}  ✓ ${__("already created")}` : value;
@@ -675,6 +684,14 @@ $.extend(erpnext.item, {
 							${__("Select at least one value from each of the attributes.")}
 						</label>`,
 					},
+					//// Neoffice — two added dialog fields (1a94553c0e, 2026-07-08 for the summary; 3594a46c69,
+					//// 2023-12-01 "added checkbox in multiple variant creation for manage stock" for the checkbox):
+					//// a count of the variants that already exist, and a "Manage Stock" checkbox so a batch of
+					//// variants can be created as non-stock items in one go — upstream always inherits the
+					//// template's is_stock_item. The checkbox is read back in the primary action (marked below) and
+					//// honoured by controllers/item_variant.py and stock/doctype/item_variant_settings.
+					//// CAREFUL: these two fields shift the column indexes the dialog code walks — hence the
+					//// `i===0 || i===1` skips further down.
 					//// added — summary of already-created variants (values checked "✓ already created" below)
 					{
 						fieldtype: "HTML",
@@ -706,6 +723,9 @@ $.extend(erpnext.item, {
 				let selected_attributes = get_selected_attributes();
 				let use_template_image = me.multiple_variant_dialog.get_value("use_template_image");
 
+				//// Neoffice — passes the "Manage Stock" choice to enqueue_multiple_variant_creation inside the
+				//// attribute map (3594a46c69, 2023-12-01). It rides in `selected_attributes`, so the server
+				//// side must pop it before treating the dict as attributes — see controllers/item_variant.py.
 				selected_attributes["is_stock_item"] = me.multiple_variant_dialog.get_value("is_stock_item"); //// added line
 				me.multiple_variant_dialog.hide();
 				frappe.call({
@@ -736,6 +756,12 @@ $.extend(erpnext.item, {
 				"0px"
 			);
 
+			//// Neoffice — added, no upstream equivalent (1a94553c0e, 2026-07-08): a "Select all /
+			//// Deselect all" link per attribute column, because generating every variant of a template
+			//// otherwise means ticking each value by hand.
+			//// TO REVIEW: it walks Frappe's dialog markup (.form-column / .checkbox input / .column-label)
+			//// and skips columns 0 and 1 by index — any change to the dialog layout, ours or upstream's,
+			//// silently moves the links or drops them.
 			//// added — per-attribute "select all / none" so generating everywhere is one click
 			me.multiple_variant_dialog.$wrapper.find(".form-column").each((i, col) => {
 				if (i === 0 || i === 1) return; // help/summary + Manage Stock columns
@@ -768,6 +794,11 @@ $.extend(erpnext.item, {
 		function get_selected_attributes() {
 			let selected_attributes = {};
 			me.multiple_variant_dialog.$wrapper.find(".form-column").each((i, col) => {
+				//// Neoffice — upstream skips only column 0 (the help text); ours also skips column 1, the
+				//// summary + "Manage Stock" column we inserted above. The block that follows maps the column
+				//// heading back to the UNTRANSLATED attribute name by reading the form's attribute grid: the
+				//// heading shown is the translated label, and posting it as the attribute name created bogus
+				//// Item Variant Attribute rows on a non-English site.
 				if(i===0 || i===1) return; //// added || i===1
 				let attribute_name = $(col).find(".column-label").html().trim();
 				//// added code block
@@ -833,6 +864,8 @@ $.extend(erpnext.item, {
 		}, this);
 
 		Promise.all(promises)
+			//// Neoffice — the existing-variant lookup is chained before the dialog is built (1a94553c0e,
+			//// 2026-07-08); upstream goes straight from Promise.all to make_and_show_dialog.
 			.then(load_existing_variants) //// added — flag already-created variants
 			.then(() => {
 				let fields = make_fields_from_attribute_values(attr_val_fields);

@@ -1,3 +1,5 @@
+//// Neoffice — the ONLY divergence of this file from upstream v15.89.0 is its missing final
+//// newline (a5f79d75b3, 2025-02-26 "update neov2"). No code differs.
 frappe.provide("erpnext.stock");
 
 erpnext.stock.ItemDashboard = class ItemDashboard {
