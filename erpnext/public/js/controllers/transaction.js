@@ -232,6 +232,11 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 
 		if (this.frm.fields_dict["items"].grid.get_field("expense_account")) {
 			this.frm.set_query("expense_account", "items", function(doc) {
+				//// Neoffice — added branch: upstream restricts the item expense_account picker to Profit and
+				//// Loss accounts everywhere. On a Purchase Invoice / Purchase Order any non-group account of
+				//// the company is offered instead — the client-side counterpart of the widening in
+				//// controllers/queries.py get_expense_account (marked there, e44c5deb5f). Origin commit for
+				//// this file carries no rationale (TO REVIEW).
 				//// added if
 				if (doc.doctype == "Purchase Invoice" || doc.doctype == "Purchase Order") {
 					return {

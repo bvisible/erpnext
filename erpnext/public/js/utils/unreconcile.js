@@ -99,6 +99,11 @@ erpnext.accounts.unreconcile_payment = {
 					read_only: 1,
 				},
 			];
+			//// Neoffice — the allocations table of the Unreconcile dialog is made writable (read_only: 0,
+			//// upstream 1) by 1c82f0adea (2025-03-18 "read_only 1 => 0"). Users must be able to pick which
+			//// allocations to undo instead of unreconciling the whole payment.
+			//// TO REVIEW: the commit gives no rationale and `cannot_add_rows: true` is kept, so the intent
+			//// was to allow editing existing rows only — confirm the server side honours what is edited.
 			/// read_only 1 => 0
 			let unreconcile_dialog_fields = [
 				{

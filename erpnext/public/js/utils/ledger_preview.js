@@ -72,6 +72,11 @@ erpnext.accounts.ledger_preview = {
 			],
 		});
 
+		//// Neoffice — the delay before the ledger DataTable is drawn goes from upstream's 200 ms to
+		//// 1000 ms (ef160121c0, 2025-03-17 "Update ledger_preview.js"): on our instances the dialog was
+		//// not laid out yet at 200 ms and the table rendered with zero-width columns.
+		//// TO REVIEW: a longer timer is still a race, and it makes every ledger preview feel slow —
+		//// the fix is to draw on the dialog's shown event.
 		setTimeout(function () {
 			me.get_datatable(columns, data, dialog.get_field(fieldname).wrapper);
 		}, 1000);
