@@ -574,11 +574,8 @@ erpnext.PointOfSale.ItemSelector = class {
 	//// sellable items (point_of_sale.has_items, our endpoint) and picks a readable text colour from
 	//// the group's pos_color luminance. Runs to the end of the class.
 	//// TO REVIEW before the upstream merge, two real defects:
-	////   - the root group is matched by the HARD-CODED FRENCH string
-	////     "Tous les Groupes d'Articles". On any site whose Item Group root is not named exactly
-	////     that (English, German, Italian, or simply renamed) the group bar comes up empty. It must
-	////     be resolved through the tree (parent_item_group IS NULL / get_root_of) — and no literal
-	////     in a source file may be French (see the Neoffice code rules).
+	////   - (fixed 2026-09-03) the root group used to be matched by a hard-coded French literal;
+	////     it is now resolved through the tree (parent_item_group is not set).
 	////   - render_item_group_list / render_parent_item_group_list await one has_items() round-trip
 	////     PER GROUP, in sequence, every time the bar is redrawn.
 	//// added functions for pos item groups
@@ -589,7 +586,12 @@ erpnext.PointOfSale.ItemSelector = class {
 		let res_parent = [];
 		let res_all_parents = [];
 		if(!this.item_group) {
-			res_childs = await frappe.db.get_list("Item Group", {filters: {'parent_item_group': 'Tous les Groupes d\'Articles'},  fields: ["name", "parent_item_group", "pos_color"]});
+			//// Neoffice — the root Item Group's NAME is translated at setup (`_("All Item Groups")`), so
+			//// the French literal used until 2026-09-03 only matched French-set-up sites and the group
+			//// bar came up empty everywhere else. Resolve the root through the tree.
+			const root_groups = await frappe.db.get_list("Item Group", {filters: {'parent_item_group': ['is', 'not set']}, fields: ["name"], limit: 1});
+			const root_group = root_groups.length ? root_groups[0].name : "All Item Groups";
+			res_childs = await frappe.db.get_list("Item Group", {filters: {'parent_item_group': root_group},  fields: ["name", "parent_item_group", "pos_color"]});
 			let pos_profile_doc = await frappe.db.get_doc("POS Profile", this.pos_profile);
 			if (pos_profile_doc && pos_profile_doc.item_groups) {
 				let itemGroupNames = pos_profile_doc.item_groups.map(entry => entry.item_group);

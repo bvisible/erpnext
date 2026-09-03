@@ -998,10 +998,12 @@ class PurchaseInvoice(BuyingController):
 			#//// string put on every item GL entry (total + currency, the customer_reference — our Custom
 			#//// Field — and the first 40 chars of the description) so a Swiss bank statement line can be
 			#//// matched back to the invoice, and `tax_excluded`, telling whether the line is booked net.
-			#//// TO REVIEW — latent NameError: the upstream loop below runs on
-			#//// `if flt(item.base_net_amount) or (self.get("update_stock") and item.valuation_rate)`, which
-			#//// is WIDER than this guard. A line with a zero net amount but a valuation rate reaches
-			#//// `"remarks": remark` with `remark` never assigned.
+			#//// The upstream loop below runs on `flt(item.base_net_amount) or (update_stock and
+			#//// item.valuation_rate)`, WIDER than this guard: until 2026-09-03 a line with a zero net
+			#//// amount but a valuation rate reached `"remarks": remark` with `remark` never assigned
+			#//// (NameError). Both names are now defined on every line.
+			remark = None
+			tax_excluded = None
 			if flt(item.base_net_amount):
        			#//// added block
 				remark = ""

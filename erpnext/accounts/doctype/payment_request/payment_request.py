@@ -844,15 +844,16 @@ def get_rendered_message(docname):
 
 #//// Neoffice — signature widened (b83a0c8847, 2026-03-15): upstream is
 #//// `resend_payment_email(docname)` and re-sends the stored mail to the stored email_to.
-#//// SECURITY — TO REVIEW before the upstream merge: `allow_guest=True` is upstream's, but with
-#//// these three new parameters an unauthenticated caller now chooses the recipient, the subject
-#//// and the body of a mail the site sends, with the reference document's PDF attached. Either
-#//// drop allow_guest here, or keep the overrides for a signed-in caller only.
+#//// `allow_guest=True` is upstream's (the payment page re-sends the stored mail). Since
+#//// 2026-09-03 the three overrides are honoured for a signed-in caller with write access to the
+#//// Payment Request only — the desk's Send-by-Email dialog; a guest gets exactly upstream's
+#//// behaviour, never a caller-chosen recipient, subject or body (marking campaign, tracker).
 @frappe.whitelist(allow_guest=True)
 def resend_payment_email(docname, recipients=None, subject=None, message=None):
-	return frappe.get_doc("Payment Request", docname).send_email(
-		recipients=recipients, subject=subject, message=message
-	)
+	doc = frappe.get_doc("Payment Request", docname)
+	if frappe.session.user == "Guest" or not doc.has_permission("write"):
+		recipients = subject = message = None
+	return doc.send_email(recipients=recipients, subject=subject, message=message)
 
 
 @frappe.whitelist()
