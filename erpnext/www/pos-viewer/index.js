@@ -1,3 +1,8 @@
+//// Neoffice — added file (no upstream equivalent): client side of the POS Viewer second
+//// screen (33e5705d01, 2025-11-05, plus the 2025-11-26 series listed in index.py). Holds the
+//// API key in localStorage, subscribes to the realtime cart events and falls back to polling,
+//// renders the cart, the "Merci pour votre achat" screen and the ads slider, and carries the
+//// customer-creation form. See index.py for the feature and its merge note.
 /**
  * POS Viewer - External page for viewing POS cart in real-time
  * Uses localStorage for API key persistence and WebSocket for real-time updates

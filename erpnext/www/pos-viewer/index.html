@@ -1,3 +1,9 @@
+{# //// Neoffice — added file (no upstream equivalent): the POS Viewer page template
+   //// (33e5705d01, 2025-11-05; logo instead of the text title by 8b257b7ec3, thank-you screen
+   //// by 064a6df140 — both 2025-11-26). index.css is inlined below through {% include %} and
+   //// index.js is loaded at the end. See index.py for the feature and its merge note.
+   //// TO REVIEW: the page pulls intl-tel-input from the jsdelivr CDN, so the till's customer
+   //// display needs outbound internet to render its phone field. #}
 {% extends "templates/web.html" %}
 
 {% block title %}{{ _("POS Viewer") }}{% endblock %}

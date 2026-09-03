@@ -1,3 +1,8 @@
+/* //// Neoffice — added file (no upstream equivalent): styles of the POS Viewer second screen
+   //// (33e5705d01, 2025-11-05; layout of the cart columns and the ads slider reworked through
+   //// the 2025-11-26 series — f77f8dd3dc, d9a24b5e27, c3d4ad3f4d, bec0b41da1, 824cc6a759,
+   //// a562c8fab9, e57f5e4386, 4f269a5639, d31bbc0aeb, f698d4af26, 6f6ccf0f3a).
+   //// It is inlined into index.html through a Jinja {% include %}, not served as an asset. */
 /**
  * POS Viewer Styles
  * Responsive design optimized for tablets (768px+)
