@@ -144,6 +144,10 @@ erpnext.PointOfSale.PastOrderSummary = class {
 					: t.rate != 0
 					? `${t.description} @ ${t.rate}%`
 					: t.description;
+					//// Neoffice — added filter (cb4d19e0e7, 2023-12-22 "fixes for pos receipt"): upstream prints
+					//// every tax row of the invoice, so a zero-rate line (exempt goods, a 0 % template) printed a
+					//// "0.00" tax row on the customer receipt. Note the shape: the arrow function now returns
+					//// `undefined` for the skipped rows, which .join("") swallows.
 					if(t.tax_amount_after_discount_amount > 0) { //// added if condition
 						return `
 							<div class="tax-row">
@@ -210,6 +214,9 @@ erpnext.PointOfSale.PastOrderSummary = class {
 
 		this.$summary_container.on("click", ".email-btn", () => {
 			////
+			//// Neoffice — added (9978ab08c5, 2025-11-24): upstream opens the e-mail dialog with an empty
+			//// body, so whoever mailed a receipt had to type one. Pre-fills a translatable greeting with
+			//// the customer name; the strings live in the app PO catalogues.
 			let content = __("Hello {0},\n\nThank you for your purchase.\nPlease find attached the receipt.\n\nBest regards,\n{1}", [
 				this.doc.customer || "",
 				this.doc.owner || "",
@@ -228,6 +235,14 @@ erpnext.PointOfSale.PastOrderSummary = class {
 	print_receipt() {
 		const frm = this.events.get_frm();
 		
+		//// Neoffice — print_receipt() rewritten (3527861548, 2025-04-29 "add support CloudPRNT
+		//// printer"): upstream always calls frappe.utils.print, i.e. the browser print dialog. Ours
+		//// first reads the POS Profile: if a CloudPRNT printer is configured (our Custom Fields
+		//// cloudprnt_printer / cloudprnt_printer_name), the ticket is pushed to it through the
+		//// `cloudprnt` app and nothing opens on screen — a till printer must print without a dialog.
+		//// Falls back to upstream's behaviour when no printer is set.
+		//// Cross-app dependency: erpnext calls cloudprnt.api.print_pos_invoice — guard or move out at
+		//// the merge; on a site without the CloudPRNT app the call fails and no ticket is printed.
 		//// Get pos profil config
 		frappe.call({
 			method: "erpnext.selling.page.point_of_sale.point_of_sale.get_pos_profile_data",
@@ -306,6 +321,13 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		const doc = this.doc || frm.doc;
 		const print_format = frm.pos_print_format;
 
+		//// Neoffice — the whole send_email() body is wrapped in a Company e-mail lookup (f032a768e2,
+		//// 2024-09-23 "last updates" — no rationale in the commit, TO REVIEW). Upstream sends the
+		//// receipt as the logged-in cashier (sender_full_name: frappe.user.full_name(), default
+		//// sender); ours sends it as the COMPANY, from the company e-mail address, so the customer gets
+		//// a receipt from the shop and not from an employee. The dialog fields are also cleared and the
+		//// dialog closed after a successful send. Quote style and formatting differ throughout — a
+		//// prettier-only diff on top of the real change.
 		frappe.db.get_value('Company', doc.company, 'email', (r) => { //// added to get company email
 			frappe.call({
 				method: "frappe.core.doctype.communication.email.make",

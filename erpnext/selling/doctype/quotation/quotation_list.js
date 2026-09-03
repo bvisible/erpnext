@@ -26,6 +26,11 @@ frappe.listview_settings["Quotation"] = {
 	},
 
 	get_indicator: function (doc) {
+		//// Neoffice — rewritten (40468858e1, 2026-03-16): upstream is an if/else chain over five
+		//// statuses only (Open, Partially Ordered, Ordered, Lost, Expired) and shows NO indicator for
+		//// anything else. Ours is a map, so Draft, Cancelled and above all "Invoiced" — the status our
+		//// flow sets once the quotation has been billed — get a colour instead of an empty cell.
+		//// Expired is red here where upstream greys it: an expired quotation is a lost sale to chase.
 		const status_colors = {
 			"Draft": "red",
 			"Open": "orange",

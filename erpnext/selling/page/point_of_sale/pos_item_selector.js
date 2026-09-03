@@ -16,6 +16,11 @@ erpnext.PointOfSale.ItemSelector = class {
 		this.prepare_dom();
 		this.make_search_bar();
 		this.load_items_data();
+		//// Neoffice — item-group buttons above the item grid: load_item_groups_data() /
+		//// bind_item_group_events() and the two containers added to the markup below, with the methods
+		//// at the end of the class. Upstream only offers the Item Group Link filter in the search bar;
+		//// at a touch till the cashier needs one tap per family, coloured (Item Group.pos_color, our
+		//// Custom Field). See the marker on load_item_groups_data() for the merge caveats.
 		this.load_item_groups_data();  //// added for pos item groups
 		this.bind_events();
 		this.bind_item_group_events();  //// added for pos item groups
@@ -67,6 +72,9 @@ erpnext.PointOfSale.ItemSelector = class {
 	get_items({ start = 0, page_length = 40, search_term = "" }) {
 		const doc = this.events.get_frm().doc;
 		const price_list = (doc && doc.selling_price_list) || this.price_list;
+		//// Neoffice — the current customer is passed to get_items (whose signature we widened, marked
+		//// in point_of_sale.py) so the grid can show the promotional price that applies to THIS
+		//// customer's group rather than the bare price list rate.
 		const customer = (doc && doc.customer) || this.customer;
 		let { item_group, pos_profile } = this;
 
@@ -129,6 +137,10 @@ erpnext.PointOfSale.ItemSelector = class {
 		}
 
 		////
+		//// Neoffice — added, with the div_attr block below (c319057093 / 371ca292fc, 2023-11-08;
+		//// 1a6ccdb835 for the attributes): upstream renders one plain `item-rate`. Ours shows the list
+		//// price struck through next to the promotional price when the item carries one (promo_price
+		//// from get_items), and lists a variant's attributes under the tile.
 		function get_promo_price_html() {
 			if(item.promo_price && item.promo_price > -1 && price_list_rate > 0) {
 				const promo_precision = flt(item.promo_price, 2) % 1 != 0 ? 2 : 0;
@@ -217,6 +229,13 @@ erpnext.PointOfSale.ItemSelector = class {
 		this.item_group_field.toggle_label(false);
 
 		this.attach_clear_btn();
+		//// Neoffice — added, no upstream equivalent (7cf81b4371, 2024-03-14 "update for future
+		//// advanced search"): a magnifier button next to the search field opens a MultiSelectDialog on
+		//// Item, with the supplier child columns (supplier / supplier_part_no), so the cashier can find
+		//// an item by supplier reference and add several at once — the till search matches item code,
+		//// name and barcode only.
+		//// TO REVIEW: the dialog is wired up inside a 500 ms setTimeout and refreshed through jQuery
+		//// events on Frappe's internal markup; it will break on any dialog rework upstream.
 		let search_element = this.$component.find('.search-field').find('div')[0];
 		$(search_element).append('<span class="search-icon"><i class="fa fa-search" aria-hidden="true"></i></span>');
 
@@ -292,6 +311,10 @@ erpnext.PointOfSale.ItemSelector = class {
 		});
 	}
 
+	//// Neoffice — added scan button (and the frappe.ui.Scanner handler below): opens the camera
+	//// scanner on a tablet till that has no barcode gun. Upstream only listens to keyboard-wedge
+	//// scanners through onscan.js. The .link-btn:last-child selector of the clear button had to
+	//// change with it, since there are now two buttons in the field.
 	attach_clear_btn() {
 		this.search_field.$wrapper.find(".control-input").append(
 			`<span class="link-btn" style="top: 0px; right: 25px; ">
@@ -448,6 +471,9 @@ erpnext.PointOfSale.ItemSelector = class {
 				return;
 			}
 
+			//// Neoffice — added guard (c5d374aaed, 2025-12-06 "prevent Enter key from triggering item click
+			//// when dialog is open"): with the "Set Item Price" dialog open (pos_controller.js), Enter was
+			//// both confirming the price AND re-triggering this handler, adding the item twice.
 			// Don't trigger item click if a dialog is open (e.g., price entry dialog)
 			if (cur_dialog) {
 				return;
@@ -472,6 +498,9 @@ erpnext.PointOfSale.ItemSelector = class {
 
 	filter_items({ search_term = "" } = {}) {
 		const selling_price_list = this.events.get_frm().doc.selling_price_list;
+		//// Neoffice — added: upstream re-arms auto-add on every filter_items call, so clearing the
+		//// search box could add the first item of the reloaded grid on its own. Origin commit gives no
+		//// rationale (TO REVIEW).
 		//// if search term is empty, disable auto add item
 		if (search_term !== "") this.auto_add_item = true;
 
@@ -540,6 +569,18 @@ erpnext.PointOfSale.ItemSelector = class {
 		this.$component.css("display", show ? "flex" : "none");
 	}
 
+	//// Neoffice — added block, no upstream equivalent: builds the item-group buttons (parents from
+	//// the group tree, then the children of the current group), keeps only the groups that have
+	//// sellable items (point_of_sale.has_items, our endpoint) and picks a readable text colour from
+	//// the group's pos_color luminance. Runs to the end of the class.
+	//// TO REVIEW before the upstream merge, two real defects:
+	////   - the root group is matched by the HARD-CODED FRENCH string
+	////     "Tous les Groupes d'Articles". On any site whose Item Group root is not named exactly
+	////     that (English, German, Italian, or simply renamed) the group bar comes up empty. It must
+	////     be resolved through the tree (parent_item_group IS NULL / get_root_of) — and no literal
+	////     in a source file may be French (see the Neoffice code rules).
+	////   - render_item_group_list / render_parent_item_group_list await one has_items() round-trip
+	////     PER GROUP, in sequence, every time the bar is redrawn.
 	//// added functions for pos item groups
 	async load_item_groups_data() {
 		let res = [];

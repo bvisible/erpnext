@@ -1,3 +1,5 @@
+//// Neoffice — the ONLY divergence of this file from upstream v15.89.0 is its missing final
+//// newline (a5f79d75b3, 2025-02-26 "update neov2"). Nothing else differs.
 erpnext.PointOfSale.ItemDetails = class {
 	constructor({ wrapper, events, settings }) {
 		this.wrapper = wrapper;

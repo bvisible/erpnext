@@ -107,6 +107,17 @@ erpnext.PointOfSale.Payment = class {
 		this.numpad_value = "";
 	}
 
+	//// Neoffice — on_numpad_clicked made async and made to WAIT for this.selected_mode (poll every
+	//// 100 ms). Upstream assumes a payment mode is already selected when a numpad key is pressed;
+	//// with our default-mode selection running in a setTimeout (marked at the end of this file), a
+	//// fast cashier hit the numpad first and got a TypeError on undefined.
+	//// TO REVIEW before the upstream merge:
+	////   - the wait has NO timeout: if no mode is ever selected the interval runs forever;
+	////   - upstream's unguarded `this.selected_mode.$input.get(0).focus();` is still there, one line
+	////     ABOVE the `if (this.selected_mode.$input)` guard that was added to replace it — so the
+	////     guard cannot do its job; delete the first line.
+	////   - the "changes from v14 not applied. Maybe conflict" note is the original author's: this
+	////     method was already an unresolved v14→v15 carry-over.
 	//// changes from v14 not applied. Maybe conflict
 	async on_numpad_clicked($btn) { //// async added
 		const button_value = $btn.attr("data-button-value");
@@ -227,6 +238,14 @@ erpnext.PointOfSale.Payment = class {
 				return;
 			}
 
+			//// Neoffice — the submit guard is widened (6ef39645d9 / 255a047ed1, 2025-03, coupon codes).
+			//// Upstream refuses a zero-paid order unless the invoice is 100 % discounted; ours also accepts
+			//// it when the discount amount equals the total (with or without the rounding adjustment) —
+			//// a coupon that brings the ticket to zero is a legitimate sale, not an empty order.
+			//// The block just below is the opposite guard (7eea61c52e, 2025-12-06): refuse a ticket where
+			//// EVERY line has a zero rate, so an unpriced item cannot be given away by mistake. A gift card
+			//// paid with real goods still passes, because one non-zero line is enough.
+			//// TO REVIEW: the widened condition mixes && and || without parentheses around the first group.
 			//// Add discount check
 			if (!items.length || (paid_amount == 0 && doc.additional_discount_percentage != 100 && doc.discount_amount != doc.total) && (doc.discount_amount != (doc.total + doc.rounding_adjustment))) {
 				const message = items.length
@@ -318,6 +337,10 @@ erpnext.PointOfSale.Payment = class {
 			: doc.rounded_total;
 		const remaining_amount = grand_total - doc.paid_amount;
 		const current_value = this.selected_mode ? this.selected_mode.get_value() : undefined;
+		//// Neoffice — upstream pre-fills the payment field only when something is still DUE
+		//// (remaining_amount > 0). Ours also pre-fills a NEGATIVE remainder, i.e. change to give back
+		//// on a return / over-payment, which upstream leaves blank. Origin commit carries no rationale
+		//// (TO REVIEW).
 		if (!current_value && remaining_amount != 0 && this.selected_mode) { //// modified remaining_amount > 0 by remaining_amount != 0
 			this.selected_mode.set_value(remaining_amount);
 		}
@@ -432,6 +455,9 @@ erpnext.PointOfSale.Payment = class {
 					const payment_type = p.type;
 					const margin = i % 2 === 0 ? "pr-2" : "pl-2";
 					const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
+					//// Neoffice — the sanitised mode name is added as a class on the wrapper (5cacc68131,
+					//// 2023-10-30 "Change div payment-mode-wrapper"), so a POS theme can style or hide one payment
+					//// method (TWINT, card, cash) by name. Upstream only puts it on the inner elements.
 					//// added ${mode} in div.payment-mode-wrapper
 					return `
 					<div class="payment-mode-wrapper ${mode}">
@@ -497,6 +523,14 @@ erpnext.PointOfSale.Payment = class {
 			const mode = this.sanitize_mode_of_payment(p.mode_of_payment);
 			if (p.default) {
 				setTimeout(() => {
+					//// Neoffice — the auto-selection of the default payment mode now honours the POS Profile
+					//// `disable_auto_price` Custom Field (90bc163a95 / bdf73f7a80, 2025-03): upstream clicks the
+					//// default mode, which immediately fills it with the full amount due. Tills that take split or
+					//// partial payments want the mode selected but the amount EMPTY, so the cashier types what was
+					//// actually handed over. Upstream's line is kept above as a `////` dead comment.
+					//// TO REVIEW: reaches through the globals cur_pos / cur_frm, nests a 100 ms timer inside the
+					//// existing 500 ms one, and re-enables the submit button by writing an inline background colour
+					//// (`var(--blue-500)`) instead of a class.
 					////this.$payment_modes.find(`.${mode}.mode-of-payment-control`).parent().click();
 					//// added code block maybe conflict
 					frappe.db.get_value("POS Profile",{"name":cur_pos.pos_profile},"disable_auto_price").then((disable_auto_price) => {

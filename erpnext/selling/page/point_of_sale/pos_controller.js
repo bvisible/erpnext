@@ -1,3 +1,5 @@
+//// Neoffice — this file also lost its final newline (a5f79d75b3, 2025-02-26 "update neov2"):
+//// expect a last-line merge conflict with no content behind it.
 erpnext.PointOfSale.Controller = class {
 	constructor(wrapper) {
 		this.wrapper = $(wrapper).find(".layout-main-section");
@@ -170,6 +172,10 @@ erpnext.PointOfSale.Controller = class {
 			}
 		});
 
+		//// Neoffice — added, with show_customer_created_notification() below (5da3935a2d, 2025-11-26
+		//// "notify POS when customer created from POS Viewer"): the shopper can fill in their own
+		//// details on the customer-facing screen (www/pos-viewer), and the till is told in realtime so
+		//// the cashier can attach the new customer to the sale in progress. No upstream equivalent.
 		// Listen for customer created from POS Viewer
 		frappe.realtime.on(`customer_created_${this.pos_opening}`, (data) => {
 			this.show_customer_created_notification(data);
@@ -563,6 +569,10 @@ erpnext.PointOfSale.Controller = class {
 		]);
 	}
 
+	//// Neoffice — added, called from the new-order sequence above (064a6df140, 2025-11-26
+	//// "clear cart display on new sale with thank you message"): tells the customer-facing screen
+	//// that the sale is over, so it clears the cart and shows the thank-you message instead of
+	//// keeping the previous shopper's basket on display. No upstream equivalent.
 	clear_pos_viewer_cart(sale_completed = false) {
 		// Clear POS Viewer cart when starting a new sale
 		if (this.pos_opening) {
@@ -650,6 +660,10 @@ erpnext.PointOfSale.Controller = class {
 		frappe.dom.freeze();
 		let item_row = undefined;
 
+		//// Neoffice — added fallback: upstream leaves set_warehouse to whatever the POS Invoice was
+		//// created with, and an invoice opened before the profile had loaded went out with no
+		//// warehouse, so stock was never moved. Origin: none of the commits in v15.89.0..HEAD states a
+		//// rationale (TO REVIEW).
 		//// if this.frm.doc.set_warehouse is not set yet, then set it from pos profile settings
 		if (!this.frm.doc.set_warehouse) {
 			this.frm.doc.set_warehouse = this.settings.warehouse;
@@ -692,6 +706,21 @@ erpnext.PointOfSale.Controller = class {
 				if (!item_code) return;
 
 				if (rate == undefined || rate == 0) {
+					//// Neoffice — the whole "Set Item Price" dialog below replaces upstream's three lines
+					//// (`frappe.show_alert({message: __("Price is not set for the item."), indicator: "orange"});
+					//// frappe.utils.play_sound("error");`). Upstream simply refuses an item with no price; in a
+					//// shop that sells unpriced goods (bulk, repairs, second-hand) that blocks the sale, so ours
+					//// asks for the price at the till instead — numpad, keyboard entry, Enter to confirm — and adds
+					//// the item with the rate typed, forcing it back after the server recalculation.
+					//// Built by 7eea61c52e (2025-12-06 "block zero-price only tickets and prompt for price entry")
+					//// then fifteen same-day fixes (ff5fa58951, a8eb3450d3, 500cc692d1, b3c15ee609, 3a3ffac716,
+					//// e7e92fb21b, 621fa6f581, 78c2b5196f, d9ef54a8f7, 209e5d277c, 761e2b20ea, f8cfe6378a,
+					//// e036cdd662, 901bf0d5cc) about ONE symptom: Enter submitted the item twice, because Frappe's
+					//// own Enter hotkey on the dialog fired alongside ours. Hence the _submitted / _price_dialog_
+					//// open latches, the capture-phase handlers and the removed data-hotkey.
+					//// TO REVIEW at the merge: that accumulation is worth rewriting once rather than re-applying;
+					//// the add-to-cart body is duplicated verbatim between primary_action and the keydown handler.
+					//// Our block runs to the end of the numpad click handler.
 					// Prevent multiple dialogs from opening for the same item
 					if (this._price_dialog_open) {
 						return;
@@ -1026,6 +1055,10 @@ erpnext.PointOfSale.Controller = class {
 		this.cart.update_item_html(item_row, remove_item);
 		this.cart.update_totals_section(this.frm);
 
+		//// Neoffice — added, no upstream equivalent (33e5705d01, 2025-11-05 "Add POS Viewer external
+		//// cart display feature"): every cart change is pushed to the customer-facing second screen,
+		//// both through the cache endpoint (erpnext/www/pos-viewer/index.py, added file) for the
+		//// polling fallback and through a realtime event for the live path.
 		// Publish real-time event for external POS viewer
 		if (this.pos_opening) {
 			const cart_data = {

@@ -88,6 +88,10 @@ erpnext.PointOfSale.ItemCart = class {
 	make_cart_totals_section() {
 		this.$totals_section = this.$component.find(".cart-totals-section");
 
+		//// Neoffice — a discount row is added to the cart totals markup below (419a1db67a, 2023-12-20
+		//// "add discount in pos cart"): upstream's totals go net total → taxes → grand total, so an
+		//// invoice-level discount was invisible at the till. The row carries the class "hidden" until
+		//// there is a discount to show.
 		//// added line discount <div class="discount-container hidden"> <div>${__('Discount')}</div> <div>0.00</div> </div>
 		this.$totals_section.append(
 			`<div class="add-discount-wrapper">
@@ -324,6 +328,9 @@ erpnext.PointOfSale.ItemCart = class {
 					if (this.value) {
 						const frm = me.events.get_frm();
 						frappe.dom.freeze();
+						//// Neoffice — upstream sets `customer` alone; ours sets `title` in the same call so the POS
+						//// Invoice is named after the customer in the list views instead of showing the series only.
+						//// Origin: no commit in v15.89.0..HEAD carries a rationale (TO REVIEW).
 						frappe.model.set_value(frm.doc.doctype, frm.doc.name, {'customer': this.value, "title": this.value}); //// {'customer': this.value, "title": this.value} replaces: 'customer', this.value
 						frm.script_manager.trigger("customer", frm.doc.doctype, frm.doc.name).then(() => {
 							frappe.run_serially([
@@ -505,6 +512,12 @@ erpnext.PointOfSale.ItemCart = class {
 			? frm.doc.grand_total
 			: frm.doc.rounded_total;
 		this.render_grand_total(grand_total);
+		//// Neoffice — upstream calls render_taxes(frm.doc.taxes) straight away. Wrapped in a 100 ms
+		//// timer (32e4dceca8 / 396ddcd6a3, 2025-03/04, "Update pos_item_cart.js" — no rationale in
+		//// either commit): the taxes were being drawn from a document the server had not finished
+		//// recalculating, so the cart showed the previous line's tax.
+		//// TO REVIEW: a timer is a race, not a fix — the tax total can still be one item behind on a
+		//// slow instance.
 		setTimeout(() => { //// added surrounding setTimeout
 			this.render_taxes(frm.doc.taxes);
 		}, 100);////
@@ -583,6 +596,9 @@ erpnext.PointOfSale.ItemCart = class {
 
 	update_item_html(item, remove_item) {
 		const $item = this.get_cart_item(item);
+		//// Neoffice — added DOM event: broadcasts every cart change as `item_added_to_cart_custom` so
+		//// code outside this class can react without patching it (used by our POS integrations).
+		//// No upstream equivalent; origin commit carries no rationale (TO REVIEW).
 		//// Add trigger
 		const customEvent = new CustomEvent("item_added_to_cart_custom", {
 			detail: item
@@ -607,6 +623,9 @@ erpnext.PointOfSale.ItemCart = class {
 		const me = this;
 
 		if (!$item_to_update.length) {
+			//// Neoffice — append → prepend (bf3377af62, 2023-10-30 "Change order product add pos cart"):
+			//// the last item scanned shows at the TOP of the cart, where the cashier is looking, instead of
+			//// scrolling off the bottom of a long ticket.
 			////this.$cart_items_wrapper.append(
 			this.$cart_items_wrapper.prepend(
 				`<div class="cart-item-wrapper" data-row-name="${escape(item_data.name)}"></div>
@@ -615,6 +634,10 @@ erpnext.PointOfSale.ItemCart = class {
 			$item_to_update = this.get_cart_item(item_data);
 		}
 
+		//// Neoffice — added, no upstream equivalent (1a6ccdb835 family, 2023-11-08): fetches the Item
+		//// to show a variant's attributes ("Colour: red / Size: M") under its name in the cart, and,
+		//// with get_base_and_discount() below, the struck-through price and the discount percentage.
+		//// TO REVIEW: one frappe.db.get_doc("Item") PER CART LINE, on every re-render.
 		//// added code block
 		// get item data from item master
 		frappe.db.get_doc('Item', item_data.item_code).then(itemInfo => {
@@ -666,6 +689,8 @@ erpnext.PointOfSale.ItemCart = class {
 			me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
 		}
 
+		//// Neoffice — added helper (419a1db67a, 2023-12-20 "add discount in pos cart"): renders the
+		//// price before discount and the discount percentage on the cart line. No upstream equivalent.
 		//// added get_base_and_discount function
 		function get_base_and_discount() {
 			if (item_data.discount_percentage != 0) {
@@ -702,6 +727,11 @@ erpnext.PointOfSale.ItemCart = class {
 
 		function get_description_html() {
 			if (item_data.description) {
+				//// Neoffice — rewritten (5d5dfb8964, 2025-04-29 "Remove all HTML tags from the description in
+				//// POS"): upstream only strips <div> wrappers and MUTATES item_data.description in place, so
+				//// any other markup (<p>, <br>, <span>, an <img> from the web editor) was rendered raw in the
+				//// cart line and the truncation was written back into the document. Ours extracts the text of
+				//// the whole fragment into a local, leaving item_data untouched.
 				//// Remove all HTML tags from the description
 				let clean_description = item_data.description;
 				if (typeof clean_description === 'string' && clean_description.indexOf("<") != -1) {

@@ -234,6 +234,10 @@ class Customer(TransactionBase):
 
 	def on_update(self):
 		self.validate_name_with_customer_group()
+		#//// Neoffice — guard added (a47ceb00bb, 2024-03-05 "add supplier part ref in item search +
+		#//// avoid contact/address creation while importing"): upstream builds the primary Contact and
+		#//// Address on every on_update, so a Data Import of customers created one Contact and one
+		#//// Address per row — duplicating records the import was usually bringing in separately.
 		if not frappe.flags.in_import: #//// added if condition
 			self.create_primary_contact()
 			self.create_primary_address()
@@ -377,6 +381,12 @@ class Customer(TransactionBase):
 		if self.loyalty_program:
 			return
 
+		#//// Neoffice — early return for the walk-in POS customer (419a1db67a, 2023-12-20 "prevent to
+		#//// show loyalty points in pos for passage"): "Passage" is the anonymous till customer every
+		#//// cash sale is booked against, so it accumulated the loyalty points of the whole shop and the
+		#//// POS offered to redeem them to whoever was at the counter.
+		#//// TO REVIEW: the customer is matched by its NAME, hard-coded — an instance that names its
+		#//// walk-in customer anything else silently gets the bug back.
 		#////added if
 		if self.name == "Passage":
 			return
@@ -753,6 +763,12 @@ def make_contact(args, is_primary_contact=1):
 		contact.add_email(args.get("email_id"), is_primary=True)
 	if args.get("mobile_no"):
 		contact.add_phone(args.get("mobile_no"), is_primary_mobile_no=True)
+	#//// Neoffice — reuse an existing Contact instead of creating a second one (b8d3deee22,
+	#//// 2023-12-22 "add missing fix"): upstream always inserts a new Contact, so a customer whose
+	#//// e-mail already had one ended up with duplicates. Note the consequence: when a Contact is
+	#//// found, the object built above is DISCARDED and the found one is updated and re-inserted —
+	#//// which is why the final insert had to become ignore_permissions=True (marked below).
+	#//// TO REVIEW: matching on e-mail alone merges two people sharing a mailbox (info@…).
 	#//// added if-else condition
 	existing = frappe.db.get_all("Contact", filters={"email_id": args.get("email_id")})
 	if existing:
