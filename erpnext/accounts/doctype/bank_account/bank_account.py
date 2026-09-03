@@ -56,6 +56,14 @@ class BankAccount(Document):
 		self.validate_account()
 		self.update_default_bank_account()
 
+	#//// Neoffice — the body is NEUTRALISED (a528cdd49b, 2025-03-17 "Remove hold code in Journal
+	#//// Entry and remove frappe throw in bank account"). Upstream throws when a second Bank
+	#//// Account points at the same GL Account ("'{0}' account is already used by {1}"); ours
+	#//// accepts it — the upstream code is kept below as `# ///` dead comments (THREE slashes, so
+	#//// `grep "////"` does not see it). Still in force upstream at v15.121.0.
+	#//// TO REVIEW before the upstream merge: the commit gives no reason beyond its subject, so we
+	#//// cannot tell whether this is still needed (several Bank Accounts on one GL account) or a
+	#//// leftover from a one-off migration.
 	def validate_account(self):
 		if self.account:
 			pass

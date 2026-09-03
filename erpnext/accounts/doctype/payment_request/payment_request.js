@@ -40,6 +40,21 @@ frappe.ui.form.on("Payment Request", "refresh", function (frm) {
 		!frm.doc.__islocal &&
 		frm.doc.docstatus == 1
 	) {
+		//// Neoffice — the whole "Resend Payment Email" button is rewritten (b83a0c8847 +
+		//// 2483c36bc4, 2026-03-15; 132320ee4d, 2026-05-30). Upstream fires
+		//// resend_payment_email(docname) straight away and just says "Message Sent".
+		//// Ours: (1) renames the button "Send by Email"; (2) calls get_rendered_message so the dialog
+		//// shows the message with its Jinja placeholders already resolved and the amount formatted
+		//// with its currency (users were reading the raw template and "22.9" instead of "22.90 CHF");
+		//// (3) lets the sender edit recipients / subject / message before sending; (4) lists the real
+		//// attachments — reference document + linked delivery note(s) — by calling
+		//// neoffice_theme.override_doctype.payment_request.get_payment_email_attachments, with the
+		//// reference document shown immediately as a fallback when neoffice_theme is absent.
+		//// Cross-app dependency: this file (erpnext) calls into neoffice_theme.
+		//// TO REVIEW at the merge: the block is mis-nested — primary_action_label / primary_action sit
+		//// INSIDE the fields array literal, and the closing braces are shifted accordingly. It works
+		//// but no formatter will keep it; rewrite the dialog rather than resolve it line by line.
+		//// Our block runs to the closing `});` of this add_custom_button call.
 		frm.add_custom_button(__('Send by Email'), function(){
 			// Render the message template server-side before showing
 			// Render message server-side via get_message

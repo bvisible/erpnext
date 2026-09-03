@@ -1,6 +1,16 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+#//// Neoffice — added file (no upstream equivalent): 3D bin packing for the "Multiple
+#//// Constraints" shipping mode. Added by 7534a0d7f6 (2025-03-17 "Use algho py3dbp and
+#//// visualization matplotlib"), fixed by a50104af31 (2025-04-05 "Fix bug shipping").
+#//// It packs the order items into the candidate boxes (py3dbp) and renders a matplotlib PNG of
+#//// the result into the site files, so the seller can see how the parcel was computed before
+#//// accepting the shipping charge that ShippingRule.get_shipping_amount_from_multiple_
+#//// constraints() derived from it. Consumed by packing_visualization.js.
+#//// TO REVIEW at the merge: this pulls py3dbp, numpy and matplotlib into erpnext's runtime
+#//// (pyproject.toml, same commit) for a feature only our shipping mode uses — the natural home
+#//// is a Neoffice app, not the erpnext fork.
 import frappe
 import os
 import json

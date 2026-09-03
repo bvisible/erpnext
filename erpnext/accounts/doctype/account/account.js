@@ -169,6 +169,13 @@ frappe.ui.form.on("Account", {
 					fieldname: "account_number",
 					fieldtype: "Data",
 					default: frm.doc.account_number,
+					//// Neoffice — added (25f6526206, 2024-01-29 "add read only"): upstream's "Update Account
+					//// Number / Name" dialog lets anyone retype the account number; ours locks the field for
+					//// everyone but Administrator once the Account carries a tax_code (our Swiss VAT code, an
+					//// erpnextswiss Custom Field) — renumbering a VAT account breaks the reports built on it.
+					//// TO REVIEW before the upstream merge: the commit gives no rationale, and the expression is
+					//// built by STRING CONCATENATION — the tax_code VALUE is pasted into the eval, so a code that
+					//// is not a valid JS expression (or an empty tax_code) yields a broken condition.
 					read_only_depends_on: 'eval:frappe.session.user != "Administrator" && ' + frm.doc.tax_code //// added
 				},
 			],

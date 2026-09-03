@@ -732,6 +732,15 @@ frappe.ui.form.on("Sales Invoice", {
 			}
 		});
 
+		//// Neoffice — TO REVIEW: DEAD DUPLICATE, present since 0f8787d3d6 (2023-10-30 "First change
+		//// v15", the v14→v15 port). The ~47 lines that follow (custom_make_buttons, the timesheets
+		//// time_sheet query, the discount_account and deferred_revenue_account grid queries) are a
+		//// v14-era copy of the block upstream re-declares IDENTICALLY right below, prettier-formatted;
+		//// upstream's assignments run second and win, so ours has no effect. The ONE line with no
+		//// upstream counterpart is the `frm.set_query('company_address', …)` at the end of the block
+		//// (upstream v15 does not restrict company_address on Sales Invoice). At the merge: drop this
+		//// copy and keep that single set_query. The `income_account` query just above only differs by
+		//// quote style and trailing commas — same v14 leftover.
 		frm.custom_make_buttons = {
 			'Delivery Note': 'Delivery',
 			'Sales Invoice': 'Return / Credit Note',
@@ -1057,6 +1066,10 @@ frappe.ui.form.on("Sales Invoice", {
 
 	append_time_log: function (frm, time_log, exchange_rate) {
 		const row = frm.add_child("timesheets");
+		//// Neoffice — added (0f8787d3d6, kept by 0269b590df 2026-08-21): the pulled timesheet row
+		//// carries the Timesheet Detail billing_rate, which upstream drops. It feeds the per-rate
+		//// aggregation in the Get Timesheets dialog below; the SQL that exposes it is our
+		//// `tsd.billing_rate as billing_rate` in projects/doctype/timesheet/timesheet.py (marked there).
 		row.rate = time_log.billing_rate; //// added
 		row.activity_type = time_log.activity_type;
 		row.description = time_log.description;
@@ -1110,6 +1123,13 @@ frappe.ui.form.on("Sales Invoice", {
 									};
 								},
 							},
+							//// Neoffice — TO REVIEW: the Get Timesheets dialog declares col_break_1, to_time and project
+							//// TWICE. The duplicate arrived with the upstream merge ef8ddb9de6 (2025-02-26): upstream had
+							//// reworked its own dialog fields and the resolution kept both copies (the file went from one
+							//// `col_break_1` to two at exactly that commit). Frappe keeps the LAST field of a duplicated
+							//// fieldname, so the layout still works by accident. Ours proper are the Section Breaks, the
+							//// second Column Break and the reqd "Timesheet billing Item" Link (default "MO") — the item
+							//// the aggregated hours are billed on. Drop the first copy at the merge.
 							{
 								fieldtype: "Column Break",
 								fieldname: "col_break_1",
@@ -1171,6 +1191,15 @@ frappe.ui.form.on("Sales Invoice", {
 						],
 						primary_action: function () {
 							const data = d.get_values();
+							//// Neoffice — added after the upstream add_timesheet_data call (0f8787d3d6, v14→v15 port):
+							//// the pulled timesheet lines are grouped by billing rate and one Sales Invoice item per rate
+							//// is appended, so the customer sees "12 h @ 120.00" instead of forty timesheet lines.
+							//// TO REVIEW before the upstream merge, three defects visible in the code below:
+							////   - the 200 ms setTimeout races the model updates queued by add_timesheet_data;
+							////   - `frappe.model.get_new_doc("Item")` builds an *Item* document and appends it to the
+							////     `items` child table (which is Sales Invoice Item);
+							////   - `frm.save()` is called INSIDE the per-rate loop, i.e. once per distinct rate.
+							//// Same commit dropped upstream's `__("Get Items From")` button group on this button.
 							//// added — aggregate pulled timesheets into one billing item per rate
 							frm.events.add_timesheet_data(frm, {
 								from_time: data.from_time,

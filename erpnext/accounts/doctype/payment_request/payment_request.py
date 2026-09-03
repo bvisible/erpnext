@@ -409,6 +409,16 @@ class PaymentRequest(Document):
 
 		return payment_entry
 
+	#//// Neoffice — rewritten (b83a0c8847, 2026-03-15 "Payment Request email dialog + attach
+	#//// reference document PDF"). Two changes against upstream `def send_email(self)`:
+	#////   - recipients / subject / message can be overridden by the caller, so the Send-by-Email
+	#////     dialog (payment_request.js) can send what the user actually edited;
+	#////   - the print format falls back to the reference DocType's default_print_format when the
+	#////     Payment Request has none — upstream passes print_format=None and attaches the Standard
+	#////     format, which is not the Oslo layout our customers receive.
+	#//// TO REVIEW: upstream ENQUEUES the mail (`enqueue(frappe.sendmail, queue="short", …)`); ours
+	#//// calls frappe.sendmail(now=True) inline, so the HTTP request blocks on the SMTP round-trip
+	#//// and on rendering the PDF. Was probably meant to surface send errors in the dialog.
 	def send_email(self, recipients=None, subject=None, message=None):
 		"""send email with reference document (Sales Order/Invoice) attached"""
 		ref_print_format = self.print_format or frappe.db.get_value(
@@ -822,6 +832,9 @@ def get_print_format_list(ref_doctype):
 	return {"print_format": print_format_list}
 
 
+#//// Neoffice — added (2483c36bc4, 2026-03-15): renders get_message() server-side so the
+#//// Send-by-Email dialog shows the resolved text ("Bonjour Daniel Moret", "22.90 CHF") instead
+#//// of the raw Jinja template. No upstream equivalent.
 @frappe.whitelist()
 def get_rendered_message(docname):
 	"""Return the rendered message for the Payment Request email dialog."""
@@ -829,6 +842,12 @@ def get_rendered_message(docname):
 	return pr.get_message()
 
 
+#//// Neoffice — signature widened (b83a0c8847, 2026-03-15): upstream is
+#//// `resend_payment_email(docname)` and re-sends the stored mail to the stored email_to.
+#//// SECURITY — TO REVIEW before the upstream merge: `allow_guest=True` is upstream's, but with
+#//// these three new parameters an unauthenticated caller now chooses the recipient, the subject
+#//// and the body of a mail the site sends, with the reference document's PDF attached. Either
+#//// drop allow_guest here, or keep the overrides for a signed-in caller only.
 @frappe.whitelist(allow_guest=True)
 def resend_payment_email(docname, recipients=None, subject=None, message=None):
 	return frappe.get_doc("Payment Request", docname).send_email(

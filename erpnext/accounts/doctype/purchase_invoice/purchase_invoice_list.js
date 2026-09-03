@@ -16,6 +16,8 @@ frappe.listview_settings["Purchase Invoice"] = {
 		"on_hold",
 		"represents_company",
 		"is_internal_supplier",
+		//// Neoffice — added to add_fields (8f46440155, 2026-01-31): the list view needs our
+		//// is_proposed Custom Field to colour the "In Payment Run" rows below.
 		"is_proposed",
 	],
 	get_indicator(doc) {
@@ -31,6 +33,10 @@ frappe.listview_settings["Purchase Invoice"] = {
 			}
 		}
 
+		//// Neoffice — added (8f46440155, 2026-01-31), with the "In Payment Run" entry in status_colors
+		//// just below: the stored `status` is only refreshed when the invoice is saved, so a payment
+		//// run that just flagged is_proposed would still be listed Unpaid. Reading the flag first
+		//// keeps the list truthful. Upstream has neither the status nor this branch.
 		// Check is_proposed first (status may not be synced)
 		if (cint(doc.is_proposed) && flt(doc.outstanding_amount) > 0 && doc.docstatus == 1) {
 			return [__("In Payment Run"), "blue", "is_proposed,=,1"];

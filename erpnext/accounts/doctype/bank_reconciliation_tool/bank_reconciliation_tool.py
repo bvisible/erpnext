@@ -522,6 +522,14 @@ def subtract_allocations(gl_account, vouchers):
 		if amount := get_allocated_amount(voucher_allocated_amounts, voucher, gl_account):
 			voucher["paid_amount"] -= amount
 
+		#//// Neoffice — upstream appends every voucher unconditionally; ours drops those whose
+		#//// remaining paid_amount fell to 0 or below, so fully-allocated Journal / Payment Entries stop
+		#//// showing up as "0.00" matches in the Mint reconciliation screen (059e9173a8, 2025-10-27).
+		#//// TO REVIEW before the upstream merge — this filter has a contradictory history: 5b2fd01baa
+		#//// (2025-11-01) REVERTED it, saying the real fix had landed in Mint (mint commit 4748808,
+		#//// filter on status "Unreconciled" as well as unallocated_amount > 0) and that the workaround
+		#//// was no longer needed; four days later 33e5705d01 (2025-11-05, the POS Viewer commit) put
+		#//// it back — blame on these lines is 33e5705d01, not 059e9173a8. Decide once, upstream side.
 		# Custom: Filter out vouchers with paid_amount <= 0 to prevent vouchers with 0.00 amount
 		# from appearing in Mint/ERPNext Bank Reconciliation UI
 		# This occurs when get_allocated_amount() incorrectly calculates allocations

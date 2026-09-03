@@ -28,6 +28,11 @@ frappe.ui.form.on("Shipping Rule", {
 	},
 	toggle_reqd: function (frm) {
 		frm.toggle_reqd("shipping_amount", frm.doc.calculate_based_on === "Fixed");
+		//// Neoffice — added "Multiple Constraints" mode (5bb3903da1, 2025-03-13 "Advanced Shipping
+		//// Rule with Multiple Constraints"). Upstream only knows Fixed / Net Total / Net Weight and
+		//// makes `conditions` mandatory for everything that is not Fixed. In our mode the charge comes
+		//// from the `condition_multiple_constraints` child table instead, so `conditions` must NOT be
+		//// required and the two UOM fields must be. See shipping_rule.py for the whole feature.
 		frm.toggle_reqd("conditions", frm.doc.calculate_based_on !== "Fixed" && frm.doc.calculate_based_on !== "Multiple Constraints");
 		frm.toggle_reqd("condition_multiple_constraints", frm.doc.calculate_based_on === "Multiple Constraints");
 		frm.toggle_reqd("weight_uom", frm.doc.calculate_based_on === "Multiple Constraints");

@@ -312,6 +312,10 @@ class Subscription(Document):
 			)
 			unsupported_plans = []
 			for x in subscription_plan_currencies:
+				#//// Neoffice — null guard added. Upstream compares the plan currency to the party billing
+				#//// currency straight away, so a Subscription Plan with an empty currency (or a customer with
+				#//// no billing currency) was reported as an "unsupported plan" and blocked the subscription.
+				#//// Origin: none of the commits in v15.89.0..HEAD carries a rationale — TO REVIEW.
 				if x.currency and party_billing_currency and x.currency != party_billing_currency: #//// added x.currency and party_billing_currency and
 					unsupported_plans.append("{}".format(get_link_to_form("Subscription Plan", x.name)))
 
@@ -396,12 +400,22 @@ class Subscription(Document):
 
 		invoice = frappe.new_doc(self.invoice_document_type)
 		invoice.company = company
+		#//// Neoffice — carries our `customer_reference` Custom Field from the Subscription onto the
+		#//// generated invoice (f032a768e2, 2024-09-23 "last updates" — the commit gives no rationale,
+		#//// TO REVIEW). It is the reference the customer must quote on the payment; without it the QR
+		#//// invoice and the bank reconciliation lose the link. Both fields are Custom Fields, so this
+		#//// line raises AttributeError on a site that does not have them.
 		invoice.customer_reference = self.customer_reference #//// added
 		invoice.set_posting_time = 1
 
 		if self.generate_invoice_at == "Beginning of the current subscription period":
 			invoice.posting_date = self.current_invoice_start
 		elif self.generate_invoice_at == "Days before the current subscription period":
+			#//// Neoffice — upstream: `invoice.posting_date = posting_date or self.current_invoice_start`.
+			#//// Ours always computes the date the plan asks for ("Days before the current subscription
+			#//// period"), ignoring the posting_date the caller passed — so an invoice generated late (a
+			#//// missed scheduler run, a manual catch-up) is still dated the day it should have been.
+			#//// Origin: c9578a74f6 (2024-02-02 "fix date behaviour"), no further rationale — TO REVIEW.
 			invoice.posting_date = add_days(self.current_invoice_start, -1 * self.number_of_days) #////posting_date or self.current_invoice_start
 		else:
 			invoice.posting_date = self.current_invoice_end
@@ -584,6 +598,11 @@ class Subscription(Document):
 			return False
 
 		if self.generate_invoice_at == "Beginning of the current subscription period" and (
+				#//// Neoffice — the three date tests in this method were changed from `==` to `>=`, and the
+				#//// `is_new_subscription()` escape added (c2a51c7b50, 2025-11-30). Upstream only generates an
+				#//// invoice on the EXACT day, so a scheduler that did not run that day (instance down, backlog)
+				#//// silently skipped the period for good. Ours catches up. The re-indentation of the
+				#//// surrounding conditions is ours too and will conflict cosmetically.
 				getdate(posting_date) >= getdate(self.current_invoice_start) or self.is_new_subscription() #//// changed from == to >=
 		):
 			return True
@@ -650,6 +669,11 @@ class Subscription(Document):
 			order_by="from_date asc",
 		)
 
+	#//// Neoffice — added (c2a51c7b50, 2025-11-30 "add missing is_new_subscription method for
+	#//// invoice generation"): can_generate_new_invoice() already called it but nobody had written
+	#//// it, so every subscription run died on AttributeError. Returns True while the subscription
+	#//// has produced no invoice yet, which lets a subscription created mid-period bill at once.
+	#//// No upstream equivalent.
 	def is_new_subscription(self) -> bool:
 		"""
 		Returns True if this subscription has never generated any invoice yet.
@@ -692,6 +716,13 @@ class Subscription(Document):
 
 		to_generate_invoice = (
 			True
+			#//// Neoffice — TO REVIEW, condition INVERTED. Upstream (unchanged at v15.121.0):
+			#////   True if self.status == "Active"
+			#////        and not self.generate_invoice_at == "Beginning of the current subscription period"
+			#//// i.e. on cancellation, bill the period just consumed unless it was billed up front. Ours
+			#//// keeps only `self.status != "Active"` and comments the second half out, so a cancellation
+			#//// generates a final invoice exactly when upstream would NOT, and never when it would. No
+			#//// commit in v15.89.0..HEAD explains it — establish the intended behaviour before merging.
 			if self.status != "Active" #//// changed == to !=
 			   #//// commented and not self.generate_invoice_at == "Beginning of the current subscription period"
 			else False

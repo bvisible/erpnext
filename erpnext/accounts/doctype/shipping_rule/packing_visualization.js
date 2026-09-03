@@ -1,3 +1,8 @@
+//// Neoffice — added file (no upstream equivalent): the client side of the packing
+//// visualisation (7534a0d7f6, 2025-03-17; fixed by a50104af31, 2025-04-05). Collects the item
+//// dimensions from the open Sales/Delivery document, calls packing_visualization.py and shows
+//// the rendered 3D packing in a dialog. Belongs to the "Multiple Constraints" shipping feature
+//// documented in shipping_rule.py. File has no trailing newline (7534a0d7f6).
 /**
  * View form item packaging
  * Retrieves item dimensions, shipping rule, and generates a visualization
