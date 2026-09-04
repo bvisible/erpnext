@@ -714,23 +714,29 @@ class Subscription(Document):
 		if self.status == "Cancelled":
 			frappe.throw(_("subscription is already cancelled."), InvoiceCancelled)
 
-		to_generate_invoice = (
-			True
-			#//// Neoffice — TO REVIEW, condition INVERTED. Upstream (unchanged at v15.121.0):
-			#////   True if self.status == "Active"
-			#////        and not self.generate_invoice_at == "Beginning of the current subscription period"
-			#//// i.e. on cancellation, bill the period just consumed unless it was billed up front. Ours
-			#//// keeps only `self.status != "Active"` and comments the second half out, so a cancellation
-			#//// generates a final invoice exactly when upstream would NOT, and never when it would. No
-			#//// commit in v15.89.0..HEAD explains it — establish the intended behaviour before merging.
-			if self.status != "Active" #//// changed == to !=
-			   #//// commented and not self.generate_invoice_at == "Beginning of the current subscription period"
-			else False
+		#//// Neoffice — upstream (unchanged at v15.121.0) bills the consumed part of the current period
+		#//// on cancellation unless it was billed up front, but it only exempts "Beginning of the current
+		#//// subscription period" although get_items_from_plans above already treats "Days before the
+		#//// current subscription period" as prepaid too (is_prepaid=1, no proration). Cancelling an
+		#//// Active "Days before" subscription therefore billed the residual window a second time, at
+		#//// full plan price (measured: 108.10 CHF for a single day of a 100 CHF/month plan); 318 of the
+		#//// fleet's 371 subscriptions use that mode, so both prepaid modes are exempted here. From
+		#//// f032a768e2 (2024-09-23, "last updates", no reason recorded) to 2026-09-04 this condition was
+		#//// inverted (`status != "Active"`, second half commented out): it produced parasitic full-price
+		#//// invoices on non-Active subscriptions instead — tracker #207. To be proposed upstream.
+		to_generate_invoice = self.status == "Active" and self.generate_invoice_at not in (
+			"Beginning of the current subscription period",
+			"Days before the current subscription period",
 		)
 		self.status = "Cancelled"
 		self.cancelation_date = nowdate()
 
-		if to_generate_invoice and self.cancelation_date >= self.current_invoice_start:
+		#//// Neoffice — upstream compares the two dates raw: cancelation_date is the nowdate() string
+		#//// just assigned while current_invoice_start is a datetime.date whenever the document was
+		#//// loaded from the database (any server-side caller: scripts, NORA tools, the theme's dunning
+		#//// test), so "str >= date" raised TypeError there. The desk button never saw it because
+		#//// run_doc_method rebuilds the document from the client JSON, where both are strings.
+		if to_generate_invoice and getdate(self.cancelation_date) >= getdate(self.current_invoice_start):
 			self.generate_invoice(self.current_invoice_start, self.cancelation_date)
 
 		self.save()
