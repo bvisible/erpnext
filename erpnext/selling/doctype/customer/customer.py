@@ -137,16 +137,37 @@ class Customer(TransactionBase):
 		"""If customer created from Lead, update customer id in quotations, opportunities"""
 		self.update_lead_status()
 
+	#//// Neoffice — added method, no upstream equivalent (see validate() below).
+	def get_default_billing_currency(self) -> str | None:
+		"""Currency this customer is billed in: its own receivable account, else the default company."""
+		from erpnext import get_default_company, get_default_currency
+
+		rows = self.get("accounts") or []
+		row = next((r for r in rows if r.company == get_default_company()), None)
+		if row is None and len(rows) == 1:
+			row = rows[0]
+
+		if row and row.account:
+			currency = frappe.db.get_value("Account", row.account, "account_currency", cache=True)
+			if currency:
+				return currency
+
+		return get_default_currency()
+
 	def validate(self):
 		#//// Neoffice — default_currency is mandatory on our Customer (customer.json, reqd since
 		#//// 2023-11) while upstream leaves it optional. Every programmatic creation — webshop
 		#//// signup, POS quick customer, imports, upstream test fixtures — inserts without one and
-		#//// died on MandatoryError. Fill it from the default company before the mandatory check,
-		#//// so mandatory means "never empty", not "every caller must know".
+		#//// died on MandatoryError. Fill it before the mandatory check, so mandatory means "never
+		#//// empty", not "every caller must know".
+		#//// The value comes from the party's OWN receivable account when it has one, and only then
+		#//// from the default company: that is the currency ERPNext itself bills the party in
+		#//// (get_party_account_currency). Reading the default company first stamped a currency that
+		#//// contradicted the account the customer posts to, and every Subscription on such a
+		#//// customer then died in validate_party_billing_currency (upstream test_subscription
+		#//// recovery / future_subscription, 2026-09-04).
 		if not self.default_currency:
-			from erpnext import get_default_currency
-
-			self.default_currency = get_default_currency()
+			self.default_currency = self.get_default_billing_currency()
 		self.flags.is_new_doc = self.is_new()
 		self.flags.old_lead = self.lead_name
 		validate_party_accounts(self)
