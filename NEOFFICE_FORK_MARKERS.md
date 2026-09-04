@@ -90,17 +90,17 @@ Modified in the same file (kind B): `item_name.in_list_view 1`, `is_stock_item.i
 ### B. Modified properties of upstream fields — become Property Setters
 
 #### Status option added (feature, not layout)
-- `accounts/doctype/purchase_invoice/purchase_invoice.json` — `status` (Select) `options` gains
+- `erpnext/accounts/doctype/purchase_invoice/purchase_invoice.json` — `status` (Select) `options` gains
   `In Payment Run` (`e84ce61bd4`, 2025-11-28). Paired with the `DF.Literal` and `set_status()`
   changes marked in `purchase_invoice.py` and the colour in `purchase_invoice_list.js`.
   Same file, `e8aaf3e9d7` (2026-02-02): `section_break_44.collapsible 1 → 0`;
   `33e5705d01`: `payments_section.depends_on` dropped; `title/due_date/outstanding_amount.in_list_view 1`.
 
 #### Mandatory / label changes
-- `selling/doctype/customer/customer.json` — `default_currency.reqd → 1` (`1c3c1a2693`, 2023-11-27).
+- `erpnext/selling/doctype/customer/customer.json` — `default_currency.reqd → 1` (`1c3c1a2693`, 2023-11-27).
   **This is the fork behaviour** that `Customer.validate` compensates for (marked in `customer.py`,
   fixed by `ecdec25916`). Converting it to a Property Setter must keep that default in step.
-- `accounts/doctype/subscription/subscription.json` (`f032a768e2`) — `current_invoice_start.label`
+- `erpnext/accounts/doctype/subscription/subscription.json` (`f032a768e2`) — `current_invoice_start.label`
   *Current Invoice Start Date* → *Next Invoice Start Date*; `current_invoice_end.label` likewise;
   both `in_list_view 1`.
 - `erpnext/projects/doctype/task/task.json` (`f032a768e2`) — `is_group.allow_in_quick_entry 1`,
@@ -119,26 +119,26 @@ conflict at the merge.
 
 | file | fields touched (`columns` / `in_list_view`) |
 |---|---|
-| `accounts/doctype/journal_entry/journal_entry.json` | `title`, `posting_date`, `cheque_no`, `user_remark`, `remark` |
-| `accounts/doctype/journal_entry_account/journal_entry_account.json` | `account`, `party_type`, `debit_in_account_currency`, `credit_in_account_currency`, `reference_name`, `user_remark` |
-| `accounts/doctype/journal_entry_template/journal_entry_template.json` | `template_title` |
-| `accounts/doctype/loyalty_program_collection/loyalty_program_collection.json` | `min_spent` |
-| `accounts/doctype/mode_of_payment/mode_of_payment.json` | `type` |
-| `accounts/doctype/payment_entry/payment_entry.json` | `paid_amount` |
-| `accounts/doctype/payment_term/payment_term.json` | `payment_term_name`, `mode_of_payment` |
-| `accounts/doctype/purchase_invoice_item/purchase_invoice_item.json` | `item_code`, `description`, `qty`, `uom`, `rate`, `amount`, `item_tax_template`, `expense_account` |
-| `accounts/doctype/purchase_taxes_and_charges/purchase_taxes_and_charges.json` | `charge_type`, `included_in_print_rate`, `account_head`, `rate` |
-| `accounts/doctype/sales_invoice/sales_invoice.json` | `title`, `posting_date`, `rounded_total`, `section_break_49` |
-| `accounts/doctype/sales_invoice_item/sales_invoice_item.json` | `item_code`, `description_section`, `description`, `qty`, `uom`, `price_list_rate`, `discount_percentage`, `discount_amount`, `rate`, `amount`, `warehouse` |
-| `accounts/doctype/sales_taxes_and_charges/sales_taxes_and_charges.json` | `charge_type`, `account_head`, `included_in_print_rate`, `rate` |
-| `selling/doctype/quotation/quotation.json` | `title` |
-| `selling/doctype/quotation_item/quotation_item.json` | `item_code`, `section_break_5`, `description`, `image` (`fetch_from` dropped), `qty`, `uom`, `price_list_rate`, `discount_percentage`, `discount_amount`, `rate`, `amount` |
-| `selling/doctype/sales_order/sales_order.json` | `customer_name` |
-| `selling/doctype/sales_order_item/sales_order_item.json` | `item_code`, `delivery_date`, `section_break_5`, `description`, `stock_uom`, `uom`, `price_list_rate`, `discount_percentage`, `discount_amount`, `rate`, `amount`, `warehouse`; top-level `row_format Dynamic` |
-| `stock/doctype/delivery_note_item/delivery_note_item.json` | `item_code`, `section_break_6`, `description`, `qty`, `uom`, `price_list_rate`, `discount_percentage`, `discount_amount`, `rate`, `amount`, `warehouse` |
-| `stock/doctype/item_default/item_default.json` | `company`, `default_warehouse`, `default_price_list`, `expense_account`, `income_account` |
-| `stock/doctype/item_supplier/item_supplier.json` | `supplier`, `supplier_part_no` |
-| `stock/doctype/item_tax/item_tax.json` | `item_tax_template`, `tax_category`, `valid_from`, `minimum_net_rate`, `maximum_net_rate` |
+| `erpnext/accounts/doctype/journal_entry/journal_entry.json` | `title`, `posting_date`, `cheque_no`, `user_remark`, `remark` |
+| `erpnext/accounts/doctype/journal_entry_account/journal_entry_account.json` | `account`, `party_type`, `debit_in_account_currency`, `credit_in_account_currency`, `reference_name`, `user_remark` |
+| `erpnext/accounts/doctype/journal_entry_template/journal_entry_template.json` | `template_title` |
+| `erpnext/accounts/doctype/loyalty_program_collection/loyalty_program_collection.json` | `min_spent` |
+| `erpnext/accounts/doctype/mode_of_payment/mode_of_payment.json` | `type` |
+| `erpnext/accounts/doctype/payment_entry/payment_entry.json` | `paid_amount` |
+| `erpnext/accounts/doctype/payment_term/payment_term.json` | `payment_term_name`, `mode_of_payment` |
+| `erpnext/accounts/doctype/purchase_invoice_item/purchase_invoice_item.json` | `item_code`, `description`, `qty`, `uom`, `rate`, `amount`, `item_tax_template`, `expense_account` |
+| `erpnext/accounts/doctype/purchase_taxes_and_charges/purchase_taxes_and_charges.json` | `charge_type`, `included_in_print_rate`, `account_head`, `rate` |
+| `erpnext/accounts/doctype/sales_invoice/sales_invoice.json` | `title`, `posting_date`, `rounded_total`, `section_break_49` |
+| `erpnext/accounts/doctype/sales_invoice_item/sales_invoice_item.json` | `item_code`, `description_section`, `description`, `qty`, `uom`, `price_list_rate`, `discount_percentage`, `discount_amount`, `rate`, `amount`, `warehouse` |
+| `erpnext/accounts/doctype/sales_taxes_and_charges/sales_taxes_and_charges.json` | `charge_type`, `account_head`, `included_in_print_rate`, `rate` |
+| `erpnext/selling/doctype/quotation/quotation.json` | `title` |
+| `erpnext/selling/doctype/quotation_item/quotation_item.json` | `item_code`, `section_break_5`, `description`, `image` (`fetch_from` dropped), `qty`, `uom`, `price_list_rate`, `discount_percentage`, `discount_amount`, `rate`, `amount` |
+| `erpnext/selling/doctype/sales_order/sales_order.json` | `customer_name` |
+| `erpnext/selling/doctype/sales_order_item/sales_order_item.json` | `item_code`, `delivery_date`, `section_break_5`, `description`, `stock_uom`, `uom`, `price_list_rate`, `discount_percentage`, `discount_amount`, `rate`, `amount`, `warehouse`; top-level `row_format Dynamic` |
+| `erpnext/stock/doctype/delivery_note_item/delivery_note_item.json` | `item_code`, `section_break_6`, `description`, `qty`, `uom`, `price_list_rate`, `discount_percentage`, `discount_amount`, `rate`, `amount`, `warehouse` |
+| `erpnext/stock/doctype/item_default/item_default.json` | `company`, `default_warehouse`, `default_price_list`, `expense_account`, `income_account` |
+| `erpnext/stock/doctype/item_supplier/item_supplier.json` | `supplier`, `supplier_part_no` |
+| `erpnext/stock/doctype/item_tax/item_tax.json` | `item_tax_template`, `tax_category`, `valid_from`, `minimum_net_rate`, `maximum_net_rate` |
 
 ### C. Top-level DocType properties
 
@@ -160,10 +160,10 @@ conflict at the merge.
 
 ### Defects found while inventorying
 
-- `accounts/doctype/purchase_invoice_item/purchase_invoice_item.json` — `field_order` contains
+- `erpnext/accounts/doctype/purchase_invoice_item/purchase_invoice_item.json` — `field_order` contains
   `column_break_ulom`, which **has no field definition**. A dangling `field_order` entry; harmless
   today, but it will not survive a strict validation.
-- `selling/doctype/customer/test_records.json` (`b7c85d6065`, 2026-09-01) is a fixture, not a
+- `erpnext/selling/doctype/customer/test_records.json` (`b7c85d6065`, 2026-09-01) is a fixture, not a
   DocType: the test customers were given a currency because `default_currency` is `reqd` on our
   Customer (see above).
 
