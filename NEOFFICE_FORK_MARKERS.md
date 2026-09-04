@@ -149,12 +149,12 @@ conflict at the merge.
   `stock/page/warehouse_capacity_summary` (`f032a768e2` / `da71070613`).
   **TO REVIEW**: a Domain named *Gestion* — a French word — gates these doctypes and pages. No
   commit explains it; if the Domain does not exist on a site, upstream hides the doctype.
-- `accounts/doctype/journal_entry.json` and `stock/doctype/stock_ledger_entry.json`:
+- `erpnext/accounts/doctype/journal_entry/journal_entry.json` and `stock/doctype/stock_ledger_entry.json`:
   top-level `read_only: 1` (upstream: unset).
-- `accounts/doctype/loyalty_point_entry.json` and `stock/doctype/stock_ledger_entry.json`:
+- `erpnext/accounts/doctype/loyalty_point_entry/loyalty_point_entry.json` and `stock/doctype/stock_ledger_entry.json`:
   `permissions` rewritten (`da71070613`, 2023-11-15 *updates for v15*; no rationale — **TO REVIEW**,
   a permission change is exactly what must not diverge silently).
-- `stock/page/warehouse_capacity_summary.json`: `page_name` *Warehouse Capacity Summary* →
+- `erpnext/stock/page/warehouse_capacity_summary/warehouse_capacity_summary.json`: `page_name` *Warehouse Capacity Summary* →
   `warehouse-capacity-summary`; `selling/page/sales_funnel.json` and `stock/page/stock_balance.json`:
   `system_page: 0` and a rewritten `creation`.
 
