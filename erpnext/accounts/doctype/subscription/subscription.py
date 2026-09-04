@@ -591,15 +591,21 @@ class Subscription(Document):
 		if self.has_outstanding_invoice() and not self.generate_new_invoices_past_due_date:
 			return False
 
+		# `>=`, not `==`: a run that lands after the day the period was due to be billed must
+		# still bill it. With `==` a single missed run (instance down, a backlog, an outstanding
+		# invoice that held this gate shut until it was paid) skips the period, process() then
+		# rolls the period forward unbilled, and the subscription never lands on a boundary day
+		# again -- it stops invoicing for good. generate_invoice() dates the invoice on the day
+		# it should have had, so catching up does not move the posting date.
 		if self.generate_invoice_at == "Beginning of the current subscription period" and (
-			getdate(posting_date) == getdate(self.current_invoice_start)
+			getdate(posting_date) >= getdate(self.current_invoice_start)
 		):
 			return True
 		elif self.generate_invoice_at == "Days before the current subscription period" and (
-			getdate(posting_date) == getdate(add_days(self.current_invoice_start, -1 * self.number_of_days))
+			getdate(posting_date) >= getdate(add_days(self.current_invoice_start, -1 * self.number_of_days))
 		):
 			return True
-		elif getdate(posting_date) == getdate(self.current_invoice_end):
+		elif getdate(posting_date) >= getdate(self.current_invoice_end):
 			return True
 		else:
 			return False

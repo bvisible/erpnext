@@ -93,7 +93,9 @@ class TestSubscription(FrappeTestCase):
 
 		current_invoice.db_set("outstanding_amount", 0)
 		current_invoice.db_set("status", "Paid")
-		subscription.process()
+		# A date inside the period that was just billed: the next period has not come up for
+		# billing yet, so processing must only move the status, never invoice again.
+		subscription.process(posting_date="2018-01-15")
 
 		self.assertEqual(subscription.status, "Active")
 		self.assertEqual(subscription.current_invoice_start, add_months(subscription.start_date, 1))
@@ -262,7 +264,9 @@ class TestSubscription(FrappeTestCase):
 		settings.save()
 
 		subscription = create_subscription(start_date="2018-01-01")
-		subscription.process()  # generate first invoice
+		# Inside the first period: nothing is due for billing yet, so this only sets the status.
+		subscription.process(posting_date="2018-01-15")
+		self.assertEqual(len(subscription.invoices), 0)
 
 		# Generate an invoice for the cancelled period
 		subscription.cancel_subscription()
@@ -381,7 +385,8 @@ class TestSubscription(FrappeTestCase):
 		invoice.db_set("outstanding_amount", 0)
 		invoice.db_set("status", "Paid")
 
-		subscription.process()
+		# Inside the period that was just billed -- nothing is due yet.
+		subscription.process(posting_date="2018-01-15")
 		self.assertEqual(subscription.status, "Active")
 
 		# A new invoice is generated
@@ -570,10 +575,11 @@ class TestSubscription(FrappeTestCase):
 			getdate("2021-02-01"),
 		)
 
-		# recreate most recent invoice
+		# The 2021-03 period was never billed: a later run bills it -- one period per run, dated
+		# the day it should have had -- and leaves the invoices that already exist alone.
 		subscription.process(posting_date="2022-01-31")
 
-		self.assertEqual(len(subscription.invoices), 2)
+		self.assertEqual(len(subscription.invoices), 3)
 		self.assertEqual(
 			getdate(frappe.db.get_value("Sales Invoice", subscription.invoices[0].name, "from_date")),
 			getdate("2021-01-01"),
@@ -582,6 +588,35 @@ class TestSubscription(FrappeTestCase):
 			getdate(frappe.db.get_value("Sales Invoice", subscription.invoices[1].name, "from_date")),
 			getdate("2021-02-01"),
 		)
+		self.assertEqual(
+			getdate(frappe.db.get_value("Sales Invoice", subscription.invoices[2].name, "from_date")),
+			getdate("2021-03-01"),
+		)
+		self.assertEqual(
+			getdate(frappe.db.get_value("Sales Invoice", subscription.invoices[2].name, "posting_date")),
+			getdate("2021-03-31"),
+		)
+
+	def test_missed_run_does_not_lose_a_billing_period(self):
+		"""The daily job did not run on the day the period was due to be billed."""
+		subscription = create_subscription(start_date="2018-01-01", generate_new_invoices_past_due_date=1)
+		period_start = subscription.current_invoice_start
+		period_end = subscription.current_invoice_end
+
+		# the run of `period_end` never happened; the next one is the day after
+		subscription.process(posting_date=add_days(period_end, 1))
+
+		self.assertEqual(len(subscription.invoices), 1)
+		invoice = frappe.db.get_value(
+			"Sales Invoice",
+			subscription.invoices[0].name,
+			["from_date", "to_date", "posting_date"],
+			as_dict=True,
+		)
+		# the period is billed, and dated the day it should have been
+		self.assertEqual(getdate(invoice.from_date), getdate(period_start))
+		self.assertEqual(getdate(invoice.to_date), getdate(period_end))
+		self.assertEqual(getdate(invoice.posting_date), getdate(period_end))
 
 	def test_subscription_invoice_generation_before_days(self):
 		subscription = create_subscription(
