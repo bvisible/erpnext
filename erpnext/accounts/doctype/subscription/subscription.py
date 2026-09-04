@@ -405,7 +405,10 @@ class Subscription(Document):
 		#//// TO REVIEW). It is the reference the customer must quote on the payment; without it the QR
 		#//// invoice and the bank reconciliation lose the link. Both fields are Custom Fields, so this
 		#//// line raises AttributeError on a site that does not have them.
-		invoice.customer_reference = self.customer_reference #//// added
+		#//// Neoffice — customer_reference is a site Custom Field (json_updates / hub config), absent on a
+		#//// bare bench: read it with .get() so invoices can still be generated without it (upstream
+		#//// test_subscription died on AttributeError, 2026-09-04).
+		invoice.customer_reference = self.get("customer_reference")
 		invoice.set_posting_time = 1
 
 		if self.generate_invoice_at == "Beginning of the current subscription period":
