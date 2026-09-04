@@ -1320,8 +1320,11 @@ class SalesInvoice(SellingController):
 
 				remark = ""
 				remark += (str(self.rounded_total) or str(self.grand_total)) + " " + self.currency
-				if self.customer_reference:
-					remark += " " + self.customer_reference[:25]
+				#//// Neoffice — customer_reference is a site Custom Field (json_updates / hub config), absent on a
+				#//// bare bench: read it with .get() so a Sales Invoice can still be submitted without it (#183).
+				customer_reference = self.get("customer_reference")
+				if customer_reference:
+					remark += " " + customer_reference[:25]
 				#////
 
 				gl_entries.append(
@@ -1387,8 +1390,11 @@ class SalesInvoice(SellingController):
 				#//// added block
 				remark = ""
 				remark += (str(self.rounded_total) or str(self.grand_total)) + " " + self.currency
-				if self.customer_reference:
-					remark += " " + self.customer_reference[:25]
+				#//// Neoffice — customer_reference is a site Custom Field (json_updates / hub config), absent on a
+				#//// bare bench: read it with .get() so a Sales Invoice can still be submitted without it (#183).
+				customer_reference = self.get("customer_reference")
+				if customer_reference:
+					remark += " " + customer_reference[:25]
 				remark += (" " + item.description[:40]) if item.description else ""
 				#////
 
