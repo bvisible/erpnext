@@ -103,8 +103,11 @@ Modified in the same file (kind B): `item_name.in_list_view 1`, `is_stock_item.i
 - `accounts/doctype/subscription/subscription.json` (`f032a768e2`) — `current_invoice_start.label`
   *Current Invoice Start Date* → *Next Invoice Start Date*; `current_invoice_end.label` likewise;
   both `in_list_view 1`.
-- `projects/doctype/task/task.json` (`f032a768e2`) — `description.reqd → 1`,
-  `is_group.allow_in_quick_entry 1`, `is_template.allow_in_quick_entry 1`.
+- `erpnext/projects/doctype/task/task.json` (`f032a768e2`) — `is_group.allow_in_quick_entry 1`,
+  `is_template.allow_in_quick_entry 1`. It also carried `description.reqd → 1`, **reverted to
+  upstream on 2026-09-04** (#207): upstream lets a Task exist with a title and no body, and making
+  the description mandatory refused every quick entry, every scripted insert and every Task created
+  from a template that had none. Nothing left to reconcile for that property at the merge.
 
 #### Grid / list layout — the `feat(columns)` series
 A single campaign (author *NeoService*, 2026-03-18 → 2026-04-05: `c698bb59d3`, `cf3da8f419`,
