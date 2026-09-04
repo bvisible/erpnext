@@ -601,12 +601,25 @@ class Subscription(Document):
 			return False
 
 		if self.generate_invoice_at == "Beginning of the current subscription period" and (
-				#//// Neoffice — the three date tests in this method were changed from `==` to `>=`, and the
-				#//// `is_new_subscription()` escape added (c2a51c7b50, 2025-11-30). Upstream only generates an
-				#//// invoice on the EXACT day, so a scheduler that did not run that day (instance down, backlog)
-				#//// silently skipped the period for good. Ours catches up. The re-indentation of the
-				#//// surrounding conditions is ours too and will conflict cosmetically.
-				getdate(posting_date) >= getdate(self.current_invoice_start) or self.is_new_subscription() #//// changed from == to >=
+				#//// Neoffice — the three date tests in this method were changed from `==` to `>=`. The
+				#//// change predates the root commit e8aaf3e9d7 (2026-02-02), where this repository's
+				#//// history was squashed, so git no longer holds who wrote it or why; the SHAs an earlier
+				#//// marker pass cited here (c9578a74f6, c2a51c7b50) exist in no repository.
+				#//// Upstream only generates an invoice on the EXACT day, and
+				#//// process() only rolls the period forward once its END has passed — so a scheduler that
+				#//// missed the boundary day (instance down, backlog, an outstanding invoice holding the
+				#//// gate shut) skips that period and never lands on a boundary again: the subscription
+				#//// stops billing for good. Ours catches up one period per run, and generate_invoice()
+				#//// dates the invoice on the day it should have had. The re-indentation of the surrounding
+				#//// conditions is ours too and will conflict cosmetically.
+				#//// The `or self.is_new_subscription()` escape that sat on this line (same origin) is
+				#//// dropped: it was only ever reached when posting_date < current_invoice_start — a period
+				#//// that has NOT started — so it billed a future or trialling subscription on the day it
+				#//// was created, with a posting_date in the future (measured 2026-09-04 on a throwaway
+				#//// site: start_date = today + 1 month gave a 900 invoice dated 2026-10-04 issued on
+				#//// 2026-09-04; a trial gave one dated 2026-10-05). A subscription created mid-period is
+				#//// unaffected — posting_date >= current_invoice_start already holds for it.
+				getdate(posting_date) >= getdate(self.current_invoice_start) #//// changed from == to >=
 		):
 			return True
 		elif self.generate_invoice_at == "Days before the current subscription period" and (
@@ -672,16 +685,15 @@ class Subscription(Document):
 			order_by="from_date asc",
 		)
 
-	#//// Neoffice — added (c2a51c7b50, 2025-11-30 "add missing is_new_subscription method for
-	#//// invoice generation"): can_generate_new_invoice() already called it but nobody had written
-	#//// it, so every subscription run died on AttributeError. Returns True while the subscription
-	#//// has produced no invoice yet, which lets a subscription created mid-period bill at once.
-	#//// No upstream equivalent.
+	#//// Neoffice — added together with the `>=` gate above, before the 2026-02-02 history squash
+	#//// (root commit e8aaf3e9d7): can_generate_new_invoice() called it, so without it every
+	#//// subscription run died on AttributeError. No upstream equivalent.
+	#//// It is no longer wired into the invoice gate (2026-09-04): there it only fired on a period
+	#//// that had not started, and billed future and trialling subscriptions. Kept as a helper —
+	#//// a Server Script or a report may call it — but nothing in the apps does today.
 	def is_new_subscription(self) -> bool:
 		"""
 		Returns True if this subscription has never generated any invoice yet.
-		This is used to allow invoice generation for new subscriptions even if
-		the posting date is after the current_invoice_start date.
 		"""
 		return not frappe.db.exists(
 			self.invoice_document_type,
