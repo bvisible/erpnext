@@ -687,16 +687,17 @@ class Subscription(Document):
 		if self.status == "Cancelled":
 			frappe.throw(_("subscription is already cancelled."), InvoiceCancelled)
 
-		to_generate_invoice = (
-			True
-			if self.status == "Active"
-			and not self.generate_invoice_at == "Beginning of the current subscription period"
-			else False
+		# "Days before the current subscription period" is prepaid as well (see get_items_from_plans):
+		# the running period was already billed before it started, so it must not be billed again.
+		to_generate_invoice = self.status == "Active" and self.generate_invoice_at not in (
+			"Beginning of the current subscription period",
+			"Days before the current subscription period",
 		)
 		self.status = "Cancelled"
 		self.cancelation_date = nowdate()
 
-		if to_generate_invoice and self.cancelation_date >= self.current_invoice_start:
+		# current_invoice_start is a date when the document was loaded from the database
+		if to_generate_invoice and getdate(self.cancelation_date) >= getdate(self.current_invoice_start):
 			self.generate_invoice(self.current_invoice_start, self.cancelation_date)
 
 		self.save()

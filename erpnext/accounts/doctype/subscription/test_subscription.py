@@ -221,6 +221,24 @@ class TestSubscription(FrappeTestCase):
 		settings.prorate = to_prorate
 		settings.save()
 
+	def test_subscription_cancellation_with_prepaid_days_before_invoicing(self):
+		# The running period was already billed before it started: cancelling must not bill it again
+		subscription = create_subscription(
+			generate_invoice_at="Days before the current subscription period", number_of_days=5
+		)
+		self.assertEqual(subscription.status, "Active")
+
+		subscription.cancel_subscription()
+		self.assertEqual(len(subscription.invoices), 0)
+
+	def test_subscription_cancellation_from_loaded_document(self):
+		# Loaded from the database, current_invoice_start is a date and cancelation_date a string
+		subscription = create_subscription()
+		subscription = frappe.get_doc("Subscription", subscription.name)
+
+		subscription.cancel_subscription()
+		self.assertEqual(len(subscription.invoices), 1)
+
 	def test_subscription_cancellation_invoices_with_prorata_false(self):
 		settings = frappe.get_single("Subscription Settings")
 		to_prorate = settings.prorate
