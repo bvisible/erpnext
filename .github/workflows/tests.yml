@@ -32,6 +32,7 @@ jobs:
       app_ref: ${{ inputs.app_ref || '' }}
       upstream_preview: ${{ inputs.upstream_preview || false }}
       erpnext_bootstrap: false   # erpnext IS the app under test: its own before_tests runs
-      skip_build: true            # tests only; the desk bundle is irrelevant here
+      skip_build: true            # no app build: erpnext ships no SPA
+      build_frappe_assets: true   # tests that queue an e-mail inline the CSS through frappe's assets.json
       test_args: ${{ inputs.test_args || '' }}
     secrets: inherit
