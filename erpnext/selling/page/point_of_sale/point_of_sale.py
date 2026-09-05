@@ -12,9 +12,9 @@ from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_item_group, get
 from erpnext.accounts.doctype.pos_profile.pos_profile import get_child_nodes, get_item_groups
 from erpnext.stock.get_item_details import get_conversion_factor
 from erpnext.stock.utils import scan_barcode
-#//// Neoffice — import added for the promotional-price lookup in get_items() below
-#//// (c319057093, 2023-11-08 "Update point_of_sale for promo price").
-from erpnext.utilities.product import get_price #//// added import
+# //// Neoffice — import added for the promotional-price lookup in get_items() below
+# //// (c319057093, 2023-11-08 "Update point_of_sale for promo price").
+from erpnext.utilities.product import get_price # //// added import
 
 
 def search_by_term(search_term, warehouse, price_list):
@@ -132,17 +132,17 @@ def get_parent_item_group():
 
 
 @frappe.whitelist()
-#//// Neoffice — signature and body extended. Upstream:
-#////   get_items(start, page_length, price_list, item_group, pos_profile, search_term="")
-#//// Ours adds `customer` BEFORE search_term (so any positional caller breaks — pos_item_
-#//// selector.js passes keywords, marked there) and reads the POS Profile `company` as well,
-#//// because get_price() needs it. Reason: the till must show the PROMOTIONAL price a Pricing
-#//// Rule gives this customer group, not the bare price list rate (c319057093 / 1a6ccdb835,
-#//// 2023-11-08; 7ecd583775, 2025-03-25 "Fix bug price"). The item.variant_of column and the
-#//// per-item attributes added below feed the variant lines shown in the selector and the cart.
+# //// Neoffice — signature and body extended. Upstream:
+# ////   get_items(start, page_length, price_list, item_group, pos_profile, search_term="")
+# //// Ours adds `customer` BEFORE search_term (so any positional caller breaks — pos_item_
+# //// selector.js passes keywords, marked there) and reads the POS Profile `company` as well,
+# //// because get_price() needs it. Reason: the till must show the PROMOTIONAL price a Pricing
+# //// Rule gives this customer group, not the bare price list rate (c319057093 / 1a6ccdb835,
+# //// 2023-11-08; 7ecd583775, 2025-03-25 "Fix bug price"). The item.variant_of column and the
+# //// per-item attributes added below feed the variant lines shown in the selector and the cart.
 def get_items(start, page_length, price_list, item_group, pos_profile, customer=None, search_term=""):
-	warehouse, hide_unavailable_items, company = frappe.db.get_value( #//// added , company
-		"POS Profile", pos_profile, ["warehouse", "hide_unavailable_items", "company"] #//// , "company"
+	warehouse, hide_unavailable_items, company = frappe.db.get_value( # //// added , company
+		"POS Profile", pos_profile, ["warehouse", "hide_unavailable_items", "company"] # //// , "company"
 	)
 
 	result = []
@@ -166,7 +166,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, customer=
 		bin_join_selection = "LEFT JOIN `tabBin` bin ON bin.item_code = item.name"
 		bin_join_condition = "AND (item.is_stock_item = 0 OR (item.is_stock_item = 1 AND bin.warehouse = %(warehouse)s AND bin.actual_qty > 0))"
 
-	#//// added select item.variant_of
+	# //// added select item.variant_of
 	items_data = frappe.db.sql(
 		"""
 		SELECT
@@ -236,15 +236,15 @@ def get_items(start, page_length, price_list, item_group, pos_profile, customer=
 			if sales_uom_price:
 				item_uom_price = sales_uom_price
 
-		#//// Neoffice — added block, no upstream equivalent (c319057093, 2023-11-08; 7ecd583775,
-		#//// 2025-03-25): resolves the Pricing Rule price for this item and this customer group and
-		#//// returns it as `promo_price`, which pos_item_selector.js renders struck-through next to the
-		#//// list price. `-1` is the "no promotion" sentinel.
-		#//// TO REVIEW: a bare `except Exception` turns any pricing failure into `-1` (a silent wrong
-		#//// price rather than an error), get_price() is called once PER ITEM of the page — one Pricing
-		#//// Rule resolution per row — and frappe.log_error() is called with a single argument, so the
-		#//// message lands in the 140-char title field and is truncated.
-		#//// added - Get promotional pricing
+		# //// Neoffice — added block, no upstream equivalent (c319057093, 2023-11-08; 7ecd583775,
+		# //// 2025-03-25): resolves the Pricing Rule price for this item and this customer group and
+		# //// returns it as `promo_price`, which pos_item_selector.js renders struck-through next to the
+		# //// list price. `-1` is the "no promotion" sentinel.
+		# //// TO REVIEW: a bare `except Exception` turns any pricing failure into `-1` (a silent wrong
+		# //// price rather than an error), get_price() is called once PER ITEM of the page — one Pricing
+		# //// Rule resolution per row — and frappe.log_error() is called with a single argument, so the
+		# //// message lands in the 140-char title field and is truncated.
+		# //// added - Get promotional pricing
 		promo_price = None
 		try:
 			customer_group = None
@@ -256,7 +256,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, customer=
 		except Exception as e:
 			frappe.log_error(f"Error getting pricing for {item.item_code}: {str(e)}")
 			promo_price = '-1'
-		#////
+		# ////
 
 		if item_prices and not item_uom_price:
 			item_uom = item_prices[0].get("uom")
@@ -270,11 +270,11 @@ def get_items(start, page_length, price_list, item_group, pos_profile, customer=
 		if item_uom_price and item_uom != item_uom_price.get("uom"):
 			item_uom_price.price_list_rate = item_uom_price.price_list_rate * item_conversion_factor
 
-		#//// Neoffice — upstream appends the plain dict inline; ours adds `promo_price` (above) and,
-		#//// for a variant item, its Item Variant Attribute rows, so the till can show "Colour: red /
-		#//// Size: M" under the item name (1a6ccdb835, 2023-11-08 "added attributes var").
-		#//// TO REVIEW: one extra query per variant item on every page of the item grid.
-		#//// Create result dict with all data including promo and variants
+		# //// Neoffice — upstream appends the plain dict inline; ours adds `promo_price` (above) and,
+		# //// for a variant item, its Item Variant Attribute rows, so the till can show "Colour: red /
+		# //// Size: M" under the item name (1a6ccdb835, 2023-11-08 "added attributes var").
+		# //// TO REVIEW: one extra query per variant item on every page of the item grid.
+		# //// Create result dict with all data including promo and variants
 		item_data = {
 			**item,
 			"price_list_rate": item_uom_price.get("price_list_rate"),
@@ -294,7 +294,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, customer=
 			item_data.update({"attributes": attributes})
 
 		result.append(item_data)
-		#////
+		# ////
 	return {"items": result}
 
 
@@ -471,16 +471,16 @@ def get_pos_profile_data(pos_profile):
 	pos_profile.customer_groups = _customer_groups_with_children
 	return pos_profile
 
-#////
-#//// Neoffice — added endpoint, no upstream equivalent: counts the sellable items of an Item
-#//// Group for this POS Profile, so the item-group buttons added to the selector
-#//// (pos_item_selector.js, marked there) only show groups that actually have something to sell.
-#//// TO REVIEW: the selector calls it once per group, sequentially, every time the group list is
-#//// redrawn. The file also lost its trailing newline (7ecd583775, 2025-03-25).
+# ////
+# //// Neoffice — added endpoint, no upstream equivalent: counts the sellable items of an Item
+# //// Group for this POS Profile, so the item-group buttons added to the selector
+# //// (pos_item_selector.js, marked there) only show groups that actually have something to sell.
+# //// TO REVIEW: the selector calls it once per group, sequentially, every time the group list is
+# //// redrawn. The file also lost its trailing newline (7ecd583775, 2025-03-25).
 @frappe.whitelist()
 def has_items(item_group, pos_profile):
-	warehouse, hide_unavailable_items, company = frappe.db.get_value( #////
-		"POS Profile", pos_profile, ["warehouse", "hide_unavailable_items", "company"] #////
+	warehouse, hide_unavailable_items, company = frappe.db.get_value( # ////
+		"POS Profile", pos_profile, ["warehouse", "hide_unavailable_items", "company"] # ////
 	)
 
 	if not frappe.db.exists("Item Group", item_group):
@@ -521,4 +521,4 @@ def has_items(item_group, pos_profile):
 	)
 
 	return {'count': item_count[0][0]}
-#////
+# ////

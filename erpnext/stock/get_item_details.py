@@ -471,15 +471,15 @@ def get_basic_details(args, item, overwrite_warehouse=True):
 			"discount_percentage": 0.0,
 			"discount_amount": flt(args.discount_amount) or 0.0,
 			"update_stock": args.get("update_stock")
-			#//// Neoffice — the update_stock passthrough is widened beyond upstream's
-			#//// `["Sales Invoice", "Purchase Invoice"]` to a warranty Worksheet that moves stock
-			#//// (0f8787d3d6, 2023-10-30, v14→v15 port — the note is the original author's and already
-			#//// flagged the merge risk).
-			#//// TO REVIEW — this branch is now DEAD: the neoffice_worksheet app was uninstalled fleet-wide
-			#//// on 2026-08-20 and its Custom Fields deleted (see 0269b590df, 2026-08-21, which removed the
-			#//// same dead branches from timesheet.py and sales_invoice.js). No document of type "Worksheet"
-			#//// exists any more, so the added condition can never be true — delete it at the merge.
-			#//// added (...) or (args.get("doctype") == "Worksheet" and args.get("update_stock") and args.get("is_warranty")) maybe conflict => suppressed func from v14
+			# //// Neoffice — the update_stock passthrough is widened beyond upstream's
+			# //// `["Sales Invoice", "Purchase Invoice"]` to a warranty Worksheet that moves stock
+			# //// (0f8787d3d6, 2023-10-30, v14→v15 port — the note is the original author's and already
+			# //// flagged the merge risk).
+			# //// TO REVIEW — this branch is now DEAD: the neoffice_worksheet app was uninstalled fleet-wide
+			# //// on 2026-08-20 and its Custom Fields deleted (see 0269b590df, 2026-08-21, which removed the
+			# //// same dead branches from timesheet.py and sales_invoice.js). No document of type "Worksheet"
+			# //// exists any more, so the added condition can never be true — delete it at the merge.
+			# //// added (...) or (args.get("doctype") == "Worksheet" and args.get("update_stock") and args.get("is_warranty")) maybe conflict => suppressed func from v14
 			if (args.get("doctype") in ["Sales Invoice", "Purchase Invoice"]) or (args.get("doctype") == "Worksheet" and args.get("update_stock") and args.get("is_warranty")) 
 			else 0,
 			"delivered_by_supplier": item.delivered_by_supplier

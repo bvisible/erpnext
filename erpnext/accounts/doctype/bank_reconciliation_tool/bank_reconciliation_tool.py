@@ -522,17 +522,17 @@ def subtract_allocations(gl_account, vouchers):
 		if amount := get_allocated_amount(voucher_allocated_amounts, voucher, gl_account):
 			voucher["paid_amount"] -= amount
 
-		#//// Neoffice — upstream appends every voucher unconditionally. Ours drops the vouchers whose
-		#//// remaining amount fell to exactly 0 after subtracting earlier Bank Transaction allocations.
-		#//// Upstream already hides cleared vouchers (clearance_date IS NULL in the PE/JE queries), but
-		#//// get_clearance_details (bank_transaction.py) only sets clearance_date once EVERY bank
-		#//// account of the voucher is settled: a Journal Entry touching two bank accounts (an internal
-		#//// transfer) reconciled on one side only keeps clearance_date NULL and surfaced as a "0.00"
-		#//// match in the Mint reconciliation screen (059e9173a8, 2025-10-27). The 2025-11-01 revert
-		#//// (5b2fd01baa) assumed mint 4748808 replaced it, but that filter is on the left-hand
-		#//// transaction list, not on these candidates — both are needed (tracker #207, 2026-09-04).
-		#//// A NEGATIVE remainder is a computation artefact (mixed-sign lines summed on one side only),
-		#//// not a settled voucher: it stays visible, as upstream shows it, and is logged.
+		# //// Neoffice — upstream appends every voucher unconditionally. Ours drops the vouchers whose
+		# //// remaining amount fell to exactly 0 after subtracting earlier Bank Transaction allocations.
+		# //// Upstream already hides cleared vouchers (clearance_date IS NULL in the PE/JE queries), but
+		# //// get_clearance_details (bank_transaction.py) only sets clearance_date once EVERY bank
+		# //// account of the voucher is settled: a Journal Entry touching two bank accounts (an internal
+		# //// transfer) reconciled on one side only keeps clearance_date NULL and surfaced as a "0.00"
+		# //// match in the Mint reconciliation screen (059e9173a8, 2025-10-27). The 2025-11-01 revert
+		# //// (5b2fd01baa) assumed mint 4748808 replaced it, but that filter is on the left-hand
+		# //// transaction list, not on these candidates — both are needed (tracker #207, 2026-09-04).
+		# //// A NEGATIVE remainder is a computation artefact (mixed-sign lines summed on one side only),
+		# //// not a settled voucher: it stays visible, as upstream shows it, and is logged.
 		remaining = flt(voucher["paid_amount"], 2)
 		if remaining == 0:
 			continue

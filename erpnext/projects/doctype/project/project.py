@@ -303,17 +303,17 @@ class Project(Document):
 			flt(self.total_costing_amount)
 			+ flt(self.total_purchase_cost)
 			+ flt(self.get("total_consumed_material_cost", 0))
-			#//// Neoffice - expense claims added. Upstream totals hours, purchases
-			#//// and consumed material and stops there, so a submitted Expense
-			#//// Claim booked against a project raises no cost at all and the
-			#//// margin comes out higher than the job really made. In the trades
-			#//// this is not a rounding: travel, disposal, parking and tolls are
-			#//// systematic, and our own neoffice_activity/expense_claim.py books
-			#//// them here on purpose.
-			#//// The field is `total_expense_claim`, a Custom Field hrms adds and
-			#//// hrms itself keeps up to date on submit/cancel -- `get()` with a
-			#//// default keeps this safe on an instance without hrms.
-			#//// Drop this once upstream counts them (nothing suggests it will).
+			# //// Neoffice - expense claims added. Upstream totals hours, purchases
+			# //// and consumed material and stops there, so a submitted Expense
+			# //// Claim booked against a project raises no cost at all and the
+			# //// margin comes out higher than the job really made. In the trades
+			# //// this is not a rounding: travel, disposal, parking and tolls are
+			# //// systematic, and our own neoffice_activity/expense_claim.py books
+			# //// them here on purpose.
+			# //// The field is `total_expense_claim`, a Custom Field hrms adds and
+			# //// hrms itself keeps up to date on submit/cancel -- `get()` with a
+			# //// default keeps this safe on an instance without hrms.
+			# //// Drop this once upstream counts them (nothing suggests it will).
 			+ flt(self.get("total_expense_claim", 0))
 		)
 

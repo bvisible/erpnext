@@ -1,17 +1,17 @@
-#//// Neoffice — added file (no upstream equivalent in erpnext v15): server side of the POS
-#//// VIEWER, the customer-facing second screen of the till. Added by 33e5705d01 (2025-11-05
-#//// "Add POS Viewer external cart display feature"), then 064a6df140 / 3b87877051 / d837f18136
-#//// / c8acf498dd (2025-11-26, thank-you message driven by the last completed invoice rather
-#//// than by an unreliable Redis signal), 2ad646e387 + f698d4af26 (in-app ads slider shown while
-#//// the cart is empty) and 5da3935a2d → 320bc2df48 (2025-11-26, customer created from the
-#//// viewer notifies the till in realtime).
-#//// The page is opened on a tablet next to the till: pos_controller.js pushes the live cart
-#//// here through update_cart_data(), the viewer polls / listens and renders it; the shopper can
-#//// also create their own customer record from it.
-#//// TO REVIEW at the merge: the endpoints authenticate by an API key held in the browser's
-#//// localStorage, so their permission model is their own — re-audit them (RULE #1sexies) rather
-#//// than assuming the desk rules apply. And the whole page is a Neoffice feature living in the
-#//// erpnext fork: moving it to a Neoffice app would remove it from the merge surface entirely.
+# //// Neoffice — added file (no upstream equivalent in erpnext v15): server side of the POS
+# //// VIEWER, the customer-facing second screen of the till. Added by 33e5705d01 (2025-11-05
+# //// "Add POS Viewer external cart display feature"), then 064a6df140 / 3b87877051 / d837f18136
+# //// / c8acf498dd (2025-11-26, thank-you message driven by the last completed invoice rather
+# //// than by an unreliable Redis signal), 2ad646e387 + f698d4af26 (in-app ads slider shown while
+# //// the cart is empty) and 5da3935a2d → 320bc2df48 (2025-11-26, customer created from the
+# //// viewer notifies the till in realtime).
+# //// The page is opened on a tablet next to the till: pos_controller.js pushes the live cart
+# //// here through update_cart_data(), the viewer polls / listens and renders it; the shopper can
+# //// also create their own customer record from it.
+# //// TO REVIEW at the merge: the endpoints authenticate by an API key held in the browser's
+# //// localStorage, so their permission model is their own — re-audit them (RULE #1sexies) rather
+# //// than assuming the desk rules apply. And the whole page is a Neoffice feature living in the
+# //// erpnext fork: moving it to a Neoffice app would remove it from the merge surface entirely.
 import frappe
 from frappe import _
 from frappe.utils import nowdate, now_datetime

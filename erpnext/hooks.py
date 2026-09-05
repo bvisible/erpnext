@@ -10,12 +10,12 @@ source_link = "https://github.com/frappe/erpnext"
 app_logo_url = "/assets/erpnext/images/erpnext-logo.svg"
 
 
-#//// Neoffice — the ERPNext tile of the apps screen is re-branded "Neoffice" with our own icon
-#//// (96793653c0 / 3b2f73290e / 81294e7f4f, 2025 "Update hooks.py"): customers buy Neoffice, not
-#//// ERPNext, so the app switcher must not show a foreign product name and logo.
-#//// Note the cross-app asset path: the image lives in /assets/frappe/images/, i.e. it is
-#//// shipped by our frappe fork, not by erpnext — moving or renaming it there breaks this tile.
-#//// Upstream keeps "ERPNext" + erpnext-logo-blue.png; take ours at the merge.
+# //// Neoffice — the ERPNext tile of the apps screen is re-branded "Neoffice" with our own icon
+# //// (96793653c0 / 3b2f73290e / 81294e7f4f, 2025 "Update hooks.py"): customers buy Neoffice, not
+# //// ERPNext, so the app switcher must not show a foreign product name and logo.
+# //// Note the cross-app asset path: the image lives in /assets/frappe/images/, i.e. it is
+# //// shipped by our frappe fork, not by erpnext — moving or renaming it there breaks this tile.
+# //// Upstream keeps "ERPNext" + erpnext-logo-blue.png; take ours at the merge.
 add_to_apps_screen = [
 	{
 		"name": "erpnext",

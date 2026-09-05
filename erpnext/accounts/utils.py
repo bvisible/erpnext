@@ -1178,8 +1178,8 @@ def get_held_invoices(party_type, party):
 	return held_invoices
 
 
-#//// Neoffice — added function (no upstream equivalent). Upstream only knows held
-#//// invoices; it has no notion of an invoice already sent to the bank in a pain.001.
+# //// Neoffice — added function (no upstream equivalent). Upstream only knows held
+# //// invoices; it has no notion of an invoice already sent to the bank in a pain.001.
 def get_proposed_invoices(party_type, party):
 	"""
 	Returns a set of names of Purchase Invoices for the given party that are part of a
@@ -1222,9 +1222,9 @@ def get_outstanding_invoices(
 	vouchers=None,  # list of dicts [{'voucher_type': '', 'voucher_no': ''}] for filtering
 	limit=None,  # passed by reconciliation tool
 	voucher_no=None,  # filter passed by reconciliation tool
-	#//// Neoffice — added param. See the proposed_invoices block below: callers that only
-	#//// re-read the outstanding of a reference they already hold must pass False, or the
-	#//// invoice reads as fully paid.
+	# //// Neoffice — added param. See the proposed_invoices block below: callers that only
+	# //// re-read the outstanding of a reference they already hold must pass False, or the
+	# //// invoice reads as fully paid.
 	exclude_proposed=True,
 ):
 	ple = qb.DocType("Payment Ledger Entry")
@@ -1241,12 +1241,12 @@ def get_outstanding_invoices(
 		party_account_type = erpnext.get_party_account_type(party_type)
 
 	held_invoices = get_held_invoices(party_type, party)
-	#//// Neoffice — hide invoices already queued at the bank by an erpnextswiss Payment
-	#//// Proposal, so they cannot be allocated twice (see get_proposed_invoices).
-	#//// Only when the caller is OFFERING invoices to pick: skipping it is what lets the
-	#//// Payment Proposal create the very Payment Entries it queued (Payment Entry
-	#//// validation re-reads the outstanding through here and would otherwise throw
-	#//// "has already been fully paid" on an untouched invoice).
+	# //// Neoffice — hide invoices already queued at the bank by an erpnextswiss Payment
+	# //// Proposal, so they cannot be allocated twice (see get_proposed_invoices).
+	# //// Only when the caller is OFFERING invoices to pick: skipping it is what lets the
+	# //// Payment Proposal create the very Payment Entries it queued (Payment Entry
+	# //// validation re-reads the outstanding through here and would otherwise throw
+	# //// "has already been fully paid" on an untouched invoice).
 	proposed_invoices = get_proposed_invoices(party_type, party) if exclude_proposed else set()
 
 	common_filter = common_filter or []
@@ -1279,8 +1279,8 @@ def get_outstanding_invoices(
 			):
 				continue
 
-			#//// Neoffice — already queued for payment at the bank, see get_proposed_invoices().
-			#//// Empty set when the caller passed exclude_proposed=False.
+			# //// Neoffice — already queued for payment at the bank, see get_proposed_invoices().
+			# //// Empty set when the caller passed exclude_proposed=False.
 			if d.voucher_type == "Purchase Invoice" and d.voucher_no in proposed_invoices:
 				continue
 

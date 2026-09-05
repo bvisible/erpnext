@@ -467,14 +467,14 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False, ar
 
 def set_expired_status():
 	# filter out submitted non expired quotations whose validity has been ended
-	#//// Neoffice — 'Accepted' added to the exclusion list. That status is ours
-	#//// (neoffice_theme, public acceptance link): the customer opened the offer,
-	#//// signed it and we hold the signature. Upstream only knows Open/Ordered, so
-	#//// this daily job flipped a SIGNED offer to 'Expired' the day valid_till
-	#//// passed — a raw SQL UPDATE, so no hook could defend it. Seen for real on
-	#//// DEVIS-2026-00093 (accepted 2026-08-18, expired 2026-09-01): the acceptance
-	#//// vanished from the list view of the very people waiting for it. Harmless
-	#//// upstream, where no quotation ever carries that status.
+	# //// Neoffice — 'Accepted' added to the exclusion list. That status is ours
+	# //// (neoffice_theme, public acceptance link): the customer opened the offer,
+	# //// signed it and we hold the signature. Upstream only knows Open/Ordered, so
+	# //// this daily job flipped a SIGNED offer to 'Expired' the day valid_till
+	# //// passed — a raw SQL UPDATE, so no hook could defend it. Seen for real on
+	# //// DEVIS-2026-00093 (accepted 2026-08-18, expired 2026-09-01): the acceptance
+	# //// vanished from the list view of the very people waiting for it. Harmless
+	# //// upstream, where no quotation ever carries that status.
 	cond = "`tabQuotation`.docstatus = 1 and `tabQuotation`.status NOT IN ('Expired', 'Lost', 'Accepted') and `tabQuotation`.valid_till < %s"
 	# check if those QUO have SO against it
 	so_against_quo = """

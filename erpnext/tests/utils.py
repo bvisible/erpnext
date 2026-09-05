@@ -10,13 +10,13 @@ ReportFilters = dict[str, Any]
 ReportName = NewType("ReportName", str)
 
 
-#//// Neoffice — the five mass DELETEs upstream opens this helper with (tabContact, Contact
-#//// Email, Contact Phone, tabAddress, Dynamic Link) are commented out (6eea69ece2, 2026-03-24
-#//// "disable all destructive DELETE statements in test utilities"). Same reason as
-#//// setup/utils.py before_tests(): our instances run tests against the working site, so calling
-#//// this fixture destroyed every contact and address of a live customer.
-#//// TO REVIEW: without the cleanup the helper can now hit a duplicate on re-run — the honest
-#//// fix is a throw-away test site, not a neutered fixture.
+# //// Neoffice — the five mass DELETEs upstream opens this helper with (tabContact, Contact
+# //// Email, Contact Phone, tabAddress, Dynamic Link) are commented out (6eea69ece2, 2026-03-24
+# //// "disable all destructive DELETE statements in test utilities"). Same reason as
+# //// setup/utils.py before_tests(): our instances run tests against the working site, so calling
+# //// this fixture destroyed every contact and address of a live customer.
+# //// TO REVIEW: without the cleanup the helper can now hit a duplicate on re-run — the honest
+# //// fix is a throw-away test site, not a neutered fixture.
 def create_test_contact_and_address():
 	# DISABLED: mass DELETE wipes production data when tests run on shared DB
 	# frappe.db.sql("delete from tabContact")

@@ -5,18 +5,18 @@ import frappe
 from frappe.utils import cint, flt, fmt_money
 
 from erpnext.accounts.doctype.pricing_rule.pricing_rule import get_pricing_rule_for_item
-#//// Neoffice — `json` imported for the Pricing Rule lookup below, which has to decode
-#//// `pricing_rule.pricing_rules` (a JSON list of rule names). The blank-line change around it
-#//// is ours too and will conflict cosmetically.
-import json #//// added
+# //// Neoffice — `json` imported for the Pricing Rule lookup below, which has to decode
+# //// `pricing_rule.pricing_rules` (a JSON list of rule names). The blank-line change around it
+# //// is ours too and will conflict cosmetically.
+import json # //// added
 
-#//// Neoffice — two keyword arguments added to upstream's signature. `warehouse` is forwarded
-#//// into the Pricing Rule context below so a rule restricted to one warehouse actually matches
-#//// (upstream never passes it, so warehouse-scoped promotions were ignored); `from_pos` is
-#//// passed by selling/page/point_of_sale/point_of_sale.py get_items(). Both default to their
-#//// upstream behaviour, so upstream callers are unaffected.
-#//// TO REVIEW: `from_pos` is accepted but never read in this function.
-def get_price(item_code, price_list, customer_group, company, qty=1, party=None, from_pos=False, warehouse=None): #//// added , from_pos=False, warehouse=None
+# //// Neoffice — two keyword arguments added to upstream's signature. `warehouse` is forwarded
+# //// into the Pricing Rule context below so a rule restricted to one warehouse actually matches
+# //// (upstream never passes it, so warehouse-scoped promotions were ignored); `from_pos` is
+# //// passed by selling/page/point_of_sale/point_of_sale.py get_items(). Both default to their
+# //// upstream behaviour, so upstream callers are unaffected.
+# //// TO REVIEW: `from_pos` is accepted but never read in this function.
+def get_price(item_code, price_list, customer_group, company, qty=1, party=None, from_pos=False, warehouse=None): # //// added , from_pos=False, warehouse=None
 	template_item_code = frappe.db.get_value("Item", item_code, "variant_of")
 
 	if price_list:
@@ -50,9 +50,9 @@ def get_price(item_code, price_list, customer_group, company, qty=1, party=None,
 				}
 			)
 
-			#//// Neoffice — see the signature marker above: the warehouse goes into the dict handed to
-			#//// get_pricing_rule_for_item, which is how a Pricing Rule with a warehouse filter can match.
-			#//// added: pass warehouse to match Pricing Rules with warehouse filter
+			# //// Neoffice — see the signature marker above: the warehouse goes into the dict handed to
+			# //// get_pricing_rule_for_item, which is how a Pricing Rule with a warehouse filter can match.
+			# //// added: pass warehouse to match Pricing Rules with warehouse filter
 			if warehouse:
 				pricing_rule_dict["warehouse"] = warehouse
 
@@ -62,11 +62,11 @@ def get_price(item_code, price_list, customer_group, company, qty=1, party=None,
 			pricing_rule = get_pricing_rule_for_item(pricing_rule_dict)
 			price_obj = price[0]
 
-			#//// Neoffice — `mrp` is captured BEFORE the pricing rule runs; upstream only sets it inside the
-			#//// `if pricing_rule:` branch. Without this, the comparison further down
-			#//// (`if mrp != price_obj["price_list_rate"]`) hit an unbound name whenever no rule applied.
-			#//// Together with `price_obj["mrp"] = mrp` below (marked), this is what lets the webshop and
-			#//// the POS show a struck-through original price next to a promotional one.
+			# //// Neoffice — `mrp` is captured BEFORE the pricing rule runs; upstream only sets it inside the
+			# //// `if pricing_rule:` branch. Without this, the comparison further down
+			# //// (`if mrp != price_obj["price_list_rate"]`) hit an unbound name whenever no rule applied.
+			# //// Together with `price_obj["mrp"] = mrp` below (marked), this is what lets the webshop and
+			# //// the POS show a struck-through original price next to a promotional one.
 			# Store original price as MRP before any discount is applied
 			mrp = price_obj.price_list_rate or 0
 
@@ -87,23 +87,23 @@ def get_price(item_code, price_list, customer_group, company, qty=1, party=None,
 						)
 					price_obj.price_list_rate = pricing_rule.price_list_rate or 0
 
-				#//// Neoffice — added block (793f38c40b, 2023-10-30; 7eea61c52e, 2025-12-06; 70250637fb,
-				#//// 2026-02-01). Upstream handles "Discount Percentage" and "Rate" but never subtracts a
-				#//// "Discount Amount" rule from the price list rate, so such a promotion showed at full price
-				#//// on the webshop and at the till. The rest of the block exposes the rule's validity window
-				#//// (valid_from / valid_upto) on the returned price so the shop can display "offer ends on…".
-				#//// The `synchronized_rule` guard just below is documented on its own lines (ecdec25916).
-				#//// added code block
+				# //// Neoffice — added block (793f38c40b, 2023-10-30; 7eea61c52e, 2025-12-06; 70250637fb,
+				# //// 2026-02-01). Upstream handles "Discount Percentage" and "Rate" but never subtracts a
+				# //// "Discount Amount" rule from the price list rate, so such a promotion showed at full price
+				# //// on the webshop and at the till. The rest of the block exposes the rule's validity window
+				# //// (valid_from / valid_upto) on the returned price so the shop can display "offer ends on…".
+				# //// The `synchronized_rule` guard just below is documented on its own lines (ecdec25916).
+				# //// added code block
 				if pricing_rule.pricing_rule_for == "Discount Amount":
 					price_obj.price_list_rate = flt(price_obj.price_list_rate - pricing_rule.discount_amount)
 
 				if pricing_rule.pricing_rules:
 					valid_from = frappe.db.get_value("Pricing Rule", json.loads(pricing_rule.pricing_rules)[0], "valid_from")
 					valid_upto = frappe.db.get_value("Pricing Rule", json.loads(pricing_rule.pricing_rules)[0], "valid_upto")
-					#//// Neoffice — `synchronized_rule` is a legacy column: no Custom Field defines it any more
-					#//// (it came with the retired shop-sync integration), so it exists only on sites that had it
-					#//// before. A fresh site (CI, a new instance) has no such column and get_value died with
-					#//// OperationalError 1054, taking every priced webshop listing with it. Read it only if present.
+					# //// Neoffice — `synchronized_rule` is a legacy column: no Custom Field defines it any more
+					# //// (it came with the retired shop-sync integration), so it exists only on sites that had it
+					# //// before. A fresh site (CI, a new instance) has no such column and get_value died with
+					# //// OperationalError 1054, taking every priced webshop listing with it. Read it only if present.
 					synchronized_rule = (
 						frappe.db.get_value("Pricing Rule", json.loads(pricing_rule.pricing_rules)[0], "synchronized_rule")
 						if frappe.db.has_column("Pricing Rule", "synchronized_rule")
@@ -115,15 +115,15 @@ def get_price(item_code, price_list, customer_group, company, qty=1, party=None,
 					if valid_upto:
 						price[0].valid_upto = str(valid_upto) + " 23:59:59"
 					price[0].synchronized_rule = synchronized_rule
-				#////
+				# ////
 
 			if price_obj:
 				price_obj["formatted_price"] = fmt_money(
 					price_obj["price_list_rate"], currency=price_obj["currency"]
 				)
 				if mrp != price_obj["price_list_rate"]:
-					#//// Neoffice — upstream only returns the FORMATTED mrp; the raw value is added so callers can
-					#//// compute the discount themselves (the POS item grid does). See the `mrp` marker above.
+					# //// Neoffice — upstream only returns the FORMATTED mrp; the raw value is added so callers can
+					# //// compute the discount themselves (the POS item grid does). See the `mrp` marker above.
 					price_obj["mrp"] = mrp
 					price_obj["formatted_mrp"] = fmt_money(mrp, currency=price_obj["currency"])
 

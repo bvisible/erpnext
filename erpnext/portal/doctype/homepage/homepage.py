@@ -27,10 +27,10 @@ class Homepage(Document):
 	# end: auto-generated types
 
 	def validate(self):
-		#//// Neoffice: never seed the example-website sentence. A visitor must never
-		#//// read "auto-generated from ERPNext" on a client's own domain (was live on
-		#//// lo-alabouche.ch/berges/guigoz until 2026-07-10) — the platform name has
-		#//// no business on a public homepage. Default to the company name instead.
+		# //// Neoffice: never seed the example-website sentence. A visitor must never
+		# //// read "auto-generated from ERPNext" on a client's own domain (was live on
+		# //// lo-alabouche.ch/berges/guigoz until 2026-07-10) — the platform name has
+		# //// no business on a public homepage. Default to the company name instead.
 		if not self.description:
 			self.description = self.company or frappe._("Welcome")
 		delete_page_cache("home")

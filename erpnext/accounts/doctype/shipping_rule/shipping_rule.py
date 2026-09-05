@@ -25,38 +25,38 @@ class ManyBlankToValuesError(frappe.ValidationError):
 
 
 ########################################################################
-#//// Neoffice — "Multiple Constraints" shipping: +887 / -22 lines against v15.89.0.
+# //// Neoffice — "Multiple Constraints" shipping: +887 / -22 lines against v15.89.0.
 ####
-#//// Upstream ShippingRule charges either a Fixed amount or one bracket picked from the
-#//// `conditions` table by Net Total or Net Weight. Our customers ship real parcels, where the
-#//// price depends on WEIGHT AND SIZE AND VALUE at once, so a fourth calculate_based_on mode
-#//// was added: "Multiple Constraints" reads the `condition_multiple_constraints` child table
-#//// (added DocType, marked in its own file), packs the order items into boxes with a 3D
-#//// bin-packing pass and picks the matching bracket. Related: the Item dimension /
-#//// default-weight fields, packing_visualization.py/.js and shipping_rule.js (all marked).
+# //// Upstream ShippingRule charges either a Fixed amount or one bracket picked from the
+# //// `conditions` table by Net Total or Net Weight. Our customers ship real parcels, where the
+# //// price depends on WEIGHT AND SIZE AND VALUE at once, so a fourth calculate_based_on mode
+# //// was added: "Multiple Constraints" reads the `condition_multiple_constraints` child table
+# //// (added DocType, marked in its own file), packs the order items into boxes with a 3D
+# //// bin-packing pass and picks the matching bracket. Related: the Item dimension /
+# //// default-weight fields, packing_visualization.py/.js and shipping_rule.js (all marked).
 ####
-#//// Source commits: 5bb3903da1 (2025-03-13, "Advanced Shipping Rule with Multiple Constraints
-#//// (Dimensions, Weight, Price, Taxes)") · 7534a0d7f6 (2025-03-17, py3dbp packing +
-#//// matplotlib visualisation) · d527e06d77 (2025-03-24, "Update shipping taxes") ·
-#//// a50104af31 (2025-04-05, "Fix bug shipping") · d62d07f7d4 (2025-08-15, default weight).
-#//// Only 5bb3903da1 states a rationale; the four others are fixes with no further detail.
+# //// Source commits: 5bb3903da1 (2025-03-13, "Advanced Shipping Rule with Multiple Constraints
+# //// (Dimensions, Weight, Price, Taxes)") · 7534a0d7f6 (2025-03-17, py3dbp packing +
+# //// matplotlib visualisation) · d527e06d77 (2025-03-24, "Update shipping taxes") ·
+# //// a50104af31 (2025-04-05, "Fix bug shipping") · d62d07f7d4 (2025-08-15, default weight).
+# //// Only 5bb3903da1 states a rationale; the four others are fixes with no further detail.
 ####
-#//// The divergence is delimited in place by the existing
-#////   `# //// Start: Custom Shipping Rule - Multiple Constraints ////` /
-#////   `# //// End: … ////` pairs (they mark WHAT, these markers add WHY). It covers: the
-#//// generated type block (imports, the calculate_based_on Literal, condition_multiple_
-#//// constraints), validate() and validate_from_to_values() (both skip the overlap / from-to
-#//// checks in the new mode — brackets are allowed to overlap on several axes),
-#//// get_shipping_amount_from_multiple_constraints() and its packing helpers, and a full
-#//// rewrite of add_shipping_rule_to_tax_table() with remove_shipping_charges_from_tax_table().
+# //// The divergence is delimited in place by the existing
+# ////   `# //// Start: Custom Shipping Rule - Multiple Constraints ////` /
+# ////   `# //// End: … ////` pairs (they mark WHAT, these markers add WHY). It covers: the
+# //// generated type block (imports, the calculate_based_on Literal, condition_multiple_
+# //// constraints), validate() and validate_from_to_values() (both skip the overlap / from-to
+# //// checks in the new mode — brackets are allowed to overlap on several axes),
+# //// get_shipping_amount_from_multiple_constraints() and its packing helpers, and a full
+# //// rewrite of add_shipping_rule_to_tax_table() with remove_shipping_charges_from_tax_table().
 ####
-#//// TO REVIEW before the upstream merge:
-#////   - py3dbp / numpy / matplotlib are runtime dependencies of an *accounting* doctype;
-#////     they were added to pyproject.toml by 7534a0d7f6.
-#////   - remove_shipping_charges_from_tax_table() identifies our own rows by scanning tax
-#////     descriptions for "shipping"/"delivery"/"freight"/"port"/"multi" (see the marker there).
-#////   - the file lost its trailing newline in 5bb3903da1.
-#//// Given the size, resolve this file from these commits, not hunk by hunk.
+# //// TO REVIEW before the upstream merge:
+# ////   - py3dbp / numpy / matplotlib are runtime dependencies of an *accounting* doctype;
+# ////     they were added to pyproject.toml by 7534a0d7f6.
+# ////   - remove_shipping_charges_from_tax_table() identifies our own rows by scanning tax
+# ////     descriptions for "shipping"/"delivery"/"freight"/"port"/"multi" (see the marker there).
+# ////   - the file lost its trailing newline in 5bb3903da1.
+# //// Given the size, resolve this file from these commits, not hunk by hunk.
 ########################################################################
 class ShippingRule(Document):
 	# begin: auto-generated types
@@ -138,9 +138,9 @@ class ShippingRule(Document):
 			)
 	# //// End: Custom Shipping Rule - Multiple Constraints ////
 
-	#//// Neoffice — the `elif self.calculate_based_on == "Multiple Constraints"` branch below is
-	#//// ours (5bb3903da1); the blank line upstream keeps after the docstring was dropped in the
-	#//// same commit. Everything else in this method is upstream's.
+	# //// Neoffice — the `elif self.calculate_based_on == "Multiple Constraints"` branch below is
+	# //// ours (5bb3903da1); the blank line upstream keeps after the docstring was dropped in the
+	# //// same commit. Everything else in this method is upstream's.
 	def apply(self, doc):
 		"""Apply shipping rule on given doc. Called from accounts controller"""
 		shipping_amount = 0.0
@@ -237,12 +237,12 @@ class ShippingRule(Document):
 
 		return 0.0
 		
-	#//// Neoffice — added, no upstream equivalent (5bb3903da1 2025-03-13, reworked by 7534a0d7f6 /
-	#//// a50104af31): computes the charge for calculate_based_on == "Multiple Constraints".
-	#//// It sums the order weight, runs calculate_optimal_packing() (py3dbp 3D bin packing) to get
-	#//// the real parcel dimensions, converts everything into the rule's weight_uom / dimensions_uom
-	#//// and returns the amount of the first condition_multiple_constraints row that satisfies every
-	#//// constraint at once. Runs to the matching `# //// End: …` marker.
+	# //// Neoffice — added, no upstream equivalent (5bb3903da1 2025-03-13, reworked by 7534a0d7f6 /
+	# //// a50104af31): computes the charge for calculate_based_on == "Multiple Constraints".
+	# //// It sums the order weight, runs calculate_optimal_packing() (py3dbp 3D bin packing) to get
+	# //// the real parcel dimensions, converts everything into the rule's weight_uom / dimensions_uom
+	# //// and returns the amount of the first condition_multiple_constraints row that satisfies every
+	# //// constraint at once. Runs to the matching `# //// End: …` marker.
 	# //// Start: Custom Shipping Rule - Multiple Constraints ////
 	def get_shipping_amount_from_multiple_constraints(self, doc):
 		"""Apply shipping rule based on multiple grouped constraints
@@ -823,16 +823,16 @@ class ShippingRule(Document):
 					)
 				)
 
-	#//// Neoffice — added helper + full rewrite of add_shipping_rule_to_tax_table() below
-	#//// (5bb3903da1, then d527e06d77 2025-03-24 "Update shipping taxes"). Upstream appends ONE
-	#//// "Actual" tax row for the shipping account and updates it in place on recalculation. Ours
-	#//// must first clear the previous shipping rows (the amount changes as items are added, and a
-	#//// second rule may have applied), then re-add them with the VAT split our customers need.
-	#//// The upstream body is kept just below as `# ////` dead comments.
-	#//// TO REVIEW: the rows to delete are matched partly on free text — any tax row whose
-	#//// description contains "shipping", "delivery", "freight", "port" or "multi" (in any
-	#//// language-independent lowercase form) is dropped, so an unrelated tax line named e.g.
-	#//// "Port autonome" would be silently removed. The bare `except:` above it hides errors too.
+	# //// Neoffice — added helper + full rewrite of add_shipping_rule_to_tax_table() below
+	# //// (5bb3903da1, then d527e06d77 2025-03-24 "Update shipping taxes"). Upstream appends ONE
+	# //// "Actual" tax row for the shipping account and updates it in place on recalculation. Ours
+	# //// must first clear the previous shipping rows (the amount changes as items are added, and a
+	# //// second rule may have applied), then re-add them with the VAT split our customers need.
+	# //// The upstream body is kept just below as `# ////` dead comments.
+	# //// TO REVIEW: the rows to delete are matched partly on free text — any tax row whose
+	# //// description contains "shipping", "delivery", "freight", "port" or "multi" (in any
+	# //// language-independent lowercase form) is dropped, so an unrelated tax line named e.g.
+	# //// "Port autonome" would be silently removed. The bare `except:` above it hides errors too.
 	# //// Start: Custom Shipping Rule - Multiple Constraints ////
 	def remove_shipping_charges_from_tax_table(self, doc):
 		"""

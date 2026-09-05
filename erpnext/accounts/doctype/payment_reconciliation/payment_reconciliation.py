@@ -378,14 +378,14 @@ class PaymentReconciliation(Document):
 			non_reconciled_invoices, key=lambda k: k["posting_date"] or getdate(nowdate())
 		)
 
-		#//// Neoffice — added call (see below).
+		# //// Neoffice — added call (see below).
 		self.notify_invoices_in_payment_run()
 
 		self.add_invoice_entries(non_reconciled_invoices)
 
-	#//// Neoffice — added method (no upstream equivalent). get_outstanding_invoices() drops
-	#//// invoices already sent to the bank; without this notice they just vanish from the
-	#//// list with no explanation.
+	# //// Neoffice — added method (no upstream equivalent). get_outstanding_invoices() drops
+	# //// invoices already sent to the bank; without this notice they just vanish from the
+	# //// list with no explanation.
 	def notify_invoices_in_payment_run(self):
 		"""Tell the user which invoices were left out because they are in a payment run.
 

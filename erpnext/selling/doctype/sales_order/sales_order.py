@@ -2,11 +2,11 @@
 # License: GNU General Public License v3. See license.txt
 
 
-#//// Neoffice — the ONLY divergence of this 1900-line file from upstream v15.89.0 is that its
-#//// final newline is gone (a5f79d75b3, 2025-02-26 "update neov2", which stripped it from ten
-#//// files of this lot at once — an editor artefact, not a decision). Nothing else differs.
-#//// Consequence at the merge: git will report a conflict on the last line of the file for no
-#//// reason — take upstream's side there.
+# //// Neoffice — the ONLY divergence of this 1900-line file from upstream v15.89.0 is that its
+# //// final newline is gone (a5f79d75b3, 2025-02-26 "update neov2", which stripped it from ten
+# //// files of this lot at once — an editor artefact, not a decision). Nothing else differs.
+# //// Consequence at the merge: git will report a conflict on the last line of the file for no
+# //// reason — take upstream's side there.
 import json
 from typing import Literal
 

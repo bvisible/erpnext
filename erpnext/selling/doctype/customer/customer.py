@@ -137,7 +137,7 @@ class Customer(TransactionBase):
 		"""If customer created from Lead, update customer id in quotations, opportunities"""
 		self.update_lead_status()
 
-	#//// Neoffice — added method, no upstream equivalent (see validate() below).
+	# //// Neoffice — added method, no upstream equivalent (see validate() below).
 	def get_default_billing_currency(self) -> str | None:
 		"""Currency this customer is billed in: its own receivable account, else the default company."""
 		from erpnext import get_default_company, get_default_currency
@@ -155,17 +155,17 @@ class Customer(TransactionBase):
 		return get_default_currency()
 
 	def validate(self):
-		#//// Neoffice — default_currency is mandatory on our Customer (customer.json, reqd since
-		#//// 2023-11) while upstream leaves it optional. Every programmatic creation — webshop
-		#//// signup, POS quick customer, imports, upstream test fixtures — inserts without one and
-		#//// died on MandatoryError. Fill it before the mandatory check, so mandatory means "never
-		#//// empty", not "every caller must know".
-		#//// The value comes from the party's OWN receivable account when it has one, and only then
-		#//// from the default company: that is the currency ERPNext itself bills the party in
-		#//// (get_party_account_currency). Reading the default company first stamped a currency that
-		#//// contradicted the account the customer posts to, and every Subscription on such a
-		#//// customer then died in validate_party_billing_currency (upstream test_subscription
-		#//// recovery / future_subscription, 2026-09-04).
+		# //// Neoffice — default_currency is mandatory on our Customer (customer.json, reqd since
+		# //// 2023-11) while upstream leaves it optional. Every programmatic creation — webshop
+		# //// signup, POS quick customer, imports, upstream test fixtures — inserts without one and
+		# //// died on MandatoryError. Fill it before the mandatory check, so mandatory means "never
+		# //// empty", not "every caller must know".
+		# //// The value comes from the party's OWN receivable account when it has one, and only then
+		# //// from the default company: that is the currency ERPNext itself bills the party in
+		# //// (get_party_account_currency). Reading the default company first stamped a currency that
+		# //// contradicted the account the customer posts to, and every Subscription on such a
+		# //// customer then died in validate_party_billing_currency (upstream test_subscription
+		# //// recovery / future_subscription, 2026-09-04).
 		if not self.default_currency:
 			self.default_currency = self.get_default_billing_currency()
 		self.flags.is_new_doc = self.is_new()
@@ -255,11 +255,11 @@ class Customer(TransactionBase):
 
 	def on_update(self):
 		self.validate_name_with_customer_group()
-		#//// Neoffice — guard added (a47ceb00bb, 2024-03-05 "add supplier part ref in item search +
-		#//// avoid contact/address creation while importing"): upstream builds the primary Contact and
-		#//// Address on every on_update, so a Data Import of customers created one Contact and one
-		#//// Address per row — duplicating records the import was usually bringing in separately.
-		if not frappe.flags.in_import: #//// added if condition
+		# //// Neoffice — guard added (a47ceb00bb, 2024-03-05 "add supplier part ref in item search +
+		# //// avoid contact/address creation while importing"): upstream builds the primary Contact and
+		# //// Address on every on_update, so a Data Import of customers created one Contact and one
+		# //// Address per row — duplicating records the import was usually bringing in separately.
+		if not frappe.flags.in_import: # //// added if condition
 			self.create_primary_contact()
 			self.create_primary_address()
 
@@ -402,16 +402,16 @@ class Customer(TransactionBase):
 		if self.loyalty_program:
 			return
 
-		#//// Neoffice — early return for the walk-in POS customer (419a1db67a, 2023-12-20 "prevent to
-		#//// show loyalty points in pos for passage"): "Passage" is the anonymous till customer every
-		#//// cash sale is booked against, so it accumulated the loyalty points of the whole shop and the
-		#//// POS offered to redeem them to whoever was at the counter.
-		#//// TO REVIEW: the customer is matched by its NAME, hard-coded — an instance that names its
-		#//// walk-in customer anything else silently gets the bug back.
-		#////added if
+		# //// Neoffice — early return for the walk-in POS customer (419a1db67a, 2023-12-20 "prevent to
+		# //// show loyalty points in pos for passage"): "Passage" is the anonymous till customer every
+		# //// cash sale is booked against, so it accumulated the loyalty points of the whole shop and the
+		# //// POS offered to redeem them to whoever was at the counter.
+		# //// TO REVIEW: the customer is matched by its NAME, hard-coded — an instance that names its
+		# //// walk-in customer anything else silently gets the bug back.
+		# ////added if
 		if self.name == "Passage":
 			return
-		#////
+		# ////
 		
 		loyalty_program = get_loyalty_programs(self)
 		if not loyalty_program:
@@ -784,13 +784,13 @@ def make_contact(args, is_primary_contact=1):
 		contact.add_email(args.get("email_id"), is_primary=True)
 	if args.get("mobile_no"):
 		contact.add_phone(args.get("mobile_no"), is_primary_mobile_no=True)
-	#//// Neoffice — reuse an existing Contact instead of creating a second one (b8d3deee22,
-	#//// 2023-12-22 "add missing fix"): upstream always inserts a new Contact, so a customer whose
-	#//// e-mail already had one ended up with duplicates. Note the consequence: when a Contact is
-	#//// found, the object built above is DISCARDED and the found one is updated and re-inserted —
-	#//// which is why the final insert had to become ignore_permissions=True (marked below).
-	#//// TO REVIEW: matching on e-mail alone merges two people sharing a mailbox (info@…).
-	#//// added if-else condition
+	# //// Neoffice — reuse an existing Contact instead of creating a second one (b8d3deee22,
+	# //// 2023-12-22 "add missing fix"): upstream always inserts a new Contact, so a customer whose
+	# //// e-mail already had one ended up with duplicates. Note the consequence: when a Contact is
+	# //// found, the object built above is DISCARDED and the found one is updated and re-inserted —
+	# //// which is why the final insert had to become ignore_permissions=True (marked below).
+	# //// TO REVIEW: matching on e-mail alone merges two people sharing a mailbox (info@…).
+	# //// added if-else condition
 	existing = frappe.db.get_all("Contact", filters={"email_id": args.get("email_id")})
 	if existing:
 		contact = frappe.get_doc("Contact", existing[0].name)
@@ -802,8 +802,8 @@ def make_contact(args, is_primary_contact=1):
 	if flags := args.get("flags"):
 		contact.insert(ignore_permissions=flags.get("ignore_permissions"))
 	else:
-	#////
-		contact.insert(ignore_permissions=True) #//// added ignore_permissions=True
+	# ////
+		contact.insert(ignore_permissions=True) # //// added ignore_permissions=True
 
 	return contact
 

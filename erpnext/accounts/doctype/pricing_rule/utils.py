@@ -296,13 +296,13 @@ def filter_pricing_rules(args, pricing_rules, doc=None):
 		if pricing_rules[0].apply_rule_on_other and not pricing_rules[0].mixed_conditions and doc:
 			pricing_rules = get_qty_and_rate_for_other_item(doc, pr_doc, pricing_rules, args) or []
 		elif pricing_rules[0].apply_rule_on_other and not pricing_rules[0].mixed_conditions:
-			#//// Neoffice — a "Discount on Other Item" rule only means something
-			#//// inside a transaction: the discount on B exists because A is on
-			#//// the same document. Asked for a bare item price (the shop's
-			#//// catalogue, erpnext.utilities.product.get_price), upstream fell
-			#//// through to the plain qty/amount test and priced both A and B
-			#//// as discounted everywhere. Without a document, the rule does
-			#//// not apply.
+			# //// Neoffice — a "Discount on Other Item" rule only means something
+			# //// inside a transaction: the discount on B exists because A is on
+			# //// the same document. Asked for a bare item price (the shop's
+			# //// catalogue, erpnext.utilities.product.get_price), upstream fell
+			# //// through to the plain qty/amount test and priced both A and B
+			# //// as discounted everywhere. Without a document, the rule does
+			# //// not apply.
 			pricing_rules = []
 		else:
 			pricing_rules = filter_pricing_rules_for_qty_amount(stock_qty, amount, pricing_rules, args)
@@ -347,10 +347,10 @@ def filter_pricing_rules(args, pricing_rules, doc=None):
 				list(filter(lambda x: x.for_price_list == args.price_list, pricing_rules)) or pricing_rules
 			)
 
-	#//// Neoffice — the webshop cart saves its Quotation server side, with no
-	#//// `for_shopping_cart` in the args: two rules that tie made the cart
-	#//// refuse to save, and the customer could neither add nor pay. A cart
-	#//// document takes the first rule, as the client cart already does.
+	# //// Neoffice — the webshop cart saves its Quotation server side, with no
+	# //// `for_shopping_cart` in the args: two rules that tie made the cart
+	# //// refuse to save, and the customer could neither add nor pay. A cart
+	# //// document takes the first rule, as the client cart already does.
 	if len(pricing_rules) > 1 and not (args.for_shopping_cart or args.get("order_type") == "Shopping Cart"):
 		frappe.throw(
 			_(
@@ -785,7 +785,7 @@ def get_pricing_rule_items(pr_doc, other_items=False) -> list:
 
 
 def validate_coupon_code(coupon_name):
-	#//// Change fore return POS
+	# //// Change fore return POS
 	coupon = frappe.get_doc("Coupon Code", coupon_name)
 	# Check if it's a gift card
 	is_gift_card = coupon.coupon_type == "Gift Card"
@@ -807,7 +807,7 @@ def validate_coupon_code(coupon_name):
 
 
 def update_coupon_code_count(coupon_name, transaction_type):
-	#//// Change fore return POS
+	# //// Change fore return POS
 	coupon = frappe.get_doc("Coupon Code", coupon_name)
 	# Check if it's a gift card
 	is_gift_card = coupon.coupon_type == "Gift Card"

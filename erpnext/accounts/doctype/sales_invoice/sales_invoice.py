@@ -1306,26 +1306,26 @@ class SalesInvoice(SellingController):
 		enable_discount_accounting = cint(
 			frappe.db.get_single_value("Selling Settings", "enable_discount_accounting")
 		)
-		company = frappe.defaults.get_global_default("company") #//// added
-		flat_rate = frappe.db.get_value("Neoffice Company Settings", self.company, "vat_accounting_method") == "Flat-rate taxation" #//// added
+		company = frappe.defaults.get_global_default("company") # //// added
+		flat_rate = frappe.db.get_value("Neoffice Company Settings", self.company, "vat_accounting_method") == "Flat-rate taxation" # //// added
 
 		for tax in self.get("taxes"):
 			amount, base_amount = self.get_tax_amounts(tax, enable_discount_accounting)
 
 			if flt(tax.base_tax_amount_after_discount_amount):
 				account_currency = get_account_currency(tax.account_head)
-				#//// added block
+				# //// added block
 				if flat_rate and frappe.db.get_value("Account", tax.account_head, "tax_code"):
 					continue
 
 				remark = ""
 				remark += (str(self.rounded_total) or str(self.grand_total)) + " " + self.currency
-				#//// Neoffice — customer_reference is a site Custom Field (json_updates / hub config), absent on a
-				#//// bare bench: read it with .get() so a Sales Invoice can still be submitted without it (#183).
+				# //// Neoffice — customer_reference is a site Custom Field (json_updates / hub config), absent on a
+				# //// bare bench: read it with .get() so a Sales Invoice can still be submitted without it (#183).
 				customer_reference = self.get("customer_reference")
 				if customer_reference:
 					remark += " " + customer_reference[:25]
-				#////
+				# ////
 
 				gl_entries.append(
 					self.get_gl_dict(
@@ -1342,7 +1342,7 @@ class SalesInvoice(SellingController):
 								amount, tax.precision("tax_amount_after_discount_amount")
 							),
 							"cost_center": tax.cost_center,
-							"remarks": remark, #//// added
+							"remarks": remark, # //// added
 						},
 						account_currency,
 						item=tax,
@@ -1373,7 +1373,7 @@ class SalesInvoice(SellingController):
 			frappe.db.get_single_value("Selling Settings", "enable_discount_accounting")
 		)
 
-		#//// added block
+		# //// added block
 		company = frappe.defaults.get_global_default("company")
 		flat_rate = frappe.db.get_value("Neoffice Company Settings", self.company, "vat_accounting_method") == "Flat-rate taxation"
 		wanted_vat = []
@@ -1381,22 +1381,22 @@ class SalesInvoice(SellingController):
 			tax_code = frappe.db.get_value("Account", tax.account_head, "tax_code")
 			if tax_code:
 				wanted_vat.append(tax.account_head)
-		#////
+		# ////
 
 		for item in self.get("items"):
 			if flt(item.base_net_amount, item.precision("base_net_amount")) or item.is_fixed_asset:
-				tax_excluded = flt(item.base_net_amount, item.precision("base_net_amount")) == flt(item.base_amount, item.precision("base_net_amount")) #//// added
+				tax_excluded = flt(item.base_net_amount, item.precision("base_net_amount")) == flt(item.base_amount, item.precision("base_net_amount")) # //// added
 
-				#//// added block
+				# //// added block
 				remark = ""
 				remark += (str(self.rounded_total) or str(self.grand_total)) + " " + self.currency
-				#//// Neoffice — customer_reference is a site Custom Field (json_updates / hub config), absent on a
-				#//// bare bench: read it with .get() so a Sales Invoice can still be submitted without it (#183).
+				# //// Neoffice — customer_reference is a site Custom Field (json_updates / hub config), absent on a
+				# //// bare bench: read it with .get() so a Sales Invoice can still be submitted without it (#183).
 				customer_reference = self.get("customer_reference")
 				if customer_reference:
 					remark += " " + customer_reference[:25]
 				remark += (" " + item.description[:40]) if item.description else ""
-				#////
+				# ////
 
 				# Do not book income for transfer within same company
 				if self.is_internal_transfer():
@@ -1405,7 +1405,7 @@ class SalesInvoice(SellingController):
 				if item.is_fixed_asset:
 					asset = self.get_asset(item)
 
-					#//// added
+					# //// added
 					amount = item.base_net_amount
 					if flat_rate:
 						if tax_excluded:
@@ -1416,13 +1416,13 @@ class SalesInvoice(SellingController):
 						else:
 							amount = item.base_amount
 
-					#////
+					# ////
 					if (self.docstatus == 2 and not self.is_return) or (
 						self.docstatus == 1 and self.is_return
 					):
 						fixed_asset_gl_entries = get_gl_entries_on_asset_regain(
 							asset,
-							amount, #////item.base_net_amount,
+							amount, # ////item.base_net_amount,
 							item.finance_book,
 							self.get("doctype"),
 							self.get("name"),
@@ -1462,7 +1462,7 @@ class SalesInvoice(SellingController):
 
 						fixed_asset_gl_entries = get_gl_entries_on_asset_disposal(
 							asset,
-							amount, #////item.base_net_amount,
+							amount, # ////item.base_net_amount,
 							item.finance_book,
 							self.get("doctype"),
 							self.get("name"),
@@ -1472,7 +1472,7 @@ class SalesInvoice(SellingController):
 						add_asset_activity(asset.name, _("Asset sold"))
 
 					for gle in fixed_asset_gl_entries:
-						gle["remarks"] = remark #//// added
+						gle["remarks"] = remark # //// added
 						gle["against"] = self.customer
 						gl_entries.append(self.get_gl_dict(gle, item=item))
 
@@ -1485,8 +1485,8 @@ class SalesInvoice(SellingController):
 						else item.deferred_revenue_account
 					)
 
-					amount, base_amount = self.get_amount_and_base_amount(item, enable_discount_accounting, flat_rate) #//// added flat_rate and not tax_excluded
-					#//// added
+					amount, base_amount = self.get_amount_and_base_amount(item, enable_discount_accounting, flat_rate) # //// added flat_rate and not tax_excluded
+					# //// added
 					if flat_rate and (tax_excluded or self.get("discount_amount")):
 						if item.item_tax_template:
 							vat_details = frappe.db.get_all("Item Tax Template Detail", {"parent": item.item_tax_template, "parenttype": "Item Tax Template", "tax_rate": [">", 0]}, ['tax_type', 'tax_rate'])
@@ -1494,7 +1494,7 @@ class SalesInvoice(SellingController):
 								applied_tax_rate = vat_details[0].tax_rate
 								amount = amount + (amount * applied_tax_rate / 100)
 								base_amount = base_amount + (base_amount * applied_tax_rate / 100)
-					#////
+					# ////
 
 					account_currency = get_account_currency(income_account)
 					gl_entries.append(
@@ -1511,7 +1511,7 @@ class SalesInvoice(SellingController):
 								"credit_in_transaction_currency": flt(amount, item.precision("net_amount")),
 								"cost_center": item.cost_center,
 								"project": item.project or self.project,
-								"remarks": remark #//// added
+								"remarks": remark # //// added
 							},
 							account_currency,
 							item=item,
@@ -2764,13 +2764,13 @@ def update_multi_mode_option(doc, pos_profile):
 	mode_of_payments = [d.mode_of_payment for d in pos_profile.get("payments")]
 	mode_of_payments_info = get_mode_of_payments_info(mode_of_payments, doc.company)
 
-	#//// Neoffice - two different causes used to share one message. The query
-	#//// above filters on `mp.enabled = 1`, so a mode that is merely DISABLED
-	#//// comes back empty and was reported as "missing account" - sending the
-	#//// user to configure an account that is already there, with no way out of
-	#//// the dialog. Seen on osiris: two disabled Payrexx modes still listed on
-	#//// a POS Profile threw this on every single till opening. Name the real
-	#//// cause instead; the account branch below is untouched.
+	# //// Neoffice - two different causes used to share one message. The query
+	# //// above filters on `mp.enabled = 1`, so a mode that is merely DISABLED
+	# //// comes back empty and was reported as "missing account" - sending the
+	# //// user to configure an account that is already there, with no way out of
+	# //// the dialog. Seen on osiris: two disabled Payrexx modes still listed on
+	# //// a POS Profile threw this on every single till opening. Name the real
+	# //// cause instead; the account branch below is untouched.
 	disabled_modes = []
 
 	for row in pos_profile.get("payments"):

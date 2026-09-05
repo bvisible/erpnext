@@ -183,15 +183,15 @@ class Item(Document):
 			for default in self.item_defaults or [frappe._dict()]:
 				self.add_price(default.default_price_list)
 
-		#//// Neoffice — buying_standard_rate is a Neoffice custom field (not in
-		#//// this doctype): read it with .get(), or every Item insert dies in
-		#//// AttributeError on a site without the customization (CI, fresh sites).
+		# //// Neoffice — buying_standard_rate is a Neoffice custom field (not in
+		# //// this doctype): read it with .get(), or every Item insert dies in
+		# //// AttributeError on a site without the customization (CI, fresh sites).
 		if self.get("buying_standard_rate"):
 			price_list = frappe.db.get_single_value(
 				"Buying Settings", "buying_price_list"
 			) or frappe.db.get_value("Price List", _("Standard Buying"))
 			self.add_price(price_list, buying=True)
-		#////
+		# ////
 
 		if self.opening_stock:
 			self.set_opening_stock()
@@ -253,7 +253,7 @@ class Item(Document):
 				frappe.throw(_('"Customer Provided Item" cannot have Valuation Rate'))
 			self.default_material_request_type = "Customer Provided"
 
-	def add_price(self, price_list=None, buying=False): #//// added , buying=False
+	def add_price(self, price_list=None, buying=False): # //// added , buying=False
 		"""Add a new price"""
 		if not price_list:
 			price_list = frappe.db.get_single_value(
@@ -268,7 +268,7 @@ class Item(Document):
 					"uom": self.stock_uom,
 					"brand": self.brand,
 					"currency": erpnext.get_default_currency(),
-					"price_list_rate": self.standard_rate if not buying else self.get("buying_standard_rate"), #//// added if not buying else buying_standard_rate (custom field, .get())
+					"price_list_rate": self.standard_rate if not buying else self.get("buying_standard_rate"), # //// added if not buying else buying_standard_rate (custom field, .get())
 				}
 			)
 			item_price.insert()
@@ -283,21 +283,21 @@ class Item(Document):
 
 		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 
-		#//// Start of custom code
+		# //// Start of custom code
 		# If warehouse is set directly on the item (from quick entry form), use it instead
 		custom_warehouse = getattr(self, "warehouse", None) or getattr(self, "default_warehouse", None)
-		#//// End of custom code
+		# //// End of custom code
 
 		# default warehouse, or Stores
 		for default in self.item_defaults or [
 			frappe._dict({"company": frappe.defaults.get_defaults().company})
 		]:
-			#//// Start of custom code
+			# //// Start of custom code
 			# Prioritize the custom warehouse if available
 			default_warehouse = custom_warehouse or default.default_warehouse or frappe.db.get_single_value(
 				"Stock Settings", "default_warehouse"
 			)
-			#//// End of custom code
+			# //// End of custom code
 
 			if default_warehouse:
 				warehouse_company = frappe.db.get_value("Warehouse", default_warehouse, "company")
@@ -1150,7 +1150,7 @@ def validate_end_of_life(item_code, end_of_life=None, disabled=None):
 			_("Item {0} has reached its end of life on {1}").format(item_code, formatdate(end_of_life))
 		)
 
-	if disabled and item_code != "Freeline" and item_code != "Subtotal": #//// added and item_code != "Freeline" and item_code != "Subtotal"
+	if disabled and item_code != "Freeline" and item_code != "Subtotal": # //// added and item_code != "Freeline" and item_code != "Subtotal"
 		frappe.throw(_("Item {0} is disabled").format(item_code))
 
 

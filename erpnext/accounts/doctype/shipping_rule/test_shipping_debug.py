@@ -1,10 +1,10 @@
-#//// Neoffice — added file (no upstream equivalent), d62d07f7d4 (2025-08-15 "add default weight
-#//// and improve customer portal user linking): a hand-run diagnostic for the "Multiple
-#//// Constraints" shipping calculation, kept next to the code it debugs.
-#//// TO REVIEW at the merge: despite the name this is NOT a test — no unittest/IntegrationTest
-#//// class, it prints to stdout and is meant for `bench execute`. It is written against the
-#//// fixture of one customer order ("2 VALVES + 1 FUSIL", French prose) and its file name makes
-#//// the bench test runner import it. Either turn it into a real test or move it out of the app.
+# //// Neoffice — added file (no upstream equivalent), d62d07f7d4 (2025-08-15 "add default weight
+# //// and improve customer portal user linking): a hand-run diagnostic for the "Multiple
+# //// Constraints" shipping calculation, kept next to the code it debugs.
+# //// TO REVIEW at the merge: despite the name this is NOT a test — no unittest/IntegrationTest
+# //// class, it prints to stdout and is meant for `bench execute`. It is written against the
+# //// fixture of one customer order ("2 VALVES + 1 FUSIL", French prose) and its file name makes
+# //// the bench test runner import it. Either turn it into a real test or move it out of the app.
 import frappe
 from frappe.utils import flt
 from erpnext.accounts.doctype.shipping_rule.shipping_rule import ShippingRule

@@ -1,12 +1,12 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-#//// Neoffice — added file (no upstream equivalent): controller of the added child DocType
-#//// `Shipping Rule Condition Multiple Constraints` (5bb3903da1, 2025-03-13). One row = one
-#//// shipping bracket constrained on several axes at once (weight, price, length, width,
-#//// height); the table hangs off Shipping Rule and is read by
-#//// get_shipping_amount_from_multiple_constraints(). Body is the generated type block only.
-#//// The DocType JSON alongside is ours too — see NEOFFICE_FORK_MARKERS.md.
+# //// Neoffice — added file (no upstream equivalent): controller of the added child DocType
+# //// `Shipping Rule Condition Multiple Constraints` (5bb3903da1, 2025-03-13). One row = one
+# //// shipping bracket constrained on several axes at once (weight, price, length, width,
+# //// height); the table hangs off Shipping Rule and is read by
+# //// get_shipping_amount_from_multiple_constraints(). Body is the generated type block only.
+# //// The DocType JSON alongside is ours too — see NEOFFICE_FORK_MARKERS.md.
 # import frappe
 from frappe.model.document import Document
 

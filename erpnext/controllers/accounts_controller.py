@@ -971,14 +971,14 @@ class AccountsController(TransactionBase):
 
 					ret = get_item_details(args, self, for_validate=for_validate, overwrite_warehouse=False)
 
-					#//// Neoffice — a "Discount on Other Item" pricing rule is fetched for
-					#//// the TRIGGER row too (the SQL widens the match and the qty test
-					#//// runs on the trigger), so `ret` carries a discount meant for
-					#//// another row. The desk client skips those values on the trigger
-					#//// (transaction.js, _set_values_for_item_list); this server path
-					#//// copied them onto any new row — a webshop cart discounted the
-					#//// trigger item as well as the offered one. Mirror the client:
-					#//// keep the rule on the row, drop the money.
+					# //// Neoffice — a "Discount on Other Item" pricing rule is fetched for
+					# //// the TRIGGER row too (the SQL widens the match and the qty test
+					# //// runs on the trigger), so `ret` carries a discount meant for
+					# //// another row. The desk client skips those values on the trigger
+					# //// (transaction.js, _set_values_for_item_list); this server path
+					# //// copied them onto any new row — a webshop cart discounted the
+					# //// trigger item as well as the offered one. Mirror the client:
+					# //// keep the rule on the row, drop the money.
 					if ret.get("apply_rule_on_other_items"):
 						beneficiaries = json.loads(ret.get("apply_rule_on_other_items")) or []
 						apply_rule_on = ret.get("apply_rule_on") or "item_code"
@@ -1259,7 +1259,7 @@ class AccountsController(TransactionBase):
 				"fiscal_year": fiscal_year,
 				"voucher_type": self.doctype,
 				"voucher_no": self.name,
-				"remarks": args.get("remarks") or self.get("remarks") or self.get("remark"), #//// added args.get("remarks") or
+				"remarks": args.get("remarks") or self.get("remarks") or self.get("remark"), # //// added args.get("remarks") or
 				"debit": 0,
 				"credit": 0,
 				"debit_in_account_currency": 0,
@@ -1968,16 +1968,16 @@ class AccountsController(TransactionBase):
 
 		return tax_map
 
-	def get_amount_and_base_amount(self, item, enable_discount_accounting, flat_rate=False): #//// added  flat_rate=False
+	def get_amount_and_base_amount(self, item, enable_discount_accounting, flat_rate=False): # //// added  flat_rate=False
 		amount = item.net_amount
 		base_amount = item.base_net_amount
 
 		if (
-			(enable_discount_accounting #//// added (
+			(enable_discount_accounting # //// added (
 			and self.get("discount_amount")
 			and self.get("additional_discount_account")
-			and not flat_rate) #//// added line
-			or (flat_rate and not self.get("discount_amount"))  #//// added line
+			and not flat_rate) # //// added line
+			or (flat_rate and not self.get("discount_amount"))  # //// added line
 		):
 			# cases where distributed_discount_amount is not patched
 			if not hasattr(self, "__has_distributed_discount_set"):

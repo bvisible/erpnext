@@ -312,11 +312,11 @@ class Subscription(Document):
 			)
 			unsupported_plans = []
 			for x in subscription_plan_currencies:
-				#//// Neoffice — null guard added. Upstream compares the plan currency to the party billing
-				#//// currency straight away, so a Subscription Plan with an empty currency (or a customer with
-				#//// no billing currency) was reported as an "unsupported plan" and blocked the subscription.
-				#//// Origin: none of the commits in v15.89.0..HEAD carries a rationale — TO REVIEW.
-				if x.currency and party_billing_currency and x.currency != party_billing_currency: #//// added x.currency and party_billing_currency and
+				# //// Neoffice — null guard added. Upstream compares the plan currency to the party billing
+				# //// currency straight away, so a Subscription Plan with an empty currency (or a customer with
+				# //// no billing currency) was reported as an "unsupported plan" and blocked the subscription.
+				# //// Origin: none of the commits in v15.89.0..HEAD carries a rationale — TO REVIEW.
+				if x.currency and party_billing_currency and x.currency != party_billing_currency: # //// added x.currency and party_billing_currency and
 					unsupported_plans.append("{}".format(get_link_to_form("Subscription Plan", x.name)))
 
 			if unsupported_plans:
@@ -400,26 +400,26 @@ class Subscription(Document):
 
 		invoice = frappe.new_doc(self.invoice_document_type)
 		invoice.company = company
-		#//// Neoffice — carries our `customer_reference` Custom Field from the Subscription onto the
-		#//// generated invoice (f032a768e2, 2024-09-23 "last updates" — the commit gives no rationale,
-		#//// TO REVIEW). It is the reference the customer must quote on the payment; without it the QR
-		#//// invoice and the bank reconciliation lose the link. Both fields are Custom Fields, so this
-		#//// line raises AttributeError on a site that does not have them.
-		#//// Neoffice — customer_reference is a site Custom Field (json_updates / hub config), absent on a
-		#//// bare bench: read it with .get() so invoices can still be generated without it (upstream
-		#//// test_subscription died on AttributeError, 2026-09-04).
+		# //// Neoffice — carries our `customer_reference` Custom Field from the Subscription onto the
+		# //// generated invoice (f032a768e2, 2024-09-23 "last updates" — the commit gives no rationale,
+		# //// TO REVIEW). It is the reference the customer must quote on the payment; without it the QR
+		# //// invoice and the bank reconciliation lose the link. Both fields are Custom Fields, so this
+		# //// line raises AttributeError on a site that does not have them.
+		# //// Neoffice — customer_reference is a site Custom Field (json_updates / hub config), absent on a
+		# //// bare bench: read it with .get() so invoices can still be generated without it (upstream
+		# //// test_subscription died on AttributeError, 2026-09-04).
 		invoice.customer_reference = self.get("customer_reference")
 		invoice.set_posting_time = 1
 
 		if self.generate_invoice_at == "Beginning of the current subscription period":
 			invoice.posting_date = self.current_invoice_start
 		elif self.generate_invoice_at == "Days before the current subscription period":
-			#//// Neoffice — upstream: `invoice.posting_date = posting_date or self.current_invoice_start`.
-			#//// Ours always computes the date the plan asks for ("Days before the current subscription
-			#//// period"), ignoring the posting_date the caller passed — so an invoice generated late (a
-			#//// missed scheduler run, a manual catch-up) is still dated the day it should have been.
-			#//// Origin: c9578a74f6 (2024-02-02 "fix date behaviour"), no further rationale — TO REVIEW.
-			invoice.posting_date = add_days(self.current_invoice_start, -1 * self.number_of_days) #////posting_date or self.current_invoice_start
+			# //// Neoffice — upstream: `invoice.posting_date = posting_date or self.current_invoice_start`.
+			# //// Ours always computes the date the plan asks for ("Days before the current subscription
+			# //// period"), ignoring the posting_date the caller passed — so an invoice generated late (a
+			# //// missed scheduler run, a manual catch-up) is still dated the day it should have been.
+			# //// Origin: c9578a74f6 (2024-02-02 "fix date behaviour"), no further rationale — TO REVIEW.
+			invoice.posting_date = add_days(self.current_invoice_start, -1 * self.number_of_days) # ////posting_date or self.current_invoice_start
 		else:
 			invoice.posting_date = self.current_invoice_end
 
@@ -601,32 +601,32 @@ class Subscription(Document):
 			return False
 
 		if self.generate_invoice_at == "Beginning of the current subscription period" and (
-				#//// Neoffice — the three date tests in this method were changed from `==` to `>=`. The
-				#//// change predates the root commit e8aaf3e9d7 (2026-02-02), where this repository's
-				#//// history was squashed, so git no longer holds who wrote it or why; the SHAs an earlier
-				#//// marker pass cited here (c9578a74f6, c2a51c7b50) exist in no repository.
-				#//// Upstream only generates an invoice on the EXACT day, and
-				#//// process() only rolls the period forward once its END has passed — so a scheduler that
-				#//// missed the boundary day (instance down, backlog, an outstanding invoice holding the
-				#//// gate shut) skips that period and never lands on a boundary again: the subscription
-				#//// stops billing for good. Ours catches up one period per run, and generate_invoice()
-				#//// dates the invoice on the day it should have had. The re-indentation of the surrounding
-				#//// conditions is ours too and will conflict cosmetically.
-				#//// The `or self.is_new_subscription()` escape that sat on this line (same origin) is
-				#//// dropped: it was only ever reached when posting_date < current_invoice_start — a period
-				#//// that has NOT started — so it billed a future or trialling subscription on the day it
-				#//// was created, with a posting_date in the future (measured 2026-09-04 on a throwaway
-				#//// site: start_date = today + 1 month gave a 900 invoice dated 2026-10-04 issued on
-				#//// 2026-09-04; a trial gave one dated 2026-10-05). A subscription created mid-period is
-				#//// unaffected — posting_date >= current_invoice_start already holds for it.
-				getdate(posting_date) >= getdate(self.current_invoice_start) #//// changed from == to >=
+				# //// Neoffice — the three date tests in this method were changed from `==` to `>=`. The
+				# //// change predates the root commit e8aaf3e9d7 (2026-02-02), where this repository's
+				# //// history was squashed, so git no longer holds who wrote it or why; the SHAs an earlier
+				# //// marker pass cited here (c9578a74f6, c2a51c7b50) exist in no repository.
+				# //// Upstream only generates an invoice on the EXACT day, and
+				# //// process() only rolls the period forward once its END has passed — so a scheduler that
+				# //// missed the boundary day (instance down, backlog, an outstanding invoice holding the
+				# //// gate shut) skips that period and never lands on a boundary again: the subscription
+				# //// stops billing for good. Ours catches up one period per run, and generate_invoice()
+				# //// dates the invoice on the day it should have had. The re-indentation of the surrounding
+				# //// conditions is ours too and will conflict cosmetically.
+				# //// The `or self.is_new_subscription()` escape that sat on this line (same origin) is
+				# //// dropped: it was only ever reached when posting_date < current_invoice_start — a period
+				# //// that has NOT started — so it billed a future or trialling subscription on the day it
+				# //// was created, with a posting_date in the future (measured 2026-09-04 on a throwaway
+				# //// site: start_date = today + 1 month gave a 900 invoice dated 2026-10-04 issued on
+				# //// 2026-09-04; a trial gave one dated 2026-10-05). A subscription created mid-period is
+				# //// unaffected — posting_date >= current_invoice_start already holds for it.
+				getdate(posting_date) >= getdate(self.current_invoice_start) # //// changed from == to >=
 		):
 			return True
 		elif self.generate_invoice_at == "Days before the current subscription period" and (
-				getdate(posting_date) >= getdate(add_days(self.current_invoice_start, -1 * self.number_of_days)) #//// changed from == to >=
+				getdate(posting_date) >= getdate(add_days(self.current_invoice_start, -1 * self.number_of_days)) # //// changed from == to >=
 		):
 			return True
-		elif getdate(posting_date) >= getdate(self.current_invoice_end): #//// changed from == to >=
+		elif getdate(posting_date) >= getdate(self.current_invoice_end): # //// changed from == to >=
 			return True
 		else:
 			return False
@@ -685,12 +685,12 @@ class Subscription(Document):
 			order_by="from_date asc",
 		)
 
-	#//// Neoffice — added together with the `>=` gate above, before the 2026-02-02 history squash
-	#//// (root commit e8aaf3e9d7): can_generate_new_invoice() called it, so without it every
-	#//// subscription run died on AttributeError. No upstream equivalent.
-	#//// It is no longer wired into the invoice gate (2026-09-04): there it only fired on a period
-	#//// that had not started, and billed future and trialling subscriptions. Kept as a helper —
-	#//// a Server Script or a report may call it — but nothing in the apps does today.
+	# //// Neoffice — added together with the `>=` gate above, before the 2026-02-02 history squash
+	# //// (root commit e8aaf3e9d7): can_generate_new_invoice() called it, so without it every
+	# //// subscription run died on AttributeError. No upstream equivalent.
+	# //// It is no longer wired into the invoice gate (2026-09-04): there it only fired on a period
+	# //// that had not started, and billed future and trialling subscriptions. Kept as a helper —
+	# //// a Server Script or a report may call it — but nothing in the apps does today.
 	def is_new_subscription(self) -> bool:
 		"""
 		Returns True if this subscription has never generated any invoice yet.
@@ -729,16 +729,16 @@ class Subscription(Document):
 		if self.status == "Cancelled":
 			frappe.throw(_("subscription is already cancelled."), InvoiceCancelled)
 
-		#//// Neoffice — upstream (unchanged at v15.121.0) bills the consumed part of the current period
-		#//// on cancellation unless it was billed up front, but it only exempts "Beginning of the current
-		#//// subscription period" although get_items_from_plans above already treats "Days before the
-		#//// current subscription period" as prepaid too (is_prepaid=1, no proration). Cancelling an
-		#//// Active "Days before" subscription therefore billed the residual window a second time, at
-		#//// full plan price (measured: 108.10 CHF for a single day of a 100 CHF/month plan); 318 of the
-		#//// fleet's 371 subscriptions use that mode, so both prepaid modes are exempted here. From
-		#//// f032a768e2 (2024-09-23, "last updates", no reason recorded) to 2026-09-04 this condition was
-		#//// inverted (`status != "Active"`, second half commented out): it produced parasitic full-price
-		#//// invoices on non-Active subscriptions instead — tracker #207. To be proposed upstream.
+		# //// Neoffice — upstream (unchanged at v15.121.0) bills the consumed part of the current period
+		# //// on cancellation unless it was billed up front, but it only exempts "Beginning of the current
+		# //// subscription period" although get_items_from_plans above already treats "Days before the
+		# //// current subscription period" as prepaid too (is_prepaid=1, no proration). Cancelling an
+		# //// Active "Days before" subscription therefore billed the residual window a second time, at
+		# //// full plan price (measured: 108.10 CHF for a single day of a 100 CHF/month plan); 318 of the
+		# //// fleet's 371 subscriptions use that mode, so both prepaid modes are exempted here. From
+		# //// f032a768e2 (2024-09-23, "last updates", no reason recorded) to 2026-09-04 this condition was
+		# //// inverted (`status != "Active"`, second half commented out): it produced parasitic full-price
+		# //// invoices on non-Active subscriptions instead — tracker #207. To be proposed upstream.
 		to_generate_invoice = self.status == "Active" and self.generate_invoice_at not in (
 			"Beginning of the current subscription period",
 			"Days before the current subscription period",
@@ -746,11 +746,11 @@ class Subscription(Document):
 		self.status = "Cancelled"
 		self.cancelation_date = nowdate()
 
-		#//// Neoffice — upstream compares the two dates raw: cancelation_date is the nowdate() string
-		#//// just assigned while current_invoice_start is a datetime.date whenever the document was
-		#//// loaded from the database (any server-side caller: scripts, NORA tools, the theme's dunning
-		#//// test), so "str >= date" raised TypeError there. The desk button never saw it because
-		#//// run_doc_method rebuilds the document from the client JSON, where both are strings.
+		# //// Neoffice — upstream compares the two dates raw: cancelation_date is the nowdate() string
+		# //// just assigned while current_invoice_start is a datetime.date whenever the document was
+		# //// loaded from the database (any server-side caller: scripts, NORA tools, the theme's dunning
+		# //// test), so "str >= date" raised TypeError there. The desk button never saw it because
+		# //// run_doc_method rebuilds the document from the client JSON, where both are strings.
 		if to_generate_invoice and getdate(self.cancelation_date) >= getdate(self.current_invoice_start):
 			self.generate_invoice(self.current_invoice_start, self.cancelation_date)
 

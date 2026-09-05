@@ -4,9 +4,9 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-#//// Neoffice — `cint` added to the import (a5f79d75b3, 2025-02-26 "update neov2") for the
-#//// float_precision rounding below. Upstream: `from frappe.utils import flt, today`, placed
-#//// AFTER the query_builder import — the reorder is ours too and will conflict cosmetically.
+# //// Neoffice — `cint` added to the import (a5f79d75b3, 2025-02-26 "update neov2") for the
+# //// float_precision rounding below. Upstream: `from frappe.utils import flt, today`, placed
+# //// AFTER the query_builder import — the reorder is ours too and will conflict cosmetically.
 from frappe.utils import flt, today, cint
 from frappe.query_builder.functions import Sum
 
@@ -177,11 +177,11 @@ def validate_loyalty_points(ref_doc, points_to_redeem):
 		if points_to_redeem > loyalty_program_details.loyalty_points:
 			frappe.throw(_("You don't have enough Loyalty Points to redeem"))
 
-		#//// Neoffice — upstream: `loyalty_amount = flt(points_to_redeem * conversion_factor)` with no
-		#//// precision, which keeps the full binary tail; the redeemed amount then failed the
-		#//// "more value than the Total Amount" check below on rounding noise. Ours rounds to the site
-		#//// float_precision first (a5f79d75b3, 2025-02-26 "update neov2"; the commit itself carries no
-		#//// rationale — reading is inferred from the code, TO REVIEW). Unchanged upstream at v15.121.0.
+		# //// Neoffice — upstream: `loyalty_amount = flt(points_to_redeem * conversion_factor)` with no
+		# //// precision, which keeps the full binary tail; the redeemed amount then failed the
+		# //// "more value than the Total Amount" check below on rounding noise. Ours rounds to the site
+		# //// float_precision first (a5f79d75b3, 2025-02-26 "update neov2"; the commit itself carries no
+		# //// rationale — reading is inferred from the code, TO REVIEW). Unchanged upstream at v15.121.0.
 		float_precision = cint(frappe.db.get_default("float_precision")) or 2
 		loyalty_amount = flt(points_to_redeem * loyalty_program_details.conversion_factor, float_precision)
 

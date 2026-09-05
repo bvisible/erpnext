@@ -2362,12 +2362,12 @@ def get_outstanding_reference_documents(args, validate=False):
 			max_outstanding=args.get("outstanding_amt_less_than"),
 			accounting_dimensions=accounting_dimensions_filter,
 			vouchers=args.get("vouchers") or None,
-			#//// Neoffice — validate=True means we are re-reading the outstanding of
-			#//// references a Payment Entry ALREADY carries (called from
-			#//// validate_allocated_amount_with_latest_data), not offering invoices to
-			#//// choose from. Hiding payment-run
-			#//// invoices here made every Payment Entry created by a Payment Proposal die on
-			#//// "has already been fully paid" — the proposal flags is_proposed itself.
+			# //// Neoffice — validate=True means we are re-reading the outstanding of
+			# //// references a Payment Entry ALREADY carries (called from
+			# //// validate_allocated_amount_with_latest_data), not offering invoices to
+			# //// choose from. Hiding payment-run
+			# //// invoices here made every Payment Entry created by a Payment Proposal die on
+			# //// "has already been fully paid" — the proposal flags is_proposed itself.
 			exclude_proposed=not validate,
 		)
 
@@ -2886,12 +2886,12 @@ def get_payment_entry(
 	reference_date=None,
 	ignore_permissions=False,
 	created_from_payment_request=False,
-	reference_no=None, #////
-	mode_of_payment=None, #////
-	paid_to=None, #////
+	reference_no=None, # ////
+	mode_of_payment=None, # ////
+	paid_to=None, # ////
 ):
-	if party_amount: #////
-		party_amount = flt(party_amount) #////
+	if party_amount: # ////
+		party_amount = flt(party_amount) # ////
 	doc = frappe.get_doc(dt, dn)
 	over_billing_allowance = frappe.db.get_single_value("Accounts Settings", "over_billing_allowance")
 	if dt in ("Sales Order", "Purchase Order") and flt(doc.per_billed, 2) >= (100.0 + over_billing_allowance):
@@ -2935,8 +2935,8 @@ def get_payment_entry(
 	pe.cost_center = doc.get("cost_center")
 	pe.posting_date = nowdate()
 	pe.reference_date = reference_date
-	pe.reference_no = reference_no #////
-	pe.mode_of_payment = mode_of_payment or doc.get("mode_of_payment") #//// added mode_of_payment or
+	pe.reference_no = reference_no # ////
+	pe.mode_of_payment = mode_of_payment or doc.get("mode_of_payment") # //// added mode_of_payment or
 	pe.party_type = party_type
 	pe.party = doc.get(scrub(party_type))
 	pe.contact_person = doc.get("contact_person")
@@ -2949,8 +2949,8 @@ def get_payment_entry(
 		party_account_currency if payment_type == "Receive" else bank.account_currency
 	)
 	pe.paid_to_account_currency = party_account_currency if payment_type == "Pay" else bank.account_currency
-	pe.paid_to = paid_to or pe.paid_to #//// added line
-	#//// added if
+	pe.paid_to = paid_to or pe.paid_to # //// added line
+	# //// added if
 	if paid_to:
 		pe.paid_to_account_balance = None
 		pe.paid_to_account_currency = None

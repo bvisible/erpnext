@@ -205,15 +205,15 @@ def create_variant(item, args, use_template_image=False):
 
 	template = frappe.get_doc("Item", item)
 	variant = frappe.new_doc("Item")
-	#//// Neoffice — variant_selling_price / variant_buying_price /
-	#//// buying_standard_rate are Neoffice custom fields: .get() reads, or
-	#//// variant creation dies in AttributeError on a site without the
-	#//// customizations (CI runners, fresh sites).
+	# //// Neoffice — variant_selling_price / variant_buying_price /
+	# //// buying_standard_rate are Neoffice custom fields: .get() reads, or
+	# //// variant creation dies in AttributeError on a site without the
+	# //// customizations (CI runners, fresh sites).
 	if template.get("variant_selling_price") and not variant.standard_rate:
 		variant.standard_rate = template.variant_selling_price
 	if template.get("variant_buying_price") and not variant.get("buying_standard_rate"):
 		variant.buying_standard_rate = template.variant_buying_price
-	#////
+	# ////
 	variant.variant_based_on = "Item Attribute"
 	variant_attributes = []
 
@@ -239,7 +239,7 @@ def enqueue_multiple_variant_creation(item, args, use_template_image=False):
 		variants = json.loads(args)
 	total_variants = 1
 	for key in variants:
-		if key != "is_stock_item": #//// added if condition
+		if key != "is_stock_item": # //// added if condition
 			total_variants *= len(variants[key])
 	if total_variants >= 600:
 		frappe.throw(_("Please do not create more than 500 items at a time"))
@@ -262,15 +262,15 @@ def create_multiple_variants(item, args, use_template_image=False):
 	if isinstance(args, str):
 		args = json.loads(args)
 
-	manage_stock = args.get("is_stock_item") #//// added
-	args.pop("is_stock_item") #//// added
+	manage_stock = args.get("is_stock_item") # //// added
+	args.pop("is_stock_item") # //// added
 	template_item = frappe.get_doc("Item", item)
 	args_set = generate_keyed_value_combinations(args)
 
 	for attribute_values in args_set:
 		if not get_variant(item, args=attribute_values):
 			variant = create_variant(item, attribute_values)
-			variant.is_stock_item = manage_stock #//// added
+			variant.is_stock_item = manage_stock # //// added
 			if use_template_image and template_item.image:
 				variant.image = template_item.image
 			variant.save()
@@ -342,7 +342,7 @@ def copy_attributes_to_variant(item, variant):
 		"opening_stock",
 		"variant_of",
 		"valuation_rate",
-		"is_stock_item", #//// added 
+		"is_stock_item", # //// added 
 	]
 
 	if item.variant_based_on == "Manufacturer":
