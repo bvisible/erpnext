@@ -1,0 +1,37 @@
+name: Tests
+# Fleet CI for the erpnext fork — on demand only (the suite takes hours; the
+# nightly proof is the product forks' CI, which benches on this fork).
+# Typical use: test an upstream PR branch from here, against upstream frappe:
+#   gh api -X POST repos/bvisible/erpnext/actions/workflows/tests.yml/dispatches -f ref=version-15 \
+#     -f "inputs[app_ref]=fix/my-branch" -f "inputs[upstream_preview]=true" \
+#     -f "inputs[test_args]=--module erpnext.accounts.doctype.subscription.test_subscription"
+on:
+  workflow_dispatch:
+    inputs:
+      app_ref:
+        description: "Branch or sha of this repo to test (default: the dispatched ref)"
+        required: false
+        default: ""
+      upstream_preview:
+        description: "Bench on upstream frappe/frappe instead of our fork (true for an upstream PR branch)"
+        type: boolean
+        required: false
+        default: false
+      test_args:
+        description: "Args for bench run-tests (e.g. --module erpnext.accounts.doctype.subscription.test_subscription)"
+        required: false
+        default: ""
+concurrency:
+  group: tests-${{ github.ref }}-${{ inputs.app_ref }}
+  cancel-in-progress: false
+jobs:
+  ci:
+    uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
+    with:
+      app: erpnext
+      app_ref: ${{ inputs.app_ref || '' }}
+      upstream_preview: ${{ inputs.upstream_preview || false }}
+      erpnext_bootstrap: false   # erpnext IS the app under test: its own before_tests runs
+      skip_build: true            # tests only; the desk bundle is irrelevant here
+      test_args: ${{ inputs.test_args || '' }}
+    secrets: inherit
