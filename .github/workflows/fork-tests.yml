@@ -1,0 +1,46 @@
+# //// Neoffice — added file (no upstream equivalent).
+#
+# Until 2026-09-08 this fork had 25 commits in fourteen days and ZERO test classes of its
+# own (#270), several of them on the path money takes. `tests.yml` next to this file runs
+# erpnext's WHOLE suite and is workflow_dispatch only, because that suite takes hours.
+# This one runs OUR classes only.
+#
+# Why not "on every push", the way the frappe fork's Tests workflow runs:
+# erpnext's before_tests builds a Company, a Fiscal Year and the rest before a single
+# assertion, so a run here is ~10 min against frappe's measured 2.6 — roughly 11 $/month
+# on this repo alone, against a 20 $/month budget for everything. Measured, not guessed.
+#
+# So it fires on the PATHS it actually covers: change the subscription billing gate or the
+# quotation expiry job and you get the signal; change anything else and you pay nothing.
+# Add a test elsewhere, add its path here — the list is the coverage, in one place.
+name: Fork tests
+on:
+  push:
+    branches: [version-15]
+    paths:
+      - "erpnext/accounts/doctype/subscription/**"
+      - "erpnext/selling/doctype/quotation/**"
+      - ".github/workflows/fork-tests.yml"
+  pull_request:
+    paths:
+      - "erpnext/accounts/doctype/subscription/**"
+      - "erpnext/selling/doctype/quotation/**"
+  workflow_dispatch:
+
+concurrency:
+  group: fork-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
+    with:
+      app: erpnext
+      erpnext_bootstrap: false # erpnext IS the app under test: its own before_tests runs
+      skip_build: true # no app build: erpnext ships no SPA
+      build_frappe_assets: true # a test that queues an e-mail inlines CSS through assets.json
+      # One --module per call would keep only the LAST one (bench run-tests drops the
+      # others silently), so the classes we add live under one module path today. When a
+      # second module arrives, add a second job rather than a second --module.
+      test_args: "--module erpnext.accounts.doctype.subscription.test_subscription_neoffice"
+    secrets: inherit
