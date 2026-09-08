@@ -121,6 +121,13 @@ class TestSubscriptionInvoiceGate(unittest.TestCase):
 		self.assertTrue(sub.can_generate_new_invoice(nowdate()))
 
 
+# //// Neoffice ▼▼▼ — new tests for the fix: process() cancels at period end and then calls
+# //// set_subscription_status(), whose last branch set a cancelled subscription straight
+# //// back to Active while cancelation_date stayed, leaving can_generate_new_invoice() to
+# //// refuse for ever with nothing saying so (6da35b6ef3 "fix(subscription): a cancelled
+# //// subscription stays cancelled", dmis, ACC-SUB-2026-00001, #230). Both directions are
+# //// asserted: cancelled stays cancelled, and a settled account that was never cancelled
+# //// still becomes Active.
 class TestCancelledStaysCancelled(unittest.TestCase):
 	"""set_subscription_status() after cancel_subscription(): the status must not come back.
 
@@ -151,3 +158,4 @@ class TestCancelledStaysCancelled(unittest.TestCase):
 		sub = self._subscription("Unpaid", None)
 		sub.set_subscription_status(nowdate())
 		self.assertEqual(sub.status, "Active")
+# //// Neoffice ▲▲▲
