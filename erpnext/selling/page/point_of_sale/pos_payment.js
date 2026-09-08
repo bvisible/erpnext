@@ -107,35 +107,34 @@ erpnext.PointOfSale.Payment = class {
 		this.numpad_value = "";
 	}
 
-	//// Neoffice — on_numpad_clicked made async and made to WAIT for this.selected_mode (poll every
-	//// 100 ms). Upstream assumes a payment mode is already selected when a numpad key is pressed;
-	//// with our default-mode selection running in a setTimeout (marked at the end of this file), a
-	//// fast cashier hit the numpad first and got a TypeError on undefined.
-	//// TO REVIEW before the upstream merge:
-	////   - the wait has NO timeout: if no mode is ever selected the interval runs forever;
-	////   - upstream's unguarded `this.selected_mode.$input.get(0).focus();` is still there, one line
-	////     ABOVE the `if (this.selected_mode.$input)` guard that was added to replace it — so the
-	////     guard cannot do its job; delete the first line.
-	////   - the "changes from v14 not applied. Maybe conflict" note is the original author's: this
-	////     method was already an unresolved v14→v15 carry-over.
-	//// changes from v14 not applied. Maybe conflict
+	//// Neoffice — on_numpad_clicked made async and made to WAIT for this.selected_mode. Upstream
+	//// assumes a payment mode is already selected when a numpad key is pressed; with our
+	//// default-mode selection running in a setTimeout (marked at the end of this file), a fast
+	//// cashier hit the numpad first and got a TypeError on undefined.
+	////
+	//// Repaired 2026-09-08 (neoffice-maintenance#207), on the money path, two defects deep:
+	////   - the guard `if (this.selected_mode.$input)` sat one line BELOW upstream's unguarded
+	////     `this.selected_mode.$input.get(0).focus();`, so the very statement it was meant to
+	////     replace threw first: the guard had never once done its job. That line is gone.
+	////   - the wait polled every 100 ms with NO timeout: on a screen where no mode is ever
+	////     selected (none configured, or the default-mode setTimeout failed), the interval ran
+	////     for ever and the promise never settled — one leaked interval per numpad press, and a
+	////     numpad that answered nothing at all. It is now bounded, and a press that times out
+	////     keeps the digit (the cashier does not retype it) instead of throwing on a mode that
+	////     is not there.
+	//// The "changes from v14 not applied. Maybe conflict" note was the original author's: this
+	//// method was already an unresolved v14->v15 carry-over.
 	async on_numpad_clicked($btn) { //// async added
 		const button_value = $btn.attr("data-button-value");
-		//// Wait for this.selected_mode to be defined
-		await new Promise(resolve => {
-			const intervalId = setInterval(() => {
-				if (this.selected_mode) {
-					clearInterval(intervalId);
-					resolve();
-				}
-			}, 100);
-		});
-		////
+		//// Wait for a payment mode to be selected — but not for ever.
+		await this.wait_for_selected_mode();
 
 		highlight_numpad_btn($btn);
 		this.numpad_value =
 			button_value === "delete" ? this.numpad_value.slice(0, -1) : this.numpad_value + button_value;
-		this.selected_mode.$input.get(0).focus();
+		//// No mode after the wait: keep the typed value and stop here. Writing it needs a mode,
+		//// and throwing would take the whole payment screen down.
+		if (!this.selected_mode) return;
 		if (this.selected_mode.$input) { //// added if condition
 			this.selected_mode.$input.get(0).focus();
 		} //// end if
@@ -147,6 +146,22 @@ erpnext.PointOfSale.Payment = class {
 				$btn.removeClass("shadow-base-inner bg-selected");
 			}, 100);
 		}
+	}
+
+	//// Neoffice — added (no upstream equivalent, neoffice-maintenance#207). Resolves as soon as a
+	//// payment mode is selected, and gives up after SELECTED_MODE_WAIT_MS so the interval can
+	//// never outlive the press that started it. Returns whether a mode showed up.
+	wait_for_selected_mode(timeout = 3000) {
+		if (this.selected_mode) return Promise.resolve(true);
+		return new Promise((resolve) => {
+			const started = Date.now();
+			const interval = setInterval(() => {
+				if (this.selected_mode || Date.now() - started >= timeout) {
+					clearInterval(interval);
+					resolve(Boolean(this.selected_mode));
+				}
+			}, 100);
+		});
 	}
 
 	bind_events() {
