@@ -31,16 +31,28 @@ concurrency:
   group: fork-tests-${{ github.ref }}
   cancel-in-progress: true
 
+# ONE JOB PER MODULE, on purpose: `bench run-tests --module A --module B` keeps only the
+# LAST one and says nothing about the others — a silent way to test a fraction of what you
+# listed. A second module therefore gets a second job, never a second --module.
 jobs:
-  ci:
+  subscription:
+    name: subscription — the gate that bills
     uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
     with:
       app: erpnext
       erpnext_bootstrap: false # erpnext IS the app under test: its own before_tests runs
       skip_build: true # no app build: erpnext ships no SPA
       build_frappe_assets: true # a test that queues an e-mail inlines CSS through assets.json
-      # One --module per call would keep only the LAST one (bench run-tests drops the
-      # others silently), so the classes we add live under one module path today. When a
-      # second module arrives, add a second job rather than a second --module.
       test_args: "--module erpnext.accounts.doctype.subscription.test_subscription_neoffice"
+    secrets: inherit
+
+  quotation:
+    name: quotation — the expiry job and a signed offer
+    uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
+    with:
+      app: erpnext
+      erpnext_bootstrap: false
+      skip_build: true
+      build_frappe_assets: true
+      test_args: "--module erpnext.selling.doctype.quotation.test_quotation_neoffice"
     secrets: inherit
