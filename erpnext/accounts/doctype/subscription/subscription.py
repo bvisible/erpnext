@@ -221,6 +221,14 @@ class Subscription(Document):
 		"""
 		Sets the status of the `Subscription`
 		"""
+		# //// Neoffice — a cancelled subscription stays cancelled (neoffice-maintenance#230).
+		# //// process() calls cancel_subscription() and then this method; with nothing
+		# //// outstanding, the last branch below set the status straight back to Active while
+		# //// cancelation_date stayed: an Active subscription that can_generate_new_invoice()
+		# //// refuses for ever, silently (dmis, ACC-SUB-2026-00001). restart_subscription() is
+		# //// the one way back, and it clears the date. Upstream version-15 has the same code.
+		if self.status == "Cancelled" and self.cancelation_date:
+			return
 		if self.is_trialling():
 			self.status = "Trialling"
 		elif self.status == "Active" and self.end_date and getdate(posting_date) > getdate(self.end_date):

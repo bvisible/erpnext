@@ -119,3 +119,35 @@ class TestSubscriptionInvoiceGate(unittest.TestCase):
 		# ... unless the subscription is allowed to bill past the due date
 		sub.generate_new_invoices_past_due_date = 1
 		self.assertTrue(sub.can_generate_new_invoice(nowdate()))
+
+
+class TestCancelledStaysCancelled(unittest.TestCase):
+	"""set_subscription_status() after cancel_subscription(): the status must not come back.
+
+	process() cancels at period end and then calls set_subscription_status(); with nothing
+	outstanding, its last branch set the status straight back to Active while
+	cancelation_date stayed -- an Active subscription that can_generate_new_invoice()
+	refuses for ever, silently (dmis, ACC-SUB-2026-00001, #230). Upstream has the same code.
+	"""
+
+	def _subscription(self, status, cancelation_date):
+		doc = frappe.new_doc("Subscription")
+		doc.update({"status": status, "cancelation_date": cancelation_date, "end_date": None})
+		# the database-backed questions the method asks, answered as a settled account
+		doc.is_trialling = lambda: False
+		doc.is_past_grace_period = lambda: False
+		doc.current_invoice_is_past_due = lambda: False
+		doc.has_outstanding_invoice = lambda: False
+		return doc
+
+	def test_a_cancelled_subscription_with_nothing_outstanding_stays_cancelled(self):
+		sub = self._subscription("Cancelled", nowdate())
+		sub.set_subscription_status(nowdate())
+		self.assertEqual(sub.status, "Cancelled", "a settled account must not undo a cancellation")
+		self.assertEqual(getdate(sub.cancelation_date), getdate(nowdate()))
+
+	def test_a_settled_subscription_that_was_never_cancelled_still_becomes_active(self):
+		"""The other direction: the guard must not freeze the method."""
+		sub = self._subscription("Unpaid", None)
+		sub.set_subscription_status(nowdate())
+		self.assertEqual(sub.status, "Active")
