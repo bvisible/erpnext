@@ -52,5 +52,6 @@ def get_default_energy_point_rules():
 			"points": rule.get("points"),
 			"user_field": rule.get("user_field") or "owner",
 		}
+		# //// Neoffice — see the block marker above: constant became a function call
 		for doctype, rule in doctype_rule_map().items()
 	]
