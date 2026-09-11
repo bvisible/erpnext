@@ -169,4 +169,14 @@ conflict at the merge.
 
 ---
 
+## Auto-marked (fork-markers workflow)
+
+- `erpnext/setup/workspace/home/home.json` — reverted the draft-orders count number card and the
+  Document Scan shortcut (in place of Videoconference) that `5b2e5a0ab2` had added — Home stays
+  sourced from the hub like every other workspace; keeping the JSON change would have given Home
+  two sources and a migrate re-import racing the hub sync (`c54de4b231` "Revert \"feat(home): count
+  draft orders, Document Scan instead of Videoconference\"").
+
+---
+
 *Written by the `//// Neoffice` marking campaign, lot E1 (neoffice-maintenance #138).*
