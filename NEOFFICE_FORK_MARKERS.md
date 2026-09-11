@@ -167,23 +167,6 @@ conflict at the merge.
   DocType: the test customers were given a currency because `default_currency` is `reqd` on our
   Customer (see above).
 
-## Workspaces
-
-#### `erpnext/setup/workspace/home/home.json`
-The whole layout is ours since `fe317f8402` (2026-06-12, *Neoffice workspace layouts*): Quick Access
-shortcuts, application tiles, information quick lists. Since neoffice_custom_fields `c0e3164`
-(neoffice-maintenance #158) the hub mirror no longer overwrites Home — **this file is the only way a
-Home change reaches the fleet**, through `bench migrate`, and only when its `modified` is newer than
-the site's Home. Upstream's Home has none of it; a merge must keep ours.
-
-Changes after the initial layout:
-- 2026-09-11 — Sales Order and Purchase Order badges count **drafts** too (`Draft` added to their
-  `stats_filter`); the Sales Order badge reads `{} Open` instead of `{}  To Deliver`, since a draft is
-  not yet to deliver. The last Quick Access tile, *Videoconference* (URL `/meet`), becomes the
-  *Document Scan* shortcut of the Accounting workspace (DocType from neoffice_theme, badge = scans not
-  yet processed); the layout block keeps its id. Importing is safe without neoffice_theme:
-  `import_doc` sets `ignore_links`.
-
 ---
 
 *Written by the `//// Neoffice` marking campaign, lot E1 (neoffice-maintenance #138).*
