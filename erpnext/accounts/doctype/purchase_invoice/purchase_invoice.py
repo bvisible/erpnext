@@ -1163,12 +1163,15 @@ class PurchaseInvoice(BuyingController):
 					)
 
 					# //// Neoffice — upstream: `amount, base_amount = self.get_amount_and_base_amount(item, None)`.
-					# //// Ours passes flat_rate on (the override lives in controllers/accounts_controller.py) AND
-					# //// swaps the two return values — check the controller signature before touching either side.
+					# //// Ours passes flat_rate on (the override lives in controllers/accounts_controller.py). From 02.02.2026
+					# //// (e8aaf3e9d7) to 14.09.2026 the two return values were unpacked the other way round: the expense line
+					# //// was debited in the invoice currency, so a foreign-currency invoice booked here could not be submitted
+					# //// (debit and credit differed by the exchange difference). The controller returns (amount, base_amount),
+					# //// as upstream, and sales_invoice.py reads it that way.
 					# //// The block that follows adds the item VAT back into the expense when the flat-rate method
 					# //// applies and the line was booked net (or an invoice-level discount shifted it), reading the
 					# //// rate from the line's Item Tax Template. Same lineage as the header marker above.
-					base_amount, amount = self.get_amount_and_base_amount(item, None, flat_rate) # //// added flat_rate
+					amount, base_amount = self.get_amount_and_base_amount(item, None, flat_rate) # //// added flat_rate
 					account_currency = get_account_currency(expense_account)
 					# //// added
 					if flat_rate and (tax_excluded or self.get("discount_amount")):
