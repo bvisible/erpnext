@@ -162,8 +162,10 @@ class EmailDigest(Document):
 				context.purchase_order_list,
 				context.purchase_orders_items_overdue_list,
 			) = self.get_purchase_orders_items_overdue_list()
-			if not context.purchase_order_list:
-				frappe.throw(_("No items to be received are overdue"))
+			# //// Neoffice — upstream b034f3d3db (backport #51827) removed the throw that
+			# //// stood here: an empty overdue list is not an error, and raising lost the
+			# //// whole digest on any day with nothing overdue (demo, 14.09). Our fork left
+			# //// v15.89.0 before that fix; drop this note with the v15 catch-up (#138).
 
 		if not context:
 			return None
