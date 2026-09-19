@@ -1,3 +1,6 @@
+# //// Neoffice — HTML entities (&#39; &quot; &amp;) removed from the French msgstr:
+# //// an old translation import left them, and Frappe escapes a label itself, so
+# //// "Journal d&#39;accès" showed literally. Keep them out on upstream merges.
 # Translations template for ERPNext.
 # Copyright (C) 2026 Frappe Technologies Pvt. Ltd.
 # This file is distributed under the same license as the ERPNext project.
@@ -2546,7 +2549,7 @@ msgid ""
 "Accounting Dimension <b>{0}</b> is required for 'Balance Sheet' account {1}."
 msgstr ""
 "La dimension de comptabilité <b>{0}</b> est requise pour le compte "
-"&quot;Bilan&quot; {1}."
+"\"Bilan\" {1}."
 
 #: erpnext/accounts/doctype/gl_entry/gl_entry.py:195
 #: erpnext/accounts/doctype/payment_ledger_entry/payment_ledger_entry.py:140
@@ -4021,7 +4024,7 @@ msgstr "Adresse"
 #: erpnext/stock/doctype/delivery_note/delivery_note.json
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.json
 msgid "Address & Contact"
-msgstr "Adresse &amp; Contact"
+msgstr "Adresse & Contact"
 
 #. Label of a Section Break field in DocType 'Lead'
 #. Label of a Tab Break field in DocType 'Employee'
@@ -4030,7 +4033,7 @@ msgstr "Adresse &amp; Contact"
 #: erpnext/setup/doctype/employee/employee.json
 #: erpnext/setup/doctype/sales_partner/sales_partner.json
 msgid "Address & Contacts"
-msgstr "Adresse &amp; Contacts"
+msgstr "Adresse & Contacts"
 
 #. Label of a Link in the Financial Reports Workspace
 #. Name of a report
@@ -13661,7 +13664,7 @@ msgid ""
 "Note' and submit again"
 msgstr ""
 "Impossible de créer une note de crédit automatiquement, décochez la case "
-"&quot;Emettre une note de crédit&quot; et soumettez à nouveau"
+"\"Emettre une note de crédit\" et soumettez à nouveau"
 
 #: erpnext/erpnext_integrations/doctype/plaid_settings/plaid_settings.py:353
 msgid "Could not detect the Company for updating Bank Accounts"
@@ -18588,7 +18591,7 @@ msgstr ""
 #. Label of a Check field in DocType 'Bank Statement Import'
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.json
 msgid "Don't Send Emails"
-msgstr "Ne pas envoyer d&#39;emails"
+msgstr "Ne pas envoyer d'emails"
 
 #. Label of a Check field in DocType 'Transaction Deletion Record Details'
 #: erpnext/accounts/doctype/transaction_deletion_record_details/transaction_deletion_record_details.json
@@ -21696,7 +21699,7 @@ msgid ""
 "type stock entry"
 msgstr ""
 "Pour la carte de travail {0}, vous pouvez uniquement saisir une entrée de "
-"stock de type &quot;Transfert d'article pour fabrication&quot;."
+"stock de type \"Transfert d'article pour fabrication\"."
 
 #: erpnext/manufacturing/doctype/work_order/work_order.py:1664
 msgid ""
@@ -21736,7 +21739,7 @@ msgstr "Pour la ligne {0}: entrez la quantité planifiée"
 #: erpnext/accounts/doctype/pricing_rule/pricing_rule.py:178
 msgid "For the 'Apply Rule On Other' condition the field {0} is mandatory"
 msgstr ""
-"Pour la condition &quot;Appliquer la règle à l'autre&quot;, le champ {0} est"
+"Pour la condition \"Appliquer la règle à l'autre\", le champ {0} est"
 " obligatoire"
 
 #. Description of a DocType
@@ -24279,8 +24282,8 @@ msgid ""
 "please enable 'Allow Zero Valuation Rate' in the {0} Item table."
 msgstr ""
 "Si l'article est traité comme un article à taux de valorisation nul dans "
-"cette entrée, veuillez activer &quot;Autoriser le taux de valorisation "
-"nul&quot; dans le {0} tableau des articles."
+"cette entrée, veuillez activer \"Autoriser le taux de valorisation "
+"nul\" dans le {0} tableau des articles."
 
 #: erpnext/manufacturing/doctype/work_order/work_order.js:1046
 msgid ""
@@ -24395,7 +24398,7 @@ msgstr ""
 "Si cette option est configurée «Oui», ERPNext vous empêchera de créer une "
 "facture d'achat sans créer d'abord un reçu d'achat. Cette configuration peut"
 " être remplacée pour un fournisseur particulier en cochant la case "
-"&quot;Autoriser la création de facture d'achat sans reçu d'achat&quot; dans "
+"\"Autoriser la création de facture d'achat sans reçu d'achat\" dans "
 "la fiche fournisseur."
 
 #: erpnext/manufacturing/doctype/manufacturing_settings/manufacturing_settings.js:10
@@ -24776,16 +24779,16 @@ msgstr "Journal d'import"
 #. Label of a HTML field in DocType 'Bank Statement Import'
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.json
 msgid "Import Log Preview"
-msgstr "Importer l&#39;aperçu du journal"
+msgstr "Importer l'aperçu du journal"
 
 #. Label of a HTML field in DocType 'Bank Statement Import'
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.json
 msgid "Import Preview"
-msgstr "Aperçu d&#39;importation"
+msgstr "Aperçu d'importation"
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:41
 msgid "Import Progress"
-msgstr "Progression de l&#39;importation"
+msgstr "Progression de l'importation"
 
 #: erpnext/accounts/doctype/chart_of_accounts_importer/chart_of_accounts_importer.js:144
 msgid "Import Successful"
@@ -24799,7 +24802,7 @@ msgstr "Importer la facture fournisseur"
 #. Label of a Select field in DocType 'Bank Statement Import'
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.json
 msgid "Import Type"
-msgstr "Type d&#39;importation"
+msgstr "Type d'importation"
 
 #: erpnext/public/js/utils/serial_no_batch_selector.js:217
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.js:84
@@ -24809,7 +24812,7 @@ msgstr "Importer en utilisant un fichier CSV"
 #. Label of a HTML field in DocType 'Bank Statement Import'
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.json
 msgid "Import Warnings"
-msgstr "Avertissements d&#39;importation"
+msgstr "Avertissements d'importation"
 
 #: erpnext/edi/doctype/code_list/code_list_import.js:130
 msgid "Import completed. {0} common codes created."
@@ -29555,7 +29558,7 @@ msgstr "Chargement des factures ! Veuillez patienter..."
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:280
 msgid "Loading import file..."
-msgstr "Chargement du fichier d&#39;importation ..."
+msgstr "Chargement du fichier d'importation ..."
 
 #: erpnext/www/pos-viewer/index.html:66
 msgid "Loading..."
@@ -33385,7 +33388,7 @@ msgid ""
 "Billing Interval Count is 3, invoices will be generated every 3 days"
 msgstr ""
 "Nombre d'intervalles pour le champ d'intervalle, par exemple si Intervalle "
-"est &quot;Jours&quot; et si le décompte d'intervalle de facturation est 3, "
+"est \"Jours\" et si le décompte d'intervalle de facturation est 3, "
 "les factures seront générées tous les 3 jours"
 
 #: erpnext/accounts/doctype/account/account_tree.js:132
@@ -56233,8 +56236,8 @@ msgid ""
 "To allow over billing, update \"Over Billing Allowance\" in Accounts "
 "Settings or the Item."
 msgstr ""
-"Pour autoriser la facturation excédentaire, mettez à jour &quot;Provision de"
-" facturation excédentaire&quot; dans les paramètres de compte ou le poste."
+"Pour autoriser la facturation excédentaire, mettez à jour \"Provision de"
+" facturation excédentaire\" dans les paramètres de compte ou le poste."
 
 #: erpnext/controllers/status_updater.py:343
 msgid ""
@@ -56242,7 +56245,7 @@ msgid ""
 " in Stock Settings or the Item."
 msgstr ""
 "Pour autoriser le dépassement de réception / livraison, mettez à jour "
-"&quot;Limite de dépassement de réception / livraison&quot; dans les "
+"\"Limite de dépassement de réception / livraison\" dans les "
 "paramètres de stock ou le poste."
 
 #. Description of the 'Mandatory Depends On' (Small Text) field in DocType
@@ -57859,7 +57862,7 @@ msgstr "Facteur de Conversion de l'UdM"
 #: erpnext/manufacturing/doctype/production_plan/production_plan.py:1326
 msgid "UOM Conversion factor ({0} -> {1}) not found for item: {2}"
 msgstr ""
-"Facteur de conversion UdM ({0} -&gt; {1}) introuvable pour l'article: {2}"
+"Facteur de conversion UdM ({0} -> {1}) introuvable pour l'article: {2}"
 
 #: erpnext/buying/utils.py:43
 msgid "UOM Conversion factor is required in row {0}"
@@ -61463,7 +61466,7 @@ msgstr "doctype"
 #. Description of the 'Coupon Name' (Data) field in DocType 'Coupon Code'
 #: erpnext/accounts/doctype/coupon_code/coupon_code.json
 msgid "e.g. \"Summer Holiday 2019 Offer 20\""
-msgstr "ex. &quot;Offre vacances d'été 2019 20&quot;"
+msgstr "ex. \"Offre vacances d'été 2019 20\""
 
 #. Description of the 'Shipping Rule Label' (Data) field in DocType 'Shipping
 #. Rule'
