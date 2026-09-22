@@ -375,60 +375,6 @@ def get_customer_list(search_term=""):
 
 
 @frappe.whitelist()
-def trigger_twint_payment(pos_opening_entry, order_uuid, qr_code, pairing_token, amount):
-	"""
-	Trigger Twint payment display on POS Viewer.
-	Called from POS when Twint payment is initiated.
-	"""
-	if not frappe.has_permission("POS Invoice", "write"):
-		frappe.throw(_("Insufficient permissions to trigger payment"))
-
-	# Store Twint payment data in cache with 10 minute expiry
-	cache_key = f"pos_twint_payment_{pos_opening_entry}"
-	payment_data = {
-		"order_uuid": order_uuid,
-		"qr_code": qr_code,
-		"pairing_token": pairing_token,
-		"amount": amount,
-		"status": "PENDING",
-		"timestamp": frappe.utils.now()
-	}
-	frappe.cache().set_value(cache_key, payment_data, expires_in_sec=600)
-
-	return {"success": True}
-
-
-@frappe.whitelist()
-def get_twint_payment(pos_opening_entry):
-	"""
-	Get current Twint payment data for POS Viewer.
-	Returns payment data if a Twint payment is active, empty dict otherwise.
-	"""
-	if not frappe.has_permission("POS Invoice", "read"):
-		frappe.throw(_("Insufficient permissions to read payment data"))
-
-	cache_key = f"pos_twint_payment_{pos_opening_entry}"
-	payment_data = frappe.cache().get_value(cache_key)
-
-	return payment_data or {}
-
-
-@frappe.whitelist()
-def clear_twint_payment(pos_opening_entry):
-	"""
-	Clear Twint payment data from cache.
-	Called when payment is completed or cancelled.
-	"""
-	if not frappe.has_permission("POS Invoice", "write"):
-		frappe.throw(_("Insufficient permissions to clear payment"))
-
-	cache_key = f"pos_twint_payment_{pos_opening_entry}"
-	frappe.cache().delete_value(cache_key)
-
-	return {"success": True}
-
-
-@frappe.whitelist()
 def clear_cart_data(pos_opening_entry, sale_completed=False):
 	"""
 	Clear cart data from cache.
