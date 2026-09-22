@@ -171,6 +171,11 @@ conflict at the merge.
 
 ## Auto-marked (fork-markers workflow)
 
+- `erpnext/setup/workspace/setup/setup.json` — removed the "Terminal Setup" link (payment-terminal
+  card, pointed at Page `terminal-setup`) — that page has never existed in this repository so the
+  link was a dead end since it was introduced by `fe317f8402`; `payment-terminal-wizard`, right
+  after it in the same card, already does that job (`e993714031` "fix(workspace): Setup linked to a
+  page that has never existed").
 - `erpnext/setup/workspace/home/home.json` — reverted the draft-orders count number card and the
   Document Scan shortcut (in place of Videoconference) that `5b2e5a0ab2` had added — Home stays
   sourced from the hub like every other workspace; keeping the JSON change would have given Home
