@@ -222,10 +222,20 @@ def create_customer_or_supplier():
 	return party
 
 # //// Neoffice ▲▲▲ end of the rewritten create_customer_or_supplier (see its header above).
-# //// create_party_contact itself is upstream's, unchanged.
+# //// create_party_contact is upstream's but for the names it gives the contact (see inside).
 def create_party_contact(doctype, fullname, user, party_name):
 	contact = frappe.new_doc("Contact")
-	contact.update({"first_name": fullname, "email_id": user})
+	# //// Neoffice — the User's own first and last names when it carries both: upstream wrote the
+	# //// full name as the first name and none as the last, so the shop's checkout greeted a new
+	# //// account with "Ana Rossi" as its first name and an empty last name, a required field
+	# //// (neoffice-maintenance#691 D-9, 2026-09-25). A User with a single name keeps upstream's, and
+	# //// so does a contact the caller names apart (the "-Customer" of a user who is a supplier too).
+	names = frappe.db.get_value("User", user, ["first_name", "last_name"], as_dict=True) or {}
+	first_name, last_name = (names.get("first_name") or "").strip(), (names.get("last_name") or "").strip()
+	if first_name and last_name and fullname == frappe.utils.get_fullname(user):
+		contact.update({"first_name": first_name, "last_name": last_name, "email_id": user})
+	else:
+		contact.update({"first_name": fullname, "email_id": user})
 	contact.append("links", dict(link_doctype=doctype, link_name=party_name))
 	contact.append("email_ids", dict(email_id=user, is_primary=True))
 	contact.flags.ignore_mandatory = True
