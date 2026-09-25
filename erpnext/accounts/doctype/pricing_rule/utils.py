@@ -649,10 +649,19 @@ def apply_pricing_rule_on_transaction(doc):
 							continue
 						elif doc.doctype == "Sales Invoice":
 							continue
-						else:
-							# if coupon code based but no coupon code selected
-							doc.set(field, 0)
 						# //// END : Add bypass for gift card coupon
+						# //// Neoffice — upstream resets the field to 0 here ("coupon code based but no coupon
+						# //// code selected"). It cannot tell the discount a coupon gave from one a user typed:
+						# //// any coupon-based transaction rule of the company (each gift card sold at the till
+						# //// creates one) wiped the additional discount of every quotation, sales order and
+						# //// delivery note at save, without a message (neoffice-maintenance#744). Only the
+						# //// discount this rule gave goes: its coupon was removed by this save and the value
+						# //// was left as the coupon set it. A discount typed by a user stays.
+						elif _is_discount_of_removed_coupon(doc, d, field):
+							doc.set(field, 0)
+							if field == "additional_discount_percentage":
+								# the amount derives from the percentage, and a zero percentage no longer recomputes it
+								doc.set("discount_amount", 0)
 
 				doc.calculate_taxes_and_totals()
 
@@ -665,6 +674,19 @@ def apply_pricing_rule_on_transaction(doc):
 				apply_pricing_rule_for_free_items(doc, item_details.free_item_data)
 				doc.set_missing_values()
 				doc.calculate_taxes_and_totals()
+
+
+# //// Neoffice — added helper (no upstream equivalent), see its caller in
+# //// apply_pricing_rule_on_transaction (neoffice-maintenance#744).
+def _is_discount_of_removed_coupon(doc, pricing_rule, field):
+	"""True when this save took off the coupon of `pricing_rule` and left `field` as the coupon set it."""
+	previous = doc.get_doc_before_save()
+	if not previous or not previous.get("coupon_code"):
+		return False
+	if frappe.db.get_value("Coupon Code", previous.coupon_code, "pricing_rule") != pricing_rule.name:
+		return False
+	precision = doc.precision(field)
+	return flt(doc.get(field), precision) == flt(previous.get(field), precision)
 
 
 def remove_free_item(doc):
