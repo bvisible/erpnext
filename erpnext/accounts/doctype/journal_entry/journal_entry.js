@@ -813,6 +813,23 @@ erpnext.journal_entry_utils.getCompanyVatInfo = function(companyName, callback) 
         erpnext.journal_entry_utils._vatInfoCache = {};
     }
 
+    //// Neoffice — the company's VAT status comes with the desk's boot
+    //// (neoffice_theme.vat_utils.extend_bootinfo, 28.09). Neoffice Company Settings
+    //// also holds the company's bank accounts, and a bookkeeper may not read it: the
+    //// read below was refused with a popup at every journal entry, and a refused read
+    //// never calls back, so the VAT fields never settled. The read stays for a
+    //// company the boot does not know yet (created since the page loaded).
+    const booted = ((frappe.boot && frappe.boot.neo_company_vat) || {})[companyName];
+    if (booted) {
+        const vatInfo = {
+            isVatCompany: Boolean(booted.is_vat_company),
+            vatMethod: booted.vat_accounting_method || null
+        };
+        if (typeof callback === 'function') callback(vatInfo);
+        return;
+    }
+    //// END Neoffice ////
+
     // is_vat_company moved to Neoffice Company Settings, vat_accounting_method also there
     frappe.db.get_value("Neoffice Company Settings", companyName, "is_vat_company", (result) => {
         const vatInfo = {
