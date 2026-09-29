@@ -1008,6 +1008,20 @@ class ShippingRule(Document):
 			except Exception as e:
 				frappe.log_error("ShippingRule",f"Error processing shipping rule taxes: {str(e)}")
 		
+		# //// Neoffice — no VAT on the shipping of a sale abroad (maintenance#969, 2026-09-29). The rule reads
+		# //// the rates of its `taxable_account` template and adds one VAT row per rate, whatever the customer:
+		# //// an export invoice came out with Swiss VAT (8.1 %) on its freight. The transport of goods in
+		# //// connection with an export, and every service that goes with it, is exempt (art. 23 al. 2 LTVA; AFC,
+		# //// "Principes de la TVA", 5.2.2.4). A document whose tax category is one of the "abroad" categories
+		# //// (Tax Category.vat_foreign, from erpnextswiss) gets the freight without the VAT rows; the amount
+		# //// stays the net one worked out above. Drop when the shipping rule picks its template by category.
+		if (
+			tax_rows
+			and doc.get("tax_category")
+			and frappe.get_meta("Tax Category").has_field("vat_foreign")
+			and frappe.db.get_value("Tax Category", doc.tax_category, "vat_foreign")
+		):
+			tax_rows = []
 		# Add the shipping charge
 		if self.shipping_rule_type == "Selling":
 			# For selling, we just need basic fields
