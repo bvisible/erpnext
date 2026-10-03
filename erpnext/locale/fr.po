@@ -3242,6 +3242,7 @@ msgstr "Actions"
 msgid "Actions performed"
 msgstr "Actions réalisées"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #. Option for the 'Status' (Select) field in DocType 'Subscription'
 #. Option for the 'Status' (Select) field in DocType 'Asset Depreciation
 #. Schedule'
@@ -3260,7 +3261,7 @@ msgstr "Actions réalisées"
 #: erpnext/stock/doctype/putaway_rule/putaway_rule_list.js:7
 #: erpnext/stock/doctype/serial_no/serial_no.json
 msgid "Active"
-msgstr "actif"
+msgstr "Actif"
 
 #: erpnext/selling/page/sales_funnel/sales_funnel.py:55
 msgid "Active Leads"
@@ -7514,6 +7515,7 @@ msgstr "Qté Disponible à l'Entrepôt"
 msgid "Available Qty to Reserve"
 msgstr "Qté disponible à réserver"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #. Label of a Section Break field in DocType 'Sales Invoice Item'
 #. Label of a Section Break field in DocType 'Quotation Item'
 #. Label of a Section Break field in DocType 'Sales Order Item'
@@ -7523,7 +7525,7 @@ msgstr "Qté disponible à réserver"
 #: erpnext/selling/doctype/sales_order_item/sales_order_item.json
 #: erpnext/stock/doctype/quick_stock_balance/quick_stock_balance.json
 msgid "Available Quantity"
-msgstr "quantité disponible"
+msgstr "Quantité disponible"
 
 #. Name of a report
 #: erpnext/stock/report/available_serial_no/available_serial_no.json
@@ -8377,6 +8379,7 @@ msgstr "Le compte bancaire/caisse {0} n'appartient pas à la société {1}"
 msgid "Banking"
 msgstr "Banque"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #. Label of a Data field in DocType 'POS Invoice Item'
 #. Label of a Data field in DocType 'Sales Invoice Item'
 #. Label of a Barcode field in DocType 'Job Card'
@@ -8395,7 +8398,7 @@ msgstr "Banque"
 #: erpnext/stock/doctype/stock_entry_detail/stock_entry_detail.json
 #: erpnext/stock/doctype/stock_reconciliation_item/stock_reconciliation_item.json
 msgid "Barcode"
-msgstr "code à barre"
+msgstr "Code-barres"
 
 #. Label of a Select field in DocType 'Item Barcode'
 #: erpnext/stock/doctype/item_barcode/item_barcode.json
@@ -8524,10 +8527,11 @@ msgstr "Basé sur les conditions de paiement"
 msgid "Based On Price List"
 msgstr "Basé sur la liste de prix"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #. Label of a Dynamic Link field in DocType 'Party Specific Item'
 #: erpnext/selling/doctype/party_specific_item/party_specific_item.json
 msgid "Based On Value"
-msgstr "critére de restriction"
+msgstr "Critère de restriction"
 
 #: erpnext/setup/doctype/holiday_list/holiday_list.js:60
 msgid ""
@@ -14074,9 +14078,10 @@ msgstr "Créer une Commande d'Achat"
 msgid "Create Purchase Orders"
 msgstr "Créer des Commandes d'Achat"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #: erpnext/utilities/activation.py:88
 msgid "Create Quotation"
-msgstr "créer offre"
+msgstr "Créer un devis"
 
 #. Title of an Onboarding Step
 #: erpnext/manufacturing/onboarding_step/create_raw_materials/create_raw_materials.json
@@ -14891,12 +14896,13 @@ msgstr "Valeur actuelle de l'actif"
 msgid "Current Assets"
 msgstr "Actifs Actuels"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #. Label of a Link field in DocType 'BOM Update Log'
 #. Label of a Link field in DocType 'BOM Update Tool'
 #: erpnext/manufacturing/doctype/bom_update_log/bom_update_log.json
 #: erpnext/manufacturing/doctype/bom_update_tool/bom_update_tool.json
 msgid "Current BOM"
-msgstr "nomenclature Actuelle"
+msgstr "Nomenclature actuelle"
 
 #: erpnext/manufacturing/doctype/bom_update_log/bom_update_log.py:77
 msgid "Current BOM and New BOM can not be same"
@@ -19088,10 +19094,11 @@ msgstr "Âge le plus précoce"
 msgid "Earnest Money"
 msgstr "Arrhes"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #: erpnext/manufacturing/doctype/bom/bom_tree.js:51
 #: erpnext/setup/doctype/employee/employee_tree.js:18
 msgid "Edit"
-msgstr "modifier"
+msgstr "Modifier"
 
 #: erpnext/stock/page/warehouse_capacity_summary/warehouse_capacity_summary.html:37
 msgid "Edit Capacity"
@@ -21147,11 +21154,12 @@ msgstr ""
 "GL (doit être activé si le bon de clôture de période n'est pas comptabilisé "
 "pour toutes les années séquentiellement ou est manquant) "
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #: erpnext/manufacturing/doctype/work_order/work_order.js:751
 #: erpnext/manufacturing/doctype/work_order/work_order.js:766
 #: erpnext/manufacturing/doctype/work_order/work_order.js:775
 msgid "Finish"
-msgstr "terminer"
+msgstr "Terminer"
 
 #: erpnext/utilities/doctype/rename_tool/rename_tool.js:78
 msgid "Finished"
@@ -31777,13 +31785,14 @@ msgstr "Plus de détails"
 msgid "More/Less than 12 months."
 msgstr "Plus/Moins de 12 mois."
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #: erpnext/manufacturing/doctype/plant_floor/stock_summary_template.html:58
 #: erpnext/stock/dashboard/item_dashboard_list.html:62
 #: erpnext/stock/doctype/batch/batch.js:91
 #: erpnext/stock/doctype/batch/batch.js:149
 #: erpnext/stock/doctype/batch/batch_dashboard.py:10
 msgid "Move"
-msgstr "mouvement"
+msgstr "Déplacer"
 
 #: erpnext/stock/dashboard/item_dashboard.js:216
 msgid "Move Item"
@@ -32347,9 +32356,10 @@ msgstr "Nom du Nouveau Centre de Coûts"
 msgid "New Customer Revenue"
 msgstr "Nouveaux Revenus de Clientèle"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #: erpnext/selling/report/customer_acquisition_and_loyalty/customer_acquisition_and_loyalty.py:15
 msgid "New Customers"
-msgstr "nouveaux clients"
+msgstr "Nouveaux clients"
 
 #: erpnext/setup/doctype/department/department_tree.js:18
 msgid "New Department"
@@ -32489,10 +32499,11 @@ msgstr "Suivant"
 msgid "Next Depreciation Date"
 msgstr "Date de l’Amortissement Suivant"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #. Label of a Date field in DocType 'Asset Maintenance Task'
 #: erpnext/assets/doctype/asset_maintenance_task/asset_maintenance_task.json
 msgid "Next Due Date"
-msgstr "prochaine date d'échéance"
+msgstr "Prochaine date d'échéance"
 
 #. Label of a Date field in DocType 'Subscription'
 #: erpnext/accounts/doctype/subscription/subscription.json
@@ -34410,6 +34421,7 @@ msgstr ""
 msgid "Options"
 msgstr "Options"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #. Option for the 'Color' (Select) field in DocType 'Supplier Scorecard
 #. Scoring
 #. Standing'
@@ -34417,7 +34429,7 @@ msgstr "Options"
 #: erpnext/buying/doctype/supplier_scorecard_scoring_standing/supplier_scorecard_scoring_standing.json
 #: erpnext/buying/doctype/supplier_scorecard_standing/supplier_scorecard_standing.json
 msgid "Orange"
-msgstr "orange"
+msgstr "Orange"
 
 #: erpnext/selling/report/territory_wise_sales/territory_wise_sales.py:43
 msgid "Order Amount"
@@ -36336,11 +36348,12 @@ msgstr "Limite de paiement"
 msgid "Payment Method"
 msgstr "Mode de paiement"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #. Label of a Section Break field in DocType 'POS Profile'
 #. Label of a Table field in DocType 'POS Profile'
 #: erpnext/accounts/doctype/pos_profile/pos_profile.json
 msgid "Payment Methods"
-msgstr "méthodes de payement"
+msgstr "Méthodes de paiement"
 
 #: erpnext/accounts/report/sales_payment_summary/sales_payment_summary.py:24
 #: erpnext/accounts/report/sales_payment_summary/sales_payment_summary.py:40
@@ -38858,12 +38871,13 @@ msgstr "Clé du titre du message"
 msgid "Postal"
 msgstr "Postal"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #. Label of a field in the addresses Web Form
 #: erpnext/crm/report/lead_details/lead_details.py:59
 #: erpnext/utilities/web_form/addresses/addresses.json
 #: erpnext/www/pos-viewer/index.html:221
 msgid "Postal Code"
-msgstr "code postal"
+msgstr "Code postal"
 
 #: erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts.py:64
 #: erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts_with_account_number.py:88
@@ -40450,6 +40464,7 @@ msgstr "Invitation de Collaboration à un Projet"
 msgid "Project Id"
 msgstr "ID du projet"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #. Label of a Data field in DocType 'Sales Invoice Timesheet'
 #. Label of a Data field in DocType 'Project'
 #. Label of a Data field in DocType 'Timesheet Detail'
@@ -40459,7 +40474,7 @@ msgstr "ID du projet"
 #: erpnext/projects/report/project_summary/project_summary.py:54
 #: erpnext/projects/report/project_wise_stock_tracking/project_wise_stock_tracking.py:42
 msgid "Project Name"
-msgstr "nom du projet"
+msgstr "Nom du projet"
 
 #: erpnext/templates/pages/projects.html:112
 msgid "Project Progress:"
@@ -40741,9 +40756,10 @@ msgstr "Des publications"
 msgid "Publish Date"
 msgstr "Date de publication"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #: erpnext/utilities/report/youtube_interactions/youtube_interactions.py:22
 msgid "Published Date"
-msgstr "date de publication"
+msgstr "Date de publication"
 
 #. Label of a Data field in DocType 'Code List'
 #: erpnext/edi/doctype/code_list/code_list.json
@@ -40755,6 +40771,7 @@ msgstr "Éditeur"
 msgid "Publisher ID"
 msgstr "ID de l'éditeur"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #. Option for the 'Invoice Type' (Select) field in DocType 'Opening Invoice
 #. Creation Tool'
 #. Option for the 'Transfer Type' (Select) field in DocType 'Share Transfer'
@@ -40781,7 +40798,7 @@ msgstr "ID de l'éditeur"
 #: erpnext/stock/doctype/item_reorder/item_reorder.json
 #: erpnext/stock/doctype/material_request/material_request.json
 msgid "Purchase"
-msgstr "achat"
+msgstr "Achat"
 
 #. Label of a Currency field in DocType 'Loyalty Point Entry'
 #. Label of a Currency field in DocType 'Asset'
@@ -42336,12 +42353,13 @@ msgstr "Créé par"
 msgid "Raised By (Email)"
 msgstr "Créé par (Email)"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #. Option for the 'Periodicity' (Select) field in DocType 'Maintenance
 #. Schedule
 #. Item'
 #: erpnext/maintenance/doctype/maintenance_schedule_item/maintenance_schedule_item.json
 msgid "Random"
-msgstr "aléatoire"
+msgstr "Aléatoire"
 
 #. Label of a Data field in DocType 'Purchase Receipt'
 #. Label of a Data field in DocType 'Subcontracting Receipt'
@@ -43743,12 +43761,13 @@ msgid "Rejected Warehouse and Accepted Warehouse cannot be same."
 msgstr ""
 "L'entrepôt de rejet et l'entrepôt accepté ne peuvent pas être identiques."
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #: erpnext/buying/doctype/purchase_order/purchase_order_dashboard.py:23
 #: erpnext/buying/doctype/supplier_quotation/supplier_quotation_dashboard.py:14
 #: erpnext/stock/doctype/delivery_note/delivery_note_dashboard.py:22
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt_dashboard.py:23
 msgid "Related"
-msgstr "en relation"
+msgstr "En relation"
 
 #. Label of a Data field in DocType 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
@@ -44925,10 +44944,11 @@ msgstr "Ratio de retour sur actif"
 msgid "Return on Equity Ratio"
 msgstr "Ratio de retour sur capitaux propres"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #. Option for the 'Tracking Status' (Select) field in DocType 'Shipment'
 #: erpnext/stock/doctype/shipment/shipment.json
 msgid "Returned"
-msgstr "retourné"
+msgstr "Retourné"
 
 #. Label of a Data field in DocType 'Serial and Batch Bundle'
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.json
@@ -47642,6 +47662,7 @@ msgstr "Sanctionné"
 msgid "Saturday"
 msgstr "Samedi"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:108
 #: erpnext/accounts/doctype/journal_entry/journal_entry.js:2301
 #: erpnext/accounts/doctype/ledger_merge/ledger_merge.js:75
@@ -47649,7 +47670,7 @@ msgstr "Samedi"
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.js:316
 #: erpnext/public/js/call_popup/call_popup.js:169
 msgid "Save"
-msgstr "sauvegarder"
+msgstr "Enregistrer"
 
 #: erpnext/selling/page/point_of_sale/pos_controller.js:245
 msgid "Save as Draft"
@@ -53232,6 +53253,7 @@ msgstr ""
 "L'ID (de connexion) de l'Utilisateur Système. S'il est défini, il deviendra "
 "la valeur par défaut pour tous les formulaires des RH."
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #. Description of the 'Make Serial No / Batch from Work Order' (Check) field
 #. in
 #. DocType 'Manufacturing Settings'
@@ -53240,8 +53262,8 @@ msgid ""
 "System will automatically create the serial numbers / batch for the Finished"
 " Good on submission of work order"
 msgstr ""
-"le systéme va créer des numéros de séries / lots à la validation des produit"
-" finis depuis les Ordres de Fabrications"
+"Le système crée automatiquement les numéros de série / lots du produit fini "
+"à la validation de l'ordre de fabrication"
 
 #. Description of the 'Allow Implicit Pegged Currency Conversion' (Check)
 #. field
@@ -57324,12 +57346,13 @@ msgstr "Détails de l'enregistrement de suppression de transactions"
 msgid "Transaction Deletion Record Item"
 msgstr "Article de l'enregistrement de suppression de transactions"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #. Label of a Section Break field in DocType 'GL Entry'
 #. Label of a Section Break field in DocType 'Payment Request'
 #: erpnext/accounts/doctype/gl_entry/gl_entry.json
 #: erpnext/accounts/doctype/payment_request/payment_request.json
 msgid "Transaction Details"
-msgstr "détails de la transaction"
+msgstr "Détails de la transaction"
 
 #. Label of a Float field in DocType 'GL Entry'
 #: erpnext/accounts/doctype/gl_entry/gl_entry.json
@@ -60463,9 +60486,10 @@ msgstr ""
 " de l'hériter de la commande d'achat. S'applique uniquement aux factures "
 "d'achat."
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #: erpnext/setup/setup_wizard/operations/install_fixtures.py:262
 msgid "White"
-msgstr "blanc"
+msgstr "Blanc"
 
 #. Option for the 'Marital Status' (Select) field in DocType 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
@@ -60984,6 +61008,7 @@ msgstr ""
 msgid "Yearly"
 msgstr "Annuel"
 
+# //// Neoffice — the French label starts with a capital (upstream wrote it in lowercase, as it read in list columns and buttons).
 #. Option for the 'Color' (Select) field in DocType 'Supplier Scorecard
 #. Scoring
 #. Standing'
@@ -60991,7 +61016,7 @@ msgstr "Annuel"
 #: erpnext/buying/doctype/supplier_scorecard_scoring_standing/supplier_scorecard_scoring_standing.json
 #: erpnext/buying/doctype/supplier_scorecard_standing/supplier_scorecard_standing.json
 msgid "Yellow"
-msgstr "jaune"
+msgstr "Jaune"
 
 #. Option for the 'Frozen' (Select) field in DocType 'Account'
 #. Option for the 'Is Opening' (Select) field in DocType 'GL Entry'
