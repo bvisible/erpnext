@@ -172,12 +172,16 @@ def create_log(doc_name, e, from_doctype, to_doctype, status, log_date=None, res
 
 
 def show_job_status(fail_count, deserialized_data_count, to_doctype):
+	# //// Neoffice — upstream passed the three dialog titles as plain English literals (only the
+	# //// Neoffice — message bodies went through _()) and injected the raw English document type
+	# //// Neoffice — name into the bodies. We translate the titles and the displayed document type
+	# //// Neoffice — name; the link target keeps the untranslated name (it builds a URL).
 	if not fail_count:
 		frappe.msgprint(
 			_("Creation of <b><a href='/app/{0}'>{1}(s)</a></b> successful").format(
-				to_doctype.lower().replace(" ", "-"), to_doctype
+				to_doctype.lower().replace(" ", "-"), _(to_doctype)
 			),
-			title="Successful",
+			title=_("Successful"),
 			indicator="green",
 		)
 	elif fail_count != 0 and fail_count < deserialized_data_count:
@@ -185,8 +189,8 @@ def show_job_status(fail_count, deserialized_data_count, to_doctype):
 			_(
 				"""Creation of {0} partially successful.
 				Check <b><a href="/app/bulk-transaction-log">Bulk Transaction Log</a></b>"""
-			).format(to_doctype),
-			title="Partially successful",
+			).format(_(to_doctype)),
+			title=_("Partially successful"),
 			indicator="orange",
 		)
 	else:
@@ -194,7 +198,7 @@ def show_job_status(fail_count, deserialized_data_count, to_doctype):
 			_(
 				"""Creation of {0} failed.
 				Check <b><a href="/app/bulk-transaction-log">Bulk Transaction Log</a></b>"""
-			).format(to_doctype),
-			title="Failed",
+			).format(_(to_doctype)),
+			title=_("Failed"),
 			indicator="red",
 		)
