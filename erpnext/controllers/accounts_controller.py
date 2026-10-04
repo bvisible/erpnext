@@ -212,7 +212,8 @@ class AccountsController(TransactionBase):
 
 			if msg:
 				msg += "<br><br>" + _("You can use {0} to reconcile against {1} later.").format(
-					get_link_to_form("Payment Reconciliation", "Payment Reconciliation"),
+					# //// Neoffice — the link label was the English doctype name, shown inside the translated sentence.
+					get_link_to_form("Payment Reconciliation", "Payment Reconciliation", _("Payment Reconciliation")),
 					get_link_to_form(self.doctype, self.get("return_against")),
 				)
 				frappe.msgprint(msg)
