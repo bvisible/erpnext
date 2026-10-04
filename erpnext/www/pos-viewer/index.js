@@ -566,13 +566,12 @@ class POSViewer {
 			customerDisplay.classList.remove('selected');
 		}
 
-		//// Neoffice — the thank-you title was a French literal next to the English subtitle; both now share one English msgid, so the French screen is unchanged (the same French sentence twice, as before).
 		// Show thank you message
 		if (itemsList) {
 			itemsList.innerHTML = `
 				<div class="thank-you-message">
 					<div class="thank-you-icon">🎉</div>
-					<h2 class="thank-you-title">${__('Thank you for your purchase!')}</h2>
+					<h2 class="thank-you-title">${__('Merci pour votre achat!')}</h2>
 					<p class="thank-you-subtitle">${__('Thank you for your purchase!')}</p>
 				</div>
 			`;

@@ -31102,6 +31102,10 @@ msgstr "Veuillez mentionner s'il s'agit d'un compte créditeur non standard"
 msgid "Mention if non-standard receivable account applicable"
 msgstr "Mentionner si le compte débiteur applicable n'est pas standard"
 
+#: erpnext/www/pos-viewer/index.js:572
+msgid "Merci pour votre achat!"
+msgstr "Merci pour votre achat !"
+
 #: erpnext/accounts/doctype/account/account.js:151
 msgid "Merge"
 msgstr "Fusionner"
