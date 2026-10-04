@@ -180,7 +180,13 @@ class AccountsController(TransactionBase):
 			against_voucher_outstanding = frappe.get_value(
 				self.doctype, self.return_against, "outstanding_amount"
 			)
-			document_type = "Credit Note" if self.doctype == "Sales Invoice" else "Debit Note"
+			# //// Neoffice — cherry-picked from upstream version-15 8f6095d05f (drop at the next upstream
+			# //// merge): upstream composed this message in three pieces and then called _() on the
+			# //// already-formatted text, so no catalog entry could ever match and the credit note
+			# //// message stayed English on every save. Upstream now has one _() per template. On top of
+			# //// that, upstream still injects the English literals "Credit Note" / "Debit Note" into the
+			# //// translated sentence (develop, v16 and v15 alike): we translate them before injecting.
+			document_type = _("Credit Note") if self.doctype == "Sales Invoice" else _("Debit Note")
 
 			msg = ""
 			if self.get("update_outstanding_for_self"):
