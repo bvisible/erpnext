@@ -90,4 +90,10 @@ function get_filters() {
 
 frappe.query_reports["Payment Ledger"] = {
 	filters: get_filters(),
+	//// Neoffice — the Data columns Voucher Type, Voucher Subtype, Party Type and Against Voucher Type carry the raw
+	//// English DocType name; the displayed cell is translated (see erpnext.utils.translate_doctype_name_cell).
+	formatter: function (value, row, column, data, default_formatter) {
+		value = erpnext.utils.translate_doctype_name_cell(value, column);
+		return default_formatter(value, row, column, data);
+	},
 };

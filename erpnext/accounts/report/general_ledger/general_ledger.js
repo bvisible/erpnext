@@ -223,6 +223,12 @@ frappe.query_reports["General Ledger"] = {
 			fieldtype: "Check",
 		},
 	],
+	//// Neoffice — the Data columns Voucher Type, Voucher Subtype, Party Type and Against Voucher Type carry the raw
+	//// English DocType name; the displayed cell is translated (see erpnext.utils.translate_doctype_name_cell).
+	formatter: function (value, row, column, data, default_formatter) {
+		value = erpnext.utils.translate_doctype_name_cell(value, column);
+		return default_formatter(value, row, column, data);
+	},
 };
 
 erpnext.utils.add_dimensions("General Ledger", 15);

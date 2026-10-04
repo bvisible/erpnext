@@ -156,6 +156,9 @@ frappe.query_reports["Accounts Payable"] = {
 	],
 
 	formatter: function (value, row, column, data, default_formatter) {
+		//// Neoffice — the Voucher Type and Party Type cells carry the raw English DocType name; the displayed
+		//// cell is translated (see erpnext.utils.translate_doctype_name_cell).
+		value = erpnext.utils.translate_doctype_name_cell(value, column);
 		value = default_formatter(value, row, column, data);
 		if (data && data.bold) {
 			value = value.bold();

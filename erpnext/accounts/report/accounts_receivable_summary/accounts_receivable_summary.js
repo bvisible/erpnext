@@ -135,6 +135,13 @@ frappe.query_reports["Accounts Receivable Summary"] = {
 		},
 	],
 
+	//// Neoffice — the Data columns Voucher Type, Voucher Subtype, Party Type and Against Voucher Type carry the raw
+	//// English DocType name; the displayed cell is translated (see erpnext.utils.translate_doctype_name_cell).
+	formatter: function (value, row, column, data, default_formatter) {
+		value = erpnext.utils.translate_doctype_name_cell(value, column);
+		return default_formatter(value, row, column, data);
+	},
+
 	onload: function (report) {
 		report.page.add_inner_button(__("Accounts Receivable"), function () {
 			var filters = report.get_values();

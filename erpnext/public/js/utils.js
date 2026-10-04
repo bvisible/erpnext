@@ -240,6 +240,21 @@ $.extend(erpnext.utils, {
 		});
 	},
 
+	//// Neoffice — added helper (no upstream equivalent). The accounting reports (General Ledger, Accounts
+	//// Receivable / Payable and their summaries, Payment Ledger) return the raw English DocType name in their
+	//// Data columns Voucher Type, Voucher Subtype, Party Type and Against Voucher Type ("Sales Invoice",
+	//// "Customer", "Receive"…), so a French UI showed English words under a French header. The value cannot be
+	//// translated server-side: the Dynamic Link column next to it (Voucher No, Party…) uses it as the DocType
+	//// to link to, and exports and filters need the real name. So the DISPLAYED cell is translated, here, from
+	//// each report's formatter, and only for those columns.
+	translate_doctype_name_cell: function (value, column) {
+		const doctype_name_columns = ["voucher_type", "voucher_subtype", "party_type", "against_voucher_type"];
+		if (value && typeof value === "string" && column && doctype_name_columns.includes(column.fieldname)) {
+			return __(value);
+		}
+		return value;
+	},
+
 	add_inventory_dimensions: function (report_name, index) {
 		let filters = frappe.query_reports[report_name].filters;
 
