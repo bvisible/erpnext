@@ -75,7 +75,9 @@ class PaymentLedger:
 						total_in_account_currency += x.amount_in_account_currency
 
 				entry = frappe._dict(
-					against_voucher_no="Outstanding:",
+					# //// Neoffice — upstream puts the English literal "Outstanding:" in the summary row's Against Voucher No
+					# //// cell; it is a display label (no link), so it goes through _().
+					against_voucher_no=_("Outstanding:"),
 					amount=total,
 					currency=voucher_data[0].currency,
 					company=voucher_data[0].company,
