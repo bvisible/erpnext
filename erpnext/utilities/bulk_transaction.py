@@ -172,33 +172,38 @@ def create_log(doc_name, e, from_doctype, to_doctype, status, log_date=None, res
 
 
 def show_job_status(fail_count, deserialized_data_count, to_doctype):
-	# //// Neoffice — upstream passed the three dialog titles as plain English literals (only the
-	# //// Neoffice — message bodies went through _()) and injected the raw English document type
-	# //// Neoffice — name into the bodies. We translate the titles and the displayed document type
-	# //// Neoffice — name; the link target keeps the untranslated name (it builds a URL).
+	# //// Neoffice — upstream passed the three dialog titles as plain English literals and injected the
+	# //// Neoffice — raw English document type name into the bodies. Worse, the three bodies carried
+	# //// Neoffice — their <b><a> markup INSIDE the _() message: frappe._() strips HTML tags before the
+	# //// Neoffice — catalogue lookup, so no French entry could ever match and they always showed in
+	# //// Neoffice — English. We keep the markup outside _() (it is injected into a plain template),
+	# //// Neoffice — translate the titles and the displayed document type, and keep the untranslated
+	# //// Neoffice — document type for the link target (it builds a URL).
 	if not fail_count:
 		frappe.msgprint(
-			_("Creation of <b><a href='/app/{0}'>{1}(s)</a></b> successful").format(
-				to_doctype.lower().replace(" ", "-"), _(to_doctype)
+			_("Creation of {0} successful").format(
+				"<b><a href='/app/{}'>{}(s)</a></b>".format(
+					to_doctype.lower().replace(" ", "-"), _(to_doctype)
+				)
 			),
 			title=_("Successful"),
 			indicator="green",
 		)
 	elif fail_count != 0 and fail_count < deserialized_data_count:
 		frappe.msgprint(
-			_(
-				"""Creation of {0} partially successful.
-				Check <b><a href="/app/bulk-transaction-log">Bulk Transaction Log</a></b>"""
-			).format(_(to_doctype)),
+			_("Creation of {0} partially successful. Check {1}").format(
+				_(to_doctype),
+				'<b><a href="/app/bulk-transaction-log">{}</a></b>'.format(_("Bulk Transaction Log")),
+			),
 			title=_("Partially successful"),
 			indicator="orange",
 		)
 	else:
 		frappe.msgprint(
-			_(
-				"""Creation of {0} failed.
-				Check <b><a href="/app/bulk-transaction-log">Bulk Transaction Log</a></b>"""
-			).format(_(to_doctype)),
+			_("Creation of {0} failed. Check {1}").format(
+				_(to_doctype),
+				'<b><a href="/app/bulk-transaction-log">{}</a></b>'.format(_("Bulk Transaction Log")),
+			),
 			title=_("Failed"),
 			indicator="red",
 		)
