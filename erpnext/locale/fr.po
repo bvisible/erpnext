@@ -21416,11 +21416,13 @@ msgstr "Exercice Fiscal {0} est nécessaire"
 msgid "Fix SABB Entry"
 msgstr "Corriger l'écriture SABB"
 
+# //// Neoffice — upstream had the participle "Fixé" for the shipping rule basis "Fixed" (a fixed amount). The adjective
+# //// "Fixe" is the commonest meaning of the bare key across apps (a fixed rate, a fixed position).
 #. Option for the 'Calculate Based On' (Select) field in DocType 'Shipping
 #. Rule'
 #: erpnext/accounts/doctype/shipping_rule/shipping_rule.json
 msgid "Fixed"
-msgstr "Fixé"
+msgstr "Fixe"
 
 #. Option for the 'Account Type' (Select) field in DocType 'Account'
 #: erpnext/accounts/doctype/account/account.json
@@ -33483,10 +33485,12 @@ msgstr "Objectifs"
 msgid "Odometer Value (Last)"
 msgstr "Valeur Compteur Kilométrique (Dernier)"
 
+# //// Neoffice — upstream had "De" (the preposition "from") for "Off": wrong for an on/off switch and for the
+# //// workstation status. "Désactivé" is the commonest meaning of the bare key across apps.
 #. Option for the 'Status' (Select) field in DocType 'Workstation'
 #: erpnext/manufacturing/doctype/workstation/workstation.json
 msgid "Off"
-msgstr "De"
+msgstr "Désactivé"
 
 #. Label of a Date field in DocType 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
@@ -41083,9 +41087,11 @@ msgstr "Numéro de la Commande d'Achat requis pour l'Article {0}"
 msgid "Purchase Order {0} is not submitted"
 msgstr "La Commande d'Achat {0} n’est pas soumise"
 
+# //// Neoffice — upstream translated "Purchase Orders" as "Acheter en ligne" ("Buy online"): a wrong word, it titles
+# //// the supplier portal list of purchase orders. Corrected to the standard term.
 #: erpnext/buying/doctype/purchase_order/purchase_order.py:904
 msgid "Purchase Orders"
-msgstr "Acheter en ligne"
+msgstr "Commandes d'achat"
 
 #. Label of a Check field in DocType 'Email Digest'
 #: erpnext/setup/doctype/email_digest/email_digest.json
@@ -45014,7 +45020,17 @@ msgstr "Journaux de réévaluation"
 msgid "Revaluation Surplus"
 msgstr "Excédent de réévaluation"
 
+# //// Neoffice — the bare key now says "Chiffre d'affaires" (turnover), the commonest meaning across apps (tax return,
+# //// CRM, newsletter). Upstream had "Produits"; the report filter of erpnext keeps it through the context "Invoice Type"
+# //// (entry just below), passed in deferred_revenue_and_expense.js.
 #: erpnext/accounts/report/deferred_revenue_and_expense/deferred_revenue_and_expense.js:88
+msgid "Revenue"
+msgstr "Chiffre d'affaires"
+
+# //// Neoffice — added entry: the sense erpnext itself needs, the accounting class opposite "Expense" in the filter
+# //// of the deferred revenue and expense report. The call site passes this context so the bare key could be released.
+#: erpnext/accounts/report/deferred_revenue_and_expense/deferred_revenue_and_expense.js:89
+msgctxt "Invoice Type"
 msgid "Revenue"
 msgstr "Produits"
 
@@ -45027,6 +45043,8 @@ msgstr "Contrepassation de"
 msgid "Reverse Journal Entry"
 msgstr "Ecriture de journal de contre-passation"
 
+# //// Neoffice — upstream had "La revue" (with a stray article) as the label of the quality review sections, links
+# //// and report. The bare noun reads right in every one of them.
 #. Label of a Link field in DocType 'Quality Action'
 #. Group in Quality Goal's connections
 #. Label of a Section Break field in DocType 'Quality Review'
@@ -45040,7 +45058,7 @@ msgstr "Ecriture de journal de contre-passation"
 #: erpnext/quality_management/doctype/quality_review_objective/quality_review_objective.json
 #: erpnext/quality_management/report/review/review.json
 msgid "Review"
-msgstr "La revue"
+msgstr "Revue"
 
 #. Title of an Onboarding Step
 #: erpnext/accounts/onboarding_step/chart_of_accounts/chart_of_accounts.json
@@ -60828,6 +60846,9 @@ msgstr "Postes de travail"
 msgid "Wrapping up"
 msgstr "Emballer"
 
+# //// Neoffice — upstream had "Reprise" (a reversal or recovery, the opposite of a write-off) for the "Write Off" section
+# //// of the invoices and for the default account name created from the standard chart. "Radiation" matches the
+# //// existing "Montant radié". Sibling labels ("Write Off Account", "... Entry"...) still say "Reprise".
 #. Label of a Section Break field in DocType 'Journal Entry'
 #. Label of a Section Break field in DocType 'POS Invoice'
 #. Label of a Section Break field in DocType 'Purchase Invoice'
@@ -60840,7 +60861,7 @@ msgstr "Emballer"
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.json
 #: erpnext/setup/doctype/company/company.py:569
 msgid "Write Off"
-msgstr "Reprise"
+msgstr "Radiation"
 
 #. Label of a Link field in DocType 'POS Invoice'
 #. Label of a Link field in DocType 'POS Profile'

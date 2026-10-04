@@ -85,7 +85,10 @@ function get_filters() {
 			label: __("Invoice Type"),
 			fieldtype: "Select",
 			options: [
-				{ value: "Revenue", label: __("Revenue") },
+				//// Neoffice — "Revenue" is the bare key of other apps too (tax return turnover, CRM metric), which
+				//// need "Chiffre d'affaires". Here it is the accounting class opposite "Expense" ("Produits"): it
+				//// carries its own context so the bare key could be released (see locale/fr.po).
+				{ value: "Revenue", label: __("Revenue", null, "Invoice Type") },
 				{ value: "Expense", label: __("Expense") },
 			],
 			default: "Revenue",
