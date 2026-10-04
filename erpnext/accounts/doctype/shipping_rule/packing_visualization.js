@@ -3,6 +3,8 @@
 //// dimensions from the open Sales/Delivery document, calls packing_visualization.py and shows
 //// the rendered 3D packing in a dialog. Belongs to the "Multiple Constraints" shipping feature
 //// documented in shipping_rule.py. File has no trailing newline (7534a0d7f6).
+//// Neoffice — i18n: every dialog title, button label and message of this file goes through __(): frappe.msgprint
+//// and frappe.ui.Dialog do not translate a title or a label themselves, so they were shown in English to every user.
 /**
  * View form item packaging
  * Retrieves item dimensions, shipping rule, and generates a visualization
@@ -13,7 +15,7 @@ function visualize_packing_from_form(frm) {
     // Check if there are any items
     if (!frm.doc.items || !frm.doc.items.length) {
         frappe.msgprint({
-            title: "No items",
+            title: __("No items"),
             message: __("The current document does not contain any items to visualize."),
             indicator: "orange"
         });
@@ -27,7 +29,7 @@ function visualize_packing_from_form(frm) {
     
     if (!item_codes.length) {
         frappe.msgprint({
-            title: "No valid items",
+            title: __("No valid items"),
             message: __("The document does not contain any valid items."),
             indicator: "red"
         });
@@ -47,7 +49,7 @@ function visualize_packing_from_form(frm) {
             
             if (r.exc || !r.message) {
                 frappe.msgprint({
-                    title: "Error",
+                    title: __("Error"),
                     message: __("Unable to retrieve item dimensions."),
                     indicator: "red"
                 });
@@ -109,7 +111,7 @@ function visualize_packing_from_form(frm) {
             // Check if there are any items with dimensions
             if (!items_to_visualize.length) {
                 frappe.msgprint({
-                    title: "No valid items",
+                    title: __("No valid items"),
                     message: __("No valid items found. Please define dimensions in the item master."),
                     indicator: "red"
                 });
@@ -131,7 +133,7 @@ function visualize_packing_from_form(frm) {
                     
                     if (r.exc) {
                         frappe.msgprint({
-                            title: "Error in visualization",
+                            title: __("Error in visualization"),
                             message: __("An error occurred while generating the visualization."),
                             indicator: "red"
                         });
@@ -142,7 +144,7 @@ function visualize_packing_from_form(frm) {
                     
                     if (!result || !result.success) {
                         frappe.msgprint({
-                            title: "Error in visualization",
+                            title: __("Error in visualization"),
                             message: __("An error occurred while generating."),
                             indicator: "red"
                         });
@@ -151,7 +153,7 @@ function visualize_packing_from_form(frm) {
                     
                     // Create a dialog to display the visualization
                     const d = new frappe.ui.Dialog({
-                        title: "Packing Visualization",
+                        title: __("Packing Visualization"),
                         size: "large",
                         fields: [
                             {
@@ -175,14 +177,14 @@ function visualize_packing_from_form(frm) {
                     if (shipping_info.shipping_rule_name) {
                         rule_info = `<div class="text-muted mb-2">
                             <strong>${__("Shipping Rule")}:</strong> ${shipping_info.shipping_rule_name}
-                            ${shipping_info.constraint_name ? `<br><strong>Constraint:</strong> ${shipping_info.constraint_name}` : ''}
+                            ${shipping_info.constraint_name ? `<br><strong>${__("Constraint")}:</strong> ${shipping_info.constraint_name}` : ''}
                         </div>`;
                     }
                     
                     // Generate the dimension information
                     const dimension_info = `<div class="font-weight-bold mb-2">
                         ${__("Bin Dimensions")}: ${bin_dims.length.toFixed(1)} × ${bin_dims.width.toFixed(1)} × ${bin_dims.height.toFixed(1)} cm
-                        (Volume: ${bin_dims.volume.toFixed(1)} cm³)
+                        (${__("Volume")}: ${bin_dims.volume.toFixed(1)} cm³)
                     </div>`;
                     
                     // Generate the list of packed items
@@ -193,7 +195,7 @@ function visualize_packing_from_form(frm) {
                         const pos = item.position.map(p => p.toFixed(1)).join(", ");
                         const dims = item.dimensions.map(d => d.toFixed(1)).join(" × ");
                         items_list += `<li><span class="font-weight-bold">${item.name}</span>: 
-                            Position: (${pos}), Dimensions: ${dims}</li>`;
+                            ${__("Position")}: (${pos}), ${__("Dimensions")}: ${dims}</li>`;
                     });
                     
                     items_list += `</ul></div>`;
@@ -218,12 +220,12 @@ function visualize_packing_from_form(frm) {
                     d.fields_dict.visualization_container.$wrapper.html(content);
                     
                     // Add action buttons
-                    d.set_primary_action("Close", () => {
+                    d.set_primary_action(__("Close"), () => {
                         d.hide();
                     });
                     
                     // Add download button
-                    d.add_custom_action("Download", () => {
+                    d.add_custom_action(__("Download"), () => {
                         const a = document.createElement('a');
                         a.href = result.image_url;
                         a.download = 'packing_visualization.png';
@@ -245,8 +247,8 @@ const visualize_packing_from_console = () => {
     // Check the current form
     if (!cur_frm) {
         frappe.msgprint({
-            title: "Error",
-            message: "No active form found. Open a document first.",
+            title: __("Error"),
+            message: __("No active form found. Open a document first."),
             indicator: "red"
         });
         return;

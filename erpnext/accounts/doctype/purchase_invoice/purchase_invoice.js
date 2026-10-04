@@ -209,7 +209,9 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 				var disabled = supplier.disabled;
 				if (internal == 1 && disabled == 0) {
 					me.frm.add_custom_button(
-						"Inter Company Invoice",
+						//// Neoffice — upstream passes the English label of a grouped custom button: page.js does not apply __() to the
+						//// label of a button inside a group, so it stayed English; we translate it.
+						__("Inter Company Invoice"),
 						function () {
 							me.make_inter_company_invoice(me.frm);
 						},

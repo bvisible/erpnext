@@ -147,7 +147,9 @@ frappe.ui.form.on("Process Statement Of Accounts", {
 				},
 			});
 		} else {
-			frappe.throw("Enter " + frm.doc.customer_collection + " name.");
+			//// Neoffice — upstream concatenates English words around the selected DocType name and never calls __(), so this
+			//// error stays English; we use one translatable template and translate the injected DocType name.
+			frappe.throw(__("Enter {0} name.", [__(frm.doc.customer_collection)]));
 		}
 	},
 });

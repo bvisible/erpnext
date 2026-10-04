@@ -2137,9 +2137,11 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		$.each(["company", "customer"], function(i, fieldname) {
 			if(frappe.meta.has_field(me.frm.doc.doctype, fieldname) &&  !["Purchase Order","Purchase Invoice"].includes(me.frm.doc.doctype)) {
 				if (!me.frm.doc[fieldname]) {
-					frappe.msgprint(__("Please specify") + ": " +
-						frappe.meta.get_label(me.frm.doc.doctype, fieldname, me.frm.doc.name) +
-						". " + __("It is needed to fetch Item Details."));
+					//// Neoffice — upstream glues two translated fragments around frappe.meta.get_label(), which returns the English field label,
+					//// so the message read "Please specify: Customer. ..." in French text; we use one template and translate the label.
+					frappe.msgprint(__("Please specify: {0}. It is needed to fetch Item Details.", [
+						__(frappe.meta.get_label(me.frm.doc.doctype, fieldname, me.frm.doc.name))
+					]));
 					valid = false;
 				}
 			}
