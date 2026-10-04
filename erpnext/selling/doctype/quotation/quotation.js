@@ -70,7 +70,18 @@ frappe.ui.form.on("Quotation", {
 	},
 
 	set_label: function (frm) {
-		frm.fields_dict.customer_address.set_label(__(frm.doc.quotation_to + " Address"));
+		//// Neoffice — upstream translated the concatenated string (quotation_to + " Address"), so only
+		//// Neoffice — the variants that happen to exist as a catalogue entry were translated. We spell
+		//// Neoffice — out one literal per variant so each is extracted and translated; the old
+		//// Neoffice — concatenation stays as the fallback for any other value.
+		const address_labels = {
+			Customer: __("Customer Address"),
+			Lead: __("Lead Address"),
+			Prospect: __("Prospect Address"),
+		};
+		frm.fields_dict.customer_address.set_label(
+			address_labels[frm.doc.quotation_to] || __(frm.doc.quotation_to + " Address")
+		);
 	},
 });
 

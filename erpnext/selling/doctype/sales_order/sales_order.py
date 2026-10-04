@@ -516,7 +516,9 @@ class SalesOrder(SellingController):
 		mod_db = frappe.db.get_value("Sales Order", self.name, "modified")
 		date_diff = frappe.db.sql(f"select TIMEDIFF('{mod_db}', '{cstr(self.modified)}')")
 		if date_diff and date_diff[0][0]:
-			frappe.throw(_("{0} {1} has been modified. Please refresh.").format(self.doctype, self.name))
+			# //// Neoffice — upstream injected the raw English document type name into the translated
+			# //// Neoffice — message. We translate the document type name before injecting it.
+			frappe.throw(_("{0} {1} has been modified. Please refresh.").format(_(self.doctype), self.name))
 
 	def update_status(self, status):
 		self.check_modified_date()

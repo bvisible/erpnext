@@ -66,10 +66,13 @@ class ProductBundle(Document):
 				invoice_links.append(get_link_to_form(doctype, invoice["parent"]))
 
 		if len(invoice_links):
+			# //// Neoffice — upstream never passed this message through _() (only the title was
+			# //// Neoffice — translated), so it showed in English. We translate the template and
+			# //// Neoffice — format it afterwards.
 			frappe.throw(
-				"This Product Bundle is linked with {}. You will have to cancel these documents in order to delete this Product Bundle".format(
-					", ".join(invoice_links)
-				),
+				_(
+					"This Product Bundle is linked with {0}. You will have to cancel these documents in order to delete this Product Bundle"
+				).format(", ".join(invoice_links)),
 				title=_("Not Allowed"),
 			)
 
