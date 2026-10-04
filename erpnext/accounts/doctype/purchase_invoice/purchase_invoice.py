@@ -1715,14 +1715,15 @@ class PurchaseInvoice(BuyingController):
 
 			if self.is_opening == "Yes" and self.rounding_adjustment:
 				if not round_off_for_opening:
+					# //// Neoffice — upstream injects an English literal into a translated sentence (never translated); we wrap it in _().
 					frappe.throw(
 						_(
 							"Opening Invoice has rounding adjustment of {0}.<br><br> '{1}' account is required to post these values. Please set it in Company: {2}.<br><br> Or, '{3}' can be enabled to not post any rounding adjustment."
 						).format(
 							frappe.bold(self.rounding_adjustment),
-							frappe.bold("Round Off for Opening"),
+							frappe.bold(_("Round Off for Opening")),
 							get_link_to_form("Company", self.company),
-							frappe.bold("Disable Rounded Total"),
+							frappe.bold(_("Disable Rounded Total")),
 						)
 					)
 				else:

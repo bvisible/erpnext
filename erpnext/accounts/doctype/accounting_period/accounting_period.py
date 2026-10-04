@@ -124,9 +124,10 @@ def validate_accounting_period_on_doc_save(doc, method=None):
 	).run(as_dict=1)
 
 	if accounting_period:
+		# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 		frappe.throw(
 			_("You cannot create a {0} within the closed Accounting Period {1}").format(
-				doc.doctype, frappe.bold(accounting_period[0]["name"])
+				_(doc.doctype), frappe.bold(accounting_period[0]["name"])
 			),
 			ClosedAccountingPeriod,
 		)

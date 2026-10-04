@@ -102,7 +102,8 @@ class PeriodClosingVoucher(AccountsController):
 	def block_if_future_closing_voucher_exists(self):
 		future_closing_voucher = self.get_future_closing_voucher()
 		if future_closing_voucher and future_closing_voucher[0][0]:
-			action = "cancel" if self.docstatus == 2 else "create"
+			# //// Neoffice — upstream injects an English literal into a translated sentence (never translated); we wrap it in _().
+			action = _("cancel") if self.docstatus == 2 else _("create")
 			frappe.throw(
 				_(
 					"You cannot {0} this document because another Period Closing Entry {1} exists after {2}"

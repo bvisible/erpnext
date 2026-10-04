@@ -596,11 +596,12 @@ def merge_account(old, new):
 		old_account.company,
 		cstr(old_account.account_currency),
 	):
+		# //// Neoffice — upstream passes an English literal as the title (never translated); we wrap it in _().
 		throw(
 			msg=_(
 				"""Merging is only possible if following properties are same in both records. Is Group, Root Type, Company and Account Currency"""
 			),
-			title=("Invalid Accounts"),
+			title=_("Invalid Accounts"),
 			exc=InvalidAccountMergeError,
 		)
 

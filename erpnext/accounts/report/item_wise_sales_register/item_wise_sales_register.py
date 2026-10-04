@@ -664,18 +664,20 @@ def get_tax_accounts(
 
 	tax_columns.sort()
 	for desc in tax_columns:
+		# //// Neoffice — upstream composes the text before translating it, so the catalogue key never matches; we use one template.
 		columns.append(
 			{
-				"label": _(desc + " Rate"),
+				"label": _("{0} Rate").format(desc),
 				"fieldname": frappe.scrub(desc + " Rate"),
 				"fieldtype": "Float",
 				"width": 100,
 			}
 		)
 
+		# //// Neoffice — upstream composes the text before translating it, so the catalogue key never matches; we use one template.
 		columns.append(
 			{
-				"label": _(desc + " Amount"),
+				"label": _("{0} Amount").format(desc),
 				"fieldname": frappe.scrub(desc + " Amount"),
 				"fieldtype": "Currency",
 				"options": "currency",

@@ -90,7 +90,8 @@ def get_party_details(inv):
 		party = inv.supplier
 
 	if not party:
-		frappe.throw(_("Please select {0} first").format(party_type))
+		# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
+		frappe.throw(_("Please select {0} first").format(_(party_type)))
 
 	return party_type, party
 

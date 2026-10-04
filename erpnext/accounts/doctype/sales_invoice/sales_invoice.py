@@ -1758,14 +1758,15 @@ class SalesInvoice(SellingController):
 
 			if self.is_opening == "Yes" and self.rounding_adjustment:
 				if not round_off_for_opening:
+					# //// Neoffice — upstream injects an English literal into a translated sentence (never translated); we wrap it in _().
 					frappe.throw(
 						_(
 							"Opening Invoice has rounding adjustment of {0}.<br><br> '{1}' account is required to post these values. Please set it in Company: {2}.<br><br> Or, '{3}' can be enabled to not post any rounding adjustment."
 						).format(
 							frappe.bold(self.rounding_adjustment),
-							frappe.bold("Round Off for Opening"),
+							frappe.bold(_("Round Off for Opening")),
 							get_link_to_form("Company", self.company),
-							frappe.bold("Disable Rounded Total"),
+							frappe.bold(_("Disable Rounded Total")),
 						)
 					)
 				else:
@@ -1900,10 +1901,11 @@ class SalesInvoice(SellingController):
 		)
 		if against_lp_entry:
 			invoice_list = ", ".join([d.invoice for d in against_lp_entry])
+			# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 			frappe.throw(
 				_(
 					"""{} can't be cancelled since the Loyalty Points earned has been redeemed. First cancel the {} No {}"""
-				).format(self.doctype, self.doctype, invoice_list)
+				).format(_(self.doctype), _(self.doctype), invoice_list)
 			)
 		else:
 			frappe.db.sql("""delete from `tabLoyalty Point Entry` where invoice=%s""", (self.name))
@@ -2325,7 +2327,8 @@ def validate_inter_company_transaction(doc, doctype):
 	party = details.get("party")
 	if not party:
 		partytype = "Supplier" if doctype in ["Sales Invoice", "Sales Order"] else "Customer"
-		frappe.throw(_("No {0} found for Inter Company Transactions.").format(partytype))
+		# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
+		frappe.throw(_("No {0} found for Inter Company Transactions.").format(_(partytype)))
 
 	company = details.get("company")
 	default_currency = frappe.get_cached_value("Company", company, "default_currency")

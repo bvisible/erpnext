@@ -92,7 +92,8 @@ def validate_party(filters):
 	if party and party_type:
 		for d in party:
 			if not frappe.db.exists(party_type, d):
-				frappe.throw(_("Invalid {0}: {1}").format(party_type, d))
+				# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
+				frappe.throw(_("Invalid {0}: {1}").format(_(party_type), d))
 
 
 def set_account_currency(filters):
@@ -638,9 +639,12 @@ def get_columns(filters):
 		filters.get("show_amount_in_company_currency")
 		and filters["presentation_currency"] != company_currency
 	):
+		# //// Neoffice — upstream composes the text before translating it (f-string), so the catalogue key changes with every value and
+		# //// never matches (or no _() at all); we use one translatable template per sentence and inject the values afterwards.
 		frappe.throw(
-			_(
-				f'Presentation Currency cannot be {frappe.bold(filters["presentation_currency"])} , When {frappe.bold("Show Credit / Debit in Company Currency")} is enabled.'
+			_("Presentation Currency cannot be {0} , When {1} is enabled.").format(
+				frappe.bold(filters["presentation_currency"]),
+				frappe.bold(_("Show Credit / Debit in Company Currency")),
 			)
 		)
 

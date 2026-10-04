@@ -344,13 +344,17 @@ class ExchangeRateRevaluation(Document):
 	def make_jv_entries(self):
 		zero_balance_jv = self.make_jv_for_zero_balance()
 		if zero_balance_jv:
+			# //// Neoffice — upstream composes the text before translating it, so the catalogue key never matches; we use one template.
 			frappe.msgprint(
-				f"Zero Balance Journal: {get_link_to_form('Journal Entry', zero_balance_jv.name)}"
+				_("Zero Balance Journal: {0}").format(get_link_to_form("Journal Entry", zero_balance_jv.name))
 			)
 
 		revaluation_jv = self.make_jv_for_revaluation()
 		if revaluation_jv:
-			frappe.msgprint(f"Revaluation Journal: {get_link_to_form('Journal Entry', revaluation_jv.name)}")
+			# //// Neoffice — upstream composes the text before translating it, so the catalogue key never matches; we use one template.
+			frappe.msgprint(
+				_("Revaluation Journal: {0}").format(get_link_to_form("Journal Entry", revaluation_jv.name))
+			)
 
 		return {
 			"revaluation_jv": revaluation_jv.name if revaluation_jv else None,

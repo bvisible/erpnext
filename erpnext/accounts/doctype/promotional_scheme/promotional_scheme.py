@@ -157,8 +157,10 @@ class PromotionalScheme(Document):
 			applicable_for = frappe.scrub(self.applicable_for)
 
 			if not self.get(applicable_for):
-				msg = f"The field {frappe.bold(self.applicable_for)} is required"
-				frappe.throw(_(msg))
+				# //// Neoffice — upstream composes the text before translating it (f-string), so the catalogue key changes with every value and
+				# //// never matches (or no _() at all); we use one translatable template per sentence and inject the values afterwards.
+				msg = _("The field {0} is required").format(frappe.bold(_(self.applicable_for)))
+				frappe.throw(msg)
 
 	def validate_pricing_rules(self):
 		if self.is_new():
@@ -259,11 +261,15 @@ class PromotionalScheme(Document):
 
 
 def raise_for_transaction_exists(name):
-	msg = f"""You can't change the {frappe.bold(_('Applicable For'))}
-		because transactions are present against the Promotional Scheme {frappe.bold(name)}. """
-	msg += "Kindly disable this Promotional Scheme and create new for new Applicable For."
+	# //// Neoffice — upstream composes the text before translating it (f-string), so the catalogue key changes with every value and
+	# //// never matches (or no _() at all); we use one translatable template per sentence and inject the values afterwards.
+	msg = _(
+		"You can't change the {0} because transactions are present against the Promotional Scheme {1}."
+	).format(frappe.bold(_("Applicable For")), frappe.bold(name))
+	msg += " "
+	msg += _("Kindly disable this Promotional Scheme and create new for new Applicable For.")
 
-	frappe.throw(_(msg), TransactionExists)
+	frappe.throw(msg, TransactionExists)
 
 
 def get_pricing_rules(doc, rules=None):

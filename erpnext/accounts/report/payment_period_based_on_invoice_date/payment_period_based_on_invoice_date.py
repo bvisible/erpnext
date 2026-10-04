@@ -61,9 +61,10 @@ def validate_filters(filters):
 	if (filters.get("payment_type") == _("Incoming") and filters.get("party_type") == "Supplier") or (
 		filters.get("payment_type") == _("Outgoing") and filters.get("party_type") == "Customer"
 	):
+		# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 		frappe.throw(
 			_("{0} payment entries can not be filtered by {1}").format(
-				filters.payment_type, filters.party_type
+				filters.payment_type, _(filters.party_type)
 			)
 		)
 

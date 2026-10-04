@@ -385,13 +385,21 @@ class POSInvoice(SalesInvoice):
 				(not d.use_serial_batch_fields and not d.serial_and_batch_bundle)
 				or (d.use_serial_batch_fields and not d.serial_no)
 			):
-				error_msg = f"Row #{d.idx}: Please select Serial No. for item {bold(d.item_code)}"
+				# //// Neoffice — upstream composes the text before translating it (f-string), so the catalogue key changes with every value and
+				# //// never matches (or no _() at all); we use one translatable template per sentence and inject the values afterwards.
+				error_msg = _("Row #{0}: Please select Serial No. for item {1}").format(
+					d.idx, bold(d.item_code)
+				)
 
 			elif d.get("has_batch_no") and (
 				(not d.use_serial_batch_fields and not d.serial_and_batch_bundle)
 				or (d.use_serial_batch_fields and not d.batch_no)
 			):
-				error_msg = f"Row #{d.idx}: Please select Batch No. for item {bold(d.item_code)}"
+				# //// Neoffice — upstream composes the text before translating it (f-string), so the catalogue key changes with every value and
+				# //// never matches (or no _() at all); we use one translatable template per sentence and inject the values afterwards.
+				error_msg = _("Row #{0}: Please select Batch No. for item {1}").format(
+					d.idx, bold(d.item_code)
+				)
 
 		if error_msg:
 			frappe.throw(error_msg, title=_("Serial / Batch Bundle Missing"), as_list=True)

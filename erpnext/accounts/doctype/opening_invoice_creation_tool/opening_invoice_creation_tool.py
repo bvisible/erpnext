@@ -105,9 +105,10 @@ class OpeningInvoiceCreationTool(Document):
 			if self.create_missing_party:
 				self.add_party(row.party_type, row.party)
 			else:
+				# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 				frappe.throw(
 					_("Row #{}: {} {} does not exist.").format(
-						row.idx, frappe.bold(row.party_type), frappe.bold(row.party)
+						row.idx, frappe.bold(_(row.party_type)), frappe.bold(row.party)
 					)
 				)
 
@@ -265,9 +266,10 @@ def start_import(invoices):
 			frappe.db.rollback()
 			doc.log_error("Opening invoice creation failed")
 	if errors:
+		# //// Neoffice — upstream injects an English literal into a translated sentence (never translated); we wrap it in _().
 		frappe.msgprint(
 			_("You had {} errors while creating opening invoices. Check {} for more details").format(
-				errors, "<a href='/app/List/Error Log' class='variant-click'>Error Log</a>"
+				errors, "<a href='/app/List/Error Log' class='variant-click'>{}</a>".format(_("Error Log"))
 			),
 			indicator="red",
 			title=_("Error Occured"),

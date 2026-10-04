@@ -121,9 +121,10 @@ def format_gl_entries(gl_entries_by_account, accounts_by_name, dimension_list, d
 		for entry in entries:
 			d = accounts_by_name.get(entry.account)
 			if not d:
+				# //// Neoffice — upstream passes an English literal as the title (never translated); we wrap it in _().
 				frappe.msgprint(
 					_("Could not retrieve information for {0}.").format(entry.account),
-					title="Error",
+					title=_("Error"),
 					raise_exception=1,
 				)
 

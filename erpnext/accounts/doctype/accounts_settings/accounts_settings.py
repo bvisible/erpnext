@@ -111,8 +111,9 @@ class AccountsSettings(Document):
 
 	def validate_stale_days(self):
 		if not self.allow_stale and cint(self.stale_days) <= 0:
+			# //// Neoffice — upstream passes an English literal as the title (never translated); we wrap it in _().
 			frappe.msgprint(
-				_("Stale Days should start from 1."), title="Error", indicator="red", raise_exception=1
+				_("Stale Days should start from 1."), title=_("Error"), indicator="red", raise_exception=1
 			)
 
 	def hide_or_show_party_and_account_balance(self):
