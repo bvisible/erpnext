@@ -77,7 +77,8 @@ def get_party_details(
 	if not party:
 		return frappe._dict()
 	if not frappe.db.exists(party_type, party):
-		frappe.throw(_("{0}: {1} does not exists").format(party_type, party))
+		# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
+		frappe.throw(_("{0}: {1} does not exists").format(_(party_type), party))
 	return _get_party_details(
 		party,
 		account,
@@ -564,11 +565,12 @@ def validate_party_gle_currency(party_type, party, company, party_account_curren
 	existing_gle_currency = get_party_gle_currency(party_type, party, company)
 
 	if existing_gle_currency and party_account_currency != existing_gle_currency:
+		# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 		frappe.throw(
 			_(
 				"{0} {1} has accounting entries in currency {2} for company {3}. Please select a receivable or payable account with currency {2}."
 			).format(
-				frappe.bold(party_type),
+				frappe.bold(_(party_type)),
 				frappe.bold(party),
 				frappe.bold(existing_gle_currency),
 				frappe.bold(company),
@@ -584,8 +586,9 @@ def validate_party_accounts(doc):
 
 	for account in doc.get("accounts"):
 		if account.company in companies:
+			# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 			frappe.throw(
-				_("There can only be 1 Account per Company in {0} {1}").format(doc.doctype, doc.name),
+				_("There can only be 1 Account per Company in {0} {1}").format(_(doc.doctype), doc.name),
 				DuplicatePartyAccountError,
 			)
 		else:
@@ -683,7 +686,8 @@ def validate_due_date_with_template(posting_date, due_date, bill_date, template_
 
 	if default_due_date != posting_date and getdate(due_date) > getdate(default_due_date):
 		if frappe.db.get_single_value("Accounts Settings", "credit_controller") in frappe.get_roles():
-			party_type = "supplier" if doctype == "Purchase Invoice" else "customer"
+			# //// Neoffice — upstream injects an English literal into a translated sentence (never translated); we wrap it in _().
+			party_type = _("Supplier") if doctype == "Purchase Invoice" else _("Customer")
 
 			msgprint(
 				_("Note: Due Date exceeds allowed {0} credit days by {1} day(s)").format(
@@ -795,17 +799,20 @@ def validate_party_frozen_disabled(party_type, party_name):
 		if party_type in ("Customer", "Supplier"):
 			party = frappe.get_cached_value(party_type, party_name, ["is_frozen", "disabled"], as_dict=True)
 			if party.disabled:
-				frappe.throw(_("{0} {1} is disabled").format(party_type, party_name), PartyDisabled)
+				# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
+				frappe.throw(_("{0} {1} is disabled").format(_(party_type), party_name), PartyDisabled)
 			elif party.get("is_frozen"):
 				frozen_accounts_modifier = frappe.db.get_single_value(
 					"Accounts Settings", "frozen_accounts_modifier"
 				)
 				if frozen_accounts_modifier not in frappe.get_roles():
-					frappe.throw(_("{0} {1} is frozen").format(party_type, party_name), PartyFrozen)
+					# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
+					frappe.throw(_("{0} {1} is frozen").format(_(party_type), party_name), PartyFrozen)
 
 		elif party_type == "Employee":
 			if frappe.db.get_value("Employee", party_name, "status") != "Active":
-				frappe.msgprint(_("{0} {1} is not active").format(party_type, party_name), alert=True)
+				# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
+				frappe.msgprint(_("{0} {1} is not active").format(_(party_type), party_name), alert=True)
 
 
 def validate_account_party_type(self):
