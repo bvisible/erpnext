@@ -670,6 +670,7 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 										])
 									);
 									if (qty > 0) {
+										//// Neoffice — see the marker above: one translatable template per split message (62ee4e47e1 "fix(i18n): translate buying messages composed or injected before _()")
 										frappe.msgprint(__("Splitting {0} units of {1}", [qty, d.item_code]));
 										var new_row = frappe.model.add_child(
 											me.frm.doc,

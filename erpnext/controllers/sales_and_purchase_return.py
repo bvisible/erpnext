@@ -50,6 +50,7 @@ def validate_return_against(doc):
 					_(doc.meta.get_label(party_type)),
 					bold(doc.get(party_type)),
 					bold(ref_doc.get(party_type)),
+					# //// Neoffice — see the marker above: the DocType name is translated before it is injected (2adf53e6fd "fix(i18n): translate the DocType names, labels and composed messages of the shared controllers")
 					_(ref_doc.doctype),
 					ref_doc.name,
 				),

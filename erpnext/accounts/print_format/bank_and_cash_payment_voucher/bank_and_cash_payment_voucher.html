@@ -15,11 +15,13 @@
     <div class="row margin-bottom">
             <div class="col-xs-6">
                 <table>
+                {# //// Neoffice — upstream prints this caption as static English text, so a French voucher shows it in English; we wrap it in _() (14aa3224ce "fix(i18n): translate the captions of the standard voucher print formats and of the fiscal-year notification"). #}
                 <tr><td><strong>{{ _("Voucher No") }}: </strong></td><td>{{ doc.name }}</td></tr>
                 </table>
             </div>
             <div class="col-xs-6">
                 <table>
+                    {# //// Neoffice — upstream prints this caption as static English text, so a French voucher shows it in English; we wrap it in _() (14aa3224ce "fix(i18n): translate the captions of the standard voucher print formats and of the fiscal-year notification"). #}
                     <tr><td><strong>{{ _("Date") }}: </strong></td><td>{{ frappe.utils.format_date(doc.creation) }}</td></tr>
                 </table>
             </div>
@@ -27,12 +29,14 @@
     <div class="margin-top">
         <table class="table table-bordered table-condensed">
             <tr>
+                {# //// Neoffice — upstream prints these captions as static English text, so a French voucher shows them in English; we wrap each in _() (14aa3224ce "fix(i18n): translate the captions of the standard voucher print formats and of the fiscal-year notification"). #}
                 <th>{{ _("Account") }}</th>
                 <th>{{ _("Party Type") }}</th>
                 <th>{{ _("Party") }}</th>
                 <th>{{ _("Amount") }}</th>
             </tr>
             <tr>
+                    {# //// Neoffice — upstream prints this caption as static English text, so a French voucher shows it in English; we wrap it in _() (14aa3224ce "fix(i18n): translate the captions of the standard voucher print formats and of the fiscal-year notification"). #}
                     <td class="top-bottom" colspan="5"><strong>{{ _("Debit") }}</strong></td>
             </tr>
             {% for entries in gl %}
@@ -44,15 +48,18 @@
                 <td class="left top-bottom">{{ entries.debit }}</td>
             </tr>
             <tr>
+                {# //// Neoffice — upstream prints this caption as static English text, so a French voucher shows it in English; we wrap it in _() (14aa3224ce "fix(i18n): translate the captions of the standard voucher print formats and of the fiscal-year notification"). #}
                 <td class="top-bottom"colspan="4"><strong> {{ _("Narration") }} </strong><br>{{ entries.remarks }}</td>
             </tr>
             {% endif %}
             {% endfor %}
             <tr>
+                    {# //// Neoffice — upstream prints this caption as static English text, so a French voucher shows it in English; we wrap it in _() (14aa3224ce "fix(i18n): translate the captions of the standard voucher print formats and of the fiscal-year notification"). #}
                     <td class="right" colspan="3" ><strong>{{ _("Total (debit)") }} </strong></td>
                     <td class="left" >{{ frappe.format((gl | sum(attribute="debit")), {fieldtype: "Currency"}) }}</td>
             </tr>
             <tr>
+                    {# //// Neoffice — upstream prints this caption as static English text, so a French voucher shows it in English; we wrap it in _() (14aa3224ce "fix(i18n): translate the captions of the standard voucher print formats and of the fiscal-year notification"). #}
                     <td class="top-bottom" colspan="5"><strong>{{ _("Credit") }}</strong></td>
             </tr>
             {% for entries in gl %}
@@ -64,11 +71,13 @@
                 <td class="left top-bottom">{{ entries.credit }}</td>
             </tr>
             <tr>
+                {# //// Neoffice — upstream prints this caption as static English text, so a French voucher shows it in English; we wrap it in _() (14aa3224ce "fix(i18n): translate the captions of the standard voucher print formats and of the fiscal-year notification"). #}
                 <td class="top-bottom" colspan="4"><strong> {{ _("Narration") }} </strong><br>{{ entries.remarks }}</td>
             </tr>
             {% endif %}
             {% endfor %}
             <tr>
+                    {# //// Neoffice — upstream prints this caption as static English text, so a French voucher shows it in English; we wrap it in _() (14aa3224ce "fix(i18n): translate the captions of the standard voucher print formats and of the fiscal-year notification"). #}
                     <td class="right" colspan="3"><strong>{{ _("Total (credit)") }} </strong></td>
                     <td class="left" >{{ frappe.format((gl | sum(attribute="credit")), {fieldtype: "Currency"}) }}</td>
             </tr>

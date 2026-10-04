@@ -633,6 +633,7 @@ erpnext.PointOfSale.Payment = class {
 		//// Neoffice — upstream wrote the "Redeem Loyalty Points" label as an English literal in this
 		//// Neoffice — template, while the same text is translated right below in the control label.
 		this.$payment_modes.append(
+			//// Neoffice — see the marker above: the Redeem Loyalty Points label inside this template is translated; the marker stays outside the template literal, where it would be displayed (1697b10661 "fix(i18n): translate selling messages that were never passed through _()")
 			`<div class="payment-mode-wrapper">
 				<div class="mode-of-payment loyalty-card" data-mode="loyalty-amount" data-payment-type="loyalty-amount">
 					${__("Redeem Loyalty Points")}
@@ -694,6 +695,7 @@ erpnext.PointOfSale.Payment = class {
 		//// Neoffice — template, without __().
 		if (docstatus === 0)
 			this.$payment_modes.append(
+				//// Neoffice — see the marker above: the Add Payment Method label inside this template is translated; the marker stays outside the template literal, where it would be displayed (1697b10661 "fix(i18n): translate selling messages that were never passed through _()")
 				`<div class="w-full pr-2">
 					<div class="add-mode-of-payment w-half text-grey mb-4 no-select pointer">${__("+ Add Payment Method")}</div>
 				</div>`

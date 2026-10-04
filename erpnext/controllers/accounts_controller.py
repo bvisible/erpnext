@@ -190,6 +190,7 @@ class AccountsController(TransactionBase):
 
 			msg = ""
 			if self.get("update_outstanding_for_self"):
+				# //// Neoffice — see the marker above: upstream fix cherry-picked, one translatable template per sentence (17e6925feb "fix(accounts_controller): make return message translatable")
 				msg = _(
 					"We can see {0} is made against {1}. If you want {1}'s outstanding to be updated, uncheck the '{2}' checkbox."
 				).format(
@@ -202,6 +203,7 @@ class AccountsController(TransactionBase):
 				abs(flt(self.rounded_total) or flt(self.grand_total)) > flt(against_voucher_outstanding)
 			):
 				self.update_outstanding_for_self = 1
+				# //// Neoffice — see the marker above: upstream fix cherry-picked, one translatable template per sentence (17e6925feb "fix(accounts_controller): make return message translatable")
 				msg = _(
 					"The outstanding amount {0} in {1} is lesser than {2}. Updating the outstanding to this invoice."
 				).format(

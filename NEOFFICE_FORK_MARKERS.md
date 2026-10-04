@@ -197,6 +197,7 @@ campaign carry their own inline `//// Neoffice` marker).
   sourced from the hub like every other workspace; keeping the JSON change would have given Home
   two sources and a migrate re-import racing the hub sync (`c54de4b231` "Revert \"feat(home): count
   draft orders, Document Scan instead of Videoconference\"").
+- `erpnext/buying/print_format/drop_shipping_format/drop_shipping_format.json` — in the `html` value (a Jinja template) each of the 20 printed labels (Purchase Order, Supplier Name, Address, Contact, Mobile No, Date, Customer Name, Customer Address, Customer Contact, Customer Mobile No, Sr, Item Name, Description, Qty, Rate, Amount, Item Code, Total, Grand Total, In Words) is wrapped in `_()`, the value opens with a Jinja `{# //// Neoffice … #}` comment (never rendered), and `modified` is bumped to `2026-10-04 12:00:00` — upstream wrote these labels as static English text, so the print ignored the print language; the values and the Jinja logic are untouched (62ee4e47e1 "fix(i18n): translate buying messages composed or injected before _()").
 
 ---
 

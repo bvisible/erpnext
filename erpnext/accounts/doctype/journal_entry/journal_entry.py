@@ -781,6 +781,7 @@ class JournalEntry(AccountsController):
 						frappe.throw(
 							_("Row {0}: Party / Account does not match with {1} / {2} in {3} {4}").format(
 								d.idx,
+								# //// Neoffice — see the marker above: the two field labels and the reference type are translated before they are injected (1ebe170a34 "fix(i18n): translate the document and party types injected in journal entry and payment messages")
 								_(field_dict.get(d.reference_type)[0]),
 								_(field_dict.get(d.reference_type)[1]),
 								_(d.reference_type),

@@ -286,6 +286,7 @@ class SellingController(StockController):
 					idx,
 					bold(item_name),
 					bold(ref_rate_field),
+					# //// Neoffice — see the marker above: the English literal net rate is translated before it is injected (2adf53e6fd "fix(i18n): translate the DocType names, labels and composed messages of the shared controllers")
 					bold(_("net rate")),
 					bold(rate),
 					get_link_to_form("Selling Settings", "Selling Settings"),
@@ -364,6 +365,7 @@ class SellingController(StockController):
 					item.idx,
 					item.item_name,
 					last_valuation_rate_in_sales_uom,
+					# //// Neoffice — see the marker above: the English literal valuation rate is translated before it is injected (2adf53e6fd "fix(i18n): translate the DocType names, labels and composed messages of the shared controllers")
 					_("valuation rate (Moving Average)"),
 				)
 

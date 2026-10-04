@@ -1256,6 +1256,7 @@ class PaymentEntry(AccountsController):
 						_("Amount {0} {1} against {2} {3}").format(
 							_(self.party_account_currency),
 							d.allocated_amount,
+							# //// Neoffice — see the marker above: the referenced document type is translated before it is injected (f3556563f5 "fix(i18n): the generated remarks of a payment entry name the referenced document type translated")
 							_(d.reference_doctype),
 							d.reference_name,
 						)

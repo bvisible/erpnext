@@ -601,6 +601,7 @@ def merge_account(old, new):
 			msg=_(
 				"""Merging is only possible if following properties are same in both records. Is Group, Root Type, Company and Account Currency"""
 			),
+			# //// Neoffice — see the marker above: the dialog title goes through _() (e31719c0d8 "fix(i18n): translate composed messages, titles and injected types in accounts doctypes and reports")
 			title=_("Invalid Accounts"),
 			exc=InvalidAccountMergeError,
 		)

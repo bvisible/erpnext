@@ -75,6 +75,7 @@ class PaymentLedgerEntry(Document):
 			frappe.throw(
 				_(
 					"""{0} {1}: Account {2} is a Group Account and group accounts cannot be used in transactions"""
+					# //// Neoffice — see the marker above: the voucher type is translated before it is injected (6c461fbe73 "fix(i18n): translate the voucher type and the round-off labels injected in ledger messages")
 				).format(_(self.voucher_type), self.voucher_no, self.account)
 			)
 

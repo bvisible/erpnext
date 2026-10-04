@@ -186,11 +186,13 @@ def show_job_status(fail_count, deserialized_data_count, to_doctype):
 					to_doctype.lower().replace(" ", "-"), _(to_doctype)
 				)
 			),
+			# //// Neoffice — see the block marker above: the dialog title is translated (ff9a2f9dda "fix(i18n): translate the bulk transaction dialog titles, doctype names and alert")
 			title=_("Successful"),
 			indicator="green",
 		)
 	elif fail_count != 0 and fail_count < deserialized_data_count:
 		frappe.msgprint(
+			# //// Neoffice — see the block marker above: the markup stays outside _(), the document type and the dialog title are translated (02ac651dfe "fix(i18n): keep the markup of the bulk transaction result messages outside _()"; ff9a2f9dda "fix(i18n): translate the bulk transaction dialog titles, doctype names and alert")
 			_("Creation of {0} partially successful. Check {1}").format(
 				_(to_doctype),
 				'<b><a href="/app/bulk-transaction-log">{}</a></b>'.format(_("Bulk Transaction Log")),
@@ -200,6 +202,7 @@ def show_job_status(fail_count, deserialized_data_count, to_doctype):
 		)
 	else:
 		frappe.msgprint(
+			# //// Neoffice — see the block marker above: the markup stays outside _(), the document type and the dialog title are translated (02ac651dfe "fix(i18n): keep the markup of the bulk transaction result messages outside _()"; ff9a2f9dda "fix(i18n): translate the bulk transaction dialog titles, doctype names and alert")
 			_("Creation of {0} failed. Check {1}").format(
 				_(to_doctype),
 				'<b><a href="/app/bulk-transaction-log">{}</a></b>'.format(_("Bulk Transaction Log")),
