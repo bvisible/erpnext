@@ -748,8 +748,12 @@ class AccountsController(TransactionBase):
 
 			for row in self.get("items"):
 				if not row.get(field):
-					msg = f"At Row {row.idx}: The field {bold(label)} is mandatory for internal transfer"
-					frappe.throw(_(msg), title=_("Internal Transfer Reference Missing"))
+					# //// Neoffice — upstream composes the text before translating it (f-string), so the catalogue key changes with every value and
+					# //// never matches (or no _() at all); we use one translatable template per sentence and inject the values afterwards.
+					msg = _("At Row {0}: The field {1} is mandatory for internal transfer").format(
+						row.idx, bold(_(label))
+					)
+					frappe.throw(msg, title=_("Internal Transfer Reference Missing"))
 
 	def validate_internal_transaction(self):
 		if not cint(
@@ -839,8 +843,9 @@ class AccountsController(TransactionBase):
 	def disable_pricing_rule_on_internal_transfer(self):
 		if not self.get("ignore_pricing_rule") and self.is_internal_transfer():
 			self.ignore_pricing_rule = 1
+			# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 			frappe.msgprint(
-				_("Disabled pricing rules since this {} is an internal transfer").format(self.doctype),
+				_("Disabled pricing rules since this {} is an internal transfer").format(_(self.doctype)),
 				alert=1,
 			)
 
@@ -853,9 +858,10 @@ class AccountsController(TransactionBase):
 					tax_updated = True
 
 			if tax_updated:
+				# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 				frappe.msgprint(
 					_("Disabled tax included prices since this {} is an internal transfer").format(
-						self.doctype
+						_(self.doctype)
 					),
 					alert=1,
 				)
@@ -2366,9 +2372,10 @@ class AccountsController(TransactionBase):
 					and party_account_currency != self.company_currency
 					and self.currency != party_account_currency
 				):
+					# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 					frappe.throw(
 						_("Accounting Entry for {0}: {1} can only be made in currency: {2}").format(
-							party_type, party, party_account_currency
+							_(party_type), party, party_account_currency
 						),
 						InvalidCurrency,
 					)

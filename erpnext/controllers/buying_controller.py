@@ -487,7 +487,8 @@ class BuyingController(SubcontractingController):
 	def validate_for_subcontracting(self):
 		if self.is_subcontracted and self.get("is_old_subcontracting_flow"):
 			if self.doctype in ["Purchase Receipt", "Purchase Invoice"] and not self.supplier_warehouse:
-				frappe.throw(_("Supplier Warehouse mandatory for sub-contracted {0}").format(self.doctype))
+				# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
+				frappe.throw(_("Supplier Warehouse mandatory for sub-contracted {0}").format(_(self.doctype)))
 
 			for item in self.get("items"):
 				if item in self.sub_contracted_items and not item.bom:
@@ -496,8 +497,12 @@ class BuyingController(SubcontractingController):
 				return
 			for row in self.get("supplied_items"):
 				if not row.reserve_warehouse:
-					msg = f"Reserved Warehouse is mandatory for the Item {frappe.bold(row.rm_item_code)} in Raw Materials supplied"
-					frappe.throw(_(msg))
+					# //// Neoffice — upstream composes the text before translating it (f-string), so the catalogue key changes with every value and
+					# //// never matches (or no _() at all); we use one translatable template per sentence and inject the values afterwards.
+					msg = _(
+						"Reserved Warehouse is mandatory for the Item {0} in Raw Materials supplied"
+					).format(frappe.bold(row.rm_item_code))
+					frappe.throw(msg)
 		else:
 			for item in self.get("items"):
 				if item.get("bom"):
@@ -570,7 +575,8 @@ class BuyingController(SubcontractingController):
 			if d.get(ref_fieldname):
 				status = frappe.db.get_value(ref_doctype, d.get(ref_fieldname), "status")
 				if status in ("Closed", "On Hold"):
-					frappe.throw(_("{0} {1} is {2}").format(ref_doctype, d.get(ref_fieldname), status))
+					# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
+					frappe.throw(_("{0} {1} is {2}").format(_(ref_doctype), d.get(ref_fieldname), _(status)))
 
 	def update_stock_ledger(self, allow_negative_stock=False, via_landed_cost_voucher=False):
 		self.update_ordered_and_reserved_qty()
@@ -864,7 +870,8 @@ class BuyingController(SubcontractingController):
 					)
 
 		for message in messages:
-			frappe.msgprint(message, title="Success", indicator="green")
+			# //// Neoffice — upstream passes an English literal as the title (never translated); we wrap it in _().
+			frappe.msgprint(message, title=_("Success"), indicator="green")
 
 	def make_asset(self, row, accounting_dimensions, is_grouped_asset=False):
 		if not row.asset_location:

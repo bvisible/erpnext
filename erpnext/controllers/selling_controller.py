@@ -275,6 +275,7 @@ class SellingController(StockController):
 
 	def validate_selling_price(self):
 		def throw_message(idx, item_name, rate, ref_rate_field):
+			# //// Neoffice — upstream injects an English literal into a translated sentence (never translated); we wrap it in _().
 			throw(
 				_(
 					"""Row #{0}: Selling rate for item {1} is lower than its {2}.
@@ -285,7 +286,7 @@ class SellingController(StockController):
 					idx,
 					bold(item_name),
 					bold(ref_rate_field),
-					bold("net rate"),
+					bold(_("net rate")),
 					bold(rate),
 					get_link_to_form("Selling Settings", "Selling Settings"),
 				),
@@ -311,7 +312,10 @@ class SellingController(StockController):
 			last_purchase_rate_in_sales_uom = last_purchase_rate * (item.conversion_factor or 1)
 
 			if flt(item.base_net_rate) < flt(last_purchase_rate_in_sales_uom):
-				throw_message(item.idx, item.item_name, last_purchase_rate_in_sales_uom, "last purchase rate")
+				# //// Neoffice — upstream injects an English literal into a translated sentence (never translated); we wrap it in _().
+				throw_message(
+					item.idx, item.item_name, last_purchase_rate_in_sales_uom, _("last purchase rate")
+				)
 
 			if is_internal_customer or not is_stock_item:
 				continue
@@ -355,11 +359,12 @@ class SellingController(StockController):
 			last_valuation_rate_in_sales_uom = last_valuation_rate * (item.conversion_factor or 1)
 
 			if flt(item.base_net_rate) < flt(last_valuation_rate_in_sales_uom):
+				# //// Neoffice — upstream injects an English literal into a translated sentence (never translated); we wrap it in _().
 				throw_message(
 					item.idx,
 					item.item_name,
 					last_valuation_rate_in_sales_uom,
-					"valuation rate (Moving Average)",
+					_("valuation rate (Moving Average)"),
 				)
 
 	def get_item_list(self):
@@ -846,7 +851,8 @@ class SellingController(StockController):
 		if not self.get("is_internal_customer") and any(d.get("target_warehouse") for d in items):
 			msg = _("Target Warehouse is set for some items but the customer is not an internal customer.")
 			msg += " " + _("This {} will be treated as material transfer.").format(_(self.doctype))
-			frappe.msgprint(msg, title="Internal Transfer", alert=True)
+			# //// Neoffice — upstream passes an English literal as the title (never translated); we wrap it in _().
+			frappe.msgprint(msg, title=_("Internal Transfer"), alert=True)
 
 	def validate_items(self):
 		# validate items to see if they have is_sales_item enabled

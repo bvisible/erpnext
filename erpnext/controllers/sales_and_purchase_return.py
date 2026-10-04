@@ -34,19 +34,23 @@ def validate_return(doc):
 
 def validate_return_against(doc):
 	if not frappe.db.exists(doc.doctype, doc.return_against):
-		frappe.throw(_("Invalid {0}: {1}").format(doc.meta.get_label("return_against"), doc.return_against))
+		# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
+		frappe.throw(
+			_("Invalid {0}: {1}").format(_(doc.meta.get_label("return_against")), doc.return_against)
+		)
 	else:
 		ref_doc = frappe.get_doc(doc.doctype, doc.return_against)
 
 		party_type = "customer" if doc.doctype in ("Sales Invoice", "Delivery Note") else "supplier"
 
 		if ref_doc.get(party_type) != doc.get(party_type):
+			# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 			frappe.throw(
 				_("The {0} {1} does not match with the {0} {2} in the {3} {4}").format(
-					doc.meta.get_label(party_type),
+					_(doc.meta.get_label(party_type)),
 					bold(doc.get(party_type)),
 					bold(ref_doc.get(party_type)),
-					ref_doc.doctype,
+					_(ref_doc.doctype),
 					ref_doc.name,
 				),
 				title=_("Party Mismatch"),
@@ -71,9 +75,10 @@ def validate_return_against(doc):
 
 			# validate same exchange rate
 			if doc.conversion_rate != ref_doc.conversion_rate:
+				# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 				frappe.throw(
 					_("Exchange Rate must be same as {0} {1} ({2})").format(
-						doc.doctype, doc.return_against, ref_doc.conversion_rate
+						_(doc.doctype), doc.return_against, ref_doc.conversion_rate
 					)
 				)
 
@@ -133,9 +138,10 @@ def validate_returned_items(doc):
 
 		if d.item_code and (flt(d.qty) <= 0 or flt(d.get("received_qty")) <= 0):
 			if key not in valid_items:
+				# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 				frappe.msgprint(
 					_("Row # {0}: Returned Item {1} does not exist in {2} {3}").format(
-						d.idx, d.item_code, doc.doctype, doc.return_against
+						d.idx, d.item_code, _(doc.doctype), doc.return_against
 					),
 					raise_exception=raise_exception,
 				)
@@ -149,9 +155,10 @@ def validate_returned_items(doc):
 					and doc.doctype in ("Delivery Note", "Sales Invoice")
 					and get_valuation_method(ref.item_code) != "Moving Average"
 				):
+					# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 					frappe.throw(
 						_("Row # {0}: Rate cannot be greater than the rate used in {1} {2}").format(
-							d.idx, doc.doctype, doc.return_against
+							d.idx, _(doc.doctype), doc.return_against
 						)
 					)
 
