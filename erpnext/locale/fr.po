@@ -14678,7 +14678,7 @@ msgid "Cross Listing of Item in multiple groups"
 msgstr "Liste Croisée d'Articles dans plusieurs groupes"
 
 #: erpnext/www/pos-viewer/index.html:93
-msgid "Créer un compte"
+msgid "Create account"
 msgstr "Créer un compte"
 
 #. Label of a Float field in DocType 'Tax Withholding Rate'
@@ -31102,10 +31102,6 @@ msgstr "Veuillez mentionner s'il s'agit d'un compte créditeur non standard"
 msgid "Mention if non-standard receivable account applicable"
 msgstr "Mentionner si le compte débiteur applicable n'est pas standard"
 
-#: erpnext/www/pos-viewer/index.js:572
-msgid "Merci pour votre achat!"
-msgstr "Merci pour votre achat !"
-
 #: erpnext/accounts/doctype/account/account.js:151
 msgid "Merge"
 msgstr "Fusionner"
@@ -46695,7 +46691,7 @@ msgid "Running"
 msgstr "En cours"
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.js:1467
-msgid "Réorganiser lignes TVA"
+msgid "Reorder VAT lines"
 msgstr "Réorganiser lignes TVA"
 
 #: erpnext/selling/report/pending_so_items_for_purchase_request/pending_so_items_for_purchase_request.py:28

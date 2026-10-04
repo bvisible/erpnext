@@ -1508,9 +1508,10 @@ frappe.ui.form.on("Journal Entry", {
                 return erpnext.journal_entry.quick_entry(frm);
             });
             
-            // Bouton pour repositionner manuellement les lignes TVA
+            // Button to reposition the VAT lines by hand
+            //// Neoffice — the button label was a French literal; it is an English msgid now (house rule), the French screen is unchanged, served by the translation catalogue.
             if (frm.doc.accounts && frm.doc.accounts.some(row => row.account && row.account.includes('TVA'))) {
-                frm.add_custom_button(__('Réorganiser lignes TVA'), function() {
+                frm.add_custom_button(__('Reorder VAT lines'), function() {
                     if (erpnext.journal_entry_utils) {
                         // Check associations first
                         frm.doc.accounts.forEach(row => {

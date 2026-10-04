@@ -201,3 +201,13 @@ campaign carry their own inline `//// Neoffice` marker).
 ---
 
 *Written by the `//// Neoffice` marking campaign, lot E1 (neoffice-maintenance #138).*
+
+### English msgids instead of French source strings (2026-10-04)
+
+House rule: the source text of a translatable string is English; the French lives in the
+catalogue and the French screen is unchanged. JSON and `.po` files cannot carry a comment, so
+those edits are recorded here (the code edits are marked in place with `//// Neoffice`).
+
+- `erpnext/accounts/workspace/accounting/accounting.json` — the link label `Transaction bancaire` is now `Bank Transaction` (the French is served by the catalogue, same words).
+- `erpnext/locale/fr.po` — 3 entries (the VAT-lines button, the POS viewer sign-up button and thank-you title) renamed to their English msgid or dropped when it already existed. The JS and HTML that call them are marked in place.
+- Left as they are on purpose: the chart and number-card labels of the Neoffice workspaces (`Paiements du Mois`, `CA du Mois`…) are the names of Dashboard Chart / Number Card records, i.e. data, and `Bank transferts` (a mixed-language card break) would change the French screen if corrected.
