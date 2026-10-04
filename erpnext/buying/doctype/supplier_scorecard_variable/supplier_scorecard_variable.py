@@ -43,11 +43,15 @@ class SupplierScorecardVariable(Document):
 
 				import_string_path(self.path)
 			except AttributeError:
-				frappe.throw(_("Could not find path for " + self.path), VariablePathNotFound)
+				# //// Neoffice — upstream concatenated the path BEFORE calling _(), so the translation key
+				# //// Neoffice — changed with every path and never matched a catalogue entry: the message
+				# //// Neoffice — stayed in English. We use one fixed template and inject the path after.
+				frappe.throw(_("Could not find path for {0}").format(self.path), VariablePathNotFound)
 
 		else:
 			if not hasattr(sys.modules[__name__], self.path):
-				frappe.throw(_("Could not find path for " + self.path), VariablePathNotFound)
+				# //// Neoffice — same fix as above (fixed template, path injected after _()).
+				frappe.throw(_("Could not find path for {0}").format(self.path), VariablePathNotFound)
 
 
 def get_total_workdays(scorecard):
