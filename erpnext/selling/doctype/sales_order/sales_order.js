@@ -1250,8 +1250,10 @@ erpnext.selling.SalesOrderController = class SalesOrderController extends erpnex
 
 				let selected_items = dialog.fields_dict.items_for_po.grid.get_selected_children();
 				if (selected_items.length == 0) {
+					//// Neoffice — upstream left the message of this frappe.throw() untranslated (only the
+					//// Neoffice — title went through __()), so it showed in English.
 					frappe.throw({
-						message: "Please select Items from the Table",
+						message: __("Please select Items from the Table"),
 						title: __("Items Required"),
 						indicator: "blue",
 					});

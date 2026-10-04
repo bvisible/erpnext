@@ -438,7 +438,8 @@ erpnext.PointOfSale.Payment = class {
 
 	toggle_remarks_control() {
 		if (this.$remarks.find(".frappe-control").length) {
-			this.$remarks.html("+ Add Remark");
+			//// Neoffice — upstream wrote this label as an English literal into the DOM, without __().
+			this.$remarks.html(__("+ Add Remark"));
 		} else {
 			this.$remarks.html("");
 			this[`remark_control`] = frappe.ui.form.make_control({
@@ -629,10 +630,12 @@ erpnext.PointOfSale.Payment = class {
 
 		const margin = this.$payment_modes.children().length % 2 === 0 ? "pr-2" : "pl-2";
 		const amount = doc.loyalty_amount > 0 ? format_currency(doc.loyalty_amount, doc.currency) : "";
+		//// Neoffice — upstream wrote the "Redeem Loyalty Points" label as an English literal in this
+		//// Neoffice — template, while the same text is translated right below in the control label.
 		this.$payment_modes.append(
 			`<div class="payment-mode-wrapper">
 				<div class="mode-of-payment loyalty-card" data-mode="loyalty-amount" data-payment-type="loyalty-amount">
-					Redeem Loyalty Points
+					${__("Redeem Loyalty Points")}
 					<div class="loyalty-amount-amount pay-amount">${amount}</div>
 					<div class="loyalty-amount-name">${loyalty_program}</div>
 					<div class="loyalty-amount mode-of-payment-control"></div>
@@ -687,10 +690,12 @@ erpnext.PointOfSale.Payment = class {
 
 	render_add_payment_method_dom() {
 		const docstatus = this.events.get_frm().doc.docstatus;
+		//// Neoffice — upstream wrote the "+ Add Payment Method" label as an English literal in this
+		//// Neoffice — template, without __().
 		if (docstatus === 0)
 			this.$payment_modes.append(
 				`<div class="w-full pr-2">
-					<div class="add-mode-of-payment w-half text-grey mb-4 no-select pointer">+ Add Payment Method</div>
+					<div class="add-mode-of-payment w-half text-grey mb-4 no-select pointer">${__("+ Add Payment Method")}</div>
 				</div>`
 			);
 	}

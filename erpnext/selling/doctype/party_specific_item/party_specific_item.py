@@ -32,4 +32,8 @@ class PartySpecificItem(Document):
 			}
 		)
 		if exists:
-			frappe.throw(_("This item filter has already been applied for the {0}").format(self.party_type))
+			# //// Neoffice — upstream injected the raw English party type (Customer, Supplier...) into the
+			# //// Neoffice — translated message. We translate it before injecting it.
+			frappe.throw(
+				_("This item filter has already been applied for the {0}").format(_(self.party_type))
+			)
