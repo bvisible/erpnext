@@ -71,21 +71,26 @@ class PaymentLedgerEntry(Document):
 		)[0]
 
 		if ret.is_group == 1:
+			# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 			frappe.throw(
 				_(
 					"""{0} {1}: Account {2} is a Group Account and group accounts cannot be used in transactions"""
-				).format(self.voucher_type, self.voucher_no, self.account)
+				).format(_(self.voucher_type), self.voucher_no, self.account)
 			)
 
 		if ret.docstatus == 2:
+			# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 			frappe.throw(
-				_("{0} {1}: Account {2} is inactive").format(self.voucher_type, self.voucher_no, self.account)
+				_("{0} {1}: Account {2} is inactive").format(
+					_(self.voucher_type), self.voucher_no, self.account
+				)
 			)
 
 		if ret.company != self.company:
+			# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 			frappe.throw(
 				_("{0} {1}: Account {2} does not belong to Company {3}").format(
-					self.voucher_type, self.voucher_no, self.account, self.company
+					_(self.voucher_type), self.voucher_no, self.account, self.company
 				)
 			)
 

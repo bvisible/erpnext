@@ -507,9 +507,10 @@ def get_debit_credit_allowance(voucher_type, precision):
 
 
 def raise_debit_credit_not_equal_error(debit_credit_diff, voucher_type, voucher_no):
+	# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 	frappe.throw(
 		_("Debit and Credit not equal for {0} #{1}. Difference is {2}.").format(
-			voucher_type, voucher_no, debit_credit_diff
+			_(voucher_type), voucher_no, debit_credit_diff
 		)
 	)
 
@@ -531,9 +532,10 @@ def make_round_off_gle(gl_map, debit_credit_diff, trx_cur_debit_credit_diff, pre
 
 	if has_opening_entry:
 		if not round_off_for_opening:
+			# //// Neoffice — upstream injects an English literal into a translated sentence (never translated); we wrap it in _().
 			frappe.throw(
 				_("Please set '{0}' in Company: {1}").format(
-					frappe.bold("Round Off for Opening"), get_link_to_form("Company", gl_map[0].company)
+					frappe.bold(_("Round Off for Opening")), get_link_to_form("Company", gl_map[0].company)
 				)
 			)
 
@@ -625,16 +627,18 @@ def get_round_off_account_and_cost_center(company, voucher_type, voucher_no, use
 			round_off_cost_center = parent_cost_center
 
 	if not round_off_account:
+		# //// Neoffice — upstream injects an English literal into a translated sentence (never translated); we wrap it in _().
 		frappe.throw(
 			_("Please mention '{0}' in Company: {1}").format(
-				frappe.bold("Round Off Account"), get_link_to_form("Company", company)
+				frappe.bold(_("Round Off Account")), get_link_to_form("Company", company)
 			)
 		)
 
 	if not round_off_cost_center:
+		# //// Neoffice — upstream injects an English literal into a translated sentence (never translated); we wrap it in _().
 		frappe.throw(
 			_("Please mention '{0}' in Company: {1}").format(
-				frappe.bold("Round Off Cost Center"), get_link_to_form("Company", company)
+				frappe.bold(_("Round Off Cost Center")), get_link_to_form("Company", company)
 			)
 		)
 
