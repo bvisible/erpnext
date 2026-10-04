@@ -60846,7 +60846,6 @@ msgstr "Postes de travail"
 msgid "Wrapping up"
 msgstr "Emballer"
 
-# //// Neoffice — upstream had "Reprise" (a reversal or recovery, the opposite of a write-off) for the "Write Off" section
 # //// of the invoices and for the default account name created from the standard chart. "Radiation" matches the
 # //// existing "Montant radié". Sibling labels ("Write Off Account", "... Entry"...) still say "Reprise".
 #. Label of a Section Break field in DocType 'Journal Entry'
@@ -60861,7 +60860,7 @@ msgstr "Emballer"
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.json
 #: erpnext/setup/doctype/company/company.py:569
 msgid "Write Off"
-msgstr "Radiation"
+msgstr "Reprise"
 
 #. Label of a Link field in DocType 'POS Invoice'
 #. Label of a Link field in DocType 'POS Profile'
