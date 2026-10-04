@@ -559,9 +559,10 @@ class JournalEntry(AccountsController):
 					and d.party_type
 					!= "Employee"  # making an excpetion for employee since they can be both payable and receivable
 				):
+					# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 					frappe.throw(
 						_("Row {0}: Account {1} and Party Type {2} have different account types").format(
-							d.idx, d.account, d.party_type
+							d.idx, d.account, _(d.party_type)
 						)
 					)
 
@@ -596,8 +597,9 @@ class JournalEntry(AccountsController):
 	def validate_cheque_info(self):
 		if self.voucher_type in ["Bank Entry"]:
 			if not self.cheque_no or not self.cheque_date:
+				# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 				msgprint(
-					_("Reference No & Reference Date is required for {0}").format(self.voucher_type),
+					_("Reference No & Reference Date is required for {0}").format(_(self.voucher_type)),
 					raise_exception=1,
 				)
 
@@ -686,9 +688,10 @@ class JournalEntry(AccountsController):
 						if flt(jvd[dr_or_cr]) > 0:
 							valid = True
 					if not valid and not self.system_generated_gain_loss():
+						# //// Neoffice — upstream injects an English literal into a translated sentence (never translated); we wrap it in _().
 						frappe.throw(
 							_("Against Journal Entry {0} does not have any unmatched {1} entry").format(
-								d.reference_name, dr_or_cr
+								d.reference_name, _("Debit") if dr_or_cr == "debit" else _("Credit")
 							)
 						)
 
@@ -719,14 +722,18 @@ class JournalEntry(AccountsController):
 
 				# check debit or credit type Sales / Purchase Order
 				if d.reference_type == "Sales Order" and flt(d.debit) > 0:
+					# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 					frappe.throw(
-						_("Row {0}: Debit entry can not be linked with a {1}").format(d.idx, d.reference_type)
+						_("Row {0}: Debit entry can not be linked with a {1}").format(
+							d.idx, _(d.reference_type)
+						)
 					)
 
 				if d.reference_type == "Purchase Order" and flt(d.credit) > 0:
+					# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 					frappe.throw(
 						_("Row {0}: Credit entry can not be linked with a {1}").format(
-							d.idx, d.reference_type
+							d.idx, _(d.reference_type)
 						)
 					)
 
@@ -770,12 +777,13 @@ class JournalEntry(AccountsController):
 					if (
 						against_voucher[0] != cstr(d.party) or party_account != d.account
 					) and self.voucher_type != "Exchange Gain Or Loss":
+						# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 						frappe.throw(
 							_("Row {0}: Party / Account does not match with {1} / {2} in {3} {4}").format(
 								d.idx,
-								field_dict.get(d.reference_type)[0],
-								field_dict.get(d.reference_type)[1],
-								d.reference_type,
+								_(field_dict.get(d.reference_type)[0]),
+								_(field_dict.get(d.reference_type)[1]),
+								_(d.reference_type),
 								d.reference_name,
 							)
 						)
@@ -784,9 +792,10 @@ class JournalEntry(AccountsController):
 				if d.reference_type in ("Sales Order", "Purchase Order"):
 					# set totals
 					if against_voucher != d.party:
+						# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 						frappe.throw(
 							_("Row {0}: {1} {2} does not match with {3}").format(
-								d.idx, d.party_type, d.party, d.reference_type
+								d.idx, _(d.party_type), d.party, _(d.reference_type)
 							)
 						)
 
@@ -803,13 +812,16 @@ class JournalEntry(AccountsController):
 				order = frappe.get_doc(reference_type, reference_name)
 
 				if order.docstatus != 1:
-					frappe.throw(_("{0} {1} is not submitted").format(reference_type, reference_name))
+					# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
+					frappe.throw(_("{0} {1} is not submitted").format(_(reference_type), reference_name))
 
 				if flt(order.per_billed) >= 100:
-					frappe.throw(_("{0} {1} is fully billed").format(reference_type, reference_name))
+					# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
+					frappe.throw(_("{0} {1} is fully billed").format(_(reference_type), reference_name))
 
 				if cstr(order.status) == "Closed":
-					frappe.throw(_("{0} {1} is closed").format(reference_type, reference_name))
+					# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
+					frappe.throw(_("{0} {1} is closed").format(_(reference_type), reference_name))
 
 				account_currency = get_account_currency(account)
 				if account_currency == self.company_currency:
@@ -824,9 +836,10 @@ class JournalEntry(AccountsController):
 					)
 
 				if flt(voucher_total) < (flt(order.advance_paid) + total):
+					# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 					frappe.throw(
 						_("Advance paid against {0} {1} cannot be greater than Grand Total {2}").format(
-							reference_type, reference_name, formatted_voucher_total
+							_(reference_type), reference_name, formatted_voucher_total
 						)
 					)
 
@@ -844,12 +857,14 @@ class JournalEntry(AccountsController):
 				)
 
 				if invoice.docstatus != 1:
-					frappe.throw(_("{0} {1} is not submitted").format(reference_type, reference_name))
+					# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
+					frappe.throw(_("{0} {1} is not submitted").format(_(reference_type), reference_name))
 
 				if total and flt(invoice.outstanding_amount) < total:
+					# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 					frappe.throw(
 						_("Payment against {0} {1} cannot be greater than Outstanding Amount {2}").format(
-							reference_type, reference_name, invoice.outstanding_amount
+							_(reference_type), reference_name, invoice.outstanding_amount
 						)
 					)
 
@@ -1270,9 +1285,10 @@ class JournalEntry(AccountsController):
 			if frappe.db.exists(
 				{"doctype": "Journal Entry", "stock_entry": self.stock_entry, "docstatus": 1}
 			):
+				# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 				frappe.msgprint(
 					_("Warning: Another {0} # {1} exists against stock entry {2}").format(
-						self.voucher_type, self.name, self.stock_entry
+						_(self.voucher_type), self.name, self.stock_entry
 					)
 				)
 
@@ -1336,7 +1352,8 @@ def get_payment_entry_against_order(
 	ref_doc = frappe.get_doc(dt, dn)
 
 	if flt(ref_doc.per_billed, 2) > 0:
-		frappe.throw(_("Can only make payment against unbilled {0}").format(dt))
+		# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
+		frappe.throw(_("Can only make payment against unbilled {0}").format(_(dt)))
 
 	if dt == "Sales Order":
 		party_type = "Customer"

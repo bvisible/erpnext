@@ -242,9 +242,10 @@ class PaymentEntry(AccountsController):
 		for d in self.get("references"):
 			key = (d.reference_doctype, d.reference_name, d.payment_term, d.payment_request)
 			if key in reference_names:
+				# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 				frappe.throw(
 					_("Row #{0}: Duplicate entry in References {1} {2}").format(
-						d.idx, d.reference_doctype, d.reference_name
+						d.idx, _(d.reference_doctype), d.reference_name
 					)
 				)
 
@@ -586,7 +587,8 @@ class PaymentEntry(AccountsController):
 
 			elif d.reference_name:
 				if not frappe.db.exists(d.reference_doctype, d.reference_name):
-					frappe.throw(_("{0} {1} does not exist").format(d.reference_doctype, d.reference_name))
+					# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
+					frappe.throw(_("{0} {1} does not exist").format(_(d.reference_doctype), d.reference_name))
 
 				ref_doc = frappe.get_doc(d.reference_doctype, d.reference_name)
 
@@ -1921,10 +1923,11 @@ class PaymentEntry(AccountsController):
 		elif self.party_type in ("Supplier", "Customer"):
 			if paid_amount > total_negative_outstanding:
 				if total_negative_outstanding == 0:
+					# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 					frappe.msgprint(
 						_("Cannot {0} from {1} without any negative outstanding invoice").format(
-							self.payment_type,
-							self.party_type,
+							_(self.payment_type),
+							_(self.party_type),
 						)
 					)
 				else:
