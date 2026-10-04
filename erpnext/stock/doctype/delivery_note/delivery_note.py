@@ -657,9 +657,11 @@ class DeliveryNote(SellingController):
 					and flt(item.packed_qty)
 					and flt(item.packed_qty) != flt(item.qty)
 				):
+					# //// Neoffice — upstream injected the raw English child doctype name into the translated
+					# //// Neoffice — message. We translate it before bolding and injecting it.
 					frappe.throw(
 						_("Row {0}: Packed Qty must be equal to {1} Qty.").format(
-							item.idx, frappe.bold(item.doctype)
+							item.idx, frappe.bold(_(item.doctype))
 						)
 					)
 
