@@ -60846,8 +60846,6 @@ msgstr "Postes de travail"
 msgid "Wrapping up"
 msgstr "Emballer"
 
-# //// of the invoices and for the default account name created from the standard chart. "Radiation" matches the
-# //// existing "Montant radié". Sibling labels ("Write Off Account", "... Entry"...) still say "Reprise".
 #. Label of a Section Break field in DocType 'Journal Entry'
 #. Label of a Section Break field in DocType 'POS Invoice'
 #. Label of a Section Break field in DocType 'Purchase Invoice'
