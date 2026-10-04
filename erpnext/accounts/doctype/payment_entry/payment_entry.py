@@ -1249,11 +1249,14 @@ class PaymentEntry(AccountsController):
 		if self.payment_type in ["Receive", "Pay"]:
 			for d in self.get("references"):
 				if d.allocated_amount:
+					# //// Neoffice — upstream injects the raw English DocType name into the translated sentence, so the stored
+					# //// remarks read "Montant CHF 129 pour Sales Invoice FA-…" in French. We translate the name with _() (the
+					# //// remarks are free text saved in the user's language: nothing reads them back).
 					remarks.append(
 						_("Amount {0} {1} against {2} {3}").format(
 							_(self.party_account_currency),
 							d.allocated_amount,
-							d.reference_doctype,
+							_(d.reference_doctype),
 							d.reference_name,
 						)
 					)
