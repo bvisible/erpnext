@@ -216,7 +216,14 @@ class AccountsController(TransactionBase):
 					get_link_to_form("Payment Reconciliation", "Payment Reconciliation", _("Payment Reconciliation")),
 					get_link_to_form(self.doctype, self.get("return_against")),
 				)
-				frappe.msgprint(msg)
+				# //// Neoffice — the check runs on save and again on submit, and the dialog then said the same
+				# //// paragraph twice, one under the other. A message already waiting to be shown is not queued again.
+				already = [
+					(frappe.parse_json(m) if isinstance(m, str) else m).get("message")
+					for m in frappe.local.message_log or []
+				]
+				if msg not in already:
+					frappe.msgprint(msg)
 
 	def validate(self):
 		if not self.get("is_return") and not self.get("is_debit_note"):
