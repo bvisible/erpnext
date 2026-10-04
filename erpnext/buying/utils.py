@@ -113,7 +113,11 @@ def check_on_hold_or_closed_status(doctype, docname) -> None:
 	status = frappe.db.get_value(doctype, docname, "status")
 
 	if status in ("Closed", "On Hold"):
-		frappe.throw(_("{0} {1} status is {2}").format(doctype, docname, status), frappe.InvalidStatusError)
+		# //// Neoffice — upstream injected the raw English document type name into the translated
+		# //// Neoffice — message. We translate the document type name before injecting it.
+		frappe.throw(
+			_("{0} {1} status is {2}").format(_(doctype), docname, status), frappe.InvalidStatusError
+		)
 
 
 @frappe.whitelist()

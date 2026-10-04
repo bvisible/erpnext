@@ -461,8 +461,11 @@ class PurchaseOrder(BuyingController):
 		date_diff = frappe.db.sql(f"select '{mod_db[0][0]}' - '{cstr(self.modified)}' ")
 
 		if date_diff and date_diff[0][0]:
+			# //// Neoffice — upstream injected the raw English document type name into the translated
+			# //// Neoffice — message, so a French user read "Purchase Order PO-0001 a été modifié".
+			# //// Neoffice — We translate the document type name before injecting it.
 			msgprint(
-				_("{0} {1} has been modified. Please refresh.").format(self.doctype, self.name),
+				_("{0} {1} has been modified. Please refresh.").format(_(self.doctype), self.name),
 				raise_exception=True,
 			)
 
