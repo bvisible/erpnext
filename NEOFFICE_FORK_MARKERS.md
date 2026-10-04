@@ -169,6 +169,22 @@ conflict at the merge.
 
 ---
 
+## i18n — JSON records whose text was never passed through `_()`
+
+JSON cannot hold a comment, so these two edits are recorded here (the Python / JS / HTML hunks of the same
+campaign carry their own inline `//// Neoffice` marker).
+
+- `erpnext/accounts/notification/notification_for_new_fiscal_year/notification_for_new_fiscal_year.json` —
+  `subject` was the English text `Notification for new fiscal year {{ doc.name }}`; upstream renders the
+  body through `_()` but not the subject, so the e-mail subject stayed English. We wrap the caption in
+  `{{ _("Notification for new fiscal year") }}`.
+- `erpnext/accounts/print_format/cheque_printing_format/cheque_printing_format.json` — in the `html` value,
+  the captions `Prepared By`, `Authorised Signatory`, `Received Payment as Above` and `A/C Payee` were static
+  English text; we wrap them in `{{ _("…") }}`. The template also carries a Jinja `{#- //// Neoffice … -#}`
+  comment at its start (never rendered).
+
+---
+
 ## Auto-marked (fork-markers workflow)
 
 - `erpnext/setup/workspace/setup/setup.json` — removed the "Terminal Setup" link (payment-terminal

@@ -25,5 +25,5 @@
    "email_by_role": "Accounts Manager"
   }
  ],
- "subject": "Notification for new fiscal year {{ doc.name }}"
+ "subject": "{{ _(\"Notification for new fiscal year\") }} {{ doc.name }}"
 }
