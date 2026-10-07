@@ -189,3 +189,56 @@ class TestLoyaltyTotals(FrappeTestCase):
 
 	def test_a_customer_with_no_entries_is_in_the_lowest_tier(self):
 		self.assertEqual(self.details(include_expired_entry=True)["tier_name"], "Tier 1")
+
+
+class TestLoyaltyDetailsAreForWhoReadsTheCustomer(FrappeTestCase):
+	"""`get_loyalty_program_details_with_points` is whitelisted: a portal account could read the
+	lifetime spend, the points and the tier of ANY customer through it, while the list of the
+	entries is refused to them. When the function is the endpoint itself, the caller must be able
+	to read the customer. The web shop calls it from Python, in the same process, for its own
+	customer: that path is left alone."""
+
+	ENDPOINT = (
+		"erpnext.accounts.doctype.loyalty_program.loyalty_program.get_loyalty_program_details_with_points"
+	)
+
+	def setUp(self):
+		customers = frappe.get_all("Customer", pluck="name", limit=1)
+		portal = frappe.get_all(
+			"User", filters={"user_type": "Website User", "enabled": 1, "name": ["!=", "Guest"]}, pluck="name"
+		)
+		programs = frappe.get_all("Loyalty Program", pluck="name", limit=1)
+		if not (customers and portal and programs):
+			self.skipTest("the site has no customer, portal account or loyalty program")
+		self.customer, self.program = customers[0], programs[0]
+		self.portal = next(
+			(u for u in portal if not frappe.has_permission("Customer", "read", user=u)), None
+		)
+		if not self.portal:
+			self.skipTest("every portal account of the site can read customers")
+		self.cmd_before = frappe.local.form_dict.get("cmd")
+
+	def tearDown(self):
+		frappe.set_user("Administrator")
+		frappe.local.form_dict.pop("cmd", None)
+		if getattr(self, "cmd_before", None):
+			frappe.local.form_dict["cmd"] = self.cmd_before
+
+	def call_as(self, user, as_endpoint):
+		frappe.set_user(user)
+		if as_endpoint:
+			frappe.local.form_dict["cmd"] = self.ENDPOINT
+		else:
+			frappe.local.form_dict.pop("cmd", None)
+		return lp.get_loyalty_program_details_with_points(self.customer, loyalty_program=self.program)
+
+	def test_a_portal_account_cannot_read_another_customers_loyalty_details_over_http(self):
+		with self.assertRaises(frappe.PermissionError):
+			self.call_as(self.portal, as_endpoint=True)
+
+	def test_staff_who_read_the_customer_still_get_them_over_http(self):
+		self.assertIn("loyalty_points", self.call_as("Administrator", as_endpoint=True))
+
+	def test_the_web_shop_reading_its_own_customer_in_process_is_not_blocked(self):
+		"""Not called as the endpoint: webshop pages, checkout and cart run it as the portal account."""
+		self.assertIn("loyalty_points", self.call_as(self.portal, as_endpoint=False))
