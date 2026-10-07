@@ -99,6 +99,8 @@ def get_loyalty_details(
 	if not expiry_date:
 		expiry_date = today()
 
+	# //// Neoffice — `include_expired_entry` arrives as the string "false" from the desk, which is
+	# //// true in Python; coerced with `_as_flag` (f57e2b76e9, neoffice-maintenance#1287).
 	include_expired_entry = _as_flag(include_expired_entry)
 
 	LoyaltyPointEntry = frappe.qb.DocType("Loyalty Point Entry")
@@ -122,6 +124,7 @@ def get_loyalty_details(
 		frappe.qb.from_(LoyaltyPointEntry)
 		.select(
 			Sum(LoyaltyPointEntry.loyalty_points).as_("loyalty_points"),
+			# //// Neoffice — see the block marker above: sums earn rows only
 			Sum(earned_amount).as_("total_spent"),
 		)
 		.where(
@@ -176,6 +179,7 @@ def get_loyalty_program_details_with_points(
 		[d.as_dict() for d in loyalty_program.collection_rules],
 		flt(lp_details.total_spent) + current_transaction_amount,
 	)
+	# //// Neoffice — see the block marker above: corrected tier lookup
 	if tier:
 		lp_details.tier_name = tier.tier_name
 		lp_details.collection_factor = tier.collection_factor
