@@ -9,6 +9,10 @@ from frappe.model.document import Document
 # //// AFTER the query_builder import — the reorder is ours too and will conflict cosmetically.
 from frappe.utils import flt, today, cint
 from frappe.query_builder.functions import Sum
+# //// Neoffice — `Case` and `sbool` added to the imports for the three loyalty fixes below
+# //// (neoffice-maintenance#1287, 2026-10-07). Upstream imports neither.
+from frappe.query_builder import Case
+from frappe.utils import sbool
 
 
 class LoyaltyProgram(Document):
@@ -42,19 +46,71 @@ class LoyaltyProgram(Document):
 	pass
 
 
+# //// Neoffice — added (no upstream equivalent), neoffice-maintenance#1287. A whitelisted function
+# //// called from the desk (`frappe.call({args: {include_expired_entry: false}})`) receives the
+# //// STRING "false", which is true in Python: the points dialog counted expired points (776 shown
+# //// for 463 usable). Upstream has no coercion here. Keep as long as these functions stay
+# //// whitelisted without type hints.
+def _as_flag(value):
+	"""A boolean sent by the desk arrives as "true"/"false"/"1"/"0": read it as what it says."""
+	return bool(sbool(value))
+
+
+
+# //// Neoffice — added (no upstream equivalent), neoffice-maintenance#1287. Upstream version-15
+# //// picks the tier in the loop of `get_loyalty_program_details_with_points` that sorts the rules
+# //// by min_spent DESCENDING, always takes the first one (`i == 0`) and only steps down while
+# //// `spent <= min_spent`: it returns the tier just ABOVE the right one (CHF 8'163.77 with a tier
+# //// from CHF 8'000 and the next from CHF 10'000 came out in the CHF 10'000 tier), and every
+# //// customer earned points at the wrong factor. Upstream fixed it on `develop` (ascending sort,
+# //// `>=`); version-15 still has the inverted loop at v15.122.0. This is the same rule as that fix.
+# //// Drop it for upstream's loop once a version-15 release carries it.
+def get_tier_for_spent(collection_rules, spent):
+	"""The tier of a customer who has spent `spent`: the rule with the highest `min_spent` that the
+	spend has reached. Under every threshold: the lowest tier (a single tier program applies to
+	everyone, whatever its threshold). No rules: no tier."""
+	rules = sorted(collection_rules or [], key=lambda rule: flt(rule.get("min_spent")))
+	if not rules:
+		return None
+
+	tier = rules[0]
+	for rule in rules:
+		if flt(spent) < flt(rule.get("min_spent")):
+			break
+		tier = rule
+	return tier
+
+
 def get_loyalty_details(
 	customer, loyalty_program, expiry_date=None, company=None, include_expired_entry=False
 ):
 	if not expiry_date:
 		expiry_date = today()
 
+	include_expired_entry = _as_flag(include_expired_entry)
+
 	LoyaltyPointEntry = frappe.qb.DocType("Loyalty Point Entry")
+
+	# //// Neoffice — upstream: `Sum(LoyaltyPointEntry.purchase_amount)` over EVERY row. Paying an
+	# //// invoice with points writes one negative row per earn row it consumes, and each of them
+	# //// copies the invoice total into `purchase_amount` (sales_invoice.apply_loyalty_points), so the
+	# //// invoice was added to `total_spent` once per row: CHF 8'163.77 shown for CHF 7'368.75 really
+	# //// spent, which pushed the customer into a higher tier. Only the rows that EARN count here
+	# //// (neoffice-maintenance#1287, 2026-10-07). Drop when upstream stops recopying the total.
+	earned_amount = (
+		Case()
+		.when(
+			(LoyaltyPointEntry.redeem_against.isnull()) | (LoyaltyPointEntry.redeem_against == ""),
+			LoyaltyPointEntry.purchase_amount,
+		)
+		.else_(0)
+	)
 
 	query = (
 		frappe.qb.from_(LoyaltyPointEntry)
 		.select(
 			Sum(LoyaltyPointEntry.loyalty_points).as_("loyalty_points"),
-			Sum(LoyaltyPointEntry.purchase_amount).as_("total_spent"),
+			Sum(earned_amount).as_("total_spent"),
 		)
 		.where(
 			(LoyaltyPointEntry.customer == customer)
@@ -88,23 +144,28 @@ def get_loyalty_program_details_with_points(
 	include_expired_entry=False,
 	current_transaction_amount=0,
 ):
+	# //// Neoffice — flags and amounts arrive as strings from the desk (see `_as_flag`), and
+	# //// `total_spent + "0"` raised a TypeError. neoffice-maintenance#1287.
+	silent = _as_flag(silent)
+	include_expired_entry = _as_flag(include_expired_entry)
+	current_transaction_amount = flt(current_transaction_amount)
+
 	lp_details = get_loyalty_program_details(customer, loyalty_program, company=company, silent=silent)
 	loyalty_program = frappe.get_doc("Loyalty Program", loyalty_program)
 	lp_details.update(
 		get_loyalty_details(customer, loyalty_program.name, expiry_date, company, include_expired_entry)
 	)
 
-	tier_spent_level = sorted(
+	# //// Neoffice — upstream: a loop over the rules sorted DESCENDING that always took the first
+	# //// and stepped down while `spent <= min_spent`, i.e. the tier above the right one. See
+	# //// `get_tier_for_spent`. neoffice-maintenance#1287.
+	tier = get_tier_for_spent(
 		[d.as_dict() for d in loyalty_program.collection_rules],
-		key=lambda rule: rule.min_spent,
-		reverse=True,
+		flt(lp_details.total_spent) + current_transaction_amount,
 	)
-	for i, d in enumerate(tier_spent_level):
-		if i == 0 or (lp_details.total_spent + current_transaction_amount) <= d.min_spent:
-			lp_details.tier_name = d.tier_name
-			lp_details.collection_factor = d.collection_factor
-		else:
-			break
+	if tier:
+		lp_details.tier_name = tier.tier_name
+		lp_details.collection_factor = tier.collection_factor
 
 	return lp_details
 
@@ -119,6 +180,8 @@ def get_loyalty_program_details(
 	include_expired_entry=False,
 ):
 	lp_details = frappe._dict()
+	# //// Neoffice — `silent` sent by the desk is a string too (see `_as_flag`). #1287.
+	silent = _as_flag(silent)
 
 	if not loyalty_program:
 		loyalty_program = frappe.db.get_value("Customer", customer, "loyalty_program")
