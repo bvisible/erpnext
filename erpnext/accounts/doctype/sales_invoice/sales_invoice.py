@@ -1315,7 +1315,7 @@ class SalesInvoice(SellingController):
 			if flt(tax.base_tax_amount_after_discount_amount):
 				account_currency = get_account_currency(tax.account_head)
 				# //// added block
-				if flat_rate and frappe.db.get_value("Account", tax.account_head, "tax_code"):
+				if flat_rate and frappe.db.has_column("Account", "tax_code") and frappe.db.get_value("Account", tax.account_head, "tax_code"):  # //// Neoffice — same guard as wanted_vat (#606)
 					continue
 
 				remark = ""
@@ -1377,8 +1377,11 @@ class SalesInvoice(SellingController):
 		company = frappe.defaults.get_global_default("company")
 		flat_rate = frappe.db.get_value("Neoffice Company Settings", self.company, "vat_accounting_method") == "Flat-rate taxation"
 		wanted_vat = []
+		# //// Neoffice — Account.tax_code is a hub-synced Custom Field (the Swiss VAT code), absent on a bare
+		# //// bench: read there it raised 1054 at submit, so no invoice could be submitted on CI (#606).
+		has_tax_code = frappe.db.has_column("Account", "tax_code")
 		for tax in self.get("taxes"):
-			tax_code = frappe.db.get_value("Account", tax.account_head, "tax_code")
+			tax_code = has_tax_code and frappe.db.get_value("Account", tax.account_head, "tax_code")
 			if tax_code:
 				wanted_vat.append(tax.account_head)
 		# ////
