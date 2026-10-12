@@ -62605,3 +62605,16 @@ msgstr "Factures en cours de paiement"
 
 msgid "{0} invoice(s) are excluded because they are already in a payment run: {1}"
 msgstr "{0} facture(s) sont écartées car elles sont déjà en cours de paiement : {1}"
+# //// Neoffice — translations added by our fork (12.10.2026): labels and messages that read in English on a French screen.
+#: erpnext/accounts/report/accounts_receivable/accounts_receivable.py
+msgid "Today Date"
+msgstr "Date du jour"
+#: Journal Entry Account
+msgid "Credit in Account Currency"
+msgstr "Crédit (devise du compte)"
+#: Journal Entry Account
+msgid "Debit in Account Currency"
+msgstr "Débit (devise du compte)"
+#: erpnext/accounts/report/sales_partners_commission
+msgid "Invoiced Amount (Excl. Tax)"
+msgstr "Montant facturé (hors taxes)"
