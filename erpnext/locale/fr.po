@@ -2528,8 +2528,9 @@ msgstr "Comptabilité"
 #: erpnext/subcontracting/doctype/subcontracting_order_item/subcontracting_order_item.json
 #: erpnext/subcontracting/doctype/subcontracting_receipt_item/subcontracting_receipt_item.json
 #: erpnext/subcontracting/doctype/subcontracting_receipt_supplied_item/subcontracting_receipt_supplied_item.json
+# //// Neoffice — plural noun, so the adjective agrees; sentence case like the rest of the product
 msgid "Accounting Details"
-msgstr "Détails Comptable"
+msgstr "Détails comptables"
 
 #. Name of a DocType
 #. Label of a Select field in DocType 'Accounting Dimension Filter'
@@ -4342,13 +4343,15 @@ msgstr "Contre l'article du bon de livraison"
 
 #. Label of a Dynamic Link field in DocType 'Quotation Item'
 #: erpnext/selling/doctype/quotation_item/quotation_item.json
+# //// Neoffice — the raw field name "docName" was printed on the line of a quotation; pairs with "Against Doctype" below
 msgid "Against Docname"
-msgstr "Pour le docName"
+msgstr "Pour le document"
 
 #. Label of a Link field in DocType 'Quotation Item'
 #: erpnext/selling/doctype/quotation_item/quotation_item.json
+# //// Neoffice — "Doctype" is developer jargon on a quotation line; "Pour le ..." like its neighbours
 msgid "Against Doctype"
-msgstr "Contre Doctype"
+msgstr "Pour le type de document"
 
 #. Label of a Data field in DocType 'Installation Note Item'
 #: erpnext/selling/doctype/installation_note_item/installation_note_item.json
