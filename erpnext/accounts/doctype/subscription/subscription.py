@@ -38,6 +38,10 @@ class InvoiceNotCancelled(frappe.ValidationError):
 
 DateTimeLikeObject = str | date
 
+# //// Neoffice — the most periods a subscription that fell behind is billed for in ONE pass (neoffice-maintenance#1556, see
+# //// Subscription.process). A month of a daily plan: a delay shrinks by 31 a night, and no run is asked for hundreds of invoices.
+MAX_CATCH_UP_PERIODS = 31
+
 
 class Subscription(Document):
 	# begin: auto-generated types
@@ -357,7 +361,12 @@ class Subscription(Document):
 		billing_cycle_info = self.get_billing_cycle_data()
 		end_date = add_to_date(self.start_date, **billing_cycle_info)
 
-		if self.end_date and getdate(self.end_date) <= getdate(end_date):
+		# //// Neoffice — upstream refuses an end date that is not AFTER the last day of the first billing period (`<=`). A membership
+		# //// paid for one period ends exactly there: a club that does not renew in its members' name seals each one at
+		# //// start + one cycle - 1 day, and that day was refused at creation (or, written around the validation, by a "Subscription
+		# //// failed" every night, neoffice-maintenance#1500). That day is accepted; an earlier one, which would cut the period, is not.
+		# //// To propose upstream.
+		if self.end_date and getdate(self.end_date) < getdate(end_date):
 			frappe.throw(
 				_("Subscription End Date must be after {0} as per the subscription plan").format(end_date)
 			)
@@ -583,13 +592,27 @@ class Subscription(Document):
 		1. `process_for_active`
 		2. `process_for_past_due`
 		"""
-		if not self.is_current_invoice_generated(
-				self.current_invoice_start, self.current_invoice_end
-		) and self.can_generate_new_invoice(posting_date):
+		# //// Neoffice — a subscription that fell behind is billed up to today, a bounded number of periods per pass
+		# //// (neoffice-maintenance#1556). Upstream bills ONE period per pass, so a daily plan that took five days of delay (an
+		# //// instance switched off, a run that failed, an unpaid invoice that held the gate shut) kept them for ever: each night
+		# //// created the invoice of the period five days back, and the delay never shrank. The loop asks the same gates as the
+		# //// single pass did, before every period (an outstanding invoice still holds it shut), and a period that begins after the
+		# //// end date of the subscription is not billed (upstream let the day after the end through, once).
+		billed = 0
+		while (
+			billed < MAX_CATCH_UP_PERIODS
+			and not self.is_current_invoice_generated(self.current_invoice_start, self.current_invoice_end)
+			and self.can_generate_new_invoice(posting_date)
+			and not (self.end_date and getdate(self.current_invoice_start) > getdate(self.end_date))
+		):
 			self.generate_invoice(posting_date=posting_date)
 			self.update_subscription_period(add_days(self.current_invoice_end, 1))
-		elif posting_date and getdate(posting_date) > getdate(self.current_invoice_end):
+			billed += 1  # //// Neoffice — the periods billed in this pass, see above
+
+		# //// Neoffice — upstream's `elif`: the period only rolls forward when nothing was billed in this pass
+		if not billed and posting_date and getdate(posting_date) > getdate(self.current_invoice_end):
 			self.update_subscription_period()
+		# //// END Neoffice ////
 
 		if self.cancel_at_period_end and (
 				getdate(posting_date) >= getdate(self.current_invoice_end)
