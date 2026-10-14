@@ -46,6 +46,19 @@ jobs:
       test_args: "--module erpnext.accounts.doctype.subscription.test_subscription_neoffice"
     secrets: inherit
 
+  # //// Neoffice — the catch-up of a subscription that fell behind and the end date on the last day of its first period
+  # //// (neoffice-maintenance#1556, #1500): real invoices, made and rolled back, so a job of its own.
+  subscription_catch_up:
+    name: subscription — the catch-up and the end date
+    uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
+    with:
+      app: erpnext
+      erpnext_bootstrap: false
+      skip_build: true
+      build_frappe_assets: true
+      test_args: "--module erpnext.accounts.doctype.subscription.test_subscription_catch_up"
+    secrets: inherit
+
   quotation:
     name: quotation — the expiry job and a signed offer
     uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main

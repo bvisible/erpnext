@@ -19,10 +19,11 @@ from unittest import mock
 
 import frappe
 from frappe.tests.utils import FrappeTestCase
-from frappe.utils import add_days, add_months, getdate, nowdate
+from frappe.utils import add_days, add_months, cint, getdate, nowdate
 
 import erpnext
 from erpnext.accounts.doctype.subscription import subscription as subscription_module
+from erpnext.accounts.utils import FiscalYearError, get_fiscal_year
 
 PREFIX = "ZZ catch up"
 
@@ -92,6 +93,12 @@ class TestSubscriptionCatchUp(FrappeTestCase):
 
 	def _subscription(self, started_days_ago, interval="Day", count=1, past_due=1, **more):
 		"""A subscription that started that many days ago and has billed nothing yet: its delay is its age."""
+		start = more.get("start_date") or add_days(nowdate(), -started_days_ago)
+		earliest = add_days(start, -cint(more.get("number_of_days")))  # an invoice made "days before" is dated before the start
+		try:
+			get_fiscal_year(earliest, company=self.company)
+		except FiscalYearError:
+			self.skipTest(f"no fiscal year holds {earliest} on this site: an invoice could not be dated then")
 		subscription = frappe.new_doc("Subscription")
 		subscription.company = self.company
 		subscription.party_type = "Customer"
