@@ -18,7 +18,7 @@ dependencies = [
     # integration dependencies
     "googlemaps",
     "plaid-python~=7.2.1",
-    "python-youtube~=0.8.0",
+    "python-youtube~=0.9.9",  # //// Neoffice — was ~=0.8.0, as upstream version-15 has now: 0.8.x caps isodate <0.7, suite needs ~=0.7.2 (maintenance#1679)
     "py3dbp",
     "matplotlib",
     "numpy",
