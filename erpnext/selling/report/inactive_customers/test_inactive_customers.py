@@ -12,6 +12,11 @@ from erpnext.selling.report.inactive_customers.inactive_customers import execute
 from frappe.tests.utils import FrappeTestCase
 
 
+# //// Neoffice — the test records of a Sales Order (the company, the warehouse, the item, the customer): `--module` does not
+# //// load them by itself, and make_sales_order below needs them.
+test_dependencies = ["Sales Order"]
+
+
 class TestInactiveCustomers(FrappeTestCase):
 	def setUp(self):
 		self.customer = frappe.get_doc(doctype="Customer", customer_name="_Test Inactive Customer").insert()
