@@ -98,3 +98,26 @@ class TestNeofficeSecurityBackports(FrappeTestCase):
 		frappe.set_user("Administrator")
 		create_or_update_cheque_print_format(template.name)
 		self.assertTrue(frappe.db.exists("Print Format", template.name))
+
+	def test_a_payment_request_is_made_only_by_someone_who_may_create_it(self):
+		# GHSA-wpfx-jw7g-7f83, upstream 460291990a and ce7101f555: open to a guest, no right asked of the caller
+		from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
+
+		self.assertFalse(
+			make_payment_request in frappe.guest_methods, "make_payment_request is open to a guest"
+		)
+		for user in ("Guest", PORTAL_USER):
+			frappe.set_user(user)
+			with self.subTest(user=user):
+				self.assertRaises(
+					frappe.PermissionError,
+					make_payment_request,
+					dt="Sales Invoice",
+					dn="neoffice-no-such-invoice",
+				)
+
+		# an accountant is let through the checks (the invoice they name does not exist: this is what comes next)
+		frappe.set_user(DESK_USER)
+		self.assertRaises(
+			frappe.DoesNotExistError, make_payment_request, dt="Sales Invoice", dn="neoffice-no-such-invoice"
+		)

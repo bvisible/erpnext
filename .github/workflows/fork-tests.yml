@@ -25,6 +25,7 @@ on:
       - "erpnext/crm/frappe_crm_api.py"
       - "erpnext/crm/doctype/appointment/**"
       - "erpnext/accounts/doctype/cheque_print_template/**"
+      - "erpnext/accounts/doctype/payment_request/**"
       - ".github/workflows/fork-tests.yml"
   pull_request:
     paths:
@@ -34,6 +35,7 @@ on:
       - "erpnext/crm/frappe_crm_api.py"
       - "erpnext/crm/doctype/appointment/**"
       - "erpnext/accounts/doctype/cheque_print_template/**"
+      - "erpnext/accounts/doctype/payment_request/**"
   workflow_dispatch:
 
 concurrency:

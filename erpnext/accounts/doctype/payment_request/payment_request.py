@@ -550,7 +550,11 @@ class PaymentRequest(Document):
 				row_number += TO_SKIP_NEW_ROW
 
 
-@frappe.whitelist(allow_guest=True)
+# //// Neoffice — backport of upstream 460291990a and ce7101f555 (v15.99.0, GHSA-wpfx-jw7g-7f83): no longer open to
+# //// a guest, and the caller needs the right to create a Payment Request and to read the document (see below). The
+# //// function is upstream's, line for line, so the merge takes it as it is. Our callers that act for someone who
+# //// has no such right call it through neoffice_theme.payment_requests (neoffice-maintenance#1748).
+@frappe.whitelist()
 def make_payment_request(**args):
 	"""Make payment request"""
 
@@ -559,6 +563,13 @@ def make_payment_request(**args):
 	if args.dt not in ALLOWED_DOCTYPES_FOR_PAYMENT_REQUEST:
 		# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 		frappe.throw(_("Payment Requests cannot be created against: {0}").format(frappe.bold(_(args.dt))))
+
+	# //// Neoffice — backport of upstream 460291990a and ce7101f555 (see above)
+	if args.dn and not isinstance(args.dn, str):
+		frappe.throw(_("Invalid parameter. 'dn' should be of type str"))
+
+	frappe.has_permission("Payment Request", "create", throw=True)
+	frappe.has_permission(args.dt, "read", args.dn, throw=True)
 
 	ref_doc = args.ref_doc or frappe.get_doc(args.dt, args.dn)
 	if not args.get("company"):
