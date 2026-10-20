@@ -26,6 +26,8 @@ on:
       - "erpnext/crm/doctype/appointment/**"
       - "erpnext/accounts/doctype/cheque_print_template/**"
       - "erpnext/accounts/doctype/payment_request/**"
+      # //// Neoffice — the portal login hook that assigns a shopper Customer (neoffice-maintenance#1756)
+      - "erpnext/portal/**"
       - "erpnext/accounts/doctype/budget/**"
       - "erpnext/accounts/doctype/journal_entry/**"
       - "erpnext/accounts/doctype/opening_invoice_creation_tool/**"
@@ -52,6 +54,8 @@ on:
       - "erpnext/crm/doctype/appointment/**"
       - "erpnext/accounts/doctype/cheque_print_template/**"
       - "erpnext/accounts/doctype/payment_request/**"
+      # //// Neoffice — the portal login hook that assigns a shopper Customer (neoffice-maintenance#1756)
+      - "erpnext/portal/**"
       - "erpnext/accounts/doctype/budget/**"
       - "erpnext/accounts/doctype/journal_entry/**"
       - "erpnext/accounts/doctype/opening_invoice_creation_tool/**"
@@ -124,6 +128,18 @@ jobs:
       skip_build: true
       build_frappe_assets: true
       test_args: "--module erpnext.tests.test_neoffice_security_backports"
+    secrets: inherit
+
+  # //// Neoffice — two homonyms must get separate Customers; the portal login hook must not merge them (neoffice-maintenance#1756)
+  portal_homonyms:
+    name: portal — homonyms get separate customers
+    uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
+    with:
+      app: erpnext
+      erpnext_bootstrap: false
+      skip_build: true
+      build_frappe_assets: true
+      test_args: "--module erpnext.portal.test_portal_homonyms_get_separate_customers"
     secrets: inherit
 
   # //// Neoffice — the upstream tests of the modules whose SQL was hardened ahead of the merge (neoffice-maintenance#1748).
