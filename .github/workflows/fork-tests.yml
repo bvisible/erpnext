@@ -143,10 +143,11 @@ jobs:
           - '--doctype "Material Request"'
           - '--doctype "Sales Order"'
           - '--doctype "Payment Entry"'
-          - '--doctype "Workstation"'
     uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
     with:
       app: erpnext
+      # the test records of Journal Entry, Sales Order… link to Payment Gateway, a doctype of the payments app
+      install_apps: payments
       erpnext_bootstrap: false
       skip_build: true
       build_frappe_assets: true
