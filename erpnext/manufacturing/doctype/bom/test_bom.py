@@ -133,6 +133,15 @@ class TestBOM(FrappeTestCase):
 		self.assertAlmostEqual(bom.base_total_cost, base_raw_material_cost + base_op_cost)
 
 	@timeout
+	def test_bom_no_operation_time_validation(self):
+		bom = frappe.copy_doc(test_records[2])
+		bom.docstatus = 0
+		for op_row in bom.operations:
+			op_row.time_in_mins = 0
+
+		self.assertRaises(frappe.ValidationError, bom.save)
+
+	@timeout
 	def test_bom_cost_with_batch_size(self):
 		bom = frappe.copy_doc(test_records[2])
 		bom.docstatus = 0
@@ -451,6 +460,29 @@ class TestBOM(FrappeTestCase):
 
 		self.assertNotEqual(len(test_items), len(filtered), msg="Item filtering showing excessive results")
 		self.assertTrue(0 < len(filtered) <= 3, msg="Item filtering showing excessive results")
+
+	@timeout
+	def test_bom_item_query_matches_item_code_colliding_with_another_barcode(self):
+		item = make_item(
+			"_Test BOM Query 2.5MM",
+			{"is_stock_item": 1, "item_name": "_Test BOM Query Sheet", "description": "sheet"},
+		)
+		make_item(
+			"_Test BOM Query Barcode Holder",
+			{"is_stock_item": 1},
+			barcode=f"90{item.name}90",
+		)
+
+		results = item_query(
+			doctype="Item",
+			txt=item.name,
+			searchfield="name",
+			start=0,
+			page_len=20,
+			filters={"is_stock_item": 1},
+		)
+
+		self.assertIn(item.name, [d[0] for d in results])
 
 	@timeout
 	def test_exclude_exploded_items_from_bom(self):

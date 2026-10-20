@@ -42,8 +42,36 @@ def get_data(report_filters):
 		gl_data = voucher_wise_gl_data.get(key) or {}
 		d.account_value = gl_data.get("account_value", 0)
 		d.difference_value = d.stock_value - d.account_value
+		d.ledger_type = "Stock Ledger Entry"
 		if abs(d.difference_value) > 0.1:
 			data.append(d)
+
+		if key in voucher_wise_gl_data:
+			del voucher_wise_gl_data[key]
+
+	if voucher_wise_gl_data:
+		data += get_gl_ledgers_with_no_stock_ledger_entries(voucher_wise_gl_data)
+
+	return data
+
+
+def get_gl_ledgers_with_no_stock_ledger_entries(voucher_wise_gl_data):
+	data = []
+
+	for key in voucher_wise_gl_data:
+		gl_data = voucher_wise_gl_data.get(key) or {}
+		data.append(
+			{
+				"name": gl_data.get("name"),
+				"ledger_type": "GL Entry",
+				"voucher_type": gl_data.get("voucher_type"),
+				"voucher_no": gl_data.get("voucher_no"),
+				"posting_date": gl_data.get("posting_date"),
+				"stock_value": 0,
+				"account_value": gl_data.get("account_value", 0),
+				"difference_value": gl_data.get("account_value", 0) * -1,
+			}
+		)
 
 	return data
 
@@ -89,6 +117,7 @@ def get_gl_data(report_filters, filters):
 			"voucher_type",
 			"voucher_no",
 			"sum(debit_in_account_currency) - sum(credit_in_account_currency) as account_value",
+			"posting_date",
 		],
 		group_by="voucher_type, voucher_no",
 	)
@@ -106,9 +135,14 @@ def get_columns(filters):
 		{
 			"label": _("Stock Ledger ID"),
 			"fieldname": "name",
-			"fieldtype": "Link",
-			"options": "Stock Ledger Entry",
+			"fieldtype": "Dynamic Link",
+			"options": "ledger_type",
 			"width": "80",
+		},
+		{
+			"label": _("Ledger Type"),
+			"fieldname": "ledger_type",
+			"fieldtype": "Data",
 		},
 		{"label": _("Posting Date"), "fieldname": "posting_date", "fieldtype": "Date"},
 		{"label": _("Posting Time"), "fieldname": "posting_time", "fieldtype": "Time"},
@@ -137,14 +171,20 @@ def get_columns(filters):
 
 
 @frappe.whitelist()
-def create_reposting_entries(rows, company):
+def create_reposting_entries(rows: str | list, company: str):
 	if isinstance(rows, str):
 		rows = parse_json(rows)
 
 	entries = []
 
 	item_wh = frappe._dict()
-	vouchers = [row.get("voucher_no") for row in rows]
+	vouchers = [
+		row.get("voucher_no")
+		for row in rows
+		if row.get("voucher_type") not in ["Purchase Receipt", "Purchase Invoice"]
+	]
+	repost_based_on_transaction(rows, company, entries)
+
 	sles = get_stock_ledgers(vouchers)
 	for sle in sles:
 		key = (sle.item_code, sle.warehouse)
@@ -166,7 +206,7 @@ def create_reposting_entries(rows, company):
 					"posting_date": sle.posting_date,
 					"posting_time": sle.posting_time,
 					"company": company,
-					"allow_nagative_stock": 1,
+					"allow_negative_stock": 1,
 				}
 			).submit()
 
@@ -177,3 +217,39 @@ def create_reposting_entries(rows, company):
 	if entries:
 		entries = ", ".join(entries)
 		frappe.msgprint(_("Reposting entries created: {0}").format(entries))
+
+
+def repost_based_on_transaction(rows, company=None, entries=None):
+	if entries is None:
+		entries = []
+
+	duplicate_vouchers = set()
+	for row in rows:
+		if (
+			row.get("voucher_type") == "Purchase Invoice"
+			and frappe.get_cached_value("Purchase Invoice", row.get("voucher_no"), "update_stock") == 0
+		):
+			continue
+
+		if row.get("voucher_type") in ["Purchase Receipt", "Purchase Invoice"]:
+			voucher_key = (row.get("voucher_type"), row.get("voucher_no"))
+			if voucher_key in duplicate_vouchers:
+				continue
+
+			duplicate_vouchers.add(voucher_key)
+			doc = frappe.get_doc(
+				{
+					"doctype": "Repost Item Valuation",
+					"based_on": "Transaction",
+					"status": "Queued",
+					"voucher_type": row.get("voucher_type"),
+					"voucher_no": row.get("voucher_no"),
+					"posting_date": row.get("posting_date"),
+					"posting_time": row.get("posting_time"),
+					"company": company,
+					"allow_negative_stock": 1,
+					"recalculate_valuation_rate": 1,
+				}
+			).submit()
+
+			entries.append(get_link_to_form("Repost Item Valuation", doc.name))

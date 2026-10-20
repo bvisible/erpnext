@@ -188,7 +188,10 @@ frappe.ui.form.on("Item", {
 		if (frm.doc.variant_of) {
 			frm.set_intro(
 				__("This Item is a Variant of {0} (Template).", [
-					`<a href="/app/item/${frm.doc.variant_of}" onclick="location.reload()">${frm.doc.variant_of}</a>`,
+					`<a href="${frappe.utils.get_form_link(
+						"Item",
+						frm.doc.variant_of
+					)}" onclick="location.reload()">${frappe.utils.escape_html(frm.doc.variant_of)}</a>`,
 				]),
 				true
 			);
@@ -224,7 +227,7 @@ frappe.ui.form.on("Item", {
 		["is_stock_item", "has_serial_no", "has_batch_no", "has_variants"].forEach((fieldname) => {
 			frm.set_df_property(fieldname, "read_only", stock_exists);
 		});
-
+		frm.set_df_property("is_fixed_asset", "read_only", frm.doc.__onload?.asset_exists ? 1 : 0);
 		frm.toggle_reqd("customer", frm.doc.is_customer_provided_item ? 1 : 0);
 	},
 
@@ -401,12 +404,6 @@ $.extend(erpnext.item, {
 					["Account", "account_type", "in", "Tax, Chargeable, Income Account, Expense Account"],
 					["Account", "docstatus", "!=", 2],
 				],
-			};
-		};
-
-		frm.fields_dict["item_group"].get_query = function (doc, cdt, cdn) {
-			return {
-				filters: [["Item Group", "docstatus", "!=", 2]],
 			};
 		};
 
@@ -640,11 +637,10 @@ $.extend(erpnext.item, {
 						default: 0,
 						onchange: function () {
 							let selected_attributes = get_selected_attributes();
-							let lengths = [];
-							Object.keys(selected_attributes).map((key) => {
-								lengths.push(selected_attributes[key].length);
+							let lengths = Object.keys(selected_attributes).map((key) => {
+								return selected_attributes[key].length;
 							});
-							if (lengths.includes(0)) {
+							if (!lengths.length) {
 								me.multiple_variant_dialog.get_primary_btn().html(__("Create Variants"));
 								me.multiple_variant_dialog.disable_primary_action();
 							} else {
@@ -681,7 +677,7 @@ $.extend(erpnext.item, {
 						fieldtype: "HTML",
 						fieldname: "help",
 						options: `<label class="control-label">
-							${__("Select at least one value from each of the attributes.")}
+							${__("Select at least one attribute value.")}
 						</label>`,
 					},
 					//// Neoffice — two added dialog fields (1a94553c0e, 2026-07-08 for the summary; 3594a46c69,
@@ -820,6 +816,9 @@ $.extend(erpnext.item, {
 						selected_attributes[attribute_name].push($(opt).attr("data-fieldname"));
 					}
 				});
+				if (!selected_attributes[attribute_name].length) {
+					delete selected_attributes[attribute_name];
+				}
 			});
 
 			return selected_attributes;
@@ -882,14 +881,18 @@ $.extend(erpnext.item, {
 
 			if (!row.disabled) {
 				if (row.numeric_values) {
-					fieldtype = "Float";
-					desc =
-						"Min Value: " +
-						row.from_range +
-						" , Max Value: " +
-						row.to_range +
-						", in Increments of: " +
-						row.increment;
+					const all_are_int =
+						flt(row.from_range) === cint(row.from_range) &&
+						flt(row.to_range) === cint(row.to_range) &&
+						flt(row.increment) === cint(row.increment);
+					fieldtype = all_are_int ? "Int" : "Float";
+					const df = { fieldtype };
+					const options = all_are_int ? { inline: 1 } : { always_show_decimals: true, inline: 1 };
+					desc = __("Min Value: {0}, Max Value: {1}, in Increments of: {2}", [
+						frappe.format(row.from_range, df, options),
+						frappe.format(row.to_range, df, options),
+						frappe.format(row.increment, df, options),
+					]);
 				} else {
 					fieldtype = "Data";
 					desc = "";
@@ -1108,7 +1111,7 @@ frappe.tour["Item"] = [
 		fieldname: "valuation_rate",
 		title: "Valuation Rate",
 		description: __(
-			"There are two options to maintain valuation of stock. FIFO (first in - first out) and Moving Average. To understand this topic in detail please visit <a href='https://docs.erpnext.com/docs/v13/user/manual/en/stock/articles/item-valuation-fifo-and-moving-average' target='_blank'>Item Valuation, FIFO and Moving Average.</a>"
+			"There are two options to maintain valuation of stock. FIFO (first in - first out) and Moving Average. To understand this topic in detail please visit <a href='https://docs.frappe.io/erpnext/user/manual/en/calculation-of-valuation-rate-in-fifo-and-moving-average' target='_blank'>Item Valuation, FIFO and Moving Average.</a>"
 		),
 	},
 	{

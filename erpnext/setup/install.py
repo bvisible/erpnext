@@ -4,14 +4,13 @@
 
 import click
 import frappe
-from frappe import _
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 from frappe.desk.page.setup_wizard.setup_wizard import add_all_roles_to
-from frappe.utils import cint
 
 import erpnext
 from erpnext.setup.default_energy_point_rules import get_default_energy_point_rules
 from erpnext.setup.doctype.incoterm.incoterm import create_incoterms
+from erpnext.setup.utils import identity as _
 
 from .default_success_action import get_default_success_action
 
@@ -25,6 +24,7 @@ def after_install():
 
 	set_single_defaults()
 	create_print_setting_custom_fields()
+	create_address_and_contact_custom_fields()
 	create_custom_company_links()
 	add_all_roles_to("Administrator")
 	create_default_success_action()
@@ -33,6 +33,7 @@ def after_install():
 	create_default_role_profiles()
 	add_company_to_session_defaults()
 	add_standard_navbar_items()
+	grant_address_read_to_accounts_manager()
 	add_app_name()
 	hide_workspaces()
 	update_roles()
@@ -90,14 +91,7 @@ def set_single_defaults():
 def setup_currency_exchange():
 	ces = frappe.get_single("Currency Exchange Settings")
 	try:
-		ces.set("result_key", [])
-		ces.set("req_params", [])
-
-		ces.api_endpoint = "https://api.frankfurter.app/{transaction_date}"
-		ces.append("result_key", {"key": "rates"})
-		ces.append("result_key", {"key": "{to_currency}"})
-		ces.append("req_params", {"key": "base", "value": "{from_currency}"})
-		ces.append("req_params", {"key": "symbols", "value": "{to_currency}"})
+		ces.service_provider = "frankfurter.dev - v2"
 		ces.save()
 	except frappe.ValidationError:
 		pass
@@ -129,6 +123,37 @@ def create_print_setting_custom_fields():
 					"insert_after": "allow_print_for_cancelled",
 				},
 			]
+		}
+	)
+
+
+def create_address_and_contact_custom_fields():
+	create_custom_fields(
+		{
+			"Address": [
+				{
+					"label": _("Tax Category"),
+					"fieldname": "tax_category",
+					"fieldtype": "Link",
+					"options": "Tax Category",
+					"insert_after": "fax",
+				},
+				{
+					"label": _("Is Your Company Address"),
+					"fieldname": "is_your_company_address",
+					"fieldtype": "Check",
+					"default": "0",
+					"insert_after": "linked_with",
+				},
+			],
+			"Contact": [
+				{
+					"label": _("Is Billing Contact"),
+					"fieldname": "is_billing_contact",
+					"fieldtype": "Check",
+					"insert_after": "is_primary_contact",
+				},
+			],
 		}
 	)
 
@@ -193,28 +218,27 @@ def add_company_to_session_defaults():
 
 def add_standard_navbar_items():
 	navbar_settings = frappe.get_single("Navbar Settings")
-
 	erpnext_navbar_items = [
 		{
-			"item_label": "Documentation",
+			"item_label": _("Documentation"),
 			"item_type": "Route",
 			"route": "https://docs.erpnext.com/",
 			"is_standard": 1,
 		},
 		{
-			"item_label": "User Forum",
+			"item_label": _("User Forum"),
 			"item_type": "Route",
 			"route": "https://discuss.frappe.io",
 			"is_standard": 1,
 		},
 		{
-			"item_label": "Frappe School",
+			"item_label": _("Frappe School"),
 			"item_type": "Route",
 			"route": "https://frappe.io/school?utm_source=in_app",
 			"is_standard": 1,
 		},
 		{
-			"item_label": "Report an Issue",
+			"item_label": _("Report an Issue"),
 			"item_type": "Route",
 			"route": "https://github.com/frappe/erpnext/issues",
 			"is_standard": 1,
@@ -298,8 +322,20 @@ def update_pegged_currencies():
 		{"source_currency": "SAR", "pegged_against": "USD", "pegged_exchange_rate": 3.75},
 	]
 
+	# Add items on pegged_currency_item if source_currency and pegged_against currency doc exist.
+
+	currencies_exist = frappe.db.get_list(
+		"Currency", {"name": ["in", ["AED", "BHD", "JOD", "OMR", "QAR", "SAR", "USD"]]}, pluck="name"
+	)
+
+	if "USD" not in currencies_exist:
+		return
+
 	for currency in currencies_to_add:
-		if currency["source_currency"] not in existing_sources:
+		if (
+			currency["source_currency"] in currencies_exist
+			and currency["source_currency"] not in existing_sources
+		):
 			doc.append("pegged_currency_item", currency)
 
 	doc.save()
@@ -332,3 +368,42 @@ DEFAULT_ROLE_PROFILES = {
 		"Purchase Manager",
 	],
 }
+
+
+def after_app_install(app_name=None):
+	if app_name == "crm":
+		from erpnext.crm.frappe_crm_api import remove_allowed_users_on_crm_install
+
+		remove_allowed_users_on_crm_install()
+
+
+def after_app_uninstall(app_name=None):
+	if app_name == "crm":
+		from erpnext.crm.frappe_crm_api import disable_frappe_crm_data_synchronization_on_crm_uninstall
+
+		disable_frappe_crm_data_synchronization_on_crm_uninstall()
+
+		frappe.db.commit()  # nosemgrep
+
+
+def grant_address_read_to_accounts_manager():
+	from frappe.permissions import add_permission, get_all_perms, update_permission_property
+
+	if not frappe.db.exists("Role", "Accounts Manager"):
+		return
+	for rule in get_all_perms("Accounts Manager"):
+		if rule.parent == "Address":
+			print("Address / Accounts Manager: kept, the site already has a rule")
+			return
+	try:
+		frappe.db.savepoint("grant_address_read_to_accounts_manager")
+		add_permission("Address", "Accounts Manager", 0, "read")
+		update_permission_property("Address", "Accounts Manager", 0, "export", 0)
+		frappe.clear_cache(doctype="Address")
+		print("Address / Accounts Manager: added read")
+	except Exception:
+		frappe.db.rollback(save_point="grant_address_read_to_accounts_manager")
+		frappe.log_error(
+			title="Could not add permission",
+			message=f"Address / Accounts Manager\n\n{frappe.get_traceback()}",
+		)

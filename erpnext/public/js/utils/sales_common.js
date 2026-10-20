@@ -280,19 +280,17 @@ erpnext.sales_common = {
 
 			set_actual_qty(doc, cdt, cdn) {
 				let row = locals[cdt][cdn];
-				let sales_doctypes = ["Sales Invoice", "Delivery Note", "Sales Order"];
+				let sales_doctypes = ["Sales Invoice", "Delivery Note", "Sales Order", "Quotation"];
 
 				if (row.item_code && row.warehouse && sales_doctypes.includes(doc.doctype)) {
-					frappe.call({
+					return this.frm.call({
 						method: "erpnext.stock.get_item_details.get_bin_details",
+						child: row,
 						args: {
 							item_code: row.item_code,
 							warehouse: row.warehouse,
-						},
-						callback(r) {
-							if (r.message) {
-								frappe.model.set_value(cdt, cdn, "actual_qty", r.message.actual_qty);
-							}
+							company: doc.company,
+							include_child_warehouses: true,
 						},
 					});
 				}
@@ -488,7 +486,30 @@ erpnext.sales_common = {
 				}
 			}
 
-			project() {
+			project(doc, cdt, cdn) {
+				if (!cdt || !cdn) {
+					if (this.frm.doc.project) {
+						$.each(this.frm.doc["items"] || [], function (i, item) {
+							if (!item.project) {
+								frappe.model.set_value(item.doctype, item.name, "project", doc.project);
+							}
+						});
+					}
+				} else {
+					const item = frappe.get_doc(cdt, cdn);
+					if (item.project) {
+						$.each(this.frm.doc["items"] || [], function (i, other_item) {
+							if (!other_item.project) {
+								frappe.model.set_value(
+									other_item.doctype,
+									other_item.name,
+									"project",
+									item.project
+								);
+							}
+						});
+					}
+				}
 				let me = this;
 				if (["Delivery Note", "Sales Invoice", "Sales Order"].includes(this.frm.doc.doctype)) {
 					if (this.frm.doc.project) {

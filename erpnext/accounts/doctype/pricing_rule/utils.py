@@ -243,10 +243,15 @@ def get_other_conditions(conditions, values, args):
 		if group_condition:
 			conditions += " and " + group_condition
 
-	if args.get("transaction_date"):
+	date = (
+		args.get("transaction_date")
+		or args.get("posting_date")
+		or frappe.get_value(args.get("doctype"), args.get("name"), "posting_date", ignore=True)
+	)
+	if date:
 		conditions += """ and %(transaction_date)s between ifnull(`tabPricing Rule`.valid_from, '2000-01-01')
 			and ifnull(`tabPricing Rule`.valid_upto, '2500-12-31')"""
-		values["transaction_date"] = args.get("transaction_date")
+		values["transaction_date"] = date
 
 	if args.get("doctype") in [
 		"Quotation",
@@ -576,6 +581,11 @@ def apply_pricing_rule_on_transaction(doc):
 		as_dict=1,
 	)
 
+	grand_total = doc.get("grand_total")
+	previously_applied_rules = get_transaction_pricing_rules(doc)
+	has_rule_discount = bool(previously_applied_rules) and not is_transaction_discount_changed(doc)
+	applied_rules = []
+
 	if pricing_rules:
 		pricing_rules = filter_pricing_rules_for_qty_amount(doc.total_qty, doc.total, pricing_rules)
 		pricing_rules = filter_pricing_rule_based_on_condition(pricing_rules, doc)
@@ -589,6 +599,7 @@ def apply_pricing_rule_on_transaction(doc):
 					doc.set("apply_discount_on", d.apply_discount_on)
 				# Variable to track whether the condition has been met
 				condition_met = False
+				fields_set = set()
 
 				for field in ["additional_discount_percentage", "discount_amount"]:
 					pr_field = "discount_percentage" if field == "additional_discount_percentage" else field
@@ -601,6 +612,14 @@ def apply_pricing_rule_on_transaction(doc):
 					else:
 						if not d.coupon_code_based:
 							doc.set(field, d.get(pr_field))
+							fields_set.add(field)
+							applied_rules.append(d.name)
+						# //// Neoffice — added branch (6ef39645d9, 2025-03-25 "change discount in POS Invoice if coupon_code
+						# //// is not empty"): on a POS Invoice, a Gift Card coupon meets the rule without setting any
+						# //// discount (the card pays, it does not discount), and a coupon linked to this rule sets it as
+						# //// upstream's coupon branch below does. Since the merge with v15.123.0 the discount it sets is
+						# //// recorded like upstream's (fields_set, applied_rules), so upstream's new bookkeeping of
+						# //// transaction rules (remove_transaction_discount) sees it.
 						elif doc.doctype == "POS Invoice":
 							# For POS Invoice, check if it's a Gift Card coupon
 							coupon = None
@@ -619,6 +638,8 @@ def apply_pricing_rule_on_transaction(doc):
 								if coupon_code_pricing_rule == d.name:
 									# if selected coupon code is linked with pricing rule
 									doc.set(field, d.get(pr_field))
+									fields_set.add(field)
+									applied_rules.append(d.name)
 
 									# Set the condition_met variable to True
 									condition_met = True
@@ -636,6 +657,8 @@ def apply_pricing_rule_on_transaction(doc):
 							if coupon_code_pricing_rule == d.name:
 								# if selected coupon code is linked with pricing rule
 								doc.set(field, d.get(pr_field))
+								fields_set.add(field)
+								applied_rules.append(d.name)
 
 								# Set the condition_met variable to True and break out of the loop
 								condition_met = True
@@ -663,6 +686,11 @@ def apply_pricing_rule_on_transaction(doc):
 								# the amount derives from the percentage, and a zero percentage no longer recomputes it
 								doc.set("discount_amount", 0)
 
+				if has_rule_discount and fields_set:
+					# clear the discount set by the previously applied rule which this rule does not set
+					for field in {"additional_discount_percentage", "discount_amount"} - fields_set:
+						doc.set(field, 0)
+
 				doc.calculate_taxes_and_totals()
 
 				# Break out of the main loop if the condition is met
@@ -674,6 +702,69 @@ def apply_pricing_rule_on_transaction(doc):
 				apply_pricing_rule_for_free_items(doc, item_details.free_item_data)
 				doc.set_missing_values()
 				doc.calculate_taxes_and_totals()
+
+	if has_rule_discount and not applied_rules:
+		remove_transaction_discount(doc, previously_applied_rules)
+
+	set_transaction_pricing_rules(doc, applied_rules)
+
+	if flt(doc.get("grand_total")) != flt(grand_total):
+		# payment schedule is validated before pricing rules are applied, so it has to be reset as per the new total
+		doc.validate_all_documents_schedule()
+
+
+def get_transaction_pricing_rules(doc):
+	"""Transaction level pricing rules are tracked as rows without an item in the pricing rules table"""
+	rows = list(doc.get("pricing_rules") or [])
+	if doc_before_save := doc.get_doc_before_save():
+		rows += doc_before_save.get("pricing_rules") or []
+
+	return {d.pricing_rule for d in rows if d.pricing_rule and not d.item_code and not d.child_docname}
+
+
+def set_transaction_pricing_rules(doc, applied_rules):
+	if not doc.meta.has_field("pricing_rules"):
+		return
+
+	doc.set(
+		"pricing_rules",
+		[d for d in doc.get("pricing_rules") if d.item_code or d.child_docname],
+	)
+
+	for pricing_rule in dict.fromkeys(applied_rules):
+		doc.append("pricing_rules", {"pricing_rule": pricing_rule, "rule_applied": 1})
+
+
+def is_transaction_discount_changed(doc):
+	"""Check if the user has changed the discount in this save"""
+	doc_before_save = doc.get_doc_before_save()
+	if not doc_before_save:
+		return False
+
+	if flt(doc.additional_discount_percentage) != flt(doc_before_save.additional_discount_percentage):
+		return True
+
+	return not doc.additional_discount_percentage and flt(doc.discount_amount) != flt(
+		doc_before_save.discount_amount
+	)
+
+
+def remove_transaction_discount(doc, pricing_rules):
+	"""Reset the discount set by a transaction level pricing rule which is no longer applicable"""
+	if not flt(doc.additional_discount_percentage) and not flt(doc.discount_amount):
+		return
+
+	doc.additional_discount_percentage = 0
+	doc.discount_amount = 0
+	doc.calculate_taxes_and_totals()
+
+	frappe.msgprint(
+		_("Additional Discount has been removed as Pricing Rule {0} is no longer applicable").format(
+			", ".join(get_link_to_form("Pricing Rule", d) for d in sorted(pricing_rules))
+		),
+		title=_("Discount Removed"),
+		indicator="orange",
+	)
 
 
 # //// Neoffice — added helper (no upstream equivalent), see its caller in
@@ -721,7 +812,7 @@ def get_product_discount_rule(pricing_rule, item_details, args=None, doc=None):
 	if pricing_rule.is_recursive:
 		transaction_qty = sum(
 			[
-				row.qty
+				flt(row.qty)
 				for row in doc.items
 				if not row.is_free_item
 				and row.item_code == args.item_code

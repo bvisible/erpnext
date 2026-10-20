@@ -4,10 +4,20 @@
 import unittest
 
 import frappe
+from frappe.tests.utils import FrappeTestCase
+from frappe.utils import today
 
-from erpnext.accounts.doctype.tax_rule.tax_rule import ConflictingTaxRule, get_tax_template
+from erpnext.accounts.doctype.tax_rule.tax_rule import ConflictingTaxRule, get_party_details, get_tax_template
+from erpnext.accounts.party import _get_party_details
 from erpnext.crm.doctype.opportunity.opportunity import make_quotation
 from erpnext.crm.doctype.opportunity.test_opportunity import make_opportunity
+from erpnext.tests.permission_test_utils import (
+	as_user,
+	assert_refused,
+	assert_refused_for_names,
+	assert_refused_without,
+	make_fenced_user,
+)
 
 test_records = frappe.get_test_records("Tax Rule")
 
@@ -70,6 +80,117 @@ class TestTaxRule(unittest.TestCase):
 		self.assertEqual(
 			get_tax_template("2015-01-01", {"customer_group": "Commercial", "use_for_shopping_cart": 1}),
 			"_Test Sales Taxes and Charges Template - _TC",
+		)
+
+	def test_for_parent_supplier_group(self):
+		purchase_template = "_Test Purchase Taxes and Charges Template - _TC"
+		if not frappe.db.exists("Purchase Taxes and Charges Template", purchase_template):
+			frappe.get_doc(
+				{
+					"doctype": "Purchase Taxes and Charges Template",
+					"title": "_Test Purchase Taxes and Charges Template",
+					"company": "_Test Company",
+					"taxes": [
+						{
+							"account_head": "_Test Account VAT - _TC",
+							"charge_type": "On Net Total",
+							"description": "VAT",
+							"doctype": "Purchase Taxes and Charges",
+							"cost_center": "Main - _TC",
+							"rate": 6,
+						}
+					],
+				}
+			).insert()
+
+		make_tax_rule(
+			supplier_group="All Supplier Groups",
+			tax_type="Purchase",
+			purchase_tax_template=purchase_template,
+			priority=1,
+			use_for_shopping_cart=0,
+			from_date="2015-01-01",
+			save=1,
+		)
+
+		# "_Test Supplier Group" has "All Supplier Groups" as its parent — should match hierarchically
+		self.assertEqual(
+			get_tax_template(
+				"2015-01-01",
+				{
+					"supplier_group": "_Test Supplier Group",
+					"tax_type": "Purchase",
+					"use_for_shopping_cart": 0,
+				},
+			),
+			purchase_template,
+		)
+
+	def test_use_for_shopping_cart_filter(self):
+		city = "Test Cart City"
+		# higher priority ensures this rule wins when use_for_shopping_cart is not filtered
+		make_tax_rule(
+			customer="_Test Customer",
+			billing_city=city,
+			sales_tax_template="_Test Sales Taxes and Charges Template - _TC",
+			use_for_shopping_cart=0,
+			priority=2,
+			save=1,
+		)
+		make_tax_rule(
+			customer="_Test Customer",
+			billing_city=city,
+			sales_tax_template="_Test Sales Taxes and Charges Template 1 - _TC",
+			use_for_shopping_cart=1,
+			priority=1,
+			save=1,
+		)
+
+		# Cart request (use_for_shopping_cart=1) filters to cart rules only
+		self.assertEqual(
+			get_tax_template(
+				"2015-01-01",
+				{"customer": "_Test Customer", "billing_city": city, "use_for_shopping_cart": 1},
+			),
+			"_Test Sales Taxes and Charges Template 1 - _TC",
+		)
+
+		# Non-cart request omits use_for_shopping_cart — no filter is applied, both rules
+		# are candidates; non-cart rule wins by higher priority
+		self.assertEqual(
+			get_tax_template(
+				"2015-01-01",
+				{"customer": "_Test Customer", "billing_city": city},
+			),
+			"_Test Sales Taxes and Charges Template - _TC",
+		)
+
+	def test_use_for_shopping_cart_default(self):
+		city = "Test Default Cart City"
+		# use_for_shopping_cart not set — Check field defaults to 0
+		make_tax_rule(
+			customer="_Test Customer",
+			billing_city=city,
+			sales_tax_template="_Test Sales Taxes and Charges Template - _TC",
+			use_for_shopping_cart=0,  # Default is set to 1.
+			save=1,
+		)
+
+		# Non-cart request (no use_for_shopping_cart in args) matches the rule
+		self.assertEqual(
+			get_tax_template(
+				"2015-01-01",
+				{"customer": "_Test Customer", "billing_city": city},
+			),
+			"_Test Sales Taxes and Charges Template - _TC",
+		)
+
+		# Cart request (use_for_shopping_cart=1) does not match — rule has default 0
+		self.assertIsNone(
+			get_tax_template(
+				"2015-01-01",
+				{"customer": "_Test Customer", "billing_city": city, "use_for_shopping_cart": 1},
+			)
 		)
 
 	def test_conflict_with_overlapping_dates(self):
@@ -305,3 +426,80 @@ def make_tax_rule(**args):
 		tax_rule.insert()
 
 	return tax_rule
+
+
+class TestTaxRulePartyDetailsPermissions(FrappeTestCase):
+	def setUp(self):
+		self.address_a = self.make_address("_Test Customer", "Tax City A")
+		self.address_b = self.make_address("_Test Customer 1", "Tax City B")
+
+	def tearDown(self):
+		frappe.db.rollback()
+
+	def make_address(self, customer, city):
+		return (
+			frappe.get_doc(
+				{
+					"doctype": "Address",
+					"address_title": city,
+					"address_type": "Billing",
+					"address_line1": "1 Tax Street",
+					"city": city,
+					"country": "India",
+					"is_primary_address": 1,
+					"links": [{"link_doctype": "Customer", "link_name": customer}],
+				}
+			)
+			.insert()
+			.name
+		)
+
+	def customer_kwargs(self, name):
+		return {"party": name, "party_type": "Customer"}
+
+	def address_kwargs(self, name):
+		return {"party": "_Test Customer", "party_type": "Customer", "args": {"billing_address": name}}
+
+	def test_get_party_details_refuses_a_party_outside_the_customer_fence(self):
+		fenced = make_fenced_user(
+			"tax-rule-party@example.com", ["Accounts Manager"], [("Customer", "_Test Customer")]
+		)
+		with as_user(fenced):
+			assert_refused_for_names(
+				self, get_party_details, self.customer_kwargs, ["_Test Customer 1"], caller_supplied=True
+			)
+			assert_refused_without(
+				self, ["linked to"], get_party_details, **self.customer_kwargs("_Test Customer 1")
+			)
+			assert_refused(self, get_party_details, party="test@example.com", party_type="User")
+			details = get_party_details(party="_Test Customer", party_type="customer")
+		self.assertEqual(details["billing_city"], "Tax City A")
+
+	def test_get_party_details_refuses_an_address_outside_the_address_fence(self):
+		fenced = make_fenced_user(
+			"tax-rule-address@example.com", ["Accounts Manager"], [("Address", self.address_a)]
+		)
+		with as_user(fenced):
+			assert_refused(self, get_party_details, **self.address_kwargs(self.address_b))
+			self.assertRaises(
+				frappe.PermissionError, get_party_details, **self.address_kwargs({"name": ["like", "%"]})
+			)
+
+	def test_get_party_details_allows_an_unfenced_accounts_user(self):
+		user = make_fenced_user("tax-rule-open@example.com", ["Accounts User"])
+		with as_user(user):
+			details = get_party_details(**self.customer_kwargs("_Test Customer 1"))
+		self.assertEqual(details["billing_city"], "Tax City B")
+
+	def test_internal_party_details_skip_address_checks_when_asked(self):
+		user = make_fenced_user("tax-rule-stock-user@example.com", ["Stock User"])
+		with as_user(user):
+			details = _get_party_details(
+				"_Test Customer",
+				"Customer",
+				company="_Test Company",
+				doctype="Delivery Note",
+				ignore_permissions=True,
+				posting_date=today(),
+			)
+		self.assertEqual(details.get("customer_address"), self.address_a)

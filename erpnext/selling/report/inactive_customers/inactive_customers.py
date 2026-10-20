@@ -4,7 +4,6 @@
 
 import frappe
 from frappe import _
-# //// Neoffice — backport of upstream 1cba32eb1a, 29dd6e6681, ebb7b37558 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 from frappe.query_builder import Case, CustomFunction
 from frappe.query_builder.functions import Count, Max, Sum
 from frappe.utils import cint
@@ -17,8 +16,7 @@ def execute(filters=None):
 	days_since_last_order = filters.get("days_since_last_order")
 	doctype = filters.get("doctype")
 
-	# //// Neoffice — backport of upstream 1cba32eb1a, 29dd6e6681, ebb7b37558 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
-	if doctype not in {"Sales Order", "Sales Invoice"}:
+	if doctype not in ("Sales Order", "Sales Invoice"):
 		frappe.throw(_("Invalid value {0} for 'Doctype'").format(doctype))
 
 	if cint(days_since_last_order) <= 0:
@@ -28,7 +26,6 @@ def execute(filters=None):
 	customers = get_sales_details(doctype)
 
 	data = []
-	# //// Neoffice — backport of upstream 1cba32eb1a, 29dd6e6681, ebb7b37558 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 	for row in customers:
 		if cint(row[8]) >= cint(days_since_last_order):
 			row.insert(7, get_last_sales_amt(row[0], doctype))
@@ -37,7 +34,6 @@ def execute(filters=None):
 
 
 def get_sales_details(doctype):
-	# //// Neoffice — backport of upstream 1cba32eb1a, 29dd6e6681, ebb7b37558 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 	customer = frappe.qb.DocType("Customer")
 	sales_doctype = frappe.qb.DocType(doctype)
 
@@ -45,7 +41,6 @@ def get_sales_details(doctype):
 	current_date = CustomFunction("CURRENT_DATE", [])
 
 	if doctype == "Sales Order":
-		# //// Neoffice — backport of upstream 1cba32eb1a, 29dd6e6681, ebb7b37558 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 		total_considered = Sum(
 			Case()
 			.when(
@@ -84,7 +79,6 @@ def get_sales_details(doctype):
 
 
 def get_last_sales_amt(customer, doctype):
-	# //// Neoffice — backport of upstream 1cba32eb1a, 29dd6e6681, ebb7b37558 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 	sales_doctype = frappe.qb.DocType(doctype)
 	date_col = sales_doctype.transaction_date if doctype == "Sales Order" else sales_doctype.posting_date
 

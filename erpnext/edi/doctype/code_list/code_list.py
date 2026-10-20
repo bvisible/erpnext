@@ -1,11 +1,11 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+import re
 from typing import TYPE_CHECKING
 
 import frappe
 from frappe.model.document import Document
-# //// Neoffice — backport of upstream 76e910e8c0 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 from frappe.utils import escape_html
 
 if TYPE_CHECKING:
@@ -65,16 +65,13 @@ class CodeList(Document):
 
 	def from_genericode(self, root: "Element"):
 		"""Extract Code List details from genericode XML"""
-		# //// Neoffice — backport of upstream 76e910e8c0 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 		self.title = escape_html(root.find(".//Identification/ShortName").text)
 		self.version = root.find(".//Identification/Version").text
 		self.canonical_uri = root.find(".//CanonicalUri").text
 		# optionals
-		# //// Neoffice — backport of upstream 76e910e8c0 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 		self.description = escape_html(getattr(root.find(".//Identification/LongName"), "text", None))
 		self.publisher = escape_html(getattr(root.find(".//Identification/Agency/ShortName"), "text", None))
 		if not self.publisher:
-			# //// Neoffice — backport of upstream 76e910e8c0 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 			self.publisher = escape_html(
 				getattr(root.find(".//Identification/Agency/LongName"), "text", None)
 			)
@@ -82,8 +79,48 @@ class CodeList(Document):
 		self.url = getattr(root.find(".//Identification/LocationUri"), "text", None)
 
 
+def _version_key(version: str | None) -> list:
+	"""Natural sort key for the version formats publishers use: integers and ISO dates.
+
+	Orders 3 < 10 (which a lexical sort gets wrong) and 2020-01-01 < 2020-11-05.
+	"""
+	return [int(p) if p.isdigit() else p for p in re.split(r"(\d+)", version or "")]
+
+
+@frappe.request_cache
+def resolve_code_list(code_list: str) -> str | None:
+	"""Return the Code List for a document name or a canonical URI.
+
+	Code Lists are named after their CanonicalVersionUri, so one canonical URI can
+	map to several documents, one per version. An exact document name takes
+	precedence, which lets a caller request a specific version; a canonical URI
+	resolves to the latest version available.
+	"""
+	if frappe.db.exists("Code List", code_list):
+		return code_list
+
+	candidates = frappe.get_all(
+		"Code List",
+		filters={"canonical_uri": code_list},
+		fields=["name", "version"],
+	)
+	if not candidates:
+		return None
+
+	# ponytail: assumes one publisher sticks to one version format. An integer and an
+	# ISO date under the same canonical URI compare numerically (3 < 2020), so the date
+	# would win; import the genericode ValidityDate and sort on that if it ever happens.
+	return max(candidates, key=lambda cl: _version_key(cl.version)).name
+
+
 def get_codes_for(code_list: str, doctype: str, name: str) -> tuple[str]:
-	"""Return the common code for a given record"""
+	"""Return the common code for a given record.
+
+	`code_list` may be a Code List name or a canonical URI (latest version wins).
+	"""
+	if not (code_list := resolve_code_list(code_list)):
+		return ()
+
 	CommonCode = frappe.qb.DocType("Common Code")
 	DynamicLink = frappe.qb.DocType("Dynamic Link")
 
@@ -105,7 +142,13 @@ def get_codes_for(code_list: str, doctype: str, name: str) -> tuple[str]:
 
 
 def get_docnames_for(code_list: str, doctype: str, code: str) -> tuple[str]:
-	"""Return the record name for a given common code"""
+	"""Return the record name for a given common code.
+
+	`code_list` may be a Code List name or a canonical URI (latest version wins).
+	"""
+	if not (code_list := resolve_code_list(code_list)):
+		return ()
+
 	CommonCode = frappe.qb.DocType("Common Code")
 	DynamicLink = frappe.qb.DocType("Dynamic Link")
 
@@ -127,6 +170,12 @@ def get_docnames_for(code_list: str, doctype: str, code: str) -> tuple[str]:
 
 
 def get_default_code(code_list: str) -> str | None:
-	"""Return the default common code for a given code list"""
+	"""Return the default common code for a given code list.
+
+	`code_list` may be a Code List name or a canonical URI (latest version wins).
+	"""
+	if not (code_list := resolve_code_list(code_list)):
+		return None
+
 	code_id = frappe.db.get_value("Code List", code_list, "default_common_code")
 	return frappe.db.get_value("Common Code", code_id, "common_code") if code_id else None

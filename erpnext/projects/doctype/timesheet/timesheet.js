@@ -30,6 +30,7 @@ frappe.ui.form.on("Timesheet", {
 			return {
 				filters: {
 					company: frm.doc.company,
+					status: "Open",
 				},
 			};
 		};
@@ -47,11 +48,7 @@ frappe.ui.form.on("Timesheet", {
 
 	refresh: function (frm) {
 		if (frm.doc.docstatus == 1) {
-			if (
-				frm.doc.per_billed < 100 &&
-				frm.doc.total_billable_hours &&
-				frm.doc.total_billable_hours > frm.doc.total_billed_hours
-			) {
+			if (frm.doc.total_billable_hours > frm.doc.total_billed_hours) {
 				frm.add_custom_button(__("Create Sales Invoice"), function () {
 					frm.trigger("make_invoice");
 				});
@@ -93,10 +90,6 @@ frappe.ui.form.on("Timesheet", {
 				}
 			}).addClass("btn-primary");
 		}
-		if (frm.doc.per_billed > 0) {
-			frm.fields_dict["time_logs"].grid.toggle_enable("billing_hours", false);
-			frm.fields_dict["time_logs"].grid.toggle_enable("is_billable", false);
-		}
 
 		let filters = {
 			status: "Open",
@@ -122,6 +115,7 @@ frappe.ui.form.on("Timesheet", {
 			return {
 				filters: {
 					customer: doc.customer,
+					status: "Open",
 				},
 			};
 		});
@@ -259,6 +253,33 @@ frappe.ui.form.on("Timesheet", {
 
 	parent_project: function (frm) {
 		set_project_in_timelog(frm);
+	},
+
+	employee: function (frm) {
+		if (frm.doc.employee && frm.doc.time_logs) {
+			const selected_employee = frm.doc.employee;
+			frm.doc.time_logs.forEach((row) => {
+				if (row.activity_type) {
+					frappe.call({
+						method: "erpnext.projects.doctype.timesheet.timesheet.get_activity_cost",
+						args: {
+							employee: frm.doc.employee,
+							activity_type: row.activity_type,
+							currency: frm.doc.currency,
+						},
+						callback: function (r) {
+							if (r.message) {
+								if (selected_employee !== frm.doc.employee) return;
+								row.billing_rate = r.message["billing_rate"];
+								row.costing_rate = r.message["costing_rate"];
+								frm.refresh_fields("time_logs");
+								calculate_billing_costing_amount(frm, row.doctype, row.name);
+							}
+						},
+					});
+				}
+			});
+		}
 	},
 });
 

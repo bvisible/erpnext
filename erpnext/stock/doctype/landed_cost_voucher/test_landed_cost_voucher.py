@@ -22,6 +22,103 @@ from erpnext.stock.serial_batch_bundle import SerialNoValuation
 
 
 class TestLandedCostVoucher(FrappeTestCase):
+	def test_landed_cost_uses_discounted_purchase_values(self):
+		for make_purchase in (make_purchase_receipt, make_purchase_invoice):
+			for apply_discount_on in ("Net Total", "Grand Total"):
+				with self.subTest(purchase=make_purchase.__name__, apply_discount_on=apply_discount_on):
+					lcv = frappe.new_doc("Landed Cost Voucher")
+					lcv.company = "_Test Company"
+					lcv.distribute_charges_based_on = "Amount"
+					for discount in (40, 0, 100):
+						purchase = make_purchase(qty=2, rate=100, update_stock=1, do_not_save=True)
+						purchase.apply_discount_on = apply_discount_on
+						purchase.additional_discount_percentage = discount
+						purchase.items[0].allow_zero_valuation_rate = 1
+						purchase.insert()
+						purchase.submit()
+						lcv.append(
+							"purchase_receipts",
+							{
+								"receipt_document_type": purchase.doctype,
+								"receipt_document": purchase.name,
+							},
+						)
+
+					lcv.get_items_from_purchase_receipts()
+					self.assertEqual([item.amount for item in lcv.items], [120, 200, 0])
+					self.assertEqual([item.rate for item in lcv.items], [60, 100, 0])
+					lcv.append("taxes", {"amount": 80})
+					lcv.total_taxes_and_charges = 80
+					lcv.set_applicable_charges_on_item()
+					self.assertEqual([item.applicable_charges for item in lcv.items], [30, 50, 0])
+
+	def test_landed_cost_rejects_offsetting_purchase_and_return_amounts(self):
+		for make_purchase in (make_purchase_receipt, make_purchase_invoice):
+			with self.subTest(purchase=make_purchase.__name__):
+				purchase = make_purchase(qty=2, rate=100, update_stock=1, do_not_save=True)
+				purchase.apply_discount_on = "Grand Total"
+				purchase.additional_discount_percentage = 50
+				purchase.insert()
+				purchase.submit()
+				original = make_purchase(qty=1, rate=100, update_stock=1)
+				purchase_return = make_purchase(
+					qty=-1, rate=100, update_stock=1, is_return=1, return_against=original.name
+				)
+				lcv = make_landed_cost_voucher(
+					receipt_document_type=purchase.doctype,
+					receipt_document=purchase.name,
+					charges=80,
+					do_not_save=True,
+				)
+				lcv.append(
+					"purchase_receipts",
+					{
+						"receipt_document_type": purchase_return.doctype,
+						"receipt_document": purchase_return.name,
+					},
+				)
+				lcv.get_items_from_purchase_receipts()
+				self.assertEqual([item.amount for item in lcv.items], [100, -100])
+				with self.assertRaisesRegex(frappe.ValidationError, "of all items is zero"):
+					lcv.insert()
+				lcv.distribute_charges_based_on = "Qty"
+				lcv.insert()
+				self.assertEqual([item.applicable_charges for item in lcv.items], [160, -80])
+
+	def test_landed_cost_rejects_fully_discounted_purchase(self):
+		for make_purchase in (make_purchase_receipt, make_purchase_invoice):
+			with self.subTest(purchase=make_purchase.__name__):
+				purchase = make_purchase(qty=2, rate=100, update_stock=1, do_not_save=True)
+				purchase.apply_discount_on = "Net Total"
+				purchase.additional_discount_percentage = 100
+				purchase.items[0].allow_zero_valuation_rate = 1
+				purchase.insert()
+				purchase.submit()
+				lcv = make_landed_cost_voucher(
+					receipt_document_type=purchase.doctype,
+					receipt_document=purchase.name,
+					charges=80,
+					do_not_save=True,
+				)
+				with self.assertRaisesRegex(frappe.ValidationError, "of all items is zero"):
+					lcv.insert()
+				lcv.distribute_charges_based_on = "Qty"
+				lcv.insert()
+				self.assertEqual([item.applicable_charges for item in lcv.items], [80])
+
+	def test_landed_cost_rejects_amounts_that_cancel_to_float_residue(self):
+		lcv = frappe.new_doc("Landed Cost Voucher")
+		lcv.company = "_Test Company"
+		lcv.distribute_charges_based_on = "Amount"
+		for amount in (100.10, 200.20, -300.30):
+			lcv.append("items", {"item_code": "_Test Item", "qty": 1, "amount": amount})
+		lcv.append("taxes", {"amount": 80})
+		lcv.total_taxes_and_charges = 80
+
+		self.assertNotEqual(sum(item.amount for item in lcv.items), 0)
+		with self.assertRaisesRegex(frappe.ValidationError, "of all items is zero"):
+			lcv.set_applicable_charges_on_item()
+
 	def test_landed_cost_voucher(self):
 		frappe.db.set_single_value("Buying Settings", "allow_multiple_items", 1)
 
@@ -173,6 +270,64 @@ class TestLandedCostVoucher(FrappeTestCase):
 
 		self.assertEqual(last_sle.qty_after_transaction, last_sle_after_landed_cost.qty_after_transaction)
 		self.assertEqual(last_sle_after_landed_cost.stock_value - last_sle.stock_value, 50.0)
+
+	def test_lcv_validates_company(self):
+		from erpnext import is_perpetual_inventory_enabled
+		from erpnext.accounts.doctype.account.test_account import create_account
+		from erpnext.stock.doctype.landed_cost_voucher.landed_cost_voucher import (
+			IncorrectCompanyValidationError,
+		)
+
+		company_a = "_Test Company"
+		company_b = "_Test Company with perpetual inventory"
+
+		srbnb = create_account(
+			account_name="Stock Received But Not Billed",
+			account_type="Stock Received But Not Billed",
+			parent_account="Stock Liabilities - _TC",
+			company=company_a,
+			account_currency="INR",
+		)
+
+		epi = is_perpetual_inventory_enabled(company_a)
+		company_doc = frappe.get_doc("Company", company_a)
+		old_inventory_account = company_doc.default_inventory_account
+		company_doc.enable_perpetual_inventory = 1
+		company_doc.stock_received_but_not_billed = srbnb
+		company_doc.default_inventory_account = "Stock In Hand - _TC"
+		company_doc.save()
+
+		pr = make_purchase_receipt(
+			company=company_a,
+			warehouse="Stores - _TC",
+			qty=1,
+			rate=100,
+		)
+
+		lcv = make_landed_cost_voucher(
+			company=company_b,
+			receipt_document_type="Purchase Receipt",
+			receipt_document=pr.name,
+			charges=50,
+			do_not_save=True,
+		)
+
+		self.assertRaises(IncorrectCompanyValidationError, lcv.validate_receipt_documents)
+		lcv.company = company_a
+
+		self.assertRaises(IncorrectCompanyValidationError, lcv.validate_expense_accounts)
+		lcv.taxes[0].expense_account = get_expense_account(company_a)
+
+		lcv.save()
+		distribute_landed_cost_on_items(lcv)
+		lcv.submit()
+
+		frappe.db.set_value(
+			"Company",
+			company_a,
+			{"enable_perpetual_inventory": epi, "default_inventory_account": old_inventory_account},
+		)
+		frappe.local.enable_perpetual_inventory = {}
 
 	def test_landed_cost_voucher_for_zero_purchase_rate(self):
 		"Test impact of LCV on future stock balances."
@@ -443,6 +598,33 @@ class TestLandedCostVoucher(FrappeTestCase):
 
 		self.assertEqual(flt(lcv.items[0].applicable_charges, 2), 41.07)
 		self.assertEqual(flt(lcv.items[2].applicable_charges, 2), 41.08)
+
+	def test_landed_cost_remainder_never_turns_an_item_negative(self):
+		pr = make_purchase_receipt(
+			company="_Test Company with perpetual inventory",
+			warehouse="Stores - TCP1",
+			supplier_warehouse="Work In Progress - TCP1",
+			qty=1,
+			rate=100,
+			do_not_save=True,
+		)
+		pr.items[0].cost_center = "Main - TCP1"
+		for rate in (100, 100, 1):
+			pr.append(
+				"items",
+				{
+					"item_code": "_Test Item",
+					"warehouse": "Stores - TCP1",
+					"cost_center": "Main - TCP1",
+					"qty": 1,
+					"rate": rate,
+				},
+			)
+		pr.submit()
+
+		lcv = create_landed_cost_voucher("Purchase Receipt", pr.name, pr.company, 0.2)
+
+		self.assertEqual([flt(item.applicable_charges, 2) for item in lcv.items], [0.07, 0.07, 0.06, 0.0])
 
 	def test_multiple_landed_cost_voucher_against_pr(self):
 		pr = make_purchase_receipt(
@@ -1076,6 +1258,7 @@ def make_landed_cost_voucher(**args):
 	lcv = frappe.new_doc("Landed Cost Voucher")
 	lcv.company = args.company or "_Test Company"
 	lcv.distribute_charges_based_on = args.distribute_charges_based_on or "Amount"
+	expense_account = get_expense_account(args.company or "_Test Company")
 
 	lcv.set(
 		"purchase_receipts",
@@ -1090,16 +1273,17 @@ def make_landed_cost_voucher(**args):
 		],
 	)
 
-	lcv.set(
-		"taxes",
-		[
-			{
-				"description": "Shipping Charges",
-				"expense_account": args.expense_account or "Expenses Included In Valuation - TCP1",
-				"amount": args.charges,
-			}
-		],
-	)
+	if args.charges:
+		lcv.set(
+			"taxes",
+			[
+				{
+					"description": "Shipping Charges",
+					"expense_account": args.expense_account or expense_account,
+					"amount": args.charges,
+				}
+			],
+		)
 
 	if not args.do_not_save:
 		lcv.insert()
@@ -1115,6 +1299,7 @@ def create_landed_cost_voucher(receipt_document_type, receipt_document, company,
 	lcv = frappe.new_doc("Landed Cost Voucher")
 	lcv.company = company
 	lcv.distribute_charges_based_on = "Amount"
+	expense_account = get_expense_account(company)
 
 	lcv.set(
 		"purchase_receipts",
@@ -1134,7 +1319,7 @@ def create_landed_cost_voucher(receipt_document_type, receipt_document, company,
 		[
 			{
 				"description": "Insurance Charges",
-				"expense_account": "Expenses Included In Valuation - TCP1",
+				"expense_account": expense_account,
 				"amount": charges,
 			}
 		],
@@ -1147,6 +1332,11 @@ def create_landed_cost_voucher(receipt_document_type, receipt_document, company,
 	lcv.submit()
 
 	return lcv
+
+
+def get_expense_account(company):
+	company_abbr = frappe.get_cached_value("Company", company, "abbr")
+	return f"Expenses Included In Valuation - {company_abbr}"
 
 
 def distribute_landed_cost_on_items(lcv):

@@ -161,6 +161,7 @@ class Item(Document):
 		self.set_onload("stock_exists", self.stock_ledger_created())
 		self.set_onload("asset_naming_series", get_asset_naming_series())
 		self.set_onload("current_valuation_method", get_valuation_method(self.name))
+		self.set_onload("asset_exists", self.has_submitted_assets())
 
 	def autoname(self):
 		if frappe.db.get_default("item_naming_by") == "Naming Series":
@@ -209,6 +210,9 @@ class Item(Document):
 		self.validate_conversion_factor()
 		self.validate_item_type()
 		self.validate_naming_series()
+		if self.is_new():
+			self.validate_opening_stock()
+		self.validate_shelf_life()
 		self.check_for_active_boms()
 		self.fill_customer_code()
 		self.check_item_tax()
@@ -216,6 +220,7 @@ class Item(Document):
 		self.validate_warehouse_for_reorder()
 		self.update_bom_item_desc()
 
+		self.validate_variant()
 		self.validate_has_variants()
 		self.validate_attributes_in_variants()
 		self.validate_stock_exists_for_template_item()
@@ -231,6 +236,7 @@ class Item(Document):
 		self.validate_item_defaults()
 		self.validate_auto_reorder_enabled_in_stock_settings()
 		self.cant_change()
+		self.validate_serialized_change_with_bundle()
 		self.validate_item_tax_net_rate_range()
 
 		if not self.is_new():
@@ -243,7 +249,24 @@ class Item(Document):
 	def validate_description(self):
 		"""Clean HTML description if set"""
 		if cint(frappe.db.get_single_value("Stock Settings", "clean_description_html")):
+			old_desc = self.description
 			self.description = clean_html(self.description)
+
+			if (
+				old_desc
+				and self.description
+				and "<img src" in old_desc
+				and "<img src" not in self.description
+			):
+				frappe.msgprint(
+					_(
+						'Image in the description has been removed. To disable this behavior, uncheck "{0}" in {1}.'
+					).format(
+						frappe.get_meta("Stock Settings").get_label("clean_description_html"),
+						get_link_to_form("Stock Settings", "Stock Settings"),
+					),
+					alert=True,
+				)
 
 	def validate_customer_provided_part(self):
 		if self.is_customer_provided_item:
@@ -273,9 +296,23 @@ class Item(Document):
 			)
 			item_price.insert()
 
+	def validate_opening_stock(self):
+		if not self.is_stock_item or not self.opening_stock:
+			return
+
+		if self.has_serial_no and not self.serial_no_series:
+			frappe.throw(
+				_("Serial Number Series is mandatory when entering Opening Stock for a serialized item.")
+			)
+
+		if self.has_batch_no and not self.create_new_batch:
+			frappe.throw(
+				_("Enable Automatically Create New Batch when entering Opening Stock for a batched item.")
+			)
+
 	def set_opening_stock(self):
 		"""set opening stock"""
-		if not self.is_stock_item or self.has_serial_no or self.has_batch_no:
+		if not self.is_stock_item:
 			return
 
 		if not self.valuation_rate and not self.standard_rate and not self.is_customer_provided_item:
@@ -331,9 +368,8 @@ class Item(Document):
 			if self.stock_ledger_created():
 				frappe.throw(_("Cannot be a fixed asset item as Stock Ledger is created."))
 
-		if not self.is_fixed_asset:
-			asset = frappe.db.get_all("Asset", filters={"item_code": self.name, "docstatus": 1}, limit=1)
-			if asset:
+		if not self.is_fixed_asset and not self.is_new():
+			if self.has_submitted_assets():
 				frappe.throw(
 					_('"Is Fixed Asset" cannot be unchecked, as Asset record exists against the item')
 				)
@@ -348,6 +384,19 @@ class Item(Document):
 				_(
 					"{0} Retain Sample is based on batch, please check Has Batch No to retain sample of item"
 				).format(self.item_code)
+			)
+
+	def validate_shelf_life(self):
+		if (
+			self.has_batch_no
+			and self.has_expiry_date
+			and self.create_new_batch
+			and cint(self.shelf_life_in_days) <= 0
+		):
+			frappe.throw(
+				_("{0} must be greater than zero.").format(
+					self.get_label_from_fieldname("shelf_life_in_days")
+				)
 			)
 
 	def clear_retain_sample(self):
@@ -550,6 +599,9 @@ class Item(Document):
 			)
 		return self._stock_ledger_created
 
+	def has_submitted_assets(self):
+		return bool(frappe.db.exists("Asset", {"item_code": self.name, "docstatus": 1}))
+
 	def update_item_price(self):
 		frappe.db.sql(
 			"""
@@ -678,7 +730,7 @@ class Item(Document):
 
 	def set_last_purchase_rate(self, new_name):
 		last_purchase_rate = get_last_purchase_details(new_name).get("base_net_rate", 0)
-		frappe.db.set_value("Item", new_name, "last_purchase_rate", last_purchase_rate)
+		frappe.db.set_value("Item", new_name, "last_purchase_rate", last_purchase_rate, update_modified=False)
 
 	def recalculate_bin_qty(self, new_name):
 		from erpnext.stock.stock_balance import repost_stock
@@ -796,6 +848,20 @@ class Item(Document):
 					{"company": defaults.get("company"), "default_warehouse": defaults.default_warehouse},
 				)
 
+		item_group = frappe.get_cached_doc("Item Group", self.item_group)
+		if not self.taxes and item_group.taxes:
+			for tax in item_group.taxes:
+				self.append(
+					"taxes",
+					{
+						"item_tax_template": tax.item_tax_template,
+						"tax_category": tax.tax_category,
+						"valid_from": tax.valid_from,
+						"minimum_net_rate": tax.minimum_net_rate,
+						"maximum_net_rate": tax.maximum_net_rate,
+					},
+				)
+
 	def update_variants(self):
 		if self.flags.dont_update_variants or frappe.db.get_single_value(
 			"Item Variant Settings", "do_not_update_variants"
@@ -816,6 +882,58 @@ class Item(Document):
 						timeout=600,
 						enqueue_after_commit=True,
 					)
+
+	def validate_variant(self):
+		if self.variant_of:
+			has_variants, based_on = frappe.get_value(
+				"Item", self.variant_of, ["has_variants", "variant_based_on"]
+			)
+			if not has_variants:
+				frappe.throw(_("Item {0} is not a template item.").format(frappe.bold(self.variant_of)))
+
+			if based_on == "Item Attribute":
+				previous_doc = self.get_doc_before_save()
+				saved_attributes = (
+					{(row.attribute, row.attribute_value) for row in previous_doc.attributes}
+					if previous_doc
+					else set()
+				)
+
+				for d in self.attributes:
+					if (d.attribute, d.attribute_value) in saved_attributes:
+						continue
+
+					if not frappe.db.exists(
+						"Item Variant Attribute", {"attribute": d.attribute, "parent": self.variant_of}
+					):
+						frappe.throw(
+							_("Attribute {0} is not valid for the selected template.").format(
+								frappe.bold(d.attribute)
+							)
+						)
+
+					numeric_values, disabled = frappe.get_value(
+						"Item Variant Attribute",
+						{"attribute": d.attribute, "parent": self.variant_of},
+						["numeric_values", "disabled"],
+					)
+
+					if disabled:
+						frappe.throw(_("Attribute {0} is disabled.").format(frappe.bold(d.attribute)))
+
+					if (
+						not numeric_values
+						and d.attribute_value
+						and not frappe.db.exists(
+							"Item Attribute Value",
+							{"parent": d.attribute, "attribute_value": d.attribute_value},
+						)
+					):
+						frappe.throw(
+							_("Attribute Value {0} is not valid for the selected attribute {1}.").format(
+								frappe.bold(d.attribute_value), frappe.bold(d.attribute)
+							)
+						)
 
 	def validate_has_variants(self):
 		if not self.has_variants and frappe.db.get_value("Item", self.name, "has_variants"):
@@ -935,11 +1053,12 @@ class Item(Document):
 				)
 
 	def validate_uom_conversion_factor(self):
-		if self.uoms:
-			for d in self.uoms:
-				value = get_uom_conv_factor(d.uom, self.stock_uom)
-				if value:
-					d.conversion_factor = value
+		for d in self.get("uoms"):
+			if not d.conversion_factor:
+				d.conversion_factor = get_uom_conv_factor(d.uom, self.stock_uom)
+
+			if flt(d.conversion_factor) <= 0:
+				frappe.throw(_("Row {0}: Conversion Factor must be greater than zero.").format(d.idx))
 
 	def validate_attributes(self):
 		if not (self.has_variants or self.variant_of):
@@ -1022,6 +1141,25 @@ class Item(Document):
 
 			frappe.throw(msg, title=_("Linked with submitted documents"))
 
+	def validate_serialized_change_with_bundle(self):
+		"""Block turning a serialized item non-serialized while any Serial and Batch Bundle still exists
+		for it. Such bundles carry the item's serial numbers; the user must delete or cancel them first."""
+		if self.is_new() or self.has_serial_no or not self._doc_before_save:
+			return
+
+		# Only relevant when the item was serialized before and is now being unset.
+		if not self._doc_before_save.has_serial_no:
+			return
+
+		# Draft (docstatus 0) or submitted (docstatus 1) bundles block the change; cancelled ones don't.
+		if frappe.db.count("Serial and Batch Bundle", {"item_code": self.name, "docstatus": ("<", 2)}):
+			frappe.throw(
+				_(
+					"Cannot change Item {0} from serialized to non-serialized because a Serial and Batch Bundle exists for it. Please delete or cancel the Serial and Batch Bundle first."
+				).format(frappe.bold(self.name)),
+				title=_("Serial and Batch Bundle Exists"),
+			)
+
 	def _get_linked_submitted_documents(self, changed_fields: list[str]) -> dict[str, str] | None:
 		linked_doctypes = [
 			"Delivery Note Item",
@@ -1040,6 +1178,7 @@ class Item(Document):
 				"Sales Order Item",
 				"Purchase Order Item",
 				"Material Request Item",
+				"Work Order Item",
 				"Product Bundle",
 				"BOM",
 			]
@@ -1332,11 +1471,21 @@ def set_item_default(item_code, company, fieldname, value):
 
 @frappe.whitelist()
 def get_item_details(item_code, company=None):
+	# deliberately not an `ignore_permissions` argument: this is whitelisted, so a caller could
+	# pass it and skip the check. _get_item_details is the unguarded in-process helper.
+	return _get_item_details(item_code, company, ignore_permissions=False)
+
+
+def _get_item_details(item_code, company=None, ignore_permissions=True):
+	doc = frappe.get_cached_doc("Item", item_code)
+	if not ignore_permissions:
+		# the whole Item document is returned below, so authorise the record itself
+		doc.check_permission()
+
 	out = frappe._dict()
 	if company:
 		out = get_item_defaults(item_code, company) or frappe._dict()
 
-	doc = frappe.get_cached_doc("Item", item_code)
 	out.update(doc.as_dict())
 
 	return out

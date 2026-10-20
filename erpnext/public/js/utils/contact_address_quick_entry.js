@@ -69,7 +69,7 @@ frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm
 			{
 				fieldtype: "Section Break",
 				label: __("Primary Contact Details"),
-				collapsible: 0, //// changed 
+				collapsible: 0,
 			},
 			{
 				label: __("First Name"),

@@ -13,9 +13,9 @@ from erpnext.stock.doctype.item.test_item import make_item
 from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
 from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 from erpnext.stock.doctype.stock_reservation_entry.stock_reservation_entry import (
+	_get_stock_reservation_entries_for_voucher,
 	cancel_stock_reservation_entries,
 	get_sre_reserved_qty_details_for_voucher,
-	get_stock_reservation_entries_for_voucher,
 	has_reserved_stock,
 )
 from erpnext.stock.utils import get_stock_balance
@@ -278,7 +278,7 @@ class TestStockReservationEntry(FrappeTestCase):
 			self.assertTrue(has_reserved_stock("Sales Order", so.name))
 
 			for item in so.items:
-				sre_details = get_stock_reservation_entries_for_voucher(
+				sre_details = _get_stock_reservation_entries_for_voucher(
 					"Sales Order", so.name, item.name, fields=["reserved_qty", "status"]
 				)[0]
 				self.assertEqual(item.stock_reserved_qty, sre_details.reserved_qty)
@@ -335,7 +335,7 @@ class TestStockReservationEntry(FrappeTestCase):
 			dn1.submit()
 
 			for item in so.items:
-				sre_details = get_stock_reservation_entries_for_voucher(
+				sre_details = _get_stock_reservation_entries_for_voucher(
 					"Sales Order", so.name, item.name, fields=["delivered_qty", "status"]
 				)[0]
 				self.assertGreater(sre_details.delivered_qty, 0)
@@ -352,7 +352,7 @@ class TestStockReservationEntry(FrappeTestCase):
 				dn2.submit()
 
 			for item in so.items:
-				sre_details = get_stock_reservation_entries_for_voucher(
+				sre_details = _get_stock_reservation_entries_for_voucher(
 					"Sales Order",
 					so.name,
 					item.name,
@@ -396,7 +396,7 @@ class TestStockReservationEntry(FrappeTestCase):
 		so.load_from_db()
 
 		for item in so.items:
-			sre_details = get_stock_reservation_entries_for_voucher(
+			sre_details = _get_stock_reservation_entries_for_voucher(
 				"Sales Order", so.name, item.name, fields=["status", "reserved_qty"]
 			)[0]
 
@@ -411,7 +411,7 @@ class TestStockReservationEntry(FrappeTestCase):
 		dn.submit()
 
 		for item in so.items:
-			sre_details = get_stock_reservation_entries_for_voucher(
+			sre_details = _get_stock_reservation_entries_for_voucher(
 				"Sales Order", so.name, item.name, fields=["status", "delivered_qty", "reserved_qty"]
 			)[0]
 
@@ -425,6 +425,10 @@ class TestStockReservationEntry(FrappeTestCase):
 		sb_entry = frappe.qb.DocType("Serial and Batch Entry")
 		for item in dn.items:
 			if item.serial_and_batch_bundle:
+				self.assertEqual(
+					frappe.db.get_value("Serial and Batch Bundle", item.serial_and_batch_bundle, "company"),
+					dn.company,
+				)
 				reserved_sb_entries = (
 					frappe.qb.from_(sre)
 					.inner_join(sb_entry)
@@ -459,7 +463,7 @@ class TestStockReservationEntry(FrappeTestCase):
 		so.load_from_db()
 
 		for item in so.items:
-			sre_details = get_stock_reservation_entries_for_voucher(
+			sre_details = _get_stock_reservation_entries_for_voucher(
 				"Sales Order",
 				so.name,
 				item.name,
@@ -520,7 +524,7 @@ class TestStockReservationEntry(FrappeTestCase):
 		so.load_from_db()
 
 		for item in so.items:
-			sre_details = get_stock_reservation_entries_for_voucher(
+			sre_details = _get_stock_reservation_entries_for_voucher(
 				"Sales Order", so.name, item.name, fields=["reserved_qty"]
 			)[0]
 
@@ -677,6 +681,36 @@ class TestStockReservationEntry(FrappeTestCase):
 
 		# Test - 1: ValidationError should be thrown as the inwarded stock is reserved.
 		self.assertRaises(frappe.ValidationError, se.cancel)
+
+	@change_settings("Stock Settings", {"allow_negative_stock": 0, "enable_stock_reservation": 1})
+	def test_reserved_stock_validation_for_batch_item(self):
+		item_properties = {
+			"is_stock_item": 1,
+			"valuation_rate": 100,
+			"has_batch_no": 1,
+			"create_new_batch": 1,
+			"batch_number_series": "SRBV-.#####.",
+		}
+		sr_item = make_item(item_code="Test Reserve Item", properties=item_properties)
+		# inward 100 qty of stock
+		create_material_receipt(items={sr_item.name: sr_item}, warehouse=self.warehouse, qty=100)
+
+		# reserve 80 qty from sales order
+		so = make_sales_order(item_code=sr_item.name, warehouse=self.warehouse, qty=80)
+		so.create_stock_reservation_entries()
+
+		# create a material issue entry including the reserved qty 10
+		se = make_stock_entry(
+			item_code=sr_item.name,
+			qty=30,
+			from_warehouse=self.warehouse,
+			rate=100,
+			purpose="Material Issue",
+			do_not_submit=True,
+		)
+
+		# validation for reserved stock should be thrown
+		self.assertRaises(frappe.ValidationError, se.submit)
 
 	def tearDown(self) -> None:
 		cancel_all_stock_reservation_entries()

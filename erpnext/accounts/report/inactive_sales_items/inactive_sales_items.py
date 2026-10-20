@@ -4,7 +4,6 @@
 
 import frappe
 from frappe import _
-# //// Neoffice — backport of upstream a94e362b8c, c0f56cd284 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 from frappe.query_builder import CustomFunction
 from frappe.utils import cint
 
@@ -96,7 +95,6 @@ def get_data(filters):
 def get_sales_details(filters):
 	item_details_map = {}
 
-	# //// Neoffice — backport of upstream a94e362b8c, c0f56cd284 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 	if filters["based_on"] not in ("Sales Order", "Sales Invoice"):
 		frappe.throw(_("Invalid value {0} for 'Based On'").format(filters["based_on"]))
 

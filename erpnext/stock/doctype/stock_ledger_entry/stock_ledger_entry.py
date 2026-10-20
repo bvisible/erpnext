@@ -2,19 +2,21 @@
 # License: GNU General Public License v3. See license.txt
 
 
+import re
 from datetime import date
 
 import frappe
 from frappe import _, bold
 from frappe.core.doctype.role.role import get_users
 from frappe.model.document import Document
-from frappe.query_builder.functions import Sum
+from frappe.query_builder.functions import Concat_ws, Sum
 from frappe.utils import add_days, cint, flt, formatdate, get_datetime, getdate
 
 from erpnext.accounts.utils import get_fiscal_year
 from erpnext.controllers.item_variant import ItemTemplateCannotHaveStock
 from erpnext.stock.doctype.inventory_dimension.inventory_dimension import get_inventory_dimensions
-from erpnext.stock.serial_batch_bundle import SerialBatchBundle
+from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos as get_parsed_serial_nos
+from erpnext.stock.serial_batch_bundle import SerialBatchBundle, get_serial_nos
 from erpnext.stock.stock_ledger import get_previous_sle
 
 
@@ -27,6 +29,10 @@ class BackDatedStockTransaction(frappe.ValidationError):
 
 
 class InventoryDimensionNegativeStockError(frappe.ValidationError):
+	pass
+
+
+class SerialNoInventoryDimensionError(frappe.ValidationError):
 	pass
 
 
@@ -98,6 +104,7 @@ class StockLedgerEntry(Document):
 		self.block_transactions_against_group_warehouse()
 		self.validate_with_last_transaction_posting_time()
 		self.validate_inventory_dimension_negative_stock()
+		self.validate_serial_no_inventory_dimension()
 
 	def set_posting_datetime(self):
 		from erpnext.stock.utils import get_combine_datetime
@@ -113,17 +120,15 @@ class StockLedgerEntry(Document):
 			return
 
 		flt_precision = cint(frappe.db.get_default("float_precision")) or 2
-		for dimension, values in dimensions.items():
-			dimension_value = values.get("value")
-			available_qty = self.get_available_qty_after_prev_transaction(dimension, dimension_value)
+		available_qty = self.get_available_qty_after_prev_transaction(dimensions)
 
-			diff = flt(available_qty + flt(self.actual_qty), flt_precision)  # qty after current transaction
-			if diff < 0 and abs(diff) > 0.0001:
-				self.throw_validation_error(diff, dimension, dimension_value)
+		diff = flt(available_qty + flt(self.actual_qty), flt_precision)  # qty after current transaction
+		if diff < 0 and abs(diff) > 0.0001:
+			self.throw_validation_error(diff, dimensions)
 
-	def get_available_qty_after_prev_transaction(self, dimension, dimension_value):
+	def get_available_qty_after_prev_transaction(self, dimensions):
 		sle = frappe.qb.DocType("Stock Ledger Entry")
-		available_qty = (
+		available_qty_query = (
 			frappe.qb.from_(sle)
 			.select(Sum(sle.actual_qty))
 			.where(
@@ -132,21 +137,27 @@ class StockLedgerEntry(Document):
 				& (sle.posting_datetime < self.posting_datetime)
 				& (sle.company == self.company)
 				& (sle.is_cancelled == 0)
-				& (sle[dimension] == dimension_value)
 			)
-		).run()
+		)
+
+		for dimension, values in dimensions.items():
+			dimension_value = values.get("value")
+			available_qty_query = available_qty_query.where(sle[dimension] == dimension_value)
+
+		available_qty = available_qty_query.run()
 
 		return available_qty[0][0] or 0
 
-	def throw_validation_error(self, diff, dimension, dimension_value):
+	def throw_validation_error(self, diff, dimensions):
 		msg = _(
-			"{0} units of {1} are required in {2} with the inventory dimension: {3} ({4}) on {5} {6} for {7} to complete the transaction."
+			"{0} units of {1} are required in {2} with the inventory dimension: {3} on {4} {5} for {6} to complete the transaction."
 		).format(
 			abs(diff),
 			frappe.get_desk_link("Item", self.item_code),
 			frappe.get_desk_link("Warehouse", self.warehouse),
-			frappe.bold(dimension),
-			frappe.bold(dimension_value),
+			frappe.bold(
+				", ".join([f"{dimension}: {values.get('value')}" for dimension, values in dimensions.items()])
+			),
 			self.posting_date,
 			self.posting_time,
 			frappe.get_desk_link(self.voucher_type, self.voucher_no),
@@ -167,6 +178,87 @@ class StockLedgerEntry(Document):
 			inv_dimension_dict.setdefault(dimension.fieldname, dimension)
 
 		return inv_dimension_dict
+
+	def validate_serial_no_inventory_dimension(self):
+		if self.is_cancelled or self.actual_qty >= 0:
+			return
+
+		dimensions = get_inventory_dimensions()
+		if not dimensions:
+			return
+
+		serial_nos = get_serial_nos(self.serial_and_batch_bundle)
+		if not serial_nos and self.serial_no:
+			serial_nos = get_parsed_serial_nos(self.serial_no)
+
+		if not serial_nos:
+			return
+
+		for serial_no, values in self.get_last_inward_dimensions(serial_nos, dimensions).items():
+			mismatches = []
+			for dimension in dimensions:
+				fieldname = dimension.fieldname
+				expected_value = values.get(fieldname)
+				if expected_value != self.get(fieldname):
+					mismatches.append(
+						_('{0}: expected "{1}", got "{2}"').format(
+							dimension.dimension_name,
+							expected_value or _("Not Set"),
+							self.get(fieldname),
+						)
+					)
+
+			if mismatches:
+				frappe.throw(
+					_("Serial No {0} is not available in the selected inventory dimensions: {1}").format(
+						frappe.bold(serial_no), frappe.bold(", ".join(mismatches))
+					),
+					title=_("Incorrect Inventory Dimension"),
+					exc=SerialNoInventoryDimensionError,
+				)
+
+	def get_last_inward_dimensions(self, serial_nos, dimensions):
+		sle = frappe.qb.DocType("Stock Ledger Entry")
+		serial_entry = frappe.qb.DocType("Serial and Batch Entry")
+		dimension_fields = [sle[dimension.fieldname].as_(dimension.fieldname) for dimension in dimensions]
+		escaped_serial_nos = [re.escape(serial_no) for serial_no in serial_nos]
+		legacy_serial_pattern = r"[\n,][[:space:]]*(" + "|".join(escaped_serial_nos) + r")[[:space:]]*[\n,]"
+		legacy_serial_condition = (
+			sle.serial_and_batch_bundle.isnull() | (sle.serial_and_batch_bundle == "")
+		) & Concat_ws("", "\n", sle.serial_no, "\n").regexp(legacy_serial_pattern)
+
+		rows = (
+			frappe.qb.from_(sle)
+			.left_join(serial_entry)
+			.on(serial_entry.parent == sle.serial_and_batch_bundle)
+			.select(
+				serial_entry.serial_no.as_("bundle_serial_no"),
+				sle.serial_no.as_("legacy_serial_nos"),
+				*dimension_fields,
+			)
+			.where(
+				(serial_entry.serial_no.isin(serial_nos) | legacy_serial_condition)
+				& (sle.item_code == self.item_code)
+				& (sle.actual_qty > 0)
+				& (sle.is_cancelled == 0)
+				& (sle.posting_datetime <= self.posting_datetime)
+			)
+			.orderby(sle.posting_datetime, order=frappe.qb.desc)
+			.orderby(sle.creation, order=frappe.qb.desc)
+		).run(as_dict=True)
+
+		serial_nos = set(serial_nos)
+		last_inward_dimensions = {}
+		for row in rows:
+			row_serial_nos = (
+				[row.bundle_serial_no]
+				if row.bundle_serial_no
+				else get_parsed_serial_nos(row.legacy_serial_nos)
+			)
+			for serial_no in serial_nos.intersection(row_serial_nos):
+				last_inward_dimensions.setdefault(serial_no, row)
+
+		return last_inward_dimensions
 
 	def on_submit(self):
 		self.check_stock_frozen_date()

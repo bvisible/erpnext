@@ -76,11 +76,11 @@
 			</div>
 			<div class="text-right col-2">
 				{%- set party_name = doc.supplier_name if doc.doctype in ['Supplier Quotation', 'Purchase Invoice', 'Purchase Order'] else doc.customer_name %}
-				<b>{{ party_name }}</b>
+				<b>{{ party_name | e }}</b>
 
 				{% if doc.contact_display and doc.contact_display != party_name %}
 					<br>
-					{{ doc.contact_display }}
+					{{ doc.contact_display | e }}
 				{% endif %}
 			</div>
 		</div>
@@ -143,7 +143,7 @@
 				<div class="col-sm-12">
 					{% for attachment in attachments %}
 					<p class="small">
-						<a href="{{ attachment.file_url }}" target="blank"> {{ attachment.file_name }} </a>
+						<a href="{{ attachment.file_url|e }}" target="blank"> {{ attachment.file_name|e }} </a>
 					</p>
 					{% endfor %}
 				</div>
@@ -154,7 +154,7 @@
 	{% if doc.terms %}
 		<div class="terms-and-condition text-muted small">
 			<hr>
-			<p>{{ doc.terms }}</p>
+			<p>{{ frappe.sanitize_html(doc.terms) }}</p>
 		</div>
 	{% endif %}
 {% endblock %}

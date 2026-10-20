@@ -53,7 +53,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		)
 
 		if self.filters.show_gl_balance:
-			gl_balance_map = get_gl_balance(self.filters.report_date, self.filters.company)
+			gl_balance_map = get_gl_balance(self.filters.report_date, self.filters.company, self.account_type)
 
 		for party, party_dict in self.party_total.items():
 			if flt(party_dict.outstanding, self.currency_precision) == 0:
@@ -132,8 +132,8 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		if row.sales_person:
 			self.party_total[row.party].sales_person.append(row.get("sales_person", ""))
 
-		if self.filters.sales_partner:
-			self.party_total[row.party]["default_sales_partner"] = row.get("default_sales_partner", "")
+		if self.filters.sales_partner and row.get("sales_partner"):
+			self.party_total[row.party]["sales_partner"] = row.get("sales_partner")
 
 	def get_columns(self):
 		self.columns = []
@@ -191,7 +191,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 				self.add_column(label=_("Sales Person"), fieldname="sales_person", fieldtype="Data")
 
 			if self.filters.sales_partner:
-				self.add_column(label=_("Sales Partner"), fieldname="default_sales_partner", fieldtype="Data")
+				self.add_column(label=_("Sales Partner"), fieldname="sales_partner", fieldtype="Data")
 
 		else:
 			self.add_column(
@@ -206,11 +206,15 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		)
 
 
-def get_gl_balance(report_date, company):
+def get_gl_balance(report_date, company, account_type):
+	if account_type == "Payable":
+		balance_calc_fields = ["party", "SUM(credit - debit) AS balance"]
+	else:
+		balance_calc_fields = ["party", "SUM(debit - credit) AS balance"]
 	return frappe._dict(
 		frappe.db.get_all(
 			"GL Entry",
-			fields=["party", "sum(debit -  credit)"],
+			fields=balance_calc_fields,
 			filters={"posting_date": ("<=", report_date), "is_cancelled": 0, "company": company},
 			group_by="party",
 			as_list=1,

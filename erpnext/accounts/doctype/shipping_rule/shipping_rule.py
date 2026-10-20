@@ -75,9 +75,7 @@ class ShippingRule(Document):
 			ShippingRuleConditionMultipleConstraints,
 		)
 		# //// End: Custom Shipping Rule - Multiple Constraints ////
-		from erpnext.accounts.doctype.shipping_rule_country.shipping_rule_country import (
-			ShippingRuleCountry,
-		)
+		from erpnext.accounts.doctype.shipping_rule_country.shipping_rule_country import ShippingRuleCountry
 
 		account: DF.Link
 		# //// Start: Custom Shipping Rule - Multiple Constraints ////
@@ -89,16 +87,18 @@ class ShippingRule(Document):
 		condition_multiple_constraints: DF.Table[ShippingRuleConditionMultipleConstraints]
 		# //// End: Custom Shipping Rule - Multiple Constraints ////
 		conditions: DF.Table[ShippingRuleCondition]
-		cost_center: DF.Link
+		cost_center: DF.Link | None
 		countries: DF.Table[ShippingRuleCountry]
 		disabled: DF.Check
 		label: DF.Data
+		project: DF.Link | None
 		shipping_amount: DF.Currency
 		shipping_rule_type: DF.Literal["Selling", "Buying"]
 	# end: auto-generated types
 
 	# //// Start: Custom Shipping Rule - Multiple Constraints ////
 	def validate(self):
+		self.validate_account_company()
 		self.validate_from_to_values()
 		self.sort_shipping_rule_conditions()
 		# ////self.validate_overlapping_shipping_rule_conditions()
@@ -107,12 +107,29 @@ class ShippingRule(Document):
 			self.validate_overlapping_shipping_rule_conditions()
 	# //// End: Custom Shipping Rule - Multiple Constraints ////
 
+	def validate_account_company(self):
+		if not self.company or not self.account:
+			return
+
+		if frappe.get_cached_value("Account", self.account, "company") != self.company:
+			throw(
+				_("Shipping Account {0} does not belong to Company {1}").format(
+					frappe.bold(self.account), frappe.bold(self.company)
+				),
+				title=_("Invalid Shipping Account"),
+			)
+
 	# //// Start: Custom Shipping Rule - Multiple Constraints ////
 	def validate_from_to_values(self):
 		# Skip validation for multiple constraints mode
 		if self.calculate_based_on == "Multiple Constraints":
 			return
-			
+
+		if self.calculate_based_on == "Fixed":
+			if self.conditions:
+				self.set("conditions", [])
+			return
+
 		zero_to_values = []
 
 		for d in self.get("conditions"):
@@ -1022,6 +1039,12 @@ class ShippingRule(Document):
 			and frappe.db.get_value("Tax Category", doc.tax_category, "vat_foreign")
 		):
 			tax_rows = []
+		# //// Neoffice — upstream's buying category (see new_tax_row below)
+		buying_category = None
+		if self.shipping_rule_type != "Selling":
+			buying_category = (
+				"Valuation and Total" if doc.get_stock_items() or doc.get_asset_items() else "Total"
+			)
 		# Add the shipping charge
 		if self.shipping_rule_type == "Selling":
 			# For selling, we just need basic fields
@@ -1045,7 +1068,10 @@ class ShippingRule(Document):
 				"account_head": self.account,
 				"cost_center": self.cost_center,
 				"tax_amount": base_shipping_amount,
-				"category": "Valuation and Total",
+				# //// Neoffice — upstream's category since the merge with v15.123.0: "Valuation and Total" only when
+				# //// the document has stock or asset items, "Total" otherwise (a valuation charge on an invoice of
+				# //// services is refused).
+				"category": buying_category,
 				"add_deduct_tax": "Add"
 			}
 
@@ -1069,7 +1095,7 @@ class ShippingRule(Document):
 					tax_row["doctype"] = "Sales Taxes and Charges"
 				else:
 					tax_row["doctype"] = "Purchase Taxes and Charges"
-					tax_row["category"] = "Valuation and Total"
+					tax_row["category"] = buying_category # //// upstream's category, see new_tax_row above
 					tax_row["add_deduct_tax"] = "Add"
 
 				# Increment idx for each tax row

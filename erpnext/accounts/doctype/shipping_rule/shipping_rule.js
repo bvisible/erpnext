@@ -9,10 +9,15 @@ frappe.ui.form.on("Shipping Rule", {
 	},
 
 	company: function (frm) {
+		if (frm.previous_company !== frm.doc.company) {
+			frm.previous_company = frm.doc.company;
+			frm.set_value("account", "");
+		}
 		erpnext.accounts.dimensions.update_dimension(frm, frm.doctype);
 	},
 
 	refresh: function (frm) {
+		frm.previous_company = frm.doc.company;
 		frm.set_query("account", function () {
 			return {
 				filters: {
@@ -25,6 +30,10 @@ frappe.ui.form.on("Shipping Rule", {
 	},
 	calculate_based_on: function (frm) {
 		frm.trigger("toggle_reqd");
+		if (frm.doc.calculate_based_on === "Fixed") {
+			frm.clear_table("conditions");
+			frm.refresh_field("conditions");
+		}
 	},
 	toggle_reqd: function (frm) {
 		frm.toggle_reqd("shipping_amount", frm.doc.calculate_based_on === "Fixed");

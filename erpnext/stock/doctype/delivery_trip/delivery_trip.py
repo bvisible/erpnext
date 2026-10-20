@@ -50,6 +50,11 @@ class DeliveryTrip(Document):
 			"UOM Conversion Factor", {"from_uom": "Meter", "to_uom": self.default_distance_uom}, "value"
 		)
 
+	def after_mapping(self, source_doc):
+		for stop in self.delivery_stops[:]:
+			if not any(stop.get(df.fieldname) for df in stop.meta.fields):
+				self.remove(stop)
+
 	def validate(self):
 		if self._action == "submit" and not self.driver:
 			frappe.throw(_("A driver must be set to submit."))
@@ -69,7 +74,7 @@ class DeliveryTrip(Document):
 
 	def validate_stop_addresses(self):
 		for stop in self.delivery_stops:
-			if not stop.customer_address:
+			if stop.address and not stop.customer_address:
 				stop.customer_address = get_address_display(frappe.get_doc("Address", stop.address).as_dict())
 
 	def update_status(self):
@@ -274,6 +279,9 @@ class DeliveryTrip(Document):
 
 @frappe.whitelist()
 def get_contact_and_address(name):
+	# `select`, not `read`: three of the four roles that run Delivery Trips hold no Customer read row
+	frappe.has_permission("Customer", ptype="select", doc=name, throw=True)
+
 	out = frappe._dict()
 
 	get_default_contact(out, name)
@@ -335,7 +343,9 @@ def get_default_address(out, name):
 
 
 @frappe.whitelist()
-def get_contact_display(contact):
+def get_contact_display(contact: str):
+	frappe.has_permission("Contact", "read", doc=contact, throw=True)
+
 	contact_info = frappe.db.get_value(
 		"Contact", contact, ["first_name", "last_name", "phone", "mobile_no"], as_dict=1
 	)
@@ -373,6 +383,7 @@ def sanitize_address(address):
 @frappe.whitelist()
 def notify_customers(delivery_trip):
 	delivery_trip = frappe.get_doc("Delivery Trip", delivery_trip)
+	delivery_trip.check_permission()
 
 	context = delivery_trip.as_dict()
 
@@ -403,7 +414,7 @@ def notify_customers(delivery_trip):
 			frappe.sendmail(
 				recipients=contact_info.email_id,
 				subject=dispatch_template.subject,
-				message=frappe.render_template(dispatch_template.response, context),
+				message=frappe.render_template(dispatch_template.response, context, restrict_globals=True),
 				attachments=get_attachments(stop),
 			)
 
@@ -436,7 +447,9 @@ def get_attachments(delivery_stop):
 
 
 @frappe.whitelist()
-def get_driver_email(driver):
+def get_driver_email(driver: str):
+	frappe.has_permission("Driver", "read", doc=driver, throw=True)
+
 	employee = frappe.db.get_value("Driver", driver, "employee")
 	email = frappe.db.get_value("Employee", employee, "prefered_email")
 	return {"email": email}

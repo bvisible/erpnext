@@ -18,7 +18,9 @@ dependencies = [
     # integration dependencies
     "googlemaps",
     "plaid-python~=7.2.1",
-    "python-youtube~=0.9.9",  # //// Neoffice — was ~=0.8.0, as upstream version-15 has now: 0.8.x caps isodate <0.7, suite needs ~=0.7.2 (maintenance#1679)
+    "python-youtube~=0.9.9",
+    # //// Neoffice — py3dbp (3D bin packing), matplotlib and numpy: the "Multiple Constraints" shipping rule
+    # //// packs the order into parcels and draws the packing (7534a0d7f6, 2025-03-17; see shipping_rule.py).
     "py3dbp",
     "matplotlib",
     "numpy",
@@ -32,7 +34,7 @@ requires = ["flit_core >=3.4,<4"]
 build-backend = "flit_core.buildapi"
 
 [tool.bench.frappe-dependencies]
-frappe = ">=15.40.4,<16.0.0"
+frappe = ">=15.111.0,<16.0.0"
 
 [tool.ruff]
 line-length = 110
@@ -75,4 +77,5 @@ docstring-code-format = true
 [project.urls]
 Homepage = "https://frappe.io/erpnext"
 Repository = "https://github.com/frappe/erpnext.git"
+Documentation = "https://docs.frappe.io/erpnext"
 "Bug Reports" = "https://github.com/frappe/erpnext/issues"

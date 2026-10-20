@@ -181,6 +181,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Customer Group",
+   "link_filters": "[[\"Customer Group\", \"is_group\", \"=\", 0]]",
    "oldfieldname": "customer_group",
    "oldfieldtype": "Link",
    "options": "Customer Group",
@@ -305,6 +306,7 @@
    "fieldname": "customer_primary_contact",
    "fieldtype": "Link",
    "label": "Customer Primary Contact",
+   "no_copy": 1,
    "options": "Contact"
   },
   {
@@ -312,6 +314,7 @@
    "fieldname": "mobile_no",
    "fieldtype": "Read Only",
    "label": "Mobile No",
+   "no_copy": 1,
    "options": "Mobile"
   },
   {
@@ -319,6 +322,7 @@
    "fieldname": "email_id",
    "fieldtype": "Read Only",
    "label": "Email Id",
+   "no_copy": 1,
    "options": "Email"
   },
   {
@@ -330,12 +334,14 @@
    "fieldname": "customer_primary_address",
    "fieldtype": "Link",
    "label": "Customer Primary Address",
+   "no_copy": 1,
    "options": "Address"
   },
   {
    "fieldname": "primary_address",
    "fieldtype": "Text",
    "label": "Primary Address",
+   "no_copy": 1,
    "read_only": 1
   },
   {
@@ -590,14 +596,16 @@
    "fieldname": "first_name",
    "fieldtype": "Read Only",
    "hidden": 1,
-   "label": "First Name"
+   "label": "First Name",
+   "no_copy": 1
   },
   {
    "fetch_from": "customer_primary_contact.last_name",
    "fieldname": "last_name",
    "fieldtype": "Read Only",
    "hidden": 1,
-   "label": "Last Name"
+   "label": "Last Name",
+   "no_copy": 1
   }
  ],
  "icon": "fa fa-user",
@@ -611,7 +619,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2026-09-03 12:36:48.222508",
+ "modified": "2026-09-21 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
@@ -664,7 +672,8 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Stock User"
+   "role": "Stock User",
+   "select": 1
   },
   {
    "email": 1,
@@ -686,6 +695,62 @@
    "read": 1,
    "report": 1,
    "role": "Accounts Manager"
+  },
+  {
+   "role": "Delivery Manager",
+   "select": 1
+  },
+  {
+   "role": "Delivery User",
+   "select": 1
+  },
+  {
+   "role": "Employee",
+   "select": 1
+  },
+  {
+   "role": "Fulfillment User",
+   "select": 1
+  },
+  {
+   "role": "HR Manager",
+   "select": 1
+  },
+  {
+   "role": "HR User",
+   "select": 1
+  },
+  {
+   "role": "Maintenance Manager",
+   "select": 1
+  },
+  {
+   "role": "Maintenance User",
+   "select": 1
+  },
+  {
+   "role": "Projects Manager",
+   "select": 1
+  },
+  {
+   "role": "Projects User",
+   "select": 1
+  },
+  {
+   "role": "Purchase Master Manager",
+   "select": 1
+  },
+  {
+   "role": "Quality Manager",
+   "select": 1
+  },
+  {
+   "role": "Support Team",
+   "select": 1
+  },
+  {
+   "role": "Website Manager",
+   "select": 1
   }
  ],
  "quick_entry": 1,

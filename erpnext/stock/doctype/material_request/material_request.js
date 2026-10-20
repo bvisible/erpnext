@@ -30,7 +30,10 @@ frappe.ui.form.on("Material Request", {
 
 		frm.set_query("from_warehouse", "items", function (doc) {
 			return {
-				filters: { company: doc.company },
+				filters: {
+					company: doc.company,
+					is_group: 0,
+				},
 			};
 		});
 
@@ -62,25 +65,56 @@ frappe.ui.form.on("Material Request", {
 
 		frm.set_query("warehouse", "items", function (doc) {
 			return {
-				filters: { company: doc.company },
+				filters: {
+					company: doc.company,
+					is_group: 0,
+				},
 			};
 		});
 
 		frm.set_query("set_warehouse", function (doc) {
 			return {
-				filters: { company: doc.company },
+				filters: {
+					company: doc.company,
+					is_group: 0,
+				},
 			};
 		});
 
 		frm.set_query("set_from_warehouse", function (doc) {
 			return {
-				filters: { company: doc.company },
+				filters: {
+					company: doc.company,
+					is_group: 0,
+				},
 			};
 		});
 
 		erpnext.accounts.dimensions.setup_dimension_filters(frm, frm.doctype);
 		if (!frm.doc.buying_price_list) {
-			frm.doc.buying_price_list = frappe.defaults.get_default("buying_price_list");
+			const buying_price_list = frappe.defaults.get_default("buying_price_list");
+			if (buying_price_list) {
+				const docname = frm.doc.name;
+				frappe.call({
+					type: "GET",
+					method: "frappe.client.has_permission",
+					no_spinner: true,
+					args: {
+						doctype: "Price List",
+						docname: buying_price_list,
+						perm_type: "read",
+					},
+					callback: ({ message }) => {
+						if (
+							message?.has_permission &&
+							frm.doc.name === docname &&
+							!frm.doc.buying_price_list
+						) {
+							frm.set_value("buying_price_list", buying_price_list);
+						}
+					},
+				});
+			}
 		}
 	},
 
@@ -96,6 +130,7 @@ frappe.ui.form.on("Material Request", {
 	refresh: function (frm) {
 		frm.events.make_custom_buttons(frm);
 		frm.toggle_reqd("customer", frm.doc.material_request_type == "Customer Provided");
+		frm.trigger("set_warehouse_label");
 	},
 
 	set_from_warehouse: function (frm) {
@@ -258,9 +293,7 @@ frappe.ui.form.on("Material Request", {
 					from_warehouse: item.from_warehouse,
 					warehouse: item.warehouse,
 					doctype: frm.doc.doctype,
-					buying_price_list: frm.doc.buying_price_list
-						? frm.doc.buying_price_list
-						: frappe.defaults.get_default("buying_price_list"),
+					buying_price_list: frm.doc.buying_price_list,
 					currency: frappe.defaults.get_default("Currency"),
 					name: frm.doc.name,
 					qty: item.qty || 1,
@@ -332,6 +365,9 @@ frappe.ui.form.on("Material Request", {
 					label: __("For Warehouse"),
 					options: "Warehouse",
 					reqd: 1,
+					get_query: function () {
+						return { filters: { company: frm.doc.company } };
+					},
 				},
 				{ fieldname: "qty", fieldtype: "Float", label: __("Quantity"), reqd: 1, default: 1 },
 				{
@@ -496,6 +532,23 @@ frappe.ui.form.on("Material Request", {
 		if (frm.doc.material_request_type !== "Material Transfer" && frm.doc.set_from_warehouse) {
 			frm.set_value("set_from_warehouse", "");
 		}
+
+		frm.trigger("set_warehouse_label");
+	},
+
+	set_warehouse_label(frm) {
+		let warehouse_label =
+			frm.doc.material_request_type === "Material Transfer" ? "Target Warehouse" : "Warehouse";
+		if (frm.doc.material_request_type === "Material Issue") {
+			warehouse_label = "From Warehouse";
+		}
+
+		frm.fields_dict["items"].grid.update_docfield_property("warehouse", "label", __(warehouse_label));
+
+		warehouse_label = "Set " + warehouse_label;
+		frm.set_df_property("set_warehouse", "label", __(warehouse_label));
+
+		refresh_field("items");
 	},
 });
 
@@ -606,10 +659,6 @@ erpnext.buying.MaterialRequestController = class MaterialRequestController exten
 	}
 
 	items_on_form_rendered() {
-		set_schedule_date(this.frm);
-	}
-
-	schedule_date() {
 		set_schedule_date(this.frm);
 	}
 

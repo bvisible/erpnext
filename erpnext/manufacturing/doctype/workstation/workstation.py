@@ -19,6 +19,7 @@ from frappe.utils import (
 	time_diff_in_seconds,
 	to_timedelta,
 )
+from frappe.utils.data import DateTimeLikeObject
 
 from erpnext.support.doctype.issue.issue import get_holidays
 
@@ -65,7 +66,7 @@ class Workstation(Document):
 	# end: auto-generated types
 
 	def before_save(self):
-		self.set_data_based_on_workstation_type()
+		self._set_data_based_on_workstation_type()
 		self.set_hour_rate()
 		self.set_total_working_hours()
 
@@ -79,9 +80,6 @@ class Workstation(Document):
 				self.total_working_hours += row.hours
 
 	def validate_working_hours(self, row):
-		if not (row.start_time and row.end_time):
-			frappe.throw(_("Row #{0}: Start Time and End Time are required").format(row.idx))
-
 		if get_time(row.start_time) >= get_time(row.end_time):
 			frappe.throw(_("Row #{0}: Start Time must be before End Time").format(row.idx))
 
@@ -95,6 +93,10 @@ class Workstation(Document):
 
 	@frappe.whitelist()
 	def set_data_based_on_workstation_type(self):
+		self.check_permission("write")
+		self._set_data_based_on_workstation_type()
+
+	def _set_data_based_on_workstation_type(self):
 		if self.workstation_type:
 			fields = [
 				"hour_rate_labour",
@@ -124,15 +126,17 @@ class Workstation(Document):
 	def validate_overlap_for_operation_timings(self):
 		"""Check if there is no overlap in setting Workstation Operating Hours"""
 		for d in self.get("working_hours"):
-			existing = frappe.db.sql_list(
-				"""select idx from `tabWorkstation Working Hour`
-				where parent = %s and name != %s
-					and (
-						(start_time between %s and %s) or
-						(end_time between %s and %s) or
-						(%s between start_time and end_time))
-				""",
-				(self.name, d.name, d.start_time, d.end_time, d.start_time, d.end_time, d.start_time),
+			wh = frappe.qb.DocType("Workstation Working Hour")
+			existing = (
+				frappe.qb.from_(wh)
+				.select(wh.idx)
+				.where(
+					(wh.parent == self.name)
+					& (wh.name != d.name)
+					& (wh.start_time < d.end_time)
+					& (wh.end_time > d.start_time)
+				)
+				.run(pluck=True)
 			)
 
 			if existing:
@@ -150,9 +154,10 @@ class Workstation(Document):
 
 		for bom_no in bom_list:
 			frappe.db.sql(
-				"""update `tabBOM Operation` set hour_rate = %s
+				"""update `tabBOM Operation`
+				set hour_rate = %s, operating_cost = %s * time_in_mins / 60
 				where parent = %s and workstation = %s""",
-				(self.hour_rate, bom_no[0], self.name),
+				(self.hour_rate, self.hour_rate, bom_no[0], self.name),
 			)
 
 	def validate_workstation_holiday(self, schedule_date, skip_holiday_list_check=False):
@@ -169,23 +174,26 @@ class Workstation(Document):
 		return schedule_date
 
 	@frappe.whitelist()
-	def start_job(self, job_card, from_time, employee):
+	def start_job(self, job_card: str, from_time: DateTimeLikeObject, employee: str):
 		doc = frappe.get_doc("Job Card", job_card)
+		doc.check_permission("write")
+
 		doc.append("time_logs", {"from_time": from_time, "employee": employee})
-		doc.save(ignore_permissions=True)
+		doc.save()
 
 		return doc
 
 	@frappe.whitelist()
-	def complete_job(self, job_card, qty, to_time):
+	def complete_job(self, job_card: str, qty: float, to_time: DateTimeLikeObject):
 		doc = frappe.get_doc("Job Card", job_card)
+		doc.check_permission("submit")
+
 		for row in doc.time_logs:
 			if not row.to_time:
 				row.to_time = to_time
-				row.time_in_mins = time_diff_in_hours(row.to_time, row.from_time) / 60
 				row.completed_qty = qty
 
-		doc.save(ignore_permissions=True)
+		doc.save()
 		doc.submit()
 
 		return doc
@@ -367,32 +375,35 @@ def check_workstation_for_holiday(workstation, from_datetime, to_datetime):
 
 @frappe.whitelist()
 def get_workstations(**kwargs):
-	kwargs = frappe._dict(kwargs)
-	_workstation = frappe.qb.DocType("Workstation")
+	frappe.has_permission("Workstation", "read", throw=True)
 
-	query = (
-		frappe.qb.from_(_workstation)
-		.select(
-			_workstation.name,
-			_workstation.description,
-			_workstation.status,
-			_workstation.on_status_image,
-			_workstation.off_status_image,
-		)
-		.orderby(_workstation.workstation_type, _workstation.name)
-		.where(_workstation.plant_floor == kwargs.plant_floor)
-	)
+	kwargs = frappe._dict(kwargs)
+
+	if not kwargs.plant_floor:
+		# the replaced query compared `plant_floor` with `=`, which no row satisfies when empty;
+		# get_list would read that as IS NULL and start returning floor-less workstations
+		return []
+
+	# A list of filters, not a dict: more than one of these can constrain `name`, and a dict would
+	# silently drop all but the last.
+	filters = [["plant_floor", "=", kwargs.plant_floor]]
 
 	if kwargs.workstation:
-		query = query.where(_workstation.name == kwargs.workstation)
+		filters.append(["name", "=", kwargs.workstation])
 
 	if kwargs.workstation_type:
-		query = query.where(_workstation.workstation_type == kwargs.workstation_type)
+		filters.append(["workstation_type", "=", kwargs.workstation_type])
 
 	if kwargs.workstation_status:
-		query = query.where(_workstation.status == kwargs.workstation_status)
+		filters.append(["status", "=", kwargs.workstation_status])
 
-	data = query.run(as_dict=True)
+	# get_list, not get_all: it applies the caller's User Permissions to rows the doctype check does not scope
+	data = frappe.get_list(
+		"Workstation",
+		filters=filters,
+		fields=["name", "description", "status", "on_status_image", "off_status_image"],
+		order_by="workstation_type, name",
+	)
 
 	color_map = {
 		"Production": "var(--green-600)",
@@ -405,12 +416,10 @@ def get_workstations(**kwargs):
 
 	for d in data:
 		d.workstation_name = get_link_to_form("Workstation", d.name)
-		# //// Neoffice — backport of upstream 928f984198, d047caf4aa (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 		d.status_image = frappe.utils.escape_html(d.on_status_image)
 		d.background_color = color_map.get(d.status, "var(--red-600)")
 		d.workstation_link = get_url_to_form("Workstation", d.name)
 		if d.status != "Production":
-			# //// Neoffice — backport of upstream 928f984198, d047caf4aa (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 			d.status_image = frappe.utils.escape_html(d.off_status_image)
 
 	return data

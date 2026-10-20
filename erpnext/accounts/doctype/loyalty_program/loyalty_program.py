@@ -56,26 +56,13 @@ def _as_flag(value):
 	return bool(sbool(value))
 
 
-# //// Neoffice — added (no upstream equivalent), neoffice-maintenance#1290. The two functions below
-# //// are whitelisted and upstream checks nothing: any signed-in account, a portal customer
-# //// included, read the points, the lifetime spend and the tier of ANY customer through them,
-# //// while the list of the entries is refused to it. When the function is the endpoint itself
-# //// (called from the browser), the caller must be able to read the customer. The web shop calls
-# //// them from Python, in the same process, for its own customer: that path is not the endpoint
-# //// and is left alone. The desk screens that call them (invoice forms, point of sale, the
-# //// customer's points dialog) are staff who read customers. Keep until upstream checks.
-def _refuse_unreadable_customer(customer, method):
-	if customer and (frappe.local.form_dict.get("cmd") or "").endswith("." + method):
-		frappe.has_permission("Customer", "read", doc=customer, throw=True)
-
-
 # //// Neoffice — added (no upstream equivalent), neoffice-maintenance#1287. Upstream version-15
 # //// picks the tier in the loop of `get_loyalty_program_details_with_points` that sorts the rules
 # //// by min_spent DESCENDING, always takes the first one (`i == 0`) and only steps down while
 # //// `spent <= min_spent`: it returns the tier just ABOVE the right one (CHF 8'163.77 with a tier
 # //// from CHF 8'000 and the next from CHF 10'000 came out in the CHF 10'000 tier), and every
 # //// customer earned points at the wrong factor. Upstream fixed it on `develop` (ascending sort,
-# //// `>=`); version-15 still has the inverted loop at v15.122.0. This is the same rule as that fix.
+# //// `>=`); version-15 still has the inverted loop at v15.123.0. This is the same rule as that fix.
 # //// Drop it for upstream's loop once a version-15 release carries it.
 def get_tier_for_spent(collection_rules, spent):
 	"""The tier of a customer who has spent `spent`: the rule with the highest `min_spent` that the
@@ -159,9 +146,10 @@ def get_loyalty_program_details_with_points(
 	include_expired_entry=False,
 	current_transaction_amount=0,
 ):
+	frappe.has_permission("Customer", doc=customer, throw=True)
+
 	# //// Neoffice — flags and amounts arrive as strings from the desk (see `_as_flag`), and
 	# //// `total_spent + "0"` raised a TypeError. neoffice-maintenance#1287.
-	_refuse_unreadable_customer(customer, "get_loyalty_program_details_with_points")
 	silent = _as_flag(silent)
 	include_expired_entry = _as_flag(include_expired_entry)
 	current_transaction_amount = flt(current_transaction_amount)
@@ -196,9 +184,12 @@ def get_loyalty_program_details(
 	silent=False,
 	include_expired_entry=False,
 ):
+	# authorise the customer, not the programme: a Loyalty Program check is read-only to System
+	# Manager and would deny every role that fills in the two calling forms.
+	frappe.has_permission("Customer", doc=customer, throw=True)
+
 	lp_details = frappe._dict()
 	# //// Neoffice — `silent` sent by the desk is a string too (see `_as_flag`). #1287.
-	_refuse_unreadable_customer(customer, "get_loyalty_program_details")
 	silent = _as_flag(silent)
 
 	if not loyalty_program:
@@ -220,6 +211,13 @@ def get_loyalty_program_details(
 
 @frappe.whitelist()
 def get_redeemption_factor(loyalty_program=None, customer=None):
+	# both call sites send only `loyalty_program`, so the calling form is the boundary; the customer branch stays guarded
+	if not (frappe.has_permission("Sales Invoice") or frappe.has_permission("POS Invoice")):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	if customer:
+		frappe.has_permission("Customer", doc=customer, throw=True)
+
 	customer_loyalty_program = None
 	if not loyalty_program:
 		customer_loyalty_program = frappe.db.get_value("Customer", customer, "loyalty_program")

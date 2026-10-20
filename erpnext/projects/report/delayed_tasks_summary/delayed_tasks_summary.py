@@ -17,7 +17,7 @@ def execute(filters=None):
 
 def get_data(filters):
 	conditions = get_conditions(filters)
-	tasks = frappe.get_all(
+	tasks = frappe.get_list(
 		"Task",
 		filters=conditions,
 		fields=[
@@ -56,7 +56,7 @@ def get_data(filters):
 
 
 def get_conditions(filters):
-	conditions = frappe._dict()
+	conditions = frappe._dict(is_template=0, status=["!=", "Cancelled"])
 	keys = ["priority", "status", "project"]
 	for key in keys:
 		if filters.get(key):
@@ -75,13 +75,27 @@ def get_chart_data(data):
 			delay = delay + 1
 		else:
 			on_track = on_track + 1
+
+	labels = []
+	datasets = []
+	colors = []
+
+	if on_track:
+		labels.append(_("On Track"))
+		datasets.append(on_track)
+		colors.append("#84D5BA")
+	if delay:
+		labels.append(_("Delayed"))
+		datasets.append(delay)
+		colors.append("#CB4B5F")
+
 	charts = {
 		"data": {
-			"labels": [_("On Track"), _("Delayed")],
-			"datasets": [{"name": _("Delayed"), "values": [on_track, delay]}],
+			"labels": labels,
+			"datasets": [{"name": _("Delayed"), "values": datasets}],
 		},
 		"type": "percentage",
-		"colors": ["#84D5BA", "#CB4B5F"],
+		"colors": colors,
 	}
 	return charts
 

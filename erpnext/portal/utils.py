@@ -222,7 +222,26 @@ def create_customer_or_supplier():
 	return party
 
 # //// Neoffice ▲▲▲ end of the rewritten create_customer_or_supplier (see its header above).
-# //// create_party_contact is upstream's but for the names it gives the contact (see inside).
+
+
+def create_party(doctype, fullname):
+	party = frappe.new_doc(doctype)
+	# Can't set parent party as group
+
+	party.update(
+		{
+			f"{doctype.lower()}_name": fullname,
+			f"{doctype.lower()}_type": "Individual",
+		}
+	)
+
+	party.flags.ignore_mandatory = True
+	party.insert(ignore_permissions=True)
+
+	return party
+
+
+# //// Neoffice — create_party_contact is upstream's but for the names it gives the contact (see inside).
 def create_party_contact(doctype, fullname, user, party_name):
 	contact = frappe.new_doc("Contact")
 	# //// Neoffice — the User's own first and last names when it carries both: upstream wrote the

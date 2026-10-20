@@ -83,9 +83,11 @@ status_map = {
 	],
 	"Delivery Note": [
 		["Draft", None],
-		["To Bill", "eval:self.per_billed < 100 and self.docstatus == 1"],
+		["To Bill", "eval:self.per_billed == 0 and self.docstatus == 1"],
+		["Partially Billed", "eval:self.per_billed < 100 and self.per_billed > 0 and self.docstatus == 1"],
 		["Completed", "eval:self.per_billed == 100 and self.docstatus == 1"],
 		["Return Issued", "eval:self.per_returned == 100 and self.docstatus == 1"],
+		["Return", "eval:self.is_return == 1 and self.per_billed == 0 and self.docstatus == 1"],
 		["Cancelled", "eval:self.docstatus==2"],
 		["Closed", "eval:self.status=='Closed' and self.docstatus != 2"],
 	],
@@ -93,6 +95,7 @@ status_map = {
 		["Draft", None],
 		["To Bill", "eval:self.per_billed == 0 and self.docstatus == 1"],
 		["Partly Billed", "eval:self.per_billed > 0 and self.per_billed < 100 and self.docstatus == 1"],
+		["Return", "eval:self.is_return == 1 and self.per_billed == 0 and self.docstatus == 1"],
 		["Return Issued", "eval:self.per_returned == 100 and self.docstatus == 1"],
 		[
 			"Completed",
@@ -108,7 +111,7 @@ status_map = {
 		["Pending", "eval:self.status != 'Stopped' and self.per_ordered == 0 and self.docstatus == 1"],
 		[
 			"Ordered",
-			"eval:self.status != 'Stopped' and self.per_ordered == 100 and self.docstatus == 1 and self.material_request_type in ['Purchase', 'Manufacture']",
+			"eval:self.status != 'Stopped' and self.per_ordered == 100 and self.docstatus == 1 and self.material_request_type in ['Purchase', 'Manufacture', 'Subcontracting']",
 		],
 		[
 			"Transferred",
@@ -132,7 +135,7 @@ status_map = {
 		],
 		[
 			"Partially Ordered",
-			"eval:self.status != 'Stopped' and self.per_ordered < 100 and self.per_ordered > 0 and self.docstatus == 1 and self.material_request_type != 'Material Transfer'",
+			"eval:self.status != 'Stopped' and self.per_ordered < 100 and self.per_ordered > 0 and self.per_received < 100 and self.docstatus == 1 and self.material_request_type not in ['Material Transfer', 'Customer Provided']",
 		],
 	],
 	"POS Opening Entry": [
@@ -155,7 +158,8 @@ status_map = {
 	"Pick List": [
 		["Draft", None],
 		["Open", "eval:self.docstatus == 1"],
-		["Completed", "stock_entry_exists"],
+		["Completed", "is_fully_transferred"],
+		["Partially Transferred", "is_partially_transferred"],
 		[
 			"Partly Delivered",
 			"eval:self.purpose == 'Delivery' and self.delivery_status == 'Partly Delivered'",
@@ -231,16 +235,16 @@ class StatusUpdater(Document):
 		self.global_amount_allowance = None
 
 		for args in self.status_updater:
-			if "target_ref_field" not in args:
-				# if target_ref_field is not specified, the programmer does not want to validate qty / amount
+			if "target_ref_field" not in args or args.get("validate_qty") is False:
+				# if target_ref_field is not specified or validate_qty is explicitly set to False, skip validation
 				continue
 
 			# get unique transactions to update
 			for d in self.get_all_children():
-				if hasattr(d, "qty") and d.qty < 0 and not self.get("is_return"):
+				if hasattr(d, "qty") and flt(d.qty) < 0 and not self.get("is_return"):
 					frappe.throw(_("For an item {0}, quantity must be positive number").format(d.item_code))
 
-				if hasattr(d, "qty") and d.qty > 0 and self.get("is_return"):
+				if hasattr(d, "qty") and flt(d.qty) > 0 and self.get("is_return"):
 					frappe.throw(_("For an item {0}, quantity must be negative number").format(d.item_code))
 
 				if not frappe.db.get_single_value("Selling Settings", "allow_negative_rates_for_items"):
@@ -272,6 +276,12 @@ class StatusUpdater(Document):
 						item["idx"] = d.idx
 						item["target_ref_field"] = args["target_ref_field"].replace("_", " ")
 
+						# skip qty over-allowance check for non-stock items
+						if "qty" in args.get("target_ref_field", "") and not frappe.get_cached_value(
+							"Item", item["item_code"], "is_stock_item"
+						):
+							continue
+
 						# if not item[args['target_ref_field']]:
 						# 	msgprint(_("Note: System will not check over-delivery and over-booking for Item {0} as quantity or amount is 0").format(item.item_code))
 						if args.get("no_allowance"):
@@ -302,13 +312,12 @@ class StatusUpdater(Document):
 			qty_or_amount,
 		)
 
-		role_allowed_to_over_deliver_receive = frappe.db.get_single_value(
-			"Stock Settings", "role_allowed_to_over_deliver_receive"
-		)
-		role_allowed_to_over_bill = frappe.db.get_single_value(
-			"Accounts Settings", "role_allowed_to_over_bill"
-		)
-		role = role_allowed_to_over_deliver_receive if qty_or_amount == "qty" else role_allowed_to_over_bill
+		role = None
+		if qty_or_amount == "qty":
+			if args.get("overflow_type") in ("delivery", "receipt"):
+				role = frappe.get_single_value("Stock Settings", "role_allowed_to_over_deliver_receive")
+		else:
+			role = frappe.get_single_value("Accounts Settings", "role_allowed_to_over_bill")
 
 		overflow_percent = (
 			(item[args["target_field"]] - item[args["target_ref_field"]]) / item[args["target_ref_field"]]
@@ -339,14 +348,17 @@ class StatusUpdater(Document):
 		):
 			return
 
-		if qty_or_amount == "qty":
-			action_msg = _(
-				'To allow over receipt / delivery, update "Over Receipt/Delivery Allowance" in Stock Settings or the Item.'
-			)
+		if args["target_dt"] != "Quotation Item":
+			if qty_or_amount == "qty":
+				action_msg = _(
+					'To allow over receipt / delivery, update "Over Receipt/Delivery Allowance" in Stock Settings or the Item.'
+				)
+			else:
+				action_msg = _(
+					'To allow over billing, update "Over Billing Allowance" in Accounts Settings or the Item.'
+				)
 		else:
-			action_msg = _(
-				'To allow over billing, update "Over Billing Allowance" in Accounts Settings or the Item.'
-			)
+			action_msg = None
 
 		frappe.throw(
 			_(
@@ -358,8 +370,7 @@ class StatusUpdater(Document):
 				frappe.bold(_(self.doctype)),
 				frappe.bold(item.get("item_code")),
 			)
-			+ "<br><br>"
-			+ action_msg,
+			+ ("<br><br>" + action_msg if action_msg else ""),
 			OverAllowanceError,
 			title=_("Limit Crossed"),
 		)
@@ -389,10 +400,8 @@ class StatusUpdater(Document):
 		for args in self.status_updater:
 			# condition to include current record (if submit or no if cancel)
 			if self.docstatus == 1:
-				# //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 				args["cond"] = " or parent=%s" % frappe.db.escape(self.name)
 			else:
-				# //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 				args["cond"] = " and parent!=%s" % frappe.db.escape(self.name)
 
 			self._update_children(args, update_modified)
@@ -423,7 +432,6 @@ class StatusUpdater(Document):
 				args["second_source_condition"] = frappe.db.sql(
 					""" select ifnull((select sum({second_source_field})
 					from `tab{second_source_dt}`
-					-- //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): the id is a bound parameter, see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 					where `{second_join_field}`=%(detail_id)s
 					and (`tab{second_source_dt}`.docstatus=1)
 					{second_source_extra_cond}), 0) """.format(**args),
@@ -438,7 +446,6 @@ class StatusUpdater(Document):
 					frappe.db.sql(
 						"""
 						(select ifnull(sum({source_field}), 0)
-							-- //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): the id is a bound parameter, see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 							from `tab{source_dt}` where `{join_field}`=%(detail_id)s
 							and (docstatus=1 {cond}) {extra_cond})
 				""".format(**args),
@@ -453,7 +460,6 @@ class StatusUpdater(Document):
 				frappe.db.sql(
 					"""update `tab{target_dt}`
 					set {target_field} = {source_dt_value} {update_modified}
-					-- //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): the id is a bound parameter, see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 					where name=%(detail_id)s""".format(**args),
 					{"detail_id": args["detail_id"]},
 				)
@@ -463,8 +469,9 @@ class StatusUpdater(Document):
 		if args.get("percent_join_field_parent"):
 			# if reference to target doc where % is to be updated, is
 			# in source doc's parent form, consider percent_join_field_parent
-			args["name"] = self.get(args["percent_join_field_parent"])
-			self._update_percent_field(args, update_modified)
+			if name := self.get(args["percent_join_field_parent"]):
+				args["name"] = name
+				self._update_percent_field(args, update_modified)
 		else:
 			distinct_transactions = set(
 				d.get(args["percent_join_field"]) for d in self.get_all_children(args["source_dt"])

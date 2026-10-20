@@ -30,8 +30,7 @@ class Department(NestedSet):
 	nsm_parent_field = "parent_department"
 
 	def autoname(self):
-		root = get_root_of("Department")
-		if root and self.department_name != root:
+		if self.company:
 			self.name = get_abbreviated_name(self.department_name, self.company)
 		else:
 			self.name = self.department_name
@@ -81,7 +80,9 @@ def get_children(doctype, parent=None, company=None, is_root=False):
 	else:
 		filters["parent_department"] = parent
 
-	return frappe.get_all("Department", fields=fields, filters=filters, order_by="name")
+	# get_list, not get_all: applies the caller's Department permission and User Permissions.
+	# Department carries no `if_owner` row, so this does not silently empty the tree.
+	return frappe.get_list("Department", fields=fields, filters=filters, order_by="name")
 
 
 @frappe.whitelist()
@@ -90,6 +91,10 @@ def add_node():
 
 	args = frappe.form_dict
 	args = make_tree_args(**args)
+
+	# `args` comes straight from form_dict, so without this the caller chooses the doctype that
+	# gets created; the add-node action is not meant to build anything else.
+	args.doctype = "Department"
 
 	if args.parent_department == args.company:
 		args.parent_department = None

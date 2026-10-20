@@ -20,9 +20,7 @@ class Shipment(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		from erpnext.stock.doctype.shipment_delivery_note.shipment_delivery_note import (
-			ShipmentDeliveryNote,
-		)
+		from erpnext.stock.doctype.shipment_delivery_note.shipment_delivery_note import ShipmentDeliveryNote
 		from erpnext.stock.doctype.shipment_parcel.shipment_parcel import ShipmentParcel
 
 		amended_from: DF.Link | None
@@ -114,18 +112,20 @@ class Shipment(Document):
 
 @frappe.whitelist()
 def get_address_name(ref_doctype, docname):
-	# Return address name
+	frappe.has_permission(ref_doctype, "select", doc=docname, throw=True)
 	return get_party_shipping_address(ref_doctype, docname)
 
 
 @frappe.whitelist()
 def get_contact_name(ref_doctype, docname):
-	# Return address name
+	frappe.has_permission(ref_doctype, "select", doc=docname, throw=True)
 	return get_default_contact(ref_doctype, docname)
 
 
 @frappe.whitelist()
-def get_company_contact(user):
+def get_company_contact(user: str):
+	frappe.has_permission("User", "read", throw=True)
+
 	contact = frappe.db.get_value(
 		"User",
 		user,

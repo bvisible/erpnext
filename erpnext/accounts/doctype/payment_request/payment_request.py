@@ -1,21 +1,24 @@
+# //// Neoffice — inspect: send_edited_payment_email (below) asks whether send_email takes the edited fields.
+import inspect
 import json
 
 import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.query_builder.functions import Sum
-from frappe.utils import flt, nowdate
+from frappe.utils import cstr, flt, nowdate
 from frappe.utils.background_jobs import enqueue
 
-from erpnext import get_company_currency
+from erpnext import _refuse, get_company_currency
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 	get_accounting_dimensions,
 )
+from erpnext.accounts.doctype.bank_account.bank_account import get_party_bank_account
 from erpnext.accounts.doctype.payment_entry.payment_entry import (
 	get_payment_entry,
 )
 from erpnext.accounts.doctype.subscription_plan.subscription_plan import get_plan_rate
-from erpnext.accounts.party import get_party_account, get_party_bank_account
+from erpnext.accounts.party import get_party_account
 from erpnext.accounts.utils import get_account_currency, get_currency_precision
 from erpnext.utilities import payment_app_import_guard
 
@@ -367,6 +370,7 @@ class PaymentRequest(Document):
 			bank_amount=bank_amount,
 			created_from_payment_request=True,
 		)
+		payment_entry.set_missing_ref_details(force=True)
 
 		payment_entry.update(
 			{
@@ -410,36 +414,45 @@ class PaymentRequest(Document):
 
 		return payment_entry
 
-	# //// Neoffice — rewritten (b83a0c8847, 2026-03-15 "Payment Request email dialog + attach
-	# //// reference document PDF"). Two changes against upstream `def send_email(self)`:
-	# ////   - recipients / subject / message can be overridden by the caller, so the Send-by-Email
-	# ////     dialog (payment_request.js) can send what the user actually edited;
-	# ////   - the print format falls back to the reference DocType's default_print_format when the
-	# ////     Payment Request has none — upstream passes print_format=None and attaches the Standard
-	# ////     format, which is not the Oslo layout our customers receive.
-	# //// TO REVIEW: upstream ENQUEUES the mail (`enqueue(frappe.sendmail, queue="short", …)`); ours
-	# //// calls frappe.sendmail(now=True) inline, so the HTTP request blocks on the SMTP round-trip
-	# //// and on rendering the PDF. Was probably meant to surface send errors in the dialog.
-	def send_email(self, recipients=None, subject=None, message=None):
-		"""send email with reference document (Sales Order/Invoice) attached"""
-		ref_print_format = self.print_format or frappe.db.get_value(
-			"DocType", self.reference_doctype, "default_print_format"
-		)
+	@frappe.whitelist(methods=["POST"])
+	def resend_payment_email(self):
+		if not (
+			self.docstatus == 1
+			and self.payment_request_type == "Inward"
+			and self.payment_channel != "Phone"
+			and self.status not in ["Initiated", "Paid"]
+		):
+			frappe.throw(_("Payment Link couldn't be sent."))
 
-		frappe.sendmail(
-			recipients=recipients or self.email_to,
-			sender=None,
-			subject=subject or self.subject,
-			message=message or self.get_message(),
-			now=True,
-			attachments=[
+		self.send_email()
+
+	def send_email(self):
+		"""send email with payment link"""
+		email_args = {
+			"recipients": self.email_to,
+			"sender": None,
+			"subject": self.subject,
+			"message": self.get_message(),
+			"now": True,
+			"attachments": [
 				frappe.attach_print(
 					self.reference_doctype,
 					self.reference_name,
 					file_name=self.reference_name,
-					print_format=ref_print_format,
+					print_format=self.print_format,
 				)
 			],
+		}
+		job_id = f"send_payment_email::{self.name}"
+		enqueue(
+			method=frappe.sendmail,
+			queue="short",
+			timeout=300,
+			is_async=True,
+			job_id=job_id,
+			deduplicate=True,
+			enqueue_after_commit=True,
+			**email_args,
 		)
 
 	def get_message(self):
@@ -451,7 +464,7 @@ class PaymentRequest(Document):
 		}
 
 		if self.message:
-			return frappe.render_template(self.message, context)
+			return frappe.render_template(self.message, context, restrict_globals=True)
 
 	def set_failed(self):
 		pass
@@ -550,10 +563,6 @@ class PaymentRequest(Document):
 				row_number += TO_SKIP_NEW_ROW
 
 
-# //// Neoffice — backport of upstream 460291990a and ce7101f555 (v15.99.0, GHSA-wpfx-jw7g-7f83): no longer open to
-# //// a guest, and the caller needs the right to create a Payment Request and to read the document (see below). The
-# //// function is upstream's, line for line, so the merge takes it as it is. Our callers that act for someone who
-# //// has no such right call it through neoffice_theme.payment_requests (neoffice-maintenance#1748).
 @frappe.whitelist()
 def make_payment_request(**args):
 	"""Make payment request"""
@@ -564,7 +573,6 @@ def make_payment_request(**args):
 		# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 		frappe.throw(_("Payment Requests cannot be created against: {0}").format(frappe.bold(_(args.dt))))
 
-	# //// Neoffice — backport of upstream 460291990a and ce7101f555 (see above)
 	if args.dn and not isinstance(args.dn, str):
 		frappe.throw(_("Invalid parameter. 'dn' should be of type str"))
 
@@ -847,31 +855,45 @@ def get_print_format_list(ref_doctype):
 
 # //// Neoffice — added (2483c36bc4, 2026-03-15): renders get_message() server-side so the
 # //// Send-by-Email dialog shows the resolved text ("Bonjour Daniel Moret", "22.90 CHF") instead
-# //// of the raw Jinja template. No upstream equivalent.
+# //// of the raw Jinja template. No upstream equivalent. Only for who can read the request (the
+# //// rendered text names the customer and the amount): checked since the merge with v15.123.0.
 @frappe.whitelist()
 def get_rendered_message(docname):
 	"""Return the rendered message for the Payment Request email dialog."""
 	pr = frappe.get_doc("Payment Request", docname)
+	pr.check_permission("read")
 	return pr.get_message()
 
 
-# //// Neoffice — signature widened (b83a0c8847, 2026-03-15): upstream is
-# //// `resend_payment_email(docname)` and re-sends the stored mail to the stored email_to.
-# //// `allow_guest=True` is upstream's (the payment page re-sends the stored mail). Since
-# //// 2026-09-03 the three overrides are honoured for a signed-in caller with write access to the
-# //// Payment Request only — the desk's Send-by-Email dialog; a guest gets exactly upstream's
-# //// behaviour, never a caller-chosen recipient, subject or body (marking campaign, tracker).
-@frappe.whitelist(allow_guest=True)
-def resend_payment_email(docname, recipients=None, subject=None, message=None):
+# //// Neoffice — added (b83a0c8847, 2026-03-15): the desk's Send-by-Email dialog (payment_request.js)
+# //// sends the recipients, subject and message the user edited. Upstream's document method
+# //// `resend_payment_email` (c38c9d5d9b) re-sends the stored mail only; until the merge with
+# //// v15.123.0 ours widened upstream's old module function, open to a guest. This one keeps upstream's
+# //// gates (POST, a submitted inward request still to be paid) and asks the right to WRITE the request,
+# //// since the caller chooses who receives what. The edited mail goes through neoffice_theme's
+# //// `send_email(recipients, subject, message)` (Oslo PDFs, timeline entry); without that override the
+# //// stored mail is sent, as upstream does.
+@frappe.whitelist(methods=["POST"])
+def send_edited_payment_email(docname, recipients=None, subject=None, message=None):
 	doc = frappe.get_doc("Payment Request", docname)
-	if frappe.session.user == "Guest" or not doc.has_permission("write"):
-		recipients = subject = message = None
-	return doc.send_email(recipients=recipients, subject=subject, message=message)
+	doc.check_permission("write")
+	if not (
+		doc.docstatus == 1
+		and doc.payment_request_type == "Inward"
+		and doc.payment_channel != "Phone"
+		and doc.status not in ["Initiated", "Paid"]
+	):
+		frappe.throw(_("Payment Link couldn't be sent."))
+
+	if "recipients" in inspect.signature(doc.send_email).parameters:
+		return doc.send_email(recipients=recipients, subject=subject, message=message)
+	return doc.send_email()
 
 
 @frappe.whitelist()
 def make_payment_entry(docname):
 	doc = frappe.get_doc("Payment Request", docname)
+	doc.check_permission("read")
 	return doc.create_payment_entry(submit=False).as_dict()
 
 
@@ -895,6 +917,7 @@ def update_payment_requests_as_per_pe_references(references=None, cancel=False):
 	)
 
 	referenced_payment_requests = {pr.name: pr for pr in referenced_payment_requests}
+	doc_updates = {}
 
 	for ref in references:
 		if not ref.payment_request:
@@ -920,7 +943,7 @@ def update_payment_requests_as_per_pe_references(references=None, cancel=False):
 				title=_("Invalid Allocated Amount"),
 			)
 
-		# update status
+		# determine status
 		if new_outstanding_amount == payment_request["grand_total"]:
 			status = "Initiated" if payment_request["payment_request_type"] == "Outward" else "Requested"
 		elif new_outstanding_amount == 0:
@@ -928,12 +951,15 @@ def update_payment_requests_as_per_pe_references(references=None, cancel=False):
 		elif new_outstanding_amount > 0:
 			status = "Partially Paid"
 
-		# update database
-		frappe.db.set_value(
-			"Payment Request",
-			ref.payment_request,
-			{"outstanding_amount": new_outstanding_amount, "status": status},
-		)
+		# prepare bulk update data
+		doc_updates[ref.payment_request] = {
+			"outstanding_amount": new_outstanding_amount,
+			"status": status,
+		}
+
+	# bulk update all payment requests
+	if doc_updates:
+		frappe.db.bulk_update("Payment Request", doc_updates)
 
 
 def get_dummy_message(doc):
@@ -957,6 +983,10 @@ def get_dummy_message(doc):
 
 @frappe.whitelist()
 def get_subscription_details(reference_doctype, reference_name):
+	reference_name = cstr(reference_name)
+	if not reference_name or not frappe.has_permission(reference_doctype, "read", doc=reference_name):
+		_refuse()
+
 	if reference_doctype == "Sales Invoice":
 		subscriptions = frappe.db.sql(
 			"""SELECT parent as sub_name FROM `tabSubscription Invoice` WHERE invoice=%s""",

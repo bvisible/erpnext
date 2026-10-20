@@ -23,7 +23,12 @@ from erpnext.accounts.doctype.tax_withholding_category.tax_withholding_category 
 	get_party_tax_withholding_details,
 )
 from erpnext.accounts.general_ledger import get_round_off_account_and_cost_center
-from erpnext.accounts.party import get_due_date, get_party_account, get_party_details
+from erpnext.accounts.party import (
+	CROSS_PARTY_FIELD_NO_MAP,
+	_get_party_details,
+	get_due_date,
+	get_party_account,
+)
 from erpnext.accounts.utils import (
 	cancel_exchange_gain_loss_journal,
 	get_account_currency,
@@ -42,6 +47,7 @@ from erpnext.controllers.accounts_controller import validate_account_head
 from erpnext.controllers.selling_controller import SellingController
 from erpnext.projects.doctype.timesheet.timesheet import get_projectwise_timesheet_data
 from erpnext.setup.doctype.company.company import update_company_current_month_sales
+from erpnext.setup.utils import get_exchange_rate
 from erpnext.stock.doctype.delivery_note.delivery_note import update_billed_amount_based_on_so
 from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
@@ -245,6 +251,8 @@ class SalesInvoice(SellingController):
 				"status_field": "billing_status",
 				"keyword": "Billed",
 				"overflow_type": "billing",
+				"extra_cond": """ and exists(select name from `tabSales Invoice`
+				where name=`tabSales Invoice Item`.parent and (is_return=0 or update_billed_amount_in_sales_order=1))""",
 			}
 		]
 
@@ -323,10 +331,22 @@ class SalesInvoice(SellingController):
 			)
 
 		self.set_against_income_account()
-		self.validate_time_sheets_are_submitted()
+
+		if self.is_return and not self.return_against and self.timesheets:
+			frappe.throw(_("Direct return is not allowed for Timesheet."))
+
+		if not self.is_return:
+			self.validate_time_sheets_are_submitted()
+
 		self.validate_multiple_billing("Delivery Note", "dn_detail", "amount")
-		if self.is_return:
-			self.timesheets = []
+
+		if self.is_return and self.return_against:
+			for row in self.timesheets:
+				if row.billing_hours:
+					row.billing_hours = -abs(row.billing_hours)
+				if row.billing_amount:
+					row.billing_amount = -abs(row.billing_amount)
+
 		self.update_packing_list()
 		self.set_billing_hours_and_amount()
 		self.update_timesheet_billing_for_project()
@@ -362,21 +382,34 @@ class SalesInvoice(SellingController):
 		validate_docs_for_deferred_accounting([self.name], [])
 
 	def validate_fixed_asset(self):
-		for d in self.get("items"):
-			if d.is_fixed_asset and d.meta.get_field("asset") and d.asset:
-				asset = frappe.get_doc("Asset", d.asset)
-				if self.doctype == "Sales Invoice" and self.docstatus == 1:
-					if self.update_stock:
-						frappe.throw(_("'Update Stock' cannot be checked for fixed asset sale"))
+		if self.doctype != "Sales Invoice":
+			return
 
-					elif asset.status in ("Scrapped", "Cancelled", "Capitalized") or (
-						asset.status == "Sold" and not self.is_return
-					):
-						frappe.throw(
-							_("Row #{0}: Asset {1} cannot be submitted, it is already {2}").format(
-								d.idx, d.asset, asset.status
+		for d in self.get("items"):
+			if d.is_fixed_asset:
+				if d.asset:
+					if not self.is_return:
+						asset_status = frappe.db.get_value("Asset", d.asset, "status")
+						if self.update_stock:
+							frappe.throw(_("'Update Stock' cannot be checked for fixed asset sale"))
+
+						elif asset_status in ("Scrapped", "Cancelled", "Capitalized"):
+							frappe.throw(
+								_("Row #{0}: Asset {1} cannot be sold, it is already {2}").format(
+									d.idx, d.asset, asset_status
+								)
 							)
+						elif asset_status == "Sold" and not self.is_return:
+							frappe.throw(_("Row #{0}: Asset {1} is already sold").format(d.idx, d.asset))
+					elif not self.return_against:
+						frappe.throw(
+							_("Row #{0}: Return Against is required for returning asset").format(d.idx)
 						)
+				else:
+					frappe.throw(
+						_("Row #{0}: You must select an Asset for Item {1}.").format(d.idx, d.item_code),
+						title=_("Missing Asset"),
+					)
 
 	def validate_item_cost_centers(self):
 		for item in self.items:
@@ -425,8 +458,8 @@ class SalesInvoice(SellingController):
 		self.calculate_taxes_and_totals()
 
 	def before_save(self):
-		self.set_account_for_mode_of_payment()
 		self.set_paid_amount()
+		self.set_account_for_mode_of_payment()
 
 	def before_submit(self):
 		self.add_remarks()
@@ -464,6 +497,9 @@ class SalesInvoice(SellingController):
 			self.validate_standalone_serial_nos_customer()
 			self.update_stock_reservation_entries()
 			self.update_stock_ledger()
+			self.validate_produced_serial_nos_against_reservation()
+
+		self.process_asset_depreciation()
 
 		# this sequence because outstanding may get -ve
 		self.make_gl_entries()
@@ -479,7 +515,7 @@ class SalesInvoice(SellingController):
 		if not cint(self.is_pos) == 1 and not self.is_return:
 			self.update_against_document_in_jv()
 
-		self.update_time_sheet(self.name)
+		self.update_time_sheet(None if (self.is_return and self.return_against) else self.name)
 
 		if frappe.db.get_single_value("Selling Settings", "sales_update_frequency") == "Each Transaction":
 			update_company_current_month_sales(self.company)
@@ -535,7 +571,7 @@ class SalesInvoice(SellingController):
 		self.check_if_consolidated_invoice()
 
 		super().before_cancel()
-		self.update_time_sheet(None)
+		self.update_time_sheet(self.return_against if (self.is_return and self.return_against) else None)
 
 	def on_cancel(self):
 		check_if_return_invoice_linked_with_payment_entry(self)
@@ -560,6 +596,8 @@ class SalesInvoice(SellingController):
 		# because updating reserved qty in bin depends upon updated delivered qty in SO
 		if self.update_stock == 1:
 			self.update_stock_ledger()
+
+		self.process_asset_depreciation()
 
 		self.make_gl_entries_on_cancel()
 
@@ -643,6 +681,7 @@ class SalesInvoice(SellingController):
 						"second_source_field": "-1 * qty",
 						"second_join_field": "so_detail",
 						"extra_cond": """ and exists (select name from `tabSales Invoice` where name=`tabSales Invoice Item`.parent and update_stock=1 and is_return=1)""",
+						"second_source_extra_cond": """ and exists (select name from `tabDelivery Note` where name=`tabDelivery Note Item`.parent and is_return=1)""",
 					}
 				)
 
@@ -727,8 +766,20 @@ class SalesInvoice(SellingController):
 		for data in timesheet.time_logs:
 			if (
 				(self.project and args.timesheet_detail == data.name)
-				or (not self.project and not data.sales_invoice)
-				or (not sales_invoice and data.sales_invoice == self.name)
+				or (not self.project and not data.sales_invoice and args.timesheet_detail == data.name)
+				or (
+					not sales_invoice
+					and data.sales_invoice == self.name
+					and args.timesheet_detail == data.name
+				)
+				or (
+					self.is_return
+					and self.return_against
+					and data.sales_invoice
+					and data.sales_invoice == self.return_against
+					and not sales_invoice
+					and args.timesheet_detail == data.name
+				)
 			):
 				data.sales_invoice = sales_invoice
 
@@ -754,6 +805,13 @@ class SalesInvoice(SellingController):
 	def set_paid_amount(self):
 		paid_amount = 0.0
 		base_paid_amount = 0.0
+
+		if not cint(self.is_pos) and self.is_return:
+			self.set("payments", [])
+			self.paid_amount = paid_amount
+			self.base_paid_amount = base_paid_amount
+			return
+
 		for data in self.payments:
 			data.base_amount = flt(data.amount * self.conversion_rate, self.precision("base_paid_amount"))
 			paid_amount += data.amount
@@ -768,11 +826,34 @@ class SalesInvoice(SellingController):
 			payment.account = get_bank_cash_account(payment.mode_of_payment, self.company).get("account")
 
 	def validate_time_sheets_are_submitted(self):
+		# Note: This validation is skipped for return invoices
+		# to allow returns to reference already-billed timesheet details
+		listed = set()
 		for data in self.timesheets:
+			if data.timesheet_detail in listed:
+				frappe.throw(
+					_("Row {0}: The same time log of Timesheet {1} is added more than once").format(
+						data.idx, frappe.bold(data.time_sheet)
+					)
+				)
+
+			# Handle invoice duplication
+			if data.time_sheet and data.timesheet_detail:
+				listed.add(data.timesheet_detail)
+				if sales_invoice := frappe.db.get_value(
+					"Timesheet Detail", data.timesheet_detail, "sales_invoice"
+				):
+					frappe.throw(
+						_("Row {0}: Sales Invoice {1} is already created for {2}").format(
+							data.idx, frappe.bold(sales_invoice), frappe.bold(data.time_sheet)
+						)
+					)
 			if data.time_sheet:
 				status = frappe.db.get_value("Timesheet", data.time_sheet, "status")
-				if status not in ["Submitted", "Payslip"]:
-					frappe.throw(_("Timesheet {0} is already completed or cancelled").format(data.time_sheet))
+				if status not in ["Submitted", "Payslip", "Partially Billed", "Billed"]:
+					frappe.throw(
+						_("Timesheet {0} cannot be invoiced in its current state").format(data.time_sheet)
+					)
 
 	def set_pos_fields(self, for_validate=False):
 		"""Set retail related fields from POS Profiles"""
@@ -796,11 +877,9 @@ class SalesInvoice(SellingController):
 		if self.pos_profile:
 			pos = frappe.get_doc("POS Profile", self.pos_profile)
 
-		if not self.get("payments") and not for_validate:
-			update_multi_mode_option(self, pos)
-
 		if pos:
 			if not for_validate:
+				update_multi_mode_option(self, pos)
 				self.tax_category = pos.get("tax_category")
 
 			if not for_validate and not self.customer:
@@ -845,9 +924,6 @@ class SalesInvoice(SellingController):
 
 			if selling_price_list:
 				self.set("selling_price_list", selling_price_list)
-
-			if not for_validate:
-				self.update_stock = cint(pos.get("update_stock"))
 
 			# set pos values in items
 			for item in self.get("items"):
@@ -1089,7 +1165,9 @@ class SalesInvoice(SellingController):
 			d.projected_qty = bin and flt(bin[0]["projected_qty"]) or 0
 
 	def update_packing_list(self):
-		if cint(self.update_stock) == 1:
+		if self.doctype == "POS Invoice" or (
+			self.doctype == "Sales Invoice" and cint(self.update_stock) == 1
+		):
 			from erpnext.stock.doctype.packed_item.packed_item import make_packing_list
 
 			make_packing_list(self)
@@ -1097,17 +1175,69 @@ class SalesInvoice(SellingController):
 			self.set("packed_items", [])
 
 	def set_billing_hours_and_amount(self):
-		if not self.project:
-			for timesheet in self.timesheets:
-				ts_doc = frappe.get_doc("Timesheet", timesheet.time_sheet)
-				if not timesheet.billing_hours and ts_doc.total_billable_hours:
-					timesheet.billing_hours = ts_doc.total_billable_hours
+		"""Fill rows from their time logs; a row without one gets its timesheet's unbilled logs."""
+		if self.is_return:
+			return
 
-				if not timesheet.billing_amount and ts_doc.total_billable_amount:
-					timesheet.billing_amount = ts_doc.total_billable_amount
+		pending = [
+			row
+			for row in self.timesheets
+			if row.time_sheet and not (row.timesheet_detail and row.billing_hours and row.billing_amount)
+		]
+		unbilled_logs = {
+			name: get_projectwise_timesheet_data(self.project, name)
+			for name in {row.time_sheet for row in pending}
+		}
+		exchange_rates = {}
+		for row in pending:
+			if row.timesheet_detail:
+				self.fill_from_time_log(row, unbilled_logs[row.time_sheet], exchange_rates)
+			else:
+				self.replace_with_time_logs(row, unbilled_logs[row.time_sheet], exchange_rates)
+
+	def fill_from_time_log(self, row, time_logs: list, exchange_rates: dict):
+		if log := next((log for log in time_logs if log.name == row.timesheet_detail), None):
+			row.billing_hours = row.billing_hours or log.billing_hours
+			row.billing_amount = row.billing_amount or self.get_billing_amount(log, exchange_rates)
+
+	def replace_with_time_logs(self, row, time_logs: list, exchange_rates: dict):
+		listed = {d.timesheet_detail for d in self.timesheets}
+		time_logs = [log for log in time_logs if log.name not in listed]
+		if not time_logs:
+			frappe.throw(
+				_("Row {0}: Timesheet {1} has no unbilled billable time logs").format(
+					row.idx, frappe.bold(row.time_sheet)
+				)
+			)
+
+		if row.billing_amount:
+			self.link_time_log(row, time_logs)
+			return
+
+		self.remove(row)
+		for log in time_logs:
+			self.append("timesheets", self.get_timesheet_row(log, exchange_rates))
+
+	def link_time_log(self, row, time_logs: list):
+		"""Bill a row's own amount against the only unbilled log of its timesheet."""
+		if len(time_logs) > 1:
+			frappe.throw(
+				_("Row {0}: Select the time log of Timesheet {1} that this amount bills").format(
+					row.idx, frappe.bold(row.time_sheet)
+				)
+			)
+
+		row.timesheet_detail = time_logs[0].name
+		row.billing_hours = row.billing_hours or time_logs[0].billing_hours
 
 	def update_timesheet_billing_for_project(self):
-		if not self.timesheets and self.project and self.is_auto_fetch_timesheet_enabled():
+		if (
+			not self.is_return
+			and not self.timesheets
+			and self.project
+			and self.has_value_changed("project")
+			and self.is_auto_fetch_timesheet_enabled()
+		):
 			self.add_timesheet_data()
 		else:
 			self.calculate_billing_amount_for_timesheet()
@@ -1120,20 +1250,41 @@ class SalesInvoice(SellingController):
 	def add_timesheet_data(self):
 		self.set("timesheets", [])
 		if self.project:
+			exchange_rates = {}
 			for data in get_projectwise_timesheet_data(self.project):
-				self.append(
-					"timesheets",
-					{
-						"time_sheet": data.time_sheet,
-						"billing_hours": data.billing_hours,
-						"billing_amount": data.billing_amount,
-						"timesheet_detail": data.name,
-						"activity_type": data.activity_type,
-						"description": data.description,
-					},
-				)
+				self.append("timesheets", self.get_timesheet_row(data, exchange_rates))
 
 			self.calculate_billing_amount_for_timesheet()
+
+	def get_timesheet_row(self, time_log, exchange_rates: dict) -> dict:
+		return {
+			"time_sheet": time_log.time_sheet,
+			"billing_hours": time_log.billing_hours,
+			"billing_amount": self.get_billing_amount(time_log, exchange_rates),
+			"timesheet_detail": time_log.name,
+			"activity_type": time_log.activity_type,
+			"description": time_log.description,
+			"from_time": time_log.from_time,
+			"to_time": time_log.to_time,
+			"project_name": time_log.project_name,
+		}
+
+	def get_billing_amount(self, time_log, exchange_rates: dict) -> float:
+		"""Time log billing amount in the invoice currency; `exchange_rates` keeps each rate for the pass."""
+		if not time_log.currency or time_log.currency == self.currency:
+			return time_log.billing_amount
+
+		if time_log.currency not in exchange_rates:
+			exchange_rate = get_exchange_rate(time_log.currency, self.currency, self.posting_date)
+			if not exchange_rate:
+				frappe.throw(
+					_(
+						"Unable to find exchange rate for {0} to {1} for key date {2}. Please create a Currency Exchange record manually."
+					).format(time_log.currency, self.currency, self.posting_date)
+				)
+			exchange_rates[time_log.currency] = exchange_rate
+
+		return flt(time_log.billing_amount) * exchange_rates[time_log.currency]
 
 	def calculate_billing_amount_for_timesheet(self):
 		def timesheet_sum(field):
@@ -1190,6 +1341,94 @@ class SalesInvoice(SellingController):
 				and frappe.db.get_value("Delivery Note", d.delivery_note, "docstatus", cache=True) != 1
 			):
 				throw(_("Delivery Note {0} is not submitted").format(d.delivery_note))
+
+	def process_asset_depreciation(self):
+		if self.is_internal_transfer():
+			return
+
+		if (self.is_return and self.docstatus == 2) or (not self.is_return and self.docstatus == 1):
+			self.depreciate_asset_on_sale()
+		else:
+			self.restore_asset()
+
+		self.update_asset()
+
+	def depreciate_asset_on_sale(self):
+		"""
+		Depreciate asset on sale or cancellation of return sales invoice
+		"""
+		disposal_date = self.get_disposal_date()
+		for d in self.get("items"):
+			if d.asset:
+				asset = frappe.get_doc("Asset", d.asset)
+				if asset.calculate_depreciation and asset.status != "Fully Depreciated":
+					depreciate_asset(asset, disposal_date, self.get_note_for_asset_sale(asset))
+
+	def get_note_for_asset_sale(self, asset):
+		return _("This schedule was created when Asset {0} was {1} through Sales Invoice {2}.").format(
+			get_link_to_form(asset.doctype, asset.name),
+			_("returned") if self.is_return else _("sold"),
+			get_link_to_form(self.doctype, self.get("name")),
+		)
+
+	def restore_asset(self):
+		"""
+		Restore asset on return or cancellation of original sales invoice
+		"""
+
+		for d in self.get("items"):
+			if d.asset:
+				asset = frappe.get_cached_doc("Asset", d.asset)
+				if asset.calculate_depreciation:
+					posting_date = self.get_disposal_date()
+					reverse_depreciation_entry_made_after_disposal(asset, posting_date)
+
+					note = self.get_note_for_asset_return(asset)
+					reset_depreciation_schedule(asset, self.posting_date, note)
+
+	def get_note_for_asset_return(self, asset):
+		asset_link = get_link_to_form(asset.doctype, asset.name)
+		invoice_link = get_link_to_form(self.doctype, self.get("name"))
+		if self.is_return:
+			return _(
+				"This schedule was created when Asset {0} was returned through Sales Invoice {1}."
+			).format(asset_link, invoice_link)
+		else:
+			return _(
+				"This schedule was created when Asset {0} was restored due to Sales Invoice {1} cancellation."
+			).format(asset_link, invoice_link)
+
+	def update_asset(self):
+		"""
+		Update asset status, disposal date and asset activity on sale or return sales invoice
+		"""
+
+		def _update_asset(asset, disposal_date, note, asset_status=None):
+			frappe.db.set_value("Asset", d.asset, "disposal_date", disposal_date)
+			add_asset_activity(asset.name, note)
+			asset.set_status(asset_status)
+
+		disposal_date = self.get_disposal_date()
+		for d in self.get("items"):
+			if d.asset:
+				asset = frappe.get_cached_doc("Asset", d.asset)
+
+				if (self.is_return and self.docstatus == 1) or (not self.is_return and self.docstatus == 2):
+					note = _("Asset returned") if self.is_return else _("Asset sold")
+					asset_status, disposal_date = None, None
+				else:
+					note = _("Asset sold") if not self.is_return else _("Return invoice of asset cancelled")
+					asset_status = "Sold"
+
+				_update_asset(asset, disposal_date, note, asset_status)
+
+	def get_disposal_date(self):
+		if self.is_return:
+			disposal_date = frappe.db.get_value("Sales Invoice", self.return_against, "posting_date")
+		else:
+			disposal_date = self.posting_date
+
+		return disposal_date
 
 	def make_gl_entries(self, gl_entries=None, from_repost=False):
 		from erpnext.accounts.general_ledger import make_gl_entries, make_reverse_gl_entries
@@ -1387,7 +1626,11 @@ class SalesInvoice(SellingController):
 		# ////
 
 		for item in self.get("items"):
-			if flt(item.base_net_amount, item.precision("base_net_amount")) or item.is_fixed_asset:
+			if (
+				flt(item.base_net_amount, item.precision("base_net_amount"))
+				or item.is_fixed_asset
+				or enable_discount_accounting
+			):
 				tax_excluded = flt(item.base_net_amount, item.precision("base_net_amount")) == flt(item.base_amount, item.precision("base_net_amount")) # //// added
 
 				# //// added block
@@ -1405,10 +1648,11 @@ class SalesInvoice(SellingController):
 				if self.is_internal_transfer():
 					continue
 
-				if item.is_fixed_asset:
-					asset = self.get_asset(item)
-
-					# //// added
+				if item.is_fixed_asset and item.asset:
+					# //// Neoffice — flat-rate VAT (see the block at the top of this method): an asset sold by a
+					# //// company on the flat-rate method is booked VAT-included (8fc9863753 / d2edcd9978,
+					# //// 2024-04-12). Upstream moved the asset entries into get_gl_entries_for_fixed_asset (696a0892fa);
+					# //// the amount and the remark are handed to it (see there).
 					amount = item.base_net_amount
 					if flat_rate:
 						if tax_excluded:
@@ -1418,68 +1662,7 @@ class SalesInvoice(SellingController):
 									amount = amount + (amount * item.tax_rate / 100)
 						else:
 							amount = item.base_amount
-
-					# ////
-					if (self.docstatus == 2 and not self.is_return) or (
-						self.docstatus == 1 and self.is_return
-					):
-						fixed_asset_gl_entries = get_gl_entries_on_asset_regain(
-							asset,
-							amount, # ////item.base_net_amount,
-							item.finance_book,
-							self.get("doctype"),
-							self.get("name"),
-							self.get("posting_date"),
-						)
-						asset.db_set("disposal_date", None)
-						add_asset_activity(asset.name, _("Asset returned"))
-						asset_status = asset.get_status()
-
-						if asset.calculate_depreciation and not asset_status == "Fully Depreciated":
-							posting_date = (
-								frappe.db.get_value("Sales Invoice", self.return_against, "posting_date")
-								if self.is_return
-								else self.posting_date
-							)
-							reverse_depreciation_entry_made_after_disposal(asset, posting_date)
-							notes = _(
-								"This schedule was created when Asset {0} was returned through Sales Invoice {1}."
-							).format(
-								get_link_to_form(asset.doctype, asset.name),
-								get_link_to_form(self.doctype, self.get("name")),
-							)
-							reset_depreciation_schedule(asset, self.posting_date, notes)
-							asset.reload()
-
-					else:
-						if asset.calculate_depreciation:
-							if not asset.status == "Fully Depreciated":
-								notes = _(
-									"This schedule was created when Asset {0} was sold through Sales Invoice {1}."
-								).format(
-									get_link_to_form(asset.doctype, asset.name),
-									get_link_to_form(self.doctype, self.get("name")),
-								)
-								depreciate_asset(asset, self.posting_date, notes)
-								asset.reload()
-
-						fixed_asset_gl_entries = get_gl_entries_on_asset_disposal(
-							asset,
-							amount, # ////item.base_net_amount,
-							item.finance_book,
-							self.get("doctype"),
-							self.get("name"),
-							self.get("posting_date"),
-						)
-						asset.db_set("disposal_date", self.posting_date)
-						add_asset_activity(asset.name, _("Asset sold"))
-
-					for gle in fixed_asset_gl_entries:
-						gle["remarks"] = remark # //// added
-						gle["against"] = self.customer
-						gl_entries.append(self.get_gl_dict(gle, item=item))
-
-					self.set_asset_status(asset)
+					self.get_gl_entries_for_fixed_asset(item, gl_entries, amount=amount, remark=remark) # //// amount, remark
 
 				else:
 					income_account = (
@@ -1525,18 +1708,37 @@ class SalesInvoice(SellingController):
 		if cint(self.update_stock) and erpnext.is_perpetual_inventory_enabled(self.company):
 			gl_entries += super().get_gl_entries()
 
+	# //// Neoffice — `amount` and `remark` added (merge with v15.123.0): the flat-rate VAT amount and the bank
+	# //// statement remark of make_item_gl_entries, which reached these entries before upstream moved them here.
+	# //// Without them (any other caller) the method is upstream's.
+	def get_gl_entries_for_fixed_asset(self, item, gl_entries, amount=None, remark=None):
+		asset = frappe.get_cached_doc("Asset", item.asset)
+		amount = item.base_net_amount if amount is None else amount # ////
 
-	def get_asset(self, item):
-		if item.get("asset"):
-			asset = frappe.get_doc("Asset", item.asset)
+		if self.is_return:
+			fixed_asset_gl_entries = get_gl_entries_on_asset_regain(
+				asset,
+				amount, # //// item.base_net_amount
+				item.finance_book,
+				self.get("doctype"),
+				self.get("name"),
+				self.get("posting_date"),
+			)
 		else:
-			frappe.throw(
-				_("Row #{0}: You must select an Asset for Item {1}.").format(item.idx, item.item_name),
-				title=_("Missing Asset"),
+			fixed_asset_gl_entries = get_gl_entries_on_asset_disposal(
+				asset,
+				amount, # //// item.base_net_amount
+				item.finance_book,
+				self.get("doctype"),
+				self.get("name"),
+				self.get("posting_date"),
 			)
 
-		self.check_finance_books(item, asset)
-		return asset
+		for gle in fixed_asset_gl_entries:
+			if remark is not None:
+				gle["remarks"] = remark # ////
+			gle["against"] = self.customer
+			gl_entries.append(self.get_gl_dict(gle, item=item))
 
 	@property
 	def enable_discount_accounting(self):
@@ -1597,7 +1799,7 @@ class SalesInvoice(SellingController):
 
 			for payment_mode in self.payments:
 				if skip_change_gl_entries and payment_mode.account == self.account_for_change_amount:
-					payment_mode.base_amount -= flt(self.change_amount)
+					payment_mode.base_amount -= flt(self.base_change_amount)
 
 				against_voucher = self.name
 				if self.is_return and self.return_against and not self.update_outstanding_for_self:
@@ -1827,7 +2029,11 @@ class SalesInvoice(SellingController):
 
 	def on_recurring(self, reference_doc, auto_repeat_doc):
 		self.set("write_off_amount", reference_doc.get("write_off_amount"))
+		self.po_no = reference_doc.po_no
+		# The payment schedule is rebuilt from the template, relative to the new posting date.
+		self.payment_terms_template = reference_doc.payment_terms_template
 		self.due_date = None
+		self.shift_service_dates(reference_doc, auto_repeat_doc)
 
 	def update_project(self):
 		unique_projects = list(set([d.project for d in self.get("items") if d.project]))
@@ -2115,7 +2321,10 @@ def validate_inter_company_party(doctype, party, company, inter_company_referenc
 	if inter_company_reference:
 		doc = frappe.get_doc(ref_doc, inter_company_reference)
 		ref_party = doc.supplier if doctype in ["Sales Invoice", "Sales Order"] else doc.customer
-		if not frappe.db.get_value(partytype, {"represents_company": doc.company}, "name") == party:
+		if (
+			not frappe.db.get_value(partytype, {"represents_company": doc.company, "disabled": 0}, "name")
+			== party
+		):
 			frappe.throw(_("Invalid {0} for Inter Company Transaction.").format(_(partytype)))
 		if not frappe.get_cached_value(ref_partytype, ref_party, "represents_company") == company:
 			frappe.throw(_("Invalid Company for Inter Company Transaction."))
@@ -2135,27 +2344,33 @@ def validate_inter_company_party(doctype, party, company, inter_company_referenc
 			)
 
 
-def update_linked_doc(doctype, name, inter_company_reference):
+def get_inter_company_counterpart(doctype: str) -> tuple[str, str]:
+	"""Return the counterpart doctype and the field both documents use to reference each other."""
 	if doctype in ["Sales Invoice", "Purchase Invoice"]:
-		ref_field = "inter_company_invoice_reference"
-	else:
-		ref_field = "inter_company_order_reference"
+		ref_doc = "Purchase Invoice" if doctype == "Sales Invoice" else "Sales Invoice"
+		return ref_doc, "inter_company_invoice_reference"
 
+	ref_doc = "Purchase Order" if doctype == "Sales Order" else "Sales Order"
+	return ref_doc, "inter_company_order_reference"
+
+
+def update_linked_doc(doctype, name, inter_company_reference):
+	ref_doc, ref_field = get_inter_company_counterpart(doctype)
 	if inter_company_reference:
-		frappe.db.set_value(doctype, inter_company_reference, ref_field, name)
+		frappe.db.set_value(ref_doc, inter_company_reference, ref_field, name)
 
 
 def unlink_inter_company_doc(doctype, name, inter_company_reference):
-	if doctype in ["Sales Invoice", "Purchase Invoice"]:
-		ref_doc = "Purchase Invoice" if doctype == "Sales Invoice" else "Sales Invoice"
-		ref_field = "inter_company_invoice_reference"
-	else:
-		ref_doc = "Purchase Order" if doctype == "Sales Order" else "Sales Order"
-		ref_field = "inter_company_order_reference"
+	ref_doc, ref_field = get_inter_company_counterpart(doctype)
+	if not inter_company_reference:
+		return
 
-	if inter_company_reference:
-		frappe.db.set_value(doctype, name, ref_field, "")
-		frappe.db.set_value(ref_doc, inter_company_reference, ref_field, "")
+	frappe.db.set_value(doctype, name, ref_field, "")
+	if frappe.db.get_value(ref_doc, inter_company_reference, ref_field) != name:
+		return
+
+	remaining_counterpart = frappe.db.get_value(doctype, {ref_field: inter_company_reference, "docstatus": 1})
+	frappe.db.set_value(ref_doc, inter_company_reference, ref_field, remaining_counterpart or "")
 
 
 def get_list_context(context=None):
@@ -2235,7 +2450,9 @@ def make_delivery_note(source_name, target_doc=None):
 					"cost_center": "cost_center",
 				},
 				"postprocess": update_item,
-				"condition": lambda doc: doc.delivered_by_supplier != 1,
+				"condition": lambda doc: (
+					doc.delivered_by_supplier != 1 and not doc.dn_detail and doc.qty - doc.delivered_qty > 0
+				),
 			},
 			"Sales Taxes and Charges": {"doctype": "Sales Taxes and Charges", "reset_value": True},
 			"Sales Team": {
@@ -2336,15 +2553,6 @@ def validate_inter_company_transaction(doc, doctype):
 		# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 		frappe.throw(_("No {0} found for Inter Company Transactions.").format(_(partytype)))
 
-	company = details.get("company")
-	default_currency = frappe.get_cached_value("Company", company, "default_currency")
-	if default_currency != doc.currency:
-		frappe.throw(
-			_("Company currencies of both the companies should match for Inter Company Transactions.")
-		)
-
-	return
-
 
 @frappe.whitelist()
 def make_inter_company_purchase_invoice(source_name, target_doc=None):
@@ -2369,12 +2577,17 @@ def make_inter_company_transaction(doctype, source_name, target_doc=None):
 		target_doctype = "Sales Invoice" if doctype == "Purchase Invoice" else "Sales Order"
 		source_document_warehouse_field = "from_warehouse"
 		target_document_warehouse_field = "target_warehouse"
-		received_items = {}
+		received_items = (
+			get_received_items(source_name, "Sales Order", "purchase_order_item")
+			if doctype == "Purchase Order"
+			else {}
+		)
 
 	validate_inter_company_transaction(source_doc, doctype)
 	details = get_inter_company_details(source_doc, doctype)
 
 	def set_missing_values(source, target):
+		target.conversion_rate = target.plc_conversion_rate = 0
 		target.run_method("set_missing_values")
 		set_purchase_references(target)
 
@@ -2391,9 +2604,9 @@ def make_inter_company_transaction(doctype, source_name, target_doc=None):
 				"parent",
 			)
 
-		target_doc.inter_company_invoice_reference = source_doc.name
+		_, reference_field = get_inter_company_counterpart(target_doc.doctype)
+		target_doc.set(reference_field, source_doc.name)
 		if target_doc.doctype in ["Purchase Invoice", "Purchase Order"]:
-			currency = frappe.db.get_value("Supplier", details.get("party"), "default_currency")
 			target_doc.company = details.get("company")
 			target_doc.supplier = details.get("party")
 			target_doc.is_internal_supplier = 1
@@ -2430,9 +2643,6 @@ def make_inter_company_transaction(doctype, source_name, target_doc=None):
 					target_doc, "billing_address", "billing_address_display", source_doc.customer_address
 				)
 
-			if currency:
-				target_doc.currency = currency
-
 			update_taxes(
 				target_doc,
 				party=target_doc.supplier,
@@ -2444,7 +2654,6 @@ def make_inter_company_transaction(doctype, source_name, target_doc=None):
 			)
 
 		else:
-			currency = frappe.db.get_value("Customer", details.get("party"), "default_currency")
 			target_doc.company = details.get("company")
 			target_doc.customer = details.get("party")
 			target_doc.selling_price_list = source_doc.buying_price_list
@@ -2466,9 +2675,6 @@ def make_inter_company_transaction(doctype, source_name, target_doc=None):
 			):
 				update_address(target_doc, "customer_address", "address_display", source_doc.shipping_address)
 
-			if currency:
-				target_doc.currency = currency
-
 			update_taxes(
 				target_doc,
 				party=target_doc.customer,
@@ -2480,8 +2686,16 @@ def make_inter_company_transaction(doctype, source_name, target_doc=None):
 				shipping_address_name=target_doc.shipping_address_name,
 			)
 
+	def get_pending_qty(row):
+		received_stock_qty = received_items.get(row.name, 0.0)
+		if not received_stock_qty:
+			return flt(row.qty)
+
+		pending_stock_qty = flt(flt(row.stock_qty) - received_stock_qty, row.precision("stock_qty"))
+		return flt(max(pending_stock_qty, 0) / (flt(row.conversion_factor) or 1), row.precision("qty"))
+
 	def update_item(source, target, source_parent):
-		target.qty = flt(source.qty) - received_items.get(source.name, 0.0)
+		target.qty = get_pending_qty(source)
 		if source.doctype == "Purchase Order Item" and target.doctype == "Sales Order Item":
 			target.purchase_order = source.parent
 			target.purchase_order_item = source.name
@@ -2506,7 +2720,7 @@ def make_inter_company_transaction(doctype, source_name, target_doc=None):
 			"rate": "rate",
 		},
 		"postprocess": update_item,
-		"condition": lambda doc: doc.qty > 0,
+		"condition": lambda doc: get_pending_qty(doc) > 0,
 	}
 
 	if doctype in ["Sales Invoice", "Sales Order"]:
@@ -2537,23 +2751,56 @@ def make_inter_company_transaction(doctype, source_name, target_doc=None):
 		{
 			doctype: {
 				"doctype": target_doctype,
+				"validation": {"docstatus": ["=", 1]},
 				"postprocess": update_details,
 				"set_target_warehouse": "set_from_warehouse",
-				"field_no_map": ["taxes_and_charges", "set_warehouse", "shipping_address"],
+				"field_no_map": [*CROSS_PARTY_FIELD_NO_MAP, "set_warehouse", "cost_center"],
 			},
 			doctype + " Item": item_field_map,
 		},
 		target_doc,
 		set_missing_values,
 	)
-
+	if not doclist.get("items"):
+		if target_doctype in ("Sales Invoice", "Purchase Invoice"):
+			message = _(
+				"Cannot create Intercompany {0}. All items in the source {1} have already been fully invoiced. "
+				"Please check the existing linked {2}s."
+			)
+		else:
+			message = _(
+				"Cannot create Intercompany {0}. All items in the source {1} have already been fully ordered. "
+				"Please check the existing linked {2}s."
+			)
+		frappe.throw(message.format(target_doctype, doctype, target_doctype))
 	return doclist
 
 
-def get_received_items(reference_name, doctype, reference_fieldname):
-	reference_field = "inter_company_invoice_reference"
-	if doctype == "Purchase Order":
-		reference_field = "inter_company_order_reference"
+@frappe.whitelist()
+def get_received_items(reference_name: str, doctype: str, reference_fieldname: str):
+	# The targets this resolves a reference field for. Stating them rejects a caller
+	# supplied doctype that would otherwise be filtered on a column it does not have.
+	reference_fields = {
+		"Purchase Invoice": ("inter_company_invoice_reference", "Sales Invoice", "sales_invoice_item"),
+		"Purchase Order": ("inter_company_order_reference", "Sales Order", "sales_order_item"),
+		"Sales Order": ("inter_company_order_reference", "Purchase Order", "purchase_order_item"),
+	}
+	if doctype not in reference_fields:
+		frappe.throw(_("Invalid doctype {0}").format(doctype), frappe.PermissionError)
+
+	reference_field, source_doctype, expected_fieldname = reference_fields[doctype]
+
+	# the source document decides access, not the targets: those belong to the counterpart company
+	# and the caller legitimately may not read them. doc= for User Permissions.
+	frappe.has_permission(source_doctype, doc=reference_name, throw=True)
+
+	# `reference_fieldname` becomes a selected column and the result key, so it has to be this
+	# target's own reference field: any other item-table column would be returned from unauthorised rows.
+	if reference_fieldname != expected_fieldname:
+		frappe.throw(
+			_("{0} is not a valid reference field for {1}").format(reference_fieldname, doctype),
+			frappe.ValidationError,
+		)
 
 	filters = {
 		reference_field: reference_name,
@@ -2563,20 +2810,19 @@ def get_received_items(reference_name, doctype, reference_fieldname):
 	target_doctypes = frappe.get_all(
 		doctype,
 		filters=filters,
-		as_list=True,
+		pluck="name",
 	)
-
+	received_items_map = {}
 	if target_doctypes:
-		target_doctypes = list(target_doctypes[0])
-
-	received_items_map = frappe._dict(
-		frappe.get_all(
+		received_items_data = frappe.get_all(
 			doctype + " Item",
 			filters={"parent": ("in", target_doctypes)},
-			fields=[reference_fieldname, "qty"],
-			as_list=1,
+			fields=[reference_fieldname, "stock_qty"],
 		)
-	)
+		for item in received_items_data:
+			key = item.get(reference_fieldname)
+			if key:
+				received_items_map[key] = received_items_map.get(key, 0.0) + flt(item.stock_qty)
 
 	return received_items_map
 
@@ -2699,7 +2945,7 @@ def update_taxes(
 	master_doctype=None,
 ):
 	# Update Party Details
-	party_details = get_party_details(
+	party_details = _get_party_details(
 		party=party,
 		party_type=party_type,
 		company=company,
@@ -2768,6 +3014,8 @@ def update_multi_mode_option(doc, pos_profile):
 		payment.account = payment_mode.default_account
 		payment.type = payment_mode.type
 
+	mop_refetched = bool(doc.payments)
+
 	doc.set("payments", [])
 	invalid_modes = []
 	mode_of_payments = [d.mode_of_payment for d in pos_profile.get("payments")]
@@ -2808,6 +3056,11 @@ def update_multi_mode_option(doc, pos_profile):
 		else:
 			msg = _("Please set default Cash or Bank account in Mode of Payments {}")
 		frappe.throw(msg.format(", ".join(invalid_modes)), title=_("Missing Account"))
+
+	if mop_refetched:
+		frappe.msgprint(
+			_("Payment methods refreshed. Please review before proceeding."), indicator="orange", alert=True
+		)
 
 
 def get_all_mode_of_payments(doc):
@@ -2859,8 +3112,6 @@ def create_dunning(source_name, target_doc=None, ignore_permissions=False):
 	from frappe.model.mapper import get_mapped_doc
 
 	def postprocess_dunning(source, target):
-		from erpnext.accounts.doctype.dunning.dunning import get_dunning_letter_text
-
 		dunning_type = frappe.db.exists("Dunning Type", {"is_default": 1, "company": source.company})
 		if dunning_type:
 			dunning_type = frappe.get_doc("Dunning Type", dunning_type)
@@ -2869,14 +3120,8 @@ def create_dunning(source_name, target_doc=None, ignore_permissions=False):
 			target.dunning_fee = dunning_type.dunning_fee
 			target.income_account = dunning_type.income_account
 			target.cost_center = dunning_type.cost_center
-			letter_text = get_dunning_letter_text(
-				dunning_type=dunning_type.name, doc=target.as_dict(), language=source.language
-			)
-
-			if letter_text:
-				target.body_text = letter_text.get("body_text")
-				target.closing_text = letter_text.get("closing_text")
-				target.language = letter_text.get("language")
+			target.language = source.language
+			target.get_dunning_letter_text()
 
 		# update outstanding from doc
 		if source.payment_schedule and len(source.payment_schedule) == 1:

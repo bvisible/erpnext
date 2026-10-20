@@ -82,13 +82,15 @@ class AccountingDimension(Document):
 			else:
 				frappe.throw(_("Company {0} is added more than once").format(frappe.bold(default.company)))
 
-	def after_insert(self):
+	def on_update(self):
 		if frappe.flags.in_test:
 			make_dimension_in_accounting_doctypes(doc=self)
 		else:
 			frappe.enqueue(
 				make_dimension_in_accounting_doctypes, doc=self, queue="long", enqueue_after_commit=True
 			)
+		frappe.flags.accounting_dimensions = None
+		frappe.flags.accounting_dimensions_details = None
 
 	def on_trash(self):
 		if frappe.flags.in_test:
@@ -102,10 +104,6 @@ class AccountingDimension(Document):
 
 		if not self.fieldname:
 			self.fieldname = scrub(self.label)
-
-	def on_update(self):
-		frappe.flags.accounting_dimensions = None
-		frappe.flags.accounting_dimensions_details = None
 
 
 def make_dimension_in_accounting_doctypes(doc, doclist=None):
@@ -209,8 +207,11 @@ def delete_accounting_dimension(doc):
 		frappe.clear_cache(doctype=doctype)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def disable_dimension(doc):
+	# toggle_disabling rewrites a Custom Field site-wide, so demand the write that configures dimensions
+	frappe.has_permission("Accounting Dimension", "write", throw=True)
+
 	if frappe.flags.in_test:
 		toggle_disabling(doc=doc)
 	else:

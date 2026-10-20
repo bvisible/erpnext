@@ -362,6 +362,21 @@ erpnext.accounts.bank_reconciliation.DialogManager = class DialogManager {
 					"eval:doc.action=='Create Voucher' && doc.document_type=='Payment Entry'",
 			},
 			{
+				fieldname: "bank_account",
+				fieldtype: "Link",
+				label: "Company Bank Account",
+				options: "Bank Account",
+				depends_on: "eval:doc.party",
+				get_query: function () {
+					return {
+						filters: {
+							is_company_account: 1,
+							company: this.company,
+						},
+					};
+				},
+			},
+			{
 				fieldname: "project",
 				fieldtype: "Link",
 				label: "Project",
@@ -511,6 +526,7 @@ erpnext.accounts.bank_reconciliation.DialogManager = class DialogManager {
 				mode_of_payment: values.mode_of_payment,
 				project: values.project,
 				cost_center: values.cost_center,
+				company_bank_account: values?.bank_account || this?.bank_account,
 			},
 			callback: (response) => {
 				const alert_string = __("Bank Transaction {0} added as Payment Entry", [
@@ -582,9 +598,11 @@ erpnext.accounts.bank_reconciliation.DialogManager = class DialogManager {
 					project: values.project,
 					cost_center: values.cost_center,
 					allow_edit: true,
+					company_bank_account: values?.bank_account || this?.bank_account,
 				},
 				callback: (r) => {
 					const doc = frappe.model.sync(r.message);
+					track_voucher(doc[0].doctype, doc[0].name, this.bank_transaction.name);
 					frappe.set_route("Form", doc[0].doctype, doc[0].name);
 				},
 			});
@@ -605,9 +623,77 @@ erpnext.accounts.bank_reconciliation.DialogManager = class DialogManager {
 				},
 				callback: (r) => {
 					var doc = frappe.model.sync(r.message);
+					track_voucher(doc[0].doctype, doc[0].name, this.bank_transaction.name);
 					frappe.set_route("Form", doc[0].doctype, doc[0].name);
 				},
 			});
 		}
 	}
 };
+
+const pending_reconciliations = new Map();
+
+const voucher_key = (doctype, docname) => `${doctype}:${docname}`;
+
+const track_voucher = (doctype, docname, bank_transaction_name) => {
+	pending_reconciliations.set(voucher_key(doctype, docname), bank_transaction_name);
+};
+
+for (const voucher_doctype of ["Payment Entry", "Journal Entry"]) {
+	frappe.ui.form.on(voucher_doctype, {
+		before_save(frm) {
+			frm.__pending_reconciliation_key = voucher_key(frm.doctype, frm.doc.name);
+		},
+
+		after_save(frm) {
+			const old_key = frm.__pending_reconciliation_key;
+			delete frm.__pending_reconciliation_key;
+
+			const new_key = voucher_key(frm.doctype, frm.doc.name);
+			if (!old_key || old_key === new_key || !pending_reconciliations.has(old_key)) return;
+
+			// Follow the rename so the voucher stays identifiable on submit
+			pending_reconciliations.set(new_key, pending_reconciliations.get(old_key));
+			pending_reconciliations.delete(old_key);
+		},
+
+		on_submit(frm) {
+			const key = voucher_key(frm.doctype, frm.doc.name);
+			const bank_transaction_name = pending_reconciliations.get(key);
+			if (!bank_transaction_name) return;
+
+			pending_reconciliations.delete(key);
+
+			frappe.call({
+				method: "erpnext.accounts.doctype.bank_reconciliation_tool.bank_reconciliation_tool.reconcile_vouchers",
+				args: {
+					bank_transaction_name: bank_transaction_name,
+					vouchers: [
+						{
+							payment_doctype: frm.doctype,
+							payment_name: frm.doc.name,
+						},
+					],
+					is_new_voucher: true,
+				},
+				callback: (r) => {
+					if (r.exc) return;
+					frappe.show_alert({
+						message: __("Bank Transaction {0} Matched", [bank_transaction_name]),
+						indicator: "green",
+					});
+				},
+				error: () => {
+					frappe.msgprint({
+						title: __("Reconciliation Failed"),
+						indicator: "red",
+						message: __(
+							"{0} {1} was submitted but could not be reconciled against Bank Transaction {2}. Match it manually from the Bank Reconciliation Tool.",
+							[__(frm.doctype), frm.doc.name, bank_transaction_name]
+						),
+					});
+				},
+			});
+		},
+	});
+}

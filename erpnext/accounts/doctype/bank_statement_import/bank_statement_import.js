@@ -2,6 +2,16 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Bank Statement Import", {
+	onload(frm) {
+		frm.set_query("bank_account", function (doc) {
+			return {
+				filters: {
+					company: doc.company,
+					is_company_account: 1,
+				},
+			};
+		});
+	},
 	setup(frm) {
 		frappe.realtime.on("data_import_refresh", ({ data_import }) => {
 			frm.import_in_progress = false;

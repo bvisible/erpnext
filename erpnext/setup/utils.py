@@ -138,7 +138,7 @@ def get_exchange_rate(from_currency, to_currency, transaction_date=None, args=No
 	if entries:
 		return flt(entries[0].exchange_rate)
 
-	if frappe.get_cached_value("Currency Exchange Settings", "Currency Exchange Settings", "disabled"):
+	if frappe.get_single_value("Currency Exchange Settings", "disabled"):
 		return 0.00
 
 	pegged_currencies = {}
@@ -242,3 +242,15 @@ def welcome_email():
 	site_name = get_default_company() or "ERPNext"
 	title = _("Welcome to {0}").format(site_name)
 	return title
+
+
+def identity(x, *args, **kwargs):
+	"""Used for redefining the translation function to return the string as is.
+
+	We want to create english records but still mark the strings as translatable.
+	E.g. when the respective DocTypes have 'Translate Link Fields' enabled or
+	we're creating custom fields.
+
+	Use like this: `from erpnext.setup.utils import identity as _`
+	"""
+	return x

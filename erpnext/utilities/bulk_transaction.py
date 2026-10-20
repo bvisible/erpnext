@@ -6,7 +6,7 @@ from frappe import _
 from frappe.utils import get_link_to_form, today
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def transaction_processing(data, from_doctype, to_doctype):
 	frappe.has_permission(from_doctype, "read", throw=True)
 	frappe.has_permission(to_doctype, "create", throw=True)
@@ -16,9 +16,39 @@ def transaction_processing(data, from_doctype, to_doctype):
 	else:
 		deserialized_data = data
 
+	skipped_records = [d for d in deserialized_data if d.get("status") in ("On Hold", "Closed")]
+
+	deserialized_data = [d for d in deserialized_data if d.get("status") not in ("On Hold", "Closed")]
+
+	# the checks above are doctype level and never consult User Permissions, so on their own they
+	# let a company-restricted caller convert another company's documents
+	for row in deserialized_data:
+		source_name = row.get("name")
+		if not source_name or not isinstance(source_name, str):
+			frappe.throw(_("Invalid name"), frappe.PermissionError)
+
+		frappe.has_permission(from_doctype, "read", source_name, throw=True)
+
 	length_of_data = len(deserialized_data)
 
-	frappe.msgprint(_("Started a background job to create {1} {0}").format(to_doctype, length_of_data))
+	skipped_msg = ""
+
+	if skipped_records:
+		skipped_msg = _("{0} creation for the following records will be skipped.").format(to_doctype)
+
+		skipped_msg += (
+			"<br><br><ul>"
+			+ "".join(_("<li>{}</li>").format(frappe.bold(row.get("name"))) for row in skipped_records)
+			+ "</ul>"
+		)
+
+	if not length_of_data:
+		frappe.msgprint(skipped_msg)
+		return
+
+	frappe.msgprint(
+		_("Started a background job to create {1} {0}. {2}").format(to_doctype, length_of_data, skipped_msg)
+	)
 	frappe.enqueue(
 		job,
 		deserialized_data=deserialized_data,
@@ -29,6 +59,7 @@ def transaction_processing(data, from_doctype, to_doctype):
 
 @frappe.whitelist()
 def retry(date: str | None = None):
+	frappe.only_for("System Manager")
 	if not date:
 		date = today()
 
@@ -127,7 +158,6 @@ def task(doc_name, from_doctype, to_doctype):
 		},
 		"Supplier Quotation": {
 			"Purchase Order": supplier_quotation.make_purchase_order,
-			"Purchase Invoice": supplier_quotation.make_purchase_invoice,
 		},
 		"Purchase Order": {
 			"Purchase Invoice": purchase_order.make_purchase_invoice,

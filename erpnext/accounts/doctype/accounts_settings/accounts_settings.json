@@ -79,6 +79,7 @@
   "acc_frozen_upto",
   "ignore_account_closing_balance",
   "use_legacy_controller_for_pcv",
+  "pcv_job_timeout",
   "column_break_25",
   "frozen_accounts_modifier",
   "tab_break_dpet",
@@ -88,13 +89,14 @@
   "enable_fuzzy_matching",
   "reports_tab",
   "remarks_section",
-  "general_ledger_remarks_length",
+  "disable_include_dimensions",
   "column_break_lvjk",
-  "receivable_payable_remarks_length",
+  "general_ledger_remarks_length",
   "accounts_receivable_payable_tuning_section",
   "receivable_payable_fetch_method",
+  "default_ageing_range",
   "column_break_ntmi",
-  "drop_ar_procedures",
+  "receivable_payable_remarks_length",
   "legacy_section",
   "ignore_is_opening_check_for_reporting",
   "payment_request_settings",
@@ -215,13 +217,14 @@
    "description": "Payment Terms from orders will be fetched into the invoices as is",
    "fieldname": "automatically_fetch_payment_terms",
    "fieldtype": "Check",
-   "label": "Automatically Fetch Payment Terms from Order"
+   "label": "Automatically Fetch Payment Terms from Order/Quotation"
   },
   {
    "description": "The percentage you are allowed to bill more against the amount ordered. For example, if the order value is $100 for an item and tolerance is set as 10%, then you are allowed to bill up to $110 ",
    "fieldname": "over_billing_allowance",
    "fieldtype": "Currency",
-   "label": "Over Billing Allowance (%)"
+   "label": "Over Billing Allowance (%)",
+   "non_negative": 1
   },
   {
    "default": "1",
@@ -482,7 +485,7 @@
   {
    "fieldname": "remarks_section",
    "fieldtype": "Section Break",
-   "label": "Remarks Column Length"
+   "label": "General Ledger Report"
   },
   {
    "default": "0",
@@ -560,12 +563,12 @@
    "fieldname": "receivable_payable_fetch_method",
    "fieldtype": "Select",
    "label": "Data Fetch Method",
-   "options": "Buffered Cursor\nUnBuffered Cursor\nRaw SQL"
+   "options": "Buffered Cursor\nUnBuffered Cursor"
   },
   {
    "fieldname": "accounts_receivable_payable_tuning_section",
    "fieldtype": "Section Break",
-   "label": "Accounts Receivable / Payable Tuning"
+   "label": "Accounts Receivable / Payable Report"
   },
   {
    "fieldname": "legacy_section",
@@ -623,13 +626,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "eval:doc.receivable_payable_fetch_method == \"Raw SQL\"",
-   "description": "Drops existing SQL Procedures and Function setup by Accounts Receivable report",
-   "fieldname": "drop_ar_procedures",
-   "fieldtype": "Button",
-   "label": "Drop Procedures"
-  },
-  {
    "default": "0",
    "fieldname": "fetch_valuation_rate_for_internal_transaction",
    "fieldtype": "Check",
@@ -657,6 +653,26 @@
    "fieldname": "show_party_balance",
    "fieldtype": "Check",
    "label": "Show Party Balance"
+  },
+  {
+   "default": "3600",
+   "depends_on": "eval: !doc.use_legacy_controller_for_pcv",
+   "description": "Timeout (in seconds) for each background job enqueued by Process Period Closing Voucher",
+   "fieldname": "pcv_job_timeout",
+   "fieldtype": "Int",
+   "label": "PCV Job Timeout (seconds)"
+  },
+  {
+   "default": "30, 60, 90, 120",
+   "fieldname": "default_ageing_range",
+   "fieldtype": "Data",
+   "label": "Default Ageing Range"
+  },
+  {
+   "default": "0",
+   "fieldname": "disable_include_dimensions",
+   "fieldtype": "Check",
+   "label": "Disable \"Consider Accounting Dimension\" Filter"
   }
  ],
  "icon": "icon-cog",
@@ -664,7 +680,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-11-06 17:48:07.682837",
+ "modified": "2026-09-04 10:08:30.115003",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Accounts Settings",

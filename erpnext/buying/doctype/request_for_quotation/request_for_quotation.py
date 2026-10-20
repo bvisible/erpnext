@@ -6,15 +6,20 @@ import json
 
 import frappe
 from frappe import _
+from frappe.contacts.doctype.contact.contact import get_full_name
 from frappe.core.doctype.communication.email import make
 from frappe.desk.form.load import get_attachments
+from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
-from frappe.query_builder import Order
-from frappe.utils import get_url
+from frappe.utils import flt, get_url
 from frappe.utils.print_format import download_pdf
 from frappe.utils.user import get_user_fullname
 
-from erpnext.accounts.party import get_party_account_currency, get_party_details
+from erpnext.accounts.party import (
+	_get_party_details,
+	get_party_account_currency,
+	validate_party_frozen_disabled,
+)
 from erpnext.buying.utils import validate_for_items
 from erpnext.controllers.buying_controller import BuyingController
 from erpnext.stock.doctype.material_request.material_request import set_missing_values
@@ -47,7 +52,8 @@ class RequestforQuotation(BuyingController):
 		incoterm: DF.Link | None
 		items: DF.Table[RequestforQuotationItem]
 		letter_head: DF.Link | None
-		message_for_supplier: DF.TextEditor
+		message_for_supplier: DF.TextEditor | None
+		mfs_html: DF.Code | None
 		named_place: DF.Data | None
 		naming_series: DF.Literal["PUR-RFQ-.YYYY.-"]
 		opportunity: DF.Link | None
@@ -56,22 +62,27 @@ class RequestforQuotation(BuyingController):
 		send_attached_files: DF.Check
 		send_document_print: DF.Check
 		status: DF.Literal["", "Draft", "Submitted", "Cancelled"]
+		subject: DF.Data
 		suppliers: DF.Table[RequestforQuotationSupplier]
 		tc_name: DF.Link | None
 		terms: DF.TextEditor | None
 		transaction_date: DF.Date
+		use_html: DF.Check
 		vendor: DF.Link | None
 	# end: auto-generated types
 
 	def before_validate(self):
 		self.set_has_unit_price_items()
 		self.flags.allow_zero_qty = self.has_unit_price_items
+		self.set_data_for_supplier()
 
 	def validate(self):
 		self.validate_duplicate_supplier()
+		self.ensure_supplier_is_not_blocked()
 		self.validate_supplier_list()
 		super().validate_qty_is_not_zero()
 		validate_for_items(self)
+		self.set_missing_item_names()
 		super().set_qty_as_per_stock_uom()
 		self.update_email_id()
 
@@ -79,16 +90,43 @@ class RequestforQuotation(BuyingController):
 			# after amend and save, status still shows as cancelled, until submit
 			self.db_set("status", "Draft")
 
+	def set_missing_item_names(self):
+		for row in self.items:
+			if row.item_code and not row.item_name:
+				row.item_name = frappe.get_cached_value("Item", row.item_code, "item_name")
+
 	def set_has_unit_price_items(self):
 		"""
 		If permitted in settings and any item has 0 qty, the RFQ has unit price items.
 		"""
 		if not frappe.db.get_single_value("Buying Settings", "allow_zero_qty_in_request_for_quotation"):
+			self.has_unit_price_items = 0
 			return
 
 		self.has_unit_price_items = any(
 			not row.qty for row in self.get("items") if (row.item_code and not row.qty)
 		)
+
+	def set_data_for_supplier(self):
+		if self.email_template:
+			data = frappe.get_value(
+				"Email Template",
+				self.email_template,
+				["use_html", "response", "response_html", "subject"],
+				as_dict=True,
+			)
+
+			self.use_html = data.use_html
+
+			if data.use_html:
+				if not self.mfs_html:
+					self.mfs_html = data.response_html
+			else:
+				if not self.message_for_supplier:
+					self.message_for_supplier = data.response
+
+			if not self.subject:
+				self.subject = data.subject
 
 	def validate_duplicate_supplier(self):
 		supplier_list = [d.supplier for d in self.suppliers]
@@ -97,9 +135,11 @@ class RequestforQuotation(BuyingController):
 
 	def validate_supplier_list(self):
 		for d in self.suppliers:
+			validate_party_frozen_disabled("Supplier", d.supplier)
+
 			prevent_rfqs = frappe.db.get_value("Supplier", d.supplier, "prevent_rfqs")
 			if prevent_rfqs:
-				standing = frappe.db.get_value("Supplier Scorecard", d.supplier, "status")
+				standing = frappe.db.get_value("Supplier Scorecard", {"supplier": d.supplier}, "status")
 				frappe.throw(
 					_("RFQs are not allowed for {0} due to a scorecard standing of {1}").format(
 						d.supplier, standing
@@ -107,7 +147,7 @@ class RequestforQuotation(BuyingController):
 				)
 			warn_rfqs = frappe.db.get_value("Supplier", d.supplier, "warn_rfqs")
 			if warn_rfqs:
-				standing = frappe.db.get_value("Supplier Scorecard", d.supplier, "status")
+				standing = frappe.db.get_value("Supplier Scorecard", {"supplier": d.supplier}, "status")
 				frappe.msgprint(
 					_(
 						"{0} currently has a {1} Supplier Scorecard standing, and RFQs to this supplier should be issued with caution."
@@ -231,7 +271,7 @@ class RequestforQuotation(BuyingController):
 
 	def update_user_in_supplier(self, supplier, user):
 		"""Update user in Supplier."""
-		if not frappe.db.exists("Portal User", {"parent": supplier, "user": user}):
+		if not frappe.db.exists("Portal User", {"parenttype": "Supplier", "parent": supplier, "user": user}):
 			supplier_doc = frappe.get_doc("Supplier", supplier)
 			supplier_doc.append(
 				"portal_users",
@@ -247,20 +287,27 @@ class RequestforQuotation(BuyingController):
 			supplier_doc.save()
 
 	def create_user(self, rfq_supplier, link):
+		contact_name = None
+		if rfq_supplier.contact:
+			name_fields = frappe.get_value(
+				"Contact", rfq_supplier.contact, ["first_name", "middle_name", "last_name"]
+			)
+			if name_fields:
+				contact_name = get_full_name(*name_fields)
+
 		user = frappe.get_doc(
 			{
 				"doctype": "User",
-				"send_welcome_email": 0,
+				"send_welcome_email": 1,
 				"email": rfq_supplier.email_id,
-				"first_name": rfq_supplier.supplier_name or rfq_supplier.supplier,
+				"first_name": contact_name or rfq_supplier.supplier_name or rfq_supplier.supplier,
 				"user_type": "Website User",
 				"redirect_url": link,
 			}
 		)
 		user.save(ignore_permissions=True)
-		update_password_link = user.reset_password()
 
-		return user, update_password_link
+		return user, get_url("/login#forgot")
 
 	def supplier_rfq_mail(self, data, update_password_link, rfq_link, preview=False):
 		full_name = get_user_fullname(frappe.session["user"])
@@ -283,20 +330,27 @@ class RequestforQuotation(BuyingController):
 			}
 		)
 
-		if not self.email_template:
-			return
-
-		email_template = frappe.get_doc("Email Template", self.email_template)
-		message = frappe.render_template(email_template.response_, doc_args)
-		subject = frappe.render_template(email_template.subject, doc_args)
 		fixed_procurement_email = frappe.db.get_single_value("Buying Settings", "fixed_email")
 		if fixed_procurement_email:
 			sender = frappe.db.get_value("Email Account", fixed_procurement_email, "email_id")
 		else:
 			sender = frappe.session.user not in STANDARD_USERS and frappe.session.user or None
 
+		message_template = self.mfs_html if self.use_html else self.message_for_supplier
+		# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti
+		rendered_message = frappe.render_template(message_template, doc_args, restrict_globals=True)
+
+		subject_source = (
+			self.subject
+			or frappe.get_value("Email Template", self.email_template, "subject")
+			or _("Request for Quotation")
+		)
+		rendered_subject = frappe.render_template(subject_source, doc_args, restrict_globals=True)
 		if preview:
-			return {"message": message, "subject": subject}
+			return {
+				"message": rendered_message,
+				"subject": rendered_subject,
+			}
 
 		attachments = []
 		if self.send_attached_files:
@@ -316,7 +370,13 @@ class RequestforQuotation(BuyingController):
 				)
 			)
 
-		self.send_email(data, sender, subject, message, attachments)
+		self.send_email(
+			data,
+			sender,
+			rendered_subject,
+			rendered_message,
+			attachments,
+		)
 
 	def send_email(self, data, sender, subject, message, attachments):
 		make(
@@ -396,7 +456,7 @@ def make_supplier_quotation_from_rfq(source_name, target_doc=None, for_supplier=
 	def postprocess(source, target_doc):
 		if for_supplier:
 			target_doc.supplier = for_supplier
-			args = get_party_details(for_supplier, party_type="Supplier", ignore_permissions=True)
+			args = _get_party_details(for_supplier, party_type="Supplier", ignore_permissions=True)
 			target_doc.currency = args.currency or get_party_account_currency(
 				"Supplier", for_supplier, source.company
 			)
@@ -432,65 +492,110 @@ def make_supplier_quotation_from_rfq(source_name, target_doc=None, for_supplier=
 
 # This method is used to make supplier quotation from supplier's portal.
 @frappe.whitelist()
-def create_supplier_quotation(doc):
+def create_supplier_quotation(doc: str | Document | dict):
 	if isinstance(doc, str):
 		doc = json.loads(doc)
+	supplier = doc.get("supplier")
 
-	try:
-		sq_doc = frappe.get_doc(
-			{
-				"doctype": "Supplier Quotation",
-				"supplier": doc.get("supplier"),
-				"terms": doc.get("terms"),
-				"company": doc.get("company"),
-				"currency": doc.get("currency")
-				or get_party_account_currency("Supplier", doc.get("supplier"), doc.get("company")),
-				"buying_price_list": doc.get("buying_price_list")
-				or frappe.db.get_value("Buying Settings", None, "buying_price_list"),
-			}
+	if frappe.session.user not in frappe.get_all(
+		"Portal User", {"parenttype": "Supplier", "parent": supplier}, pluck="user"
+	):
+		frappe.throw(_("Not Permitted"), frappe.PermissionError)
+
+	rfq = get_quotable_rfq(doc.get("name"), supplier)
+	validate_existing_supplier_quotation(supplier, rfq.name)
+
+	sq_doc = frappe.get_doc(
+		{
+			"doctype": "Supplier Quotation",
+			"supplier": supplier,
+			"terms": doc.get("terms"),
+			"company": rfq.company,
+			"currency": doc.get("currency") or get_party_account_currency("Supplier", supplier, rfq.company),
+			"buying_price_list": doc.get("buying_price_list")
+			or frappe.db.get_single_value("Buying Settings", "buying_price_list"),
+		}
+	)
+	add_items(sq_doc, supplier, rfq, doc.get("items"))
+	sq_doc.flags.ignore_permissions = True
+	sq_doc.run_method("set_missing_values")
+	sq_doc.save()
+	frappe.msgprint(_("Supplier Quotation {0} Created").format(sq_doc.name))
+	return sq_doc.name
+
+
+def get_quotable_rfq(rfq_name, supplier):
+	"""Return the submitted Request for Quotation `supplier` was invited to quote on."""
+	rfq = frappe.get_doc("Request for Quotation", rfq_name)
+	if rfq.docstatus != 1 or supplier not in {row.supplier for row in rfq.suppliers}:
+		frappe.throw(_("Not Permitted"), frappe.PermissionError)
+
+	return rfq
+
+
+def validate_existing_supplier_quotation(supplier, request_for_quotation):
+	rfq = frappe.qb.DocType("Request for Quotation")
+	(frappe.qb.from_(rfq).select(rfq.name).where(rfq.name == request_for_quotation).for_update()).run()
+
+	sq = frappe.qb.DocType("Supplier Quotation")
+	sqi = frappe.qb.DocType("Supplier Quotation Item")
+	existing_quotation = (
+		frappe.qb.from_(sq)
+		.inner_join(sqi)
+		.on(sq.name == sqi.parent)
+		.select(sq.name)
+		.where(
+			(sq.docstatus < 2)
+			& (sq.supplier == supplier)
+			& (sqi.request_for_quotation == request_for_quotation)
 		)
-		add_items(sq_doc, doc.get("supplier"), doc.get("items"))
-		sq_doc.flags.ignore_permissions = True
-		sq_doc.run_method("set_missing_values")
-		sq_doc.save()
-		frappe.msgprint(_("Supplier Quotation {0} Created").format(sq_doc.name))
-		return sq_doc.name
-	except Exception:
-		return None
+		.limit(1)
+	).run(as_dict=True)
+
+	if existing_quotation:
+		frappe.throw(
+			_("Supplier Quotation {0} already exists against Request for Quotation {1}").format(
+				frappe.bold(existing_quotation[0].name),
+				frappe.bold(request_for_quotation),
+			)
+		)
 
 
-def add_items(sq_doc, supplier, items):
+def add_items(sq_doc, supplier, rfq, items):
+	rfq_rows = {row.name: row for row in rfq.items}
 	for data in items:
 		if isinstance(data, dict):
 			data = frappe._dict(data)
 
-		create_rfq_items(sq_doc, supplier, data)
+		if data.name not in rfq_rows:
+			frappe.throw(_("Row {0} is not part of Request for Quotation {1}.").format(data.idx, rfq.name))
+
+		create_rfq_items(sq_doc, supplier, rfq_rows[data.name], data)
 
 
-def create_rfq_items(sq_doc, supplier, data):
-	args = {}
-
-	for field in [
-		"item_code",
-		"item_name",
-		"description",
-		"qty",
-		"rate",
-		"conversion_factor",
-		"warehouse",
-		"material_request",
-		"material_request_item",
-		"stock_qty",
-		"uom",
-	]:
-		args[field] = data.get(field)
-
+def create_rfq_items(sq_doc, supplier, rfq_row, data):
+	"""Take the item and its UOM from the RFQ row; only the qty and rate come from the supplier."""
+	args = {
+		field: rfq_row.get(field)
+		for field in [
+			"item_code",
+			"item_name",
+			"description",
+			"conversion_factor",
+			"warehouse",
+			"material_request",
+			"material_request_item",
+			"uom",
+		]
+	}
 	args.update(
 		{
-			"request_for_quotation_item": data.name,
-			"request_for_quotation": data.parent,
+			"qty": flt(data.get("qty")),
+			"rate": flt(data.get("rate")),
+			"request_for_quotation_item": rfq_row.name,
+			"request_for_quotation": rfq_row.parent,
 			"supplier_part_no": frappe.db.get_value(
-				"Item Supplier", {"parent": data.item_code, "supplier": supplier}, "supplier_part_no"
+				"Item Supplier", {"parent": rfq_row.item_code, "supplier": supplier}, "supplier_part_no"
 			),
 		}
 	)
@@ -587,32 +692,34 @@ def get_supplier_tag():
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def get_rfq_containing_supplier(doctype, txt, searchfield, start, page_len, filters):
-	rfq = frappe.qb.DocType("Request for Quotation")
-	rfq_supplier = frappe.qb.DocType("Request for Quotation Supplier")
+	rfq_filters = [
+		["docstatus", "=", 1],
+		["company", "=", filters.get("company")],
+	]
 
-	query = (
-		frappe.qb.from_(rfq)
-		.from_(rfq_supplier)
-		.select(rfq.name)
-		.distinct()
-		.select(rfq.transaction_date, rfq.company)
-		.where(
-			(rfq.name == rfq_supplier.parent)
-			& (rfq_supplier.supplier == filters.get("supplier"))
-			& (rfq.docstatus == 1)
-			& (rfq.company == filters.get("company"))
+	if frappe.has_permission("Request for Quotation", "read"):
+		rfq_filters.append(["Request for Quotation Supplier", "supplier", "=", filters.get("supplier")])
+	else:
+		parents = frappe.get_all(
+			"Request for Quotation Supplier",
+			filters={"supplier": filters.get("supplier"), "parenttype": "Request for Quotation"},
+			pluck="parent",
+			distinct=True,
 		)
-		.orderby(rfq.transaction_date, order=Order.asc)
-		.limit(page_len)
-		.offset(start)
-	)
+		rfq_filters.append(["name", "in", parents or [""]])
 
 	if txt:
-		query = query.where(rfq.name.like(f"%%{txt}%%"))
+		rfq_filters.append(["name", "like", f"%{txt}%"])
 
 	if filters.get("transaction_date"):
-		query = query.where(rfq.transaction_date == filters.get("transaction_date"))
+		rfq_filters.append(["transaction_date", "=", filters.get("transaction_date")])
 
-	rfq_data = query.run(as_dict=1)
-
-	return rfq_data
+	return frappe.get_list(
+		"Request for Quotation",
+		filters=rfq_filters,
+		fields=["name", "transaction_date", "company"],
+		group_by="name",
+		order_by="transaction_date asc",
+		limit_start=start,
+		limit_page_length=page_len,
+	)

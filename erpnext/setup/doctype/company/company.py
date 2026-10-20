@@ -11,7 +11,16 @@ from frappe.cache_manager import clear_defaults_cache
 from frappe.contacts.address_and_contact import load_address_and_contact
 from frappe.custom.doctype.property_setter.property_setter import make_property_setter
 from frappe.desk.page.setup_wizard.setup_wizard import make_records
-from frappe.utils import cint, formatdate, get_link_to_form, get_timestamp, today
+from frappe.utils import (
+	add_months,
+	cint,
+	formatdate,
+	get_first_day,
+	get_last_day,
+	get_link_to_form,
+	get_timestamp,
+	today,
+)
 from frappe.utils.nestedset import NestedSet, rebuild_tree
 
 from erpnext.accounts.doctype.account.account import get_account_currency
@@ -65,6 +74,7 @@ class Company(NestedSet):
 		default_operating_cost_account: DF.Link | None
 		default_payable_account: DF.Link | None
 		default_provisional_account: DF.Link | None
+		default_purchase_price_variance_account: DF.Link | None
 		default_receivable_account: DF.Link | None
 		default_sales_contact: DF.Link | None
 		default_selling_terms: DF.Link | None
@@ -336,6 +346,7 @@ class Company(NestedSet):
 			)
 			warehouse.flags.ignore_permissions = True
 			warehouse.flags.ignore_mandatory = True
+			warehouse.flags.ignore_inventory_account_validation = True
 			warehouse.insert()
 
 			if wh_detail["is_group"]:
@@ -656,6 +667,13 @@ class Company(NestedSet):
 		"""
 		Trash accounts and cost centers for this company if no gl entry exists
 		"""
+		if frappe.db.get_single_value("Global Defaults", "demo_company") == self.name:
+			frappe.throw(
+				_("{0} is the site's Demo Company and cannot be deleted directly. Use {1} instead.").format(
+					self.name, _("Delete Demo Data")
+				)
+			)
+
 		NestedSet.validate_if_child_exists(self)
 		frappe.utils.nestedset.update_nsm(self)
 
@@ -762,28 +780,40 @@ def install_country_fixtures(company, country):
 
 
 def update_company_current_month_sales(company):
-	current_month_year = formatdate(today(), "MM-yyyy")
+	"""Update Company's Total Monthly Sales.
 
-	results = frappe.db.sql(
-		f"""
-		SELECT
-			SUM(base_grand_total) AS total,
-			DATE_FORMAT(`posting_date`, '%m-%Y') AS month_year
-		FROM
-			`tabSales Invoice`
-		WHERE
-			DATE_FORMAT(`posting_date`, '%m-%Y') = '{current_month_year}'
-			AND docstatus = 1
-			AND company = {frappe.db.escape(company)}
-		GROUP BY
-			month_year
-	""",
-		as_dict=True,
+	Postgres compatibility:
+	- Avoid MariaDB-only DATE_FORMAT().
+	- Use a date range for the current month instead (portable + index-friendly).
+	"""
+
+	# Local imports so you don't have to touch file-level imports
+	from frappe.query_builder.functions import Sum
+
+	start_date = get_first_day(today())
+	end_date = get_last_day(today())
+
+	si = frappe.qb.DocType("Sales Invoice")
+
+	total_monthly_sales = (
+		frappe.qb.from_(si)
+		.select(Sum(si.base_grand_total))
+		.where(
+			(si.docstatus == 1)
+			& (si.company == company)
+			& (si.posting_date >= start_date)
+			& (si.posting_date <= end_date)
+		)
+	).run(pluck=True)[0] or 0
+
+	# Fieldname in standard ERPNext is `total_monthly_sales`
+	frappe.db.set_value(
+		"Company",
+		company,
+		"total_monthly_sales",
+		total_monthly_sales,
+		update_modified=False,
 	)
-
-	monthly_total = results[0]["total"] if len(results) > 0 else 0
-
-	frappe.db.set_value("Company", company, "total_monthly_sales", monthly_total)
 
 
 def update_company_monthly_sales(company):
@@ -819,17 +849,14 @@ def get_children(doctype, parent=None, company=None, is_root=False):
 	if parent is None or parent == "All Companies":
 		parent = ""
 
-	return frappe.db.sql(
-		f"""
-		select
-			name as value,
-			is_group as expandable
-		from
-			`tabCompany` comp
-		where
-			ifnull(parent_company, "")={frappe.db.escape(parent)}
-		""",
-		as_dict=1,
+	filters = {"parent_company": parent} if parent else {"parent_company": ["is", "not set"]}
+
+	# get_list, not db.sql: it applies the caller's Company permission and their Company User
+	# Permissions, so a restricted user sees only their own companies.
+	return frappe.get_list(
+		"Company",
+		filters=filters,
+		fields=["name as value", "is_group as expandable"],
 	)
 
 
@@ -839,6 +866,10 @@ def add_node():
 
 	args = frappe.form_dict
 	args = make_tree_args(**args)
+
+	# `args` comes straight from form_dict, so without this the caller chooses the doctype that
+	# gets created; nothing here is meant to build anything but a Company.
+	args.doctype = "Company"
 
 	if args.parent_company == "All Companies":
 		args.parent_company = None
@@ -926,6 +957,10 @@ def get_default_company_address(name, sort_key="is_primary_address", existing_ad
 	if sort_key not in ["is_shipping_address", "is_primary_address"]:
 		return None
 
+	# `select`, not `read`: denies the portal identities and costs none of the transaction-writing
+	# roles. doc= so the named company is evaluated and User Permissions apply.
+	frappe.has_permission("Company", ptype="select", doc=name, throw=True)
+
 	out = frappe.db.sql(
 		""" SELECT
 			addr.name, addr.{}
@@ -956,8 +991,12 @@ def get_billing_shipping_address(name, billing_address=None, shipping_address=No
 	return {"primary_address": primary_address, "shipping_address": shipping_address}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_transaction_deletion_request(company):
+	frappe.only_for("System Manager")
+	# User Permission check
+	frappe.has_permission("Company", ptype="delete", doc=company, throw=True)
+
 	from erpnext.setup.doctype.transaction_deletion_record.transaction_deletion_record import (
 		is_deletion_doc_running,
 	)
@@ -965,6 +1004,7 @@ def create_transaction_deletion_request(company):
 	is_deletion_doc_running(company)
 
 	tdr = frappe.get_doc({"doctype": "Transaction Deletion Record", "company": company})
+
 	tdr.submit()
 	tdr.start_deletion_tasks()
 

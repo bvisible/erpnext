@@ -7,6 +7,7 @@
 import frappe
 from frappe.model.document import Document
 from frappe.model.rename_doc import bulk_rename
+from frappe.utils.deprecations import deprecated
 
 
 class RenameTool(Document):
@@ -19,14 +20,19 @@ class RenameTool(Document):
 		from frappe.types import DF
 
 		file_to_rename: DF.Attach | None
-		select_doctype: DF.Literal
+		select_doctype: DF.Link | None
 	# end: auto-generated types
 
 	pass
 
 
 @frappe.whitelist()
+@deprecated
 def get_doctypes():
+	# The Rename Tool page is System-Manager-only, and its sibling upload() below already checks
+	# before doing anything; this listed every renameable doctype on the site to any caller.
+	frappe.has_permission("Rename Tool", throw=True)
+
 	return frappe.db.sql_list(
 		"""select name from tabDocType
 		where allow_rename=1 and module!='Core' order by name"""

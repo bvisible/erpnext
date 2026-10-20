@@ -52,39 +52,40 @@ class BankAccount(Document):
 		delete_contact_and_address("Bank Account", self.name)
 
 	def validate(self):
-		self.validate_company()
-		self.validate_account()
+		self.validate_is_company_account()
 		self.update_default_bank_account()
 
-	# //// Neoffice — the body is NEUTRALISED (a528cdd49b, 2025-03-17 "Remove hold code in Journal
-	# //// Entry and remove frappe throw in bank account"). Upstream throws when a second Bank
-	# //// Account points at the same GL Account ("'{0}' account is already used by {1}"); ours
-	# //// accepts it — the upstream code is kept below as `# ///` dead comments (THREE slashes, so
-	# //// `grep "////"` does not see it). Still in force upstream at v15.121.0.
-	# //// TO REVIEW before the upstream merge: the commit gives no reason beyond its subject, so we
-	# //// cannot tell whether this is still needed (several Bank Accounts on one GL account) or a
-	# //// leftover from a one-off migration.
-	def validate_account(self):
-		if self.account:
-			pass
-			# /// if accounts := frappe.db.get_all(
-			# /// 	"Bank Account", filters={"account": self.account, "name": ["!=", self.name]}, as_list=1
-			# /// ):
-			# /// 	frappe.throw(
-			# /// 		_("'{0}' account is already used by {1}. Use another account.").format(
-			# /// 			frappe.bold(self.account),
-			# /// 		frappe.bold(comma_and([get_link_to_form(self.doctype, x[0]) for x in accounts])),
-			# /// 	)
-			# /// )
+	def validate_is_company_account(self):
+		if self.is_company_account:
+			if not self.company:
+				frappe.throw(_("Company is mandatory for company account"))
 
-	def validate_company(self):
-		if self.is_company_account and not self.company:
-			frappe.throw(_("Company is manadatory for company account"))
+			if not self.account:
+				frappe.throw(_("Company Account is mandatory"))
+
+			self.validate_account()
 
 	@deprecated
 	def validate_iban(self):
 		"""Kept for backward compatibility, will be removed in v16."""
 		validate_iban(self.iban, throw=True)
+
+	def validate_account(self):
+		# //// Neoffice — NEUTRALISED since a528cdd49b (2025-03-17, "remove frappe throw in bank account"):
+		# //// upstream throws when a second company Bank Account points at the same GL Account; ours accepts
+		# //// it, as before the merge. The commit gives no reason beyond its subject: to review (several Bank
+		# //// Accounts on one GL account, e.g. an IBAN and a QR-IBAN?). An early return keeps upstream's code
+		# //// below untouched, so a later upstream change to it conflicts instead of passing silently.
+		return
+		if accounts := frappe.db.get_all(
+			"Bank Account", filters={"account": self.account, "name": ["!=", self.name]}, as_list=1
+		):
+			frappe.throw(
+				_("'{0}' account is already used by {1}. Use another account.").format(
+					frappe.bold(self.account),
+					frappe.bold(comma_and([get_link_to_form(self.doctype, x[0]) for x in accounts])),
+				)
+			)
 
 	def update_default_bank_account(self):
 		if self.is_default and not self.disabled:
@@ -120,7 +121,7 @@ def get_party_bank_account(party_type, party):
 	)
 
 
-def get_default_company_bank_account(company, party_type, party):
+def get_default_company_bank_account(company, party_type, party, ignore_permissions=True):
 	default_company_bank_account = frappe.db.get_value(party_type, party, "default_bank_account")
 	if default_company_bank_account:
 		if company != frappe.get_cached_value("Bank Account", default_company_bank_account, "company"):
@@ -131,11 +132,20 @@ def get_default_company_bank_account(company, party_type, party):
 			"Bank Account", {"company": company, "is_company_account": 1, "is_default": 1}
 		)
 
+	if not ignore_permissions:
+		default_company_bank_account = (
+			default_company_bank_account
+			if default_company_bank_account
+			and frappe.get_cached_doc("Bank Account", default_company_bank_account).has_permission("select")
+			else None
+		)
+
 	return default_company_bank_account
 
 
 @frappe.whitelist()
 def get_bank_account_details(bank_account):
+	frappe.has_permission("Bank Account", doc=bank_account, ptype="read", throw=True)
 	return frappe.get_cached_value(
 		"Bank Account", bank_account, ["account", "bank", "bank_account_no"], as_dict=1
 	)

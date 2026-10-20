@@ -360,6 +360,222 @@ class TestItem(FrappeTestCase):
 		self.assertRaises(InvalidItemAttributeValueError, attribute.save)
 		frappe.db.rollback()
 
+	def test_disabled_attribute_blocks_only_attribute_changes(self):
+		frappe.delete_doc_if_exists("Item", "_Test Disabled Attribute Template-L", force=1)
+		frappe.delete_doc_if_exists("Item", "_Test Disabled Attribute Template", force=1)
+		frappe.delete_doc_if_exists("Item Attribute", "_Test Disabled Size", force=1)
+
+		attribute = frappe.get_doc(
+			{
+				"doctype": "Item Attribute",
+				"attribute_name": "_Test Disabled Size",
+				"item_attribute_values": [
+					{"attribute_value": "Large", "abbr": "L"},
+					{"attribute_value": "Small", "abbr": "S"},
+				],
+			}
+		).insert()
+
+		template = make_item(
+			"_Test Disabled Attribute Template",
+			{
+				"has_variants": 1,
+				"variant_based_on": "Item Attribute",
+				"attributes": [{"attribute": attribute.name}],
+			},
+		)
+
+		variant = create_variant(template.name, {attribute.name: "Large"})
+		variant.save()
+
+		attribute.disabled = 1
+		attribute.save()
+
+		variant.reload()
+		variant.description = "Edited after the attribute was disabled"
+		variant.save()
+
+		variant.reload()
+		variant.attributes[0].attribute_value = "Small"
+		self.assertRaises(frappe.ValidationError, variant.save)
+
+	def test_rename_attribute_value_updates_variants(self):
+		frappe.delete_doc_if_exists("Item", "_Test Variant Item-L", force=1)
+
+		variant = create_variant("_Test Variant Item", {"Test Size": "Large"})
+		variant.save()
+
+		attribute = frappe.get_doc("Item Attribute", "Test Size")
+		for row in attribute.item_attribute_values:
+			if row.attribute_value == "Large":
+				row.attribute_value = "Larger"
+				break
+
+		def restore_test_size_large():
+			doc = frappe.get_doc("Item Attribute", "Test Size")
+			for row in doc.item_attribute_values:
+				if row.attribute_value == "Larger":
+					row.attribute_value = "Large"
+					break
+			frappe.flags.attribute_values = None
+			doc.save()
+
+		self.addCleanup(restore_test_size_large)
+
+		frappe.flags.attribute_values = None
+		attribute.save()
+
+		self.assertEqual(
+			frappe.db.get_value(
+				"Item Variant Attribute",
+				{"parent": variant.name, "attribute": "Test Size"},
+				"attribute_value",
+			),
+			"Larger",
+		)
+
+	def test_swapped_attribute_value_renames_update_variants(self):
+		frappe.delete_doc_if_exists("Item", "_Test Variant Item-L", force=1)
+		frappe.delete_doc_if_exists("Item", "_Test Variant Item-S", force=1)
+
+		large_variant = create_variant("_Test Variant Item", {"Test Size": "Large"})
+		large_variant.save()
+
+		small_variant = create_variant("_Test Variant Item", {"Test Size": "Small"})
+		small_variant.save()
+
+		attribute = frappe.get_doc("Item Attribute", "Test Size")
+		original_values = {row.name: row.attribute_value for row in attribute.item_attribute_values}
+
+		def restore_test_size_values():
+			doc = frappe.get_doc("Item Attribute", "Test Size")
+			for row in doc.item_attribute_values:
+				row.attribute_value = original_values[row.name]
+			frappe.flags.attribute_values = None
+			doc.save()
+
+		self.addCleanup(restore_test_size_values)
+
+		for row in attribute.item_attribute_values:
+			if row.attribute_value == "Large":
+				row.attribute_value = "Small"
+			elif row.attribute_value == "Small":
+				row.attribute_value = "Large"
+
+		frappe.flags.attribute_values = None
+		attribute.save()
+
+		self.assertEqual(
+			frappe.db.get_value(
+				"Item Variant Attribute",
+				{"parent": large_variant.name, "attribute": "Test Size"},
+				"attribute_value",
+			),
+			"Small",
+		)
+		self.assertEqual(
+			frappe.db.get_value(
+				"Item Variant Attribute",
+				{"parent": small_variant.name, "attribute": "Test Size"},
+				"attribute_value",
+			),
+			"Large",
+		)
+
+	def test_rename_attribute_abbr_updates_variant_item_code(self):
+		frappe.delete_doc_if_exists("Item", "_Test Variant Item-L", force=1)
+		frappe.delete_doc_if_exists("Item", "_Test Variant Item-LRG", force=1)
+
+		variant = create_variant("_Test Variant Item", {"Test Size": "Large"})
+		variant.save()
+
+		attribute = frappe.get_doc("Item Attribute", "Test Size")
+		for row in attribute.item_attribute_values:
+			if row.attribute_value == "Large":
+				row.abbr = "LRG"
+				break
+
+		def restore_test_size_abbr():
+			doc = frappe.get_doc("Item Attribute", "Test Size")
+			for row in doc.item_attribute_values:
+				if row.attribute_value == "Large":
+					row.abbr = "L"
+					break
+			frappe.flags.attribute_values = None
+			doc.save()
+
+		self.addCleanup(restore_test_size_abbr)
+		self.addCleanup(lambda: frappe.delete_doc_if_exists("Item", "_Test Variant Item-LRG", force=1))
+
+		frappe.flags.attribute_values = None
+		attribute.save()
+
+		self.assertFalse(frappe.db.exists("Item", "_Test Variant Item-L"))
+		self.assertTrue(frappe.db.exists("Item", "_Test Variant Item-LRG"))
+		self.assertEqual(
+			frappe.db.get_value("Item", "_Test Variant Item-LRG", "item_name"),
+			"_Test Variant Item-LRG",
+		)
+
+	def test_rename_attribute_abbr_updates_variant_item_name_from_template_name(self):
+		# item_name can be derived from the template's item_name, which may differ from its
+		# item_code (e.g. a friendly display name vs. a SKU-style code). The variant's item_name
+		# must follow the abbreviation rename the same way item_code does.
+		frappe.delete_doc_if_exists("Item", "_Test Variant Item Diff-L", force=1)
+		frappe.delete_doc_if_exists("Item", "_Test Variant Item Diff-LRG", force=1)
+		frappe.delete_doc_if_exists("Item", "_Test Variant Item Diff", force=1)
+
+		template = frappe.get_doc("Item", "_Test Variant Item").as_dict()
+		template = frappe.get_doc(
+			{
+				"doctype": "Item",
+				"item_code": "_Test Variant Item Diff",
+				"item_name": "Test Variant Friendly Name",
+				"item_group": template.item_group,
+				"stock_uom": template.stock_uom,
+				"has_variants": 1,
+				"attributes": [{"attribute": "Test Size"}],
+			}
+		)
+		template.insert()
+		self.addCleanup(lambda: frappe.delete_doc_if_exists("Item", "_Test Variant Item Diff", force=1))
+
+		variant = create_variant("_Test Variant Item Diff", {"Test Size": "Large"})
+		variant.save()
+		self.assertEqual(variant.item_code, "_Test Variant Item Diff-L")
+		self.assertEqual(variant.item_name, "Test Variant Friendly Name-L")
+
+		# even a manually customized item_name (unrelated to the auto-generated pattern) must be
+		# rebuilt on abbreviation rename, since item_code and item_name are meant to stay in lockstep.
+		frappe.db.set_value("Item", variant.name, "item_name", "Custom Friendly Large Shirt Name")
+
+		attribute = frappe.get_doc("Item Attribute", "Test Size")
+		for row in attribute.item_attribute_values:
+			if row.attribute_value == "Large":
+				row.abbr = "LRG"
+				break
+
+		def restore_test_size_abbr():
+			doc = frappe.get_doc("Item Attribute", "Test Size")
+			for row in doc.item_attribute_values:
+				if row.attribute_value == "Large":
+					row.abbr = "L"
+					break
+			frappe.flags.attribute_values = None
+			doc.save()
+
+		self.addCleanup(restore_test_size_abbr)
+		self.addCleanup(lambda: frappe.delete_doc_if_exists("Item", "_Test Variant Item Diff-LRG", force=1))
+
+		frappe.flags.attribute_values = None
+		attribute.save()
+
+		self.assertFalse(frappe.db.exists("Item", "_Test Variant Item Diff-L"))
+		self.assertEqual(
+			frappe.db.get_value("Item", "_Test Variant Item Diff-LRG", "item_name"),
+			"Test Variant Friendly Name-LRG",
+		)
+
 	def test_make_item_variant(self):
 		frappe.delete_doc_if_exists("Item", "_Test Variant Item-L", force=1)
 
@@ -500,6 +716,17 @@ class TestItem(FrappeTestCase):
 		frappe.rename_doc("Item", "Test Item Bundle Item 1", "Test Item Bundle Item 2", merge=True)
 
 		self.assertFalse(frappe.db.exists("Item", "Test Item Bundle Item 1"))
+
+	def test_invalid_uom_conversion_factor(self):
+		for conversion_factor in (0, -1):
+			with self.subTest(conversion_factor=conversion_factor), self.assertRaisesRegex(
+				frappe.ValidationError, "Conversion Factor must be greater than zero"
+			):
+				make_item(uoms=[{"uom": "Box", "conversion_factor": conversion_factor}])
+
+	def test_preserve_explicit_uom_conversion_factor(self):
+		item = make_item(properties={"stock_uom": "Gram"}, uoms=[{"uom": "Kg", "conversion_factor": 950}])
+		self.assertEqual(item.uoms[0].conversion_factor, 950)
 
 	def test_uom_conversion_factor(self):
 		if frappe.db.exists("Item", "Test Item UOM"):
@@ -882,6 +1109,94 @@ class TestItem(FrappeTestCase):
 		)
 
 		self.assertRaises(frappe.ValidationError, item_doc.save)
+
+	def test_opening_stock_requires_serial_and_batch_settings(self):
+		setups = (
+			({"has_serial_no": 1}, "Serial Number Series"),
+			({"has_batch_no": 1, "create_new_batch": 0}, "Automatically Create New Batch"),
+		)
+		for properties, message in setups:
+			with self.subTest(properties=properties), self.assertRaisesRegex(frappe.ValidationError, message):
+				make_item(
+					properties={"is_stock_item": 1, "opening_stock": 5, "valuation_rate": 100, **properties}
+				)
+
+	def test_opening_stock_with_serial_series(self):
+		item = make_item(
+			properties={
+				"is_stock_item": 1,
+				"has_serial_no": 1,
+				"serial_no_series": "SN-OPENING-.#####",
+				"opening_stock": 5,
+				"valuation_rate": 100,
+				"item_defaults": [{"company": "_Test Company", "default_warehouse": "_Test Warehouse - _TC"}],
+			}
+		)
+		self.assertEqual(frappe.db.count("Serial No", {"item_code": item.name}), 5)
+		self.assertEqual(
+			frappe.db.get_value(
+				"Bin", {"item_code": item.name, "warehouse": "_Test Warehouse - _TC"}, "actual_qty"
+			),
+			5,
+		)
+
+	def test_opening_stock_for_batch_without_series(self):
+		item = make_item(
+			properties={
+				"is_stock_item": 1,
+				"has_batch_no": 1,
+				"create_new_batch": 1,
+				"opening_stock": 5,
+				"valuation_rate": 100,
+				"item_defaults": [{"company": "_Test Company", "default_warehouse": "_Test Warehouse - _TC"}],
+			}
+		)
+
+		actual_qty = frappe.db.get_value(
+			"Stock Ledger Entry", {"item_code": item.name, "is_cancelled": 0}, "actual_qty"
+		)
+		self.assertEqual(actual_qty, 5)
+
+	def test_cannot_unset_serialized_while_bundle_exists(self):
+		from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
+			make_serial_batch_bundle,
+		)
+
+		item = make_item(
+			properties={"has_serial_no": 1, "is_stock_item": 1, "serial_no_series": "TSN-UNSET-.####"}
+		).name
+
+		serial_no = f"{item}-SN-01"
+		frappe.get_doc(
+			{"doctype": "Serial No", "serial_no": serial_no, "item_code": item, "company": "_Test Company"}
+		).insert()
+
+		# A draft (unsubmitted) Serial and Batch Bundle for the item must block the change.
+		bundle = make_serial_batch_bundle(
+			{
+				"item_code": item,
+				"warehouse": "_Test Warehouse - _TC",
+				"company": "_Test Company",
+				"qty": 1,
+				"rate": 100,
+				"voucher_type": "Stock Entry",
+				"serial_nos": [serial_no],
+				"type_of_transaction": "Inward",
+				"do_not_submit": True,
+				"ignore_sabb_validation": True,
+			}
+		)
+
+		doc = frappe.get_doc("Item", item)
+		doc.has_serial_no = 0
+		self.assertRaises(frappe.ValidationError, doc.save)
+
+		# Once the bundle is removed, the item can be made non-serialized.
+		frappe.delete_doc("Serial and Batch Bundle", bundle.name, force=True)
+		doc = frappe.get_doc("Item", item)
+		doc.has_serial_no = 0
+		doc.save()
+		self.assertEqual(frappe.db.get_value("Item", item, "has_serial_no"), 0)
 
 
 def set_item_variant_settings(fields):

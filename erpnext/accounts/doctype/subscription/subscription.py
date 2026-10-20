@@ -26,6 +26,7 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 )
 from erpnext.accounts.doctype.subscription_plan.subscription_plan import get_plan_rate
 from erpnext.accounts.party import get_party_account_currency
+from erpnext.stock.doctype.item.item import get_item_defaults
 
 
 class InvoiceCancelled(frappe.ValidationError):
@@ -225,14 +226,9 @@ class Subscription(Document):
 		"""
 		Sets the status of the `Subscription`
 		"""
-		# //// Neoffice — a cancelled subscription stays cancelled (neoffice-maintenance#230).
-		# //// process() calls cancel_subscription() and then this method; with nothing
-		# //// outstanding, the last branch below set the status straight back to Active while
-		# //// cancelation_date stayed: an Active subscription that can_generate_new_invoice()
-		# //// refuses for ever, silently (dmis, ACC-SUB-2026-00001). restart_subscription() is
-		# //// the one way back, and it clears the date. Upstream version-15 has the same code.
-		if self.status == "Cancelled" and self.cancelation_date:
+		if self.status == "Cancelled":
 			return
+
 		if self.is_trialling():
 			self.status = "Trialling"
 		elif self.status == "Active" and self.end_date and getdate(posting_date) > getdate(self.end_date):
@@ -592,15 +588,23 @@ class Subscription(Document):
 		1. `process_for_active`
 		2. `process_for_past_due`
 		"""
+		# Snapshot before update_subscription_period() below can roll this forward,
+		# so the cancel_at_period_end check further down still targets the period
+		# that just ended, not the next one.
+		current_period_end = self.current_invoice_end
+
 		# //// Neoffice — a subscription that fell behind is billed up to today, a bounded number of periods per pass
 		# //// (neoffice-maintenance#1556). Upstream bills ONE period per pass, so a daily plan that took five days of delay (an
 		# //// instance switched off, a run that failed, an unpaid invoice that held the gate shut) kept them for ever: each night
 		# //// created the invoice of the period five days back, and the delay never shrank. The loop asks the same gates as the
 		# //// single pass did, before every period (an outstanding invoice still holds it shut), and a period that begins after the
 		# //// end date of the subscription is not billed (upstream let the day after the end through, once).
+		# //// A subscription set to cancel at the end of its period bills that one period only, then upstream's check below
+		# //// (on the snapshot above, merged with v15.123.0) cancels it: the loop would otherwise bill the periods after it.
 		billed = 0
 		while (
 			billed < MAX_CATCH_UP_PERIODS
+			and not (self.cancel_at_period_end and billed)
 			and not self.is_current_invoice_generated(self.current_invoice_start, self.current_invoice_end)
 			and self.can_generate_new_invoice(posting_date)
 			and not (self.end_date and getdate(self.current_invoice_start) > getdate(self.end_date))
@@ -615,8 +619,8 @@ class Subscription(Document):
 		# //// END Neoffice ////
 
 		if self.cancel_at_period_end and (
-				getdate(posting_date) >= getdate(self.current_invoice_end)
-				or getdate(posting_date) >= getdate(self.end_date)
+			getdate(posting_date) >= getdate(current_period_end)
+			or (self.end_date and getdate(posting_date) >= getdate(self.end_date))
 		):
 			self.cancel_subscription()
 
@@ -840,6 +844,39 @@ def get_prorata_factor(
 	diff = flt(date_diff(nowdate(), period_start) + 1)
 	plan_days = flt(date_diff(period_end, period_start) + 1)
 	return diff / plan_days
+
+
+@frappe.whitelist()
+def get_plan_dimensions(
+	plan: str, company: str | None = None, party_type: str | None = None
+) -> dict[str, str]:
+	"""Resolve a plan's accounting dimensions, falling back to the plan item's company defaults."""
+	plan_doc = frappe.get_cached_doc("Subscription Plan", plan)
+
+	dimensions = {}
+	for dimension in ["cost_center", *get_accounting_dimensions()]:
+		value = plan_doc.get(dimension) or get_item_dimension(plan_doc.item, dimension, company, party_type)
+		if value:
+			dimensions[dimension] = value
+
+	return dimensions
+
+
+def get_item_dimension(
+	item_code: str, dimension: str, company: str | None, party_type: str | None
+) -> str | None:
+	if not company:
+		return None
+
+	item_defaults = get_item_defaults(item_code, company)
+	if dimension != "cost_center":
+		return item_defaults.get(dimension)
+
+	selling = item_defaults.get("selling_cost_center")
+	buying = item_defaults.get("buying_cost_center")
+	if party_type == "Supplier":
+		return buying or selling
+	return selling or buying
 
 
 def process_all(subscription: list, posting_date: DateTimeLikeObject | None = None) -> None:

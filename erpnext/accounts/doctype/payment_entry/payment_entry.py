@@ -3,6 +3,7 @@
 
 
 import json
+from datetime import date
 from functools import reduce
 
 import frappe
@@ -53,7 +54,6 @@ from erpnext.accounts.utils import (
 )
 from erpnext.controllers.accounts_controller import (
 	AccountsController,
-	get_supplier_block_status,
 	validate_taxes_and_charges,
 )
 from erpnext.setup.utils import get_exchange_rate
@@ -90,6 +90,7 @@ class PaymentEntry(AccountsController):
 		self.set_liability_account()
 		self.set_missing_ref_details(force=True)
 		self.validate_payment_type()
+		self.validate_internal_transfer_accounts()
 		self.validate_party_details()
 		self.set_exchange_rate()
 		self.validate_mandatory()
@@ -121,7 +122,13 @@ class PaymentEntry(AccountsController):
 		self.update_payment_schedule()
 		self.make_gl_entries()
 		self.update_outstanding_amounts()
+		self.update_linked_dunnings()
 		self.set_status()
+
+	def update_linked_dunnings(self):
+		from erpnext.accounts.doctype.dunning.dunning import update_dunnings_linked_to_payment
+
+		update_dunnings_linked_to_payment(self)
 
 	def validate_for_repost(self):
 		validate_docs_for_voucher_types(["Payment Entry"])
@@ -224,6 +231,7 @@ class PaymentEntry(AccountsController):
 		self.update_payment_schedule(cancel=1)
 		self.make_gl_entries(cancel=1)
 		self.update_outstanding_amounts()
+		self.update_linked_dunnings()
 		self.delink_advance_entry_references()
 		self.set_status()
 
@@ -531,6 +539,10 @@ class PaymentEntry(AccountsController):
 	def validate_payment_type(self):
 		if self.payment_type not in ("Receive", "Pay", "Internal Transfer"):
 			frappe.throw(_("Payment Type must be one of Receive, Pay and Internal Transfer"))
+
+	def validate_internal_transfer_accounts(self):
+		if self.payment_type == "Internal Transfer" and self.paid_from and self.paid_from == self.paid_to:
+			frappe.throw(_("Paid From and Paid To accounts must be different for an Internal Transfer."))
 
 	def validate_party_details(self):
 		if self.party and not frappe.db.exists(self.party_type, self.party):
@@ -1094,20 +1106,32 @@ class PaymentEntry(AccountsController):
 			self.base_paid_amount + deductions_to_consider
 		):
 			self.unallocated_amount = (
-				self.base_paid_amount
-				+ deductions_to_consider
-				- self.base_total_allocated_amount
-				- included_taxes
-			) / self.source_exchange_rate
+				flt(
+					(
+						self.base_paid_amount
+						+ deductions_to_consider
+						- self.base_total_allocated_amount
+						- included_taxes
+					),
+					self.precision("unallocated_amount"),
+				)
+				/ self.source_exchange_rate
+			)
 		elif self.payment_type == "Pay" and self.base_total_allocated_amount < (
 			self.base_received_amount - deductions_to_consider
 		):
 			self.unallocated_amount = (
-				self.base_received_amount
-				- deductions_to_consider
-				- self.base_total_allocated_amount
-				- included_taxes
-			) / self.target_exchange_rate
+				flt(
+					(
+						self.base_received_amount
+						- deductions_to_consider
+						- self.base_total_allocated_amount
+						- included_taxes
+					),
+					self.precision("unallocated_amount"),
+				)
+				/ self.target_exchange_rate
+			)
 
 	def set_exchange_gain_loss(self):
 		exchange_gain_loss = flt(
@@ -1187,9 +1211,9 @@ class PaymentEntry(AccountsController):
 				continue
 
 			if tax.add_deduct_tax == "Add":
-				included_taxes += tax.base_tax_amount
+				included_taxes += flt(tax.base_tax_amount)
 			else:
-				included_taxes -= tax.base_tax_amount
+				included_taxes -= flt(tax.base_tax_amount)
 
 		return included_taxes
 
@@ -1295,7 +1319,13 @@ class PaymentEntry(AccountsController):
 		self.add_deductions_gl_entries(gl_entries)
 		self.add_tax_gl_entries(gl_entries)
 		add_regional_gl_entries(gl_entries, self)
+		self.set_transaction_currency_and_rate_in_gl_map(gl_entries)
 		return gl_entries
+
+	def set_transaction_currency_and_rate_in_gl_map(self, gl_entries):
+		for gle in gl_entries:
+			gle.setdefault("transaction_currency", self.transaction_currency)
+			gle.setdefault("transaction_exchange_rate", self.transaction_exchange_rate)
 
 	def make_gl_entries(self, cancel=0, adv_adj=0):
 		gl_entries = self.build_gl_map()
@@ -1806,7 +1836,7 @@ class PaymentEntry(AccountsController):
 				else:
 					self.total_taxes_and_charges += current_tax_amount
 
-			self.base_total_taxes_and_charges += tax.base_tax_amount
+			self.base_total_taxes_and_charges += current_tax_amount
 
 		if self.get("taxes"):
 			self.paid_amount_after_tax = self.get("taxes")[-1].base_total
@@ -2274,6 +2304,9 @@ def get_outstanding_reference_documents(args, validate=False):
 	if args.get("party_type") == "Member":
 		return
 
+	if args.get("party_type") and args.get("party"):
+		frappe.has_permission(args["party_type"], "read", args["party"], throw=True)
+
 	if not args.get("get_outstanding_invoices") and not args.get("get_orders_to_be_billed"):
 		args["get_outstanding_invoices"] = True
 
@@ -2282,18 +2315,10 @@ def get_outstanding_reference_documents(args, validate=False):
 	accounting_dimensions_filter = []
 	posting_and_due_date = []
 
-	# confirm that Supplier is not blocked
-	if args.get("party_type") == "Supplier":
-		supplier_status = get_supplier_block_status(args["party"])
-		if supplier_status["on_hold"]:
-			if supplier_status["hold_type"] == "All":
-				return []
-			elif supplier_status["hold_type"] == "Payments":
-				if (
-					not supplier_status["release_date"]
-					or getdate(nowdate()) <= supplier_status["release_date"]
-				):
-					return []
+	if args.get("party_type") == "Supplier" and frappe.get_lazy_doc("Supplier", args["party"]).is_blocked_for(
+		"Payments"
+	):
+		return []
 
 	party_account_currency = get_account_currency(args.get("party_account"))
 	company_currency = frappe.get_cached_value("Company", args.get("company"), "default_currency")
@@ -2301,14 +2326,12 @@ def get_outstanding_reference_documents(args, validate=False):
 	# Get positive outstanding sales /purchase invoices
 	condition = ""
 	if args.get("voucher_type") and args.get("voucher_no"):
-		# //// Neoffice — backport of upstream cceedd669f (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 		condition = f" and voucher_type={frappe.db.escape(args['voucher_type'])} and voucher_no={frappe.db.escape(args['voucher_no'])}"
 		common_filter.append(ple.voucher_type == args["voucher_type"])
 		common_filter.append(ple.voucher_no == args["voucher_no"])
 
 	# Add cost center condition
 	if args.get("cost_center"):
-		# //// Neoffice — backport of upstream cceedd669f (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 		condition += f" and cost_center={frappe.db.escape(args.get('cost_center'))}"
 		accounting_dimensions_filter.append(ple.cost_center == args.get("cost_center"))
 
@@ -2316,7 +2339,6 @@ def get_outstanding_reference_documents(args, validate=False):
 	active_dimensions = get_dimensions()[0]
 	for dim in active_dimensions:
 		if args.get(dim.fieldname):
-			# //// Neoffice — backport of upstream cceedd669f (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 			condition += f" and {dim.fieldname}={frappe.db.escape(args.get(dim.fieldname))}"
 			accounting_dimensions_filter.append(ple[dim.fieldname] == args.get(dim.fieldname))
 
@@ -2326,19 +2348,19 @@ def get_outstanding_reference_documents(args, validate=False):
 	}
 
 	for fieldname, date_fields in date_fields_dict.items():
+		from_date = frappe.db.escape(str(args.get(date_fields[0]))) if args.get(date_fields[0]) else None
+		to_date = frappe.db.escape(str(args.get(date_fields[1]))) if args.get(date_fields[1]) else None
+
 		if args.get(date_fields[0]) and args.get(date_fields[1]):
-			# //// Neoffice — backport of upstream cceedd669f (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
-			condition += f" and {fieldname} between {frappe.db.escape(args.get(date_fields[0]))} and {frappe.db.escape(args.get(date_fields[1]))}"
+			condition += f" and {fieldname} between {from_date} and {to_date}"
 			posting_and_due_date.append(ple[fieldname][args.get(date_fields[0]) : args.get(date_fields[1])])
 		elif args.get(date_fields[0]):
 			# if only from date is supplied
-			# //// Neoffice — backport of upstream cceedd669f (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
-			condition += f" and {fieldname} >= {frappe.db.escape(args.get(date_fields[0]))}"
+			condition += f" and {fieldname} >= {from_date}"
 			posting_and_due_date.append(ple[fieldname].gte(args.get(date_fields[0])))
 		elif args.get(date_fields[1]):
 			# if only to date is supplied
-			# //// Neoffice — backport of upstream cceedd669f (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
-			condition += f" and {fieldname} <= {frappe.db.escape(args.get(date_fields[1]))}"
+			condition += f" and {fieldname} <= {to_date}"
 			posting_and_due_date.append(ple[fieldname].lte(args.get(date_fields[1])))
 
 	if args.get("company"):
@@ -2560,17 +2582,11 @@ def get_orders_to_be_billed(
 	if not voucher_type:
 		return []
 
-	# Add cost center condition
-	doc = frappe.get_doc({"doctype": voucher_type})
-	condition = ""
-	if doc and hasattr(doc, "cost_center") and doc.cost_center:
-		condition = " and cost_center='%s'" % cost_center
-
 	# dynamic dimension filters
-	active_dimensions = get_dimensions()[0]
+	condition = ""
+	active_dimensions = get_dimensions(True)[0]
 	for dim in active_dimensions:
 		if filters.get(dim.fieldname):
-			# //// Neoffice — backport of upstream cceedd669f (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 			condition += f" and {dim.fieldname}={frappe.db.escape(filters.get(dim.fieldname))}"
 
 	if party_account_currency == company_currency:
@@ -2699,6 +2715,9 @@ def get_party_details(company, party_type, party, date, cost_center=None):
 	if not frappe.db.exists(party_type, party):
 		frappe.throw(_("{0} {1} does not exist").format(_(party_type), party))
 
+	ptype = "select" if frappe.only_has_select_perm(party_type) else "read"
+	frappe.has_permission(party_type, ptype, party, throw=True)
+
 	party_account = get_party_account(party_type, party, company)
 	account_currency = get_account_currency(party_account)
 	account_balance = (
@@ -2715,7 +2734,7 @@ def get_party_details(company, party_type, party, date, cost_center=None):
 	)
 	if party_type in ["Customer", "Supplier"]:
 		party_bank_account = get_party_bank_account(party_type, party)
-		bank_account = get_default_company_bank_account(company, party_type, party)
+		bank_account = get_default_company_bank_account(company, party_type, party, ignore_permissions=False)
 
 	return {
 		"party_account": party_account,
@@ -2757,6 +2776,7 @@ def get_account_details(account, date, cost_center=None):
 
 @frappe.whitelist()
 def get_company_defaults(company):
+	frappe.has_permission("Company", doc=company, throw=True)
 	fields = ["write_off_account", "exchange_gain_loss_account", "cost_center"]
 	return frappe.get_cached_value("Company", company, fields, as_dict=1)
 
@@ -2799,7 +2819,8 @@ def get_reference_details(
 ):
 	total_amount = outstanding_amount = exchange_rate = account = None
 
-	ref_doc = frappe.get_doc(reference_doctype, reference_name)
+	frappe.has_permission(reference_doctype, "read", reference_name, throw=True)
+	ref_doc = frappe.get_lazy_doc(reference_doctype, reference_name)
 	company_currency = ref_doc.get("company_currency") or erpnext.get_company_currency(ref_doc.company)
 
 	# Only applies for Reverse Payment Entries
@@ -2815,9 +2836,7 @@ def get_reference_details(
 			exchange_rate = get_exchange_rate(party_account_currency, company_currency, ref_doc.posting_date)
 		else:
 			exchange_rate = 1
-			outstanding_amount, total_amount = get_outstanding_on_journal_entry(
-				reference_name, party_type, party
-			)
+		outstanding_amount, total_amount = get_outstanding_on_journal_entry(reference_name, party_type, party)
 
 	elif reference_doctype == "Payment Entry":
 		if reverse_payment_details := frappe.db.get_all(
@@ -2886,23 +2905,30 @@ def get_reference_details(
 
 @frappe.whitelist()
 def get_payment_entry(
-	dt,
-	dn,
-	party_amount=None,
-	bank_account=None,
-	bank_amount=None,
-	party_type=None,
-	payment_type=None,
-	reference_date=None,
-	ignore_permissions=False,
-	created_from_payment_request=False,
+	dt: str,
+	dn: str,
+	party_amount: int | float | None = None,
+	bank_account: str | None = None,
+	bank_amount: int | float | None = None,
+	party_type: str | None = None,
+	payment_type: str | None = None,
+	reference_date: str | date | None = None,
+	created_from_payment_request: bool | None = False,
+	# //// Neoffice — three parameters added (f032a768e2, 2024-09-23): the Swiss payment proposal and the
+	# //// bank import of erpnextswiss create the entry with the bank reference, the mode of payment and the
+	# //// account the money went to. Upstream removed `ignore_permissions` (5289982059, never read):
+	# //// a caller that still passes it (erpnextswiss payment_proposal) must drop it before this merge.
 	reference_no=None, # ////
 	mode_of_payment=None, # ////
 	paid_to=None, # ////
 ):
+	frappe.has_permission("Payment Entry", ptype="create", throw=True)
+
 	if party_amount: # ////
 		party_amount = flt(party_amount) # ////
 	doc = frappe.get_doc(dt, dn)
+	doc.check_permission()
+
 	over_billing_allowance = frappe.db.get_single_value("Accounts Settings", "over_billing_allowance")
 	if dt in ("Sales Order", "Purchase Order") and flt(doc.per_billed, 2) >= (100.0 + over_billing_allowance):
 		frappe.throw(_("Can only make payment against unbilled {0}").format(_(dt)))
@@ -3003,7 +3029,7 @@ def get_payment_entry(
 				pe.append("references", reference)
 		else:
 			if dt == "Dunning":
-				for overdue_payment in doc.overdue_payments:
+				for overdue_payment, outstanding in doc.get_unpaid_overdue_payments():
 					pe.append(
 						"references",
 						{
@@ -3011,21 +3037,23 @@ def get_payment_entry(
 							"reference_name": overdue_payment.sales_invoice,
 							"payment_term": overdue_payment.payment_term,
 							"due_date": overdue_payment.due_date,
-							"total_amount": overdue_payment.outstanding,
-							"outstanding_amount": overdue_payment.outstanding,
-							"allocated_amount": overdue_payment.outstanding,
+							"total_amount": outstanding,
+							"outstanding_amount": outstanding,
+							"allocated_amount": outstanding,
 						},
 					)
 
-				pe.append(
-					"deductions",
-					{
-						"account": doc.income_account,
-						"cost_center": doc.cost_center,
-						"amount": -1 * doc.dunning_amount,
-						"description": _("Interest and/or dunning fee"),
-					},
-				)
+				if (unpaid_dunning_amount := doc.get_unpaid_base_dunning_amount()) > 0:
+					pe.append(
+						"deductions",
+						{
+							"account": doc.income_account,
+							"cost_center": doc.cost_center,
+							"amount": -1 * unpaid_dunning_amount,
+							"description": _("Interest and/or dunning fee"),
+							"dunning": doc.name,
+						},
+					)
 			else:
 				pe.append(
 					"references",
@@ -3056,7 +3084,7 @@ def get_payment_entry(
 				pe, doc, discount_amount, base_total_discount_loss, party_account_currency
 			)
 
-		pe.set_exchange_rate(ref_doc=doc)
+		pe.set_exchange_rate()
 		pe.set_amounts()
 
 	# If PE is created from PR directly, then no need to find open PRs for the references
@@ -3307,8 +3335,10 @@ def set_grand_total_and_outstanding_amount(party_amount, dt, party_account_curre
 			grand_total = doc.rounded_total or doc.grand_total
 		outstanding_amount = doc.outstanding_amount
 	elif dt == "Dunning":
-		grand_total = doc.grand_total
-		outstanding_amount = doc.grand_total
+		# only what is left to collect, the totals on the dunning are the ones it was raised with
+		grand_total = sum(outstanding for _row, outstanding in doc.get_unpaid_overdue_payments())
+		grand_total += doc.get_unpaid_dunning_amount()
+		outstanding_amount = grand_total
 	else:
 		if party_account_currency == doc.company_currency:
 			grand_total = flt(doc.get("base_rounded_total") or doc.get("base_grand_total"))
@@ -3333,13 +3363,11 @@ def set_paid_amount_and_received_amount(
 			company_currency = frappe.get_cached_value("Company", doc.get("company"), "default_currency")
 			if bank and company_currency != bank.account_currency:
 				# doc currency can be different from bank currency
-				posting_date = doc.get("posting_date") or doc.get("transaction_date")
-				conversion_rate = get_exchange_rate(
-					bank.account_currency, party_account_currency, posting_date
-				)
+				conversion_rate = get_exchange_rate(bank.account_currency, party_account_currency)
 				received_amount = paid_amount / conversion_rate
 			else:
-				received_amount = paid_amount * doc.get("conversion_rate", 1)
+				conversion_rate = get_exchange_rate(doc.get("currency", company_currency), company_currency)
+				received_amount = paid_amount * conversion_rate
 
 		# if payment type is pay, then paid amount and received amount are swapped
 		if payment_type == "Pay":
@@ -3622,6 +3650,10 @@ def make_payment_order(source_name, target_doc=None):
 def add_regional_gl_entries(gl_entries, doc):
 	return
 
+
+# //// Neoffice — added endpoint (f032a768e2, 2024-09-23 "last updates"), no upstream equivalent: the tax
+# //// rates of the Item Tax Template set on an account (custom field `taxable_account`). TO REVIEW: no
+# //// caller found in erpnext, neoffice-theme, erpnextswiss, webshop or pos_next on 2026-10-20.
 @frappe.whitelist()
 def get_tax_data(account):
 	item_tax_template = frappe.db.get_value("Account", account, "taxable_account")
@@ -3633,4 +3665,17 @@ def get_tax_data(account):
 			LEFT JOIN `tabItem Tax Template Detail`ittd on itt.name=ittd.parent
 			WHERE ittd.tax_rate > 0
 			AND itt.name = %s""", (item_tax_template), as_dict=True
+	)
+
+
+@frappe.whitelist()
+def get_linked_bank_transactions(payment_entry: str) -> list:
+	frappe.has_permission("Payment Entry", ptype="read", doc=payment_entry, throw=True)
+	return frappe.get_all(
+		"Bank Transaction Payments",
+		filters={
+			"payment_document": "Payment Entry",
+			"payment_entry": payment_entry,
+		},
+		pluck="parent",
 	)

@@ -5,6 +5,8 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
+from frappe.query_builder import Criterion
+from frappe.query_builder.functions import Coalesce, Sum
 from frappe.utils import add_months, flt, fmt_money, get_last_day, getdate
 
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
@@ -98,12 +100,12 @@ class Budget(Document):
 					frappe.throw(_("Budget cannot be assigned against Group Account {0}").format(d.account))
 				elif account_details.company != self.company:
 					frappe.throw(
-						_("Account {0} does not belongs to company {1}").format(d.account, self.company)
+						_("Account {0} does not belong to company {1}").format(d.account, self.company)
 					)
 				elif account_details.report_type != "Profit and Loss":
 					frappe.throw(
 						_(
-							"Budget cannot be assigned against {0}, as it's not an Income or Expense account"
+							"Budget cannot be assigned against {0}, as its Root Type is not of Income or Expense"
 						).format(d.account)
 					)
 
@@ -408,29 +410,49 @@ def get_requested_amount(args):
 	return data[0][0] if data else 0
 
 
-def get_ordered_amount(args):
-	item_code = args.get("item_code")
-	condition = get_other_condition(args, "Purchase Order")
+def get_ordered_amount(params):
+	child = frappe.qb.DocType("Purchase Order Item")
+	parent = frappe.qb.DocType("Purchase Order")
 
-	data = frappe.db.sql(
-		f""" select ifnull(sum(child.amount - child.billed_amt), 0) as amount
-		from `tabPurchase Order Item` child, `tabPurchase Order` parent where
-		parent.name = child.parent and child.item_code = %s and parent.docstatus = 1 and child.amount > child.billed_amt
-		and parent.status != 'Closed' and {condition}""",
-		item_code,
-		as_list=1,
+	conditions = [
+		child.item_code == params.get("item_code"),
+		parent.docstatus == 1,
+		child.amount > child.billed_amt,
+		parent.status != "Closed",
+		child.expense_account == params.expense_account,
+	]
+
+	budget_against_field = params.get("budget_against_field")
+	if budget_against_field and params.get(budget_against_field):
+		conditions.append(child[budget_against_field] == params.get(budget_against_field))
+
+	if params.get("fiscal_year"):
+		start_date, end_date = frappe.get_cached_value(
+			"Fiscal Year", params.get("fiscal_year"), ["year_start_date", "year_end_date"]
+		)
+		conditions.append(parent.transaction_date[str(start_date) : str(end_date)])
+
+	data = (
+		frappe.qb.from_(child)
+		.join(parent)
+		.on(parent.name == child.parent)
+		.select(
+			Coalesce(Sum((child.amount - child.billed_amt) * Coalesce(parent.conversion_rate, 1)), 0).as_(
+				"amount"
+			)
+		)
+		.where(Criterion.all(conditions))
+		.run(as_list=1)
 	)
 
 	return data[0][0] if data else 0
 
 
 def get_other_condition(args, for_doc):
-	# //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 	condition = f"expense_account = {frappe.db.escape(args.expense_account)}"
 	budget_against_field = args.get("budget_against_field")
 
 	if budget_against_field and args.get(budget_against_field):
-		# //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 		condition += f" and child.{budget_against_field} = {frappe.db.escape(args.get(budget_against_field))}"
 
 	if args.get("fiscal_year"):
@@ -439,7 +461,6 @@ def get_other_condition(args, for_doc):
 			"Fiscal Year", args.get("fiscal_year"), ["year_start_date", "year_end_date"]
 		)
 
-	# //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 	condition += f" and parent.{date_field} between {frappe.db.escape(str(start_date))} and {frappe.db.escape(str(end_date))}"
 
 	return condition

@@ -23,7 +23,7 @@ class ProcessPaymentReconciliation(Document):
 		bank_cash_account: DF.Link | None
 		company: DF.Link
 		cost_center: DF.Link | None
-		default_advance_account: DF.Link
+		default_advance_account: DF.Link | None
 		error_log: DF.LongText | None
 		from_invoice_date: DF.Date | None
 		from_payment_date: DF.Date | None
@@ -128,6 +128,7 @@ def is_job_running(job_name: str) -> bool:
 @frappe.whitelist()
 def pause_job_for_doc(docname: str | None = None):
 	if docname:
+		frappe.has_permission("Process Payment Reconciliation", "write", doc=docname, throw=True)
 		frappe.db.set_value("Process Payment Reconciliation", docname, "status", "Paused")
 		log = frappe.db.get_value("Process Payment Reconciliation Log", filters={"process_pr": docname})
 		if log:
@@ -141,6 +142,8 @@ def trigger_job_for_doc(docname: str | None = None):
 	"""
 	if not docname:
 		return
+
+	frappe.has_permission("Process Payment Reconciliation", "write", doc=docname, throw=True)
 
 	if not frappe.db.get_single_value("Accounts Settings", "auto_reconcile_payments"):
 		frappe.throw(
@@ -215,10 +218,7 @@ def trigger_reconciliation_for_queued_docs():
 		fields = ["company", "party_type", "party", "receivable_payable_account", "default_advance_account"]
 
 		def get_filters_as_tuple(fields, doc):
-			filters = ()
-			for x in fields:
-				filters += tuple(doc.get(x))
-			return filters
+			return tuple(doc.get(x) or "" for x in fields)
 
 		for x in all_queued:
 			doc = frappe.get_doc("Process Payment Reconciliation", x)
@@ -412,8 +412,9 @@ def reconcile(doc: None | str = None) -> None:
 					for x in allocations:
 						pr.append("allocation", x)
 
+					skip_ref_details_update_for_pe = check_multi_currency(pr)
 					# reconcile
-					pr.reconcile_allocations(skip_ref_details_update_for_pe=True)
+					pr.reconcile_allocations(skip_ref_details_update_for_pe=skip_ref_details_update_for_pe)
 
 					# If Payment Entry, update details only for newly linked references
 					# This is for performance
@@ -501,6 +502,37 @@ def reconcile(doc: None | str = None) -> None:
 				frappe.db.set_value("Process Payment Reconciliation Log", log, "status", "Reconciled")
 				frappe.db.set_value("Process Payment Reconciliation Log", log, "reconciled", True)
 				frappe.db.set_value("Process Payment Reconciliation", doc, "status", "Completed")
+
+
+def check_multi_currency(pr_doc):
+	GL = frappe.qb.DocType("GL Entry")
+	Account = frappe.qb.DocType("Account")
+
+	def get_account_currency(voucher_type, voucher_no):
+		currency = (
+			frappe.qb.from_(GL)
+			.join(Account)
+			.on(GL.account == Account.name)
+			.select(Account.account_currency)
+			.where(
+				(GL.voucher_type == voucher_type)
+				& (GL.voucher_no == voucher_no)
+				& (Account.account_type.isin(["Payable", "Receivable"]))
+			)
+			.limit(1)
+		).run(as_dict=True)
+
+		return currency[0].account_currency if currency else None
+
+	for allocation in pr_doc.allocation:
+		reference_currency = get_account_currency(allocation.reference_type, allocation.reference_name)
+
+		invoice_currency = get_account_currency(allocation.invoice_type, allocation.invoice_number)
+
+		if reference_currency != invoice_currency:
+			return True
+
+	return False
 
 
 @frappe.whitelist()

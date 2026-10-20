@@ -75,6 +75,9 @@ frappe.ui.form.on("BOM", {
 
 	with_operations: function (frm) {
 		frm.set_df_property("fg_based_operating_cost", "hidden", frm.doc.with_operations ? 1 : 0);
+		if (frm.doc.routing && frm.doc.with_operations && !frm.doc.operations.length) {
+			frm.trigger("routing");
+		}
 	},
 
 	fg_based_operating_cost: function (frm) {
@@ -170,7 +173,9 @@ frappe.ui.form.on("BOM", {
 			frm.set_intro(
 				__("This is a Template BOM and will be used to make the work order for {0} of the item {1}", [
 					`<a class="variants-intro">variants</a>`,
-					`<a href="/app/item/${frm.doc.item}">${frm.doc.item}</a>`,
+					`<a href="${frappe.utils.get_form_link("Item", frm.doc.item)}">${frappe.utils.escape_html(
+						frm.doc.item
+					)}</a>`,
 				]),
 				true
 			);
@@ -192,6 +197,7 @@ frappe.ui.form.on("BOM", {
 						bom_no: frm.doc.name,
 						item: item,
 						qty: data.qty || 0.0,
+						company: frm.doc.company,
 						project: frm.doc.project,
 						variant_items: variant_items,
 						use_multi_level_bom: use_multi_level_bom,
@@ -263,6 +269,7 @@ frappe.ui.form.on("BOM", {
 				reqd: 1,
 				default: 1,
 				onchange: () => {
+					if (!cur_dialog) return;
 					const { quantity, items: rm } = frm.doc;
 					const variant_items_map = rm.reduce((acc, item) => {
 						acc[item.item_code] = item.qty;
@@ -389,10 +396,12 @@ frappe.ui.form.on("BOM", {
 		);
 
 		has_template_rm.forEach((d) => {
+			let bom_qty = dialog.fields_dict.qty?.value || 1;
+
 			dialog.fields_dict.items.df.data.push({
 				item_code: d.item_code,
 				variant_item_code: "",
-				qty: (d.qty / frm.doc.quantity) * (dialog.fields_dict.qty.value || 1),
+				qty: flt(d.qty / frm.doc.quantity) * flt(bom_qty),
 				source_warehouse: d.source_warehouse,
 				operation: d.operation,
 			});
@@ -434,7 +443,11 @@ frappe.ui.form.on("BOM", {
 	},
 
 	routing(frm) {
-		if (frm.doc.routing) {
+		// Refetch operations whenever the routing is (re)selected, so that
+		// changing the routing - e.g. on a new BOM version copied from another
+		// BOM - replaces the operations with those of the newly selected routing
+		// instead of keeping the old ones.
+		if (frm.doc.routing && frm.doc.with_operations) {
 			frappe.call({
 				doc: frm.doc,
 				method: "get_routing",
@@ -551,8 +564,6 @@ var get_bom_material_detail = function (doc, cdt, cdn, scrap_items) {
 				do_not_explode: d.do_not_explode,
 			},
 			callback: function (r) {
-				d = locals[cdt][cdn];
-
 				$.extend(d, r.message);
 				refresh_field("items");
 				refresh_field("scrap_items");
@@ -758,6 +769,8 @@ frappe.ui.form.on("BOM Item", "sourced_by_supplier", function (frm, cdt, cdn) {
 	if (d.sourced_by_supplier) {
 		d.rate = 0;
 		refresh_field("rate", d.name, d.parentfield);
+	} else {
+		get_bom_material_detail(frm.doc, cdt, cdn, false);
 	}
 });
 

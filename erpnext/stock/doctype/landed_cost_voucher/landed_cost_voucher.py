@@ -10,8 +10,13 @@ from frappe.query_builder.custom import ConstantColumn
 from frappe.utils import cint, flt
 
 import erpnext
+from erpnext import is_perpetual_inventory_enabled
 from erpnext.controllers.taxes_and_totals import init_landed_taxes_and_totals
 from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
+
+
+class IncorrectCompanyValidationError(frappe.ValidationError):
+	pass
 
 
 class LandedCostVoucher(Document):
@@ -66,6 +71,7 @@ class LandedCostVoucher(Document):
 		self.check_mandatory()
 		self.validate_receipt_documents()
 		self.validate_line_items()
+		self.validate_expense_accounts()
 		init_landed_taxes_and_totals(self)
 		self.set_total_taxes_and_charges()
 		if not self.get("items"):
@@ -101,10 +107,27 @@ class LandedCostVoucher(Document):
 		receipt_documents = []
 
 		for d in self.get("purchase_receipts"):
-			docstatus = frappe.db.get_value(d.receipt_document_type, d.receipt_document, "docstatus")
+			docstatus, company = frappe.get_cached_value(
+				d.receipt_document_type, d.receipt_document, ["docstatus", "company"]
+			)
 			if docstatus != 1:
 				msg = f"Row {d.idx}: {d.receipt_document_type} {frappe.bold(d.receipt_document)} must be submitted"
 				frappe.throw(_(msg), title=_("Invalid Document"))
+
+			if company != self.company:
+				frappe.throw(
+					_(
+						"Row {0}: {1} {2} is linked to company {3}. Please select a document belonging to company {4}."
+					).format(
+						d.idx,
+						d.receipt_document_type,
+						frappe.bold(d.receipt_document),
+						frappe.bold(company),
+						frappe.bold(self.company),
+					),
+					title=_("Incorrect Company"),
+					exc=IncorrectCompanyValidationError,
+				)
 
 			if d.receipt_document_type == "Purchase Invoice":
 				update_stock = frappe.db.get_value(
@@ -137,38 +160,59 @@ class LandedCostVoucher(Document):
 					_("Row {0}: Cost center is required for an item {1}").format(item.idx, item.item_code)
 				)
 
+	def validate_expense_accounts(self):
+		if not is_perpetual_inventory_enabled(self.company):
+			return
+
+		for t in self.taxes:
+			company = frappe.get_cached_value("Account", t.expense_account, "company")
+
+			if company != self.company:
+				frappe.throw(
+					_(
+						"Row {0}: Expense Account {1} is linked to company {2}. Please select an account belonging to company {3}."
+					).format(
+						t.idx,
+						frappe.bold(t.expense_account),
+						frappe.bold(company),
+						frappe.bold(self.company),
+					),
+					title=_("Incorrect Account"),
+					exc=IncorrectCompanyValidationError,
+				)
+
 	def set_total_taxes_and_charges(self):
 		self.total_taxes_and_charges = sum(flt(d.base_amount) for d in self.get("taxes"))
 
 	def set_applicable_charges_on_item(self):
 		if self.get("taxes") and self.distribute_charges_based_on != "Distribute Manually":
-			total_item_cost = 0.0
+			items = self.get("items")
 			total_charges = 0.0
-			item_count = 0
 			based_on_field = frappe.scrub(self.distribute_charges_based_on)
 
-			for item in self.get("items"):
-				total_item_cost += item.get(based_on_field)
+			total_item_cost = sum(flt(item.get(based_on_field)) for item in items)
+			if items:
+				total_item_cost = flt(total_item_cost, items[0].precision(based_on_field))
 
-			for item in self.get("items"):
-				if not total_item_cost and not item.get(based_on_field):
-					frappe.throw(
-						_(
-							"It's not possible to distribute charges equally when total amount is zero, please set 'Distribute Charges Based On' as 'Quantity'"
-						)
+			if not total_item_cost:
+				frappe.throw(
+					_("Total {0} of all items is zero. Set 'Distribute Charges Based On' to {1}.").format(
+						self.distribute_charges_based_on,
+						_("Qty") if based_on_field == "amount" else _("Amount"),
 					)
+				)
 
+			precision = items[0].precision("applicable_charges")
+			for item in items:
 				item.applicable_charges = flt(
 					flt(item.get(based_on_field))
 					* (flt(self.total_taxes_and_charges) / flt(total_item_cost)),
-					item.precision("applicable_charges"),
+					precision,
 				)
 				total_charges += item.applicable_charges
-				item_count += 1
 
-			if total_charges != self.total_taxes_and_charges:
-				diff = self.total_taxes_and_charges - total_charges
-				self.get("items")[item_count - 1].applicable_charges += diff
+			diff = flt(self.total_taxes_and_charges - total_charges, precision)
+			absorb_rounding_difference(items, diff, precision, self.total_taxes_and_charges)
 
 	def validate_applicable_charges_for_item(self):
 		if self.distribute_charges_based_on == "Distribute Manually" and len(self.taxes) > 1:
@@ -246,7 +290,7 @@ class LandedCostVoucher(Document):
 			# update stock & gl entries for cancelled state of PR
 			doc.docstatus = 2
 			doc.update_stock_ledger(allow_negative_stock=True, via_landed_cost_voucher=True)
-			doc.make_gl_entries_on_cancel()
+			doc.make_gl_entries_on_cancel(from_repost=True)
 
 			# update stock & gl entries for submit state of PR
 			doc.docstatus = 1
@@ -320,8 +364,8 @@ def get_pr_items(purchase_receipt):
 			pr_item.item_code,
 			pr_item.description,
 			pr_item.qty,
-			pr_item.base_rate,
-			pr_item.base_amount,
+			pr_item.base_net_rate.as_("base_rate"),
+			pr_item.base_net_amount.as_("base_amount"),
 			pr_item.name,
 			pr_item.cost_center,
 			pr_item.is_fixed_asset,
@@ -335,3 +379,15 @@ def get_pr_items(purchase_receipt):
 		.orderby(pr_item.idx)
 		.run(as_dict=True)
 	)
+
+
+def absorb_rounding_difference(items, diff, precision, total):
+	sign = -1 if flt(total) < 0 else 1
+	for item in reversed(items):
+		if not diff:
+			break
+
+		share = flt(item.applicable_charges) * sign
+		adjustment = diff if diff * sign > 0 else sign * max(diff * sign, -share)
+		item.applicable_charges = flt(flt(item.applicable_charges) + adjustment, precision)
+		diff = flt(diff - adjustment, precision)

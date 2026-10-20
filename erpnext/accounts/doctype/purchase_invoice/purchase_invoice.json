@@ -314,7 +314,7 @@
    "fieldname": "posting_date",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Date",
+   "label": "Posting Date",
    "oldfieldname": "posting_date",
    "oldfieldtype": "Date",
    "print_hide": 1,
@@ -354,6 +354,7 @@
   {
    "collapsible": 1,
    "collapsible_depends_on": "eval:doc.on_hold",
+   "depends_on": "eval:doc.on_hold",
    "fieldname": "sb_14",
    "fieldtype": "Section Break",
    "label": "Hold Invoice"
@@ -384,7 +385,7 @@
   },
   {
    "collapsible": 1,
-   "collapsible_depends_on": "bill_no",
+   "collapsible_depends_on": "posting_date",
    "fieldname": "supplier_invoice_details",
    "fieldtype": "Section Break",
    "label": "Supplier Invoice"
@@ -503,6 +504,7 @@
   },
   {
    "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.currency && doc.currency != erpnext.get_currency(doc.company)",
    "fieldname": "currency_and_price_list",
    "fieldtype": "Section Break",
    "label": "Currency and Price List",
@@ -515,7 +517,8 @@
    "oldfieldname": "currency",
    "oldfieldtype": "Select",
    "options": "Currency",
-   "print_hide": 1
+   "print_hide": 1,
+   "read_only_depends_on": "eval:doc.inter_company_invoice_reference"
   },
   {
    "fieldname": "conversion_rate",
@@ -605,6 +608,7 @@
   },
   {
    "default": "0",
+   "depends_on": "eval:doc.items.every((item) => !item.pr_detail)",
    "fieldname": "update_stock",
    "fieldtype": "Check",
    "label": "Update Stock",
@@ -1398,8 +1402,10 @@
    "fetch_from": "supplier.represents_company",
    "fieldname": "represents_company",
    "fieldtype": "Link",
+   "ignore_user_permissions": 1,
    "label": "Represents Company",
-   "options": "Company"
+   "options": "Company",
+   "read_only": 1
   },
   {
    "depends_on": "eval:doc.update_stock && doc.is_internal_supplier",
@@ -1617,6 +1623,7 @@
    "fieldname": "use_transaction_date_exchange_rate",
    "fieldtype": "Check",
    "label": "Use Transaction Date Exchange Rate",
+   "no_copy": 1,
    "read_only": 1
   },
   {
@@ -1661,7 +1668,7 @@
  "idx": 204,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-08-04 19:19:11.380664",
+ "modified": "2026-10-13 12:12:32.911258",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice",
@@ -1714,6 +1721,18 @@
    "read": 1,
    "role": "Accounts Manager",
    "write": 1
+  },
+  {
+   "role": "Manufacturing Manager",
+   "select": 1
+  },
+  {
+   "role": "Quality Manager",
+   "select": 1
+  },
+  {
+   "role": "Stock Manager",
+   "select": 1
   }
  ],
  "row_format": "Dynamic",

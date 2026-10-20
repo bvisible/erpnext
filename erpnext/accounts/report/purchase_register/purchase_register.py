@@ -406,7 +406,15 @@ def get_invoices(filters, additional_query_columns):
 	if filters.get("supplier"):
 		query = query.where(pi.supplier == filters.supplier)
 	if filters.get("supplier_group"):
-		query = query.where(pi.supplier_group == filters.supplier_group)
+		# read the group from the supplier master, to match the Supplier Group column
+		supplier = frappe.qb.DocType("Supplier")
+		query = query.where(
+			pi.supplier.isin(
+				frappe.qb.from_(supplier)
+				.select(supplier.name)
+				.where(supplier.supplier_group == filters.supplier_group)
+			)
+		)
 
 	query = get_conditions(filters, query, "Purchase Invoice")
 
@@ -501,7 +509,7 @@ def get_invoice_tax_map(invoice_list, invoice_expense_map, expense_accounts, inc
 		else sum(base_tax_amount_after_discount_amount) * -1 end as tax_amount
 		from `tabPurchase Taxes and Charges`
 		where parent in (%s) and category in ('Total', 'Valuation and Total')
-			and base_tax_amount_after_discount_amount != 0
+			and base_tax_amount_after_discount_amount != 0 and parenttype='Purchase Invoice'
 		group by parent, account_head, add_deduct_tax
 	"""
 		% ", ".join(["%s"] * len(invoice_list)),

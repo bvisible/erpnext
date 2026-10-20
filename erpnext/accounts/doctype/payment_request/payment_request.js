@@ -33,6 +33,8 @@ frappe.ui.form.on("Payment Request", "onload", function (frm, dt, dn) {
 });
 
 frappe.ui.form.on("Payment Request", "refresh", function (frm) {
+	let sending_email = false;
+
 	if (
 		frm.doc.payment_request_type == "Inward" &&
 		frm.doc.payment_channel !== "Phone" &&
@@ -40,102 +42,112 @@ frappe.ui.form.on("Payment Request", "refresh", function (frm) {
 		!frm.doc.__islocal &&
 		frm.doc.docstatus == 1
 	) {
-		//// Neoffice — the whole "Resend Payment Email" button is rewritten (b83a0c8847 +
-		//// 2483c36bc4, 2026-03-15; 132320ee4d, 2026-05-30). Upstream fires
-		//// resend_payment_email(docname) straight away and just says "Message Sent".
-		//// Ours: (1) renames the button "Send by Email"; (2) calls get_rendered_message so the dialog
-		//// shows the message with its Jinja placeholders already resolved and the amount formatted
-		//// with its currency (users were reading the raw template and "22.9" instead of "22.90 CHF");
-		//// (3) lets the sender edit recipients / subject / message before sending; (4) lists the real
-		//// attachments — reference document + linked delivery note(s) — by calling
-		//// neoffice_theme.override_doctype.payment_request.get_payment_email_attachments, with the
-		//// reference document shown immediately as a fallback when neoffice_theme is absent.
-		//// Cross-app dependency: this file (erpnext) calls into neoffice_theme.
-		//// TO REVIEW at the merge: the block is mis-nested — primary_action_label / primary_action sit
-		//// INSIDE the fields array literal, and the closing braces are shifted accordingly. It works
-		//// but no formatter will keep it; rewrite the dialog rather than resolve it line by line.
-		//// Our block runs to the closing `});` of this add_custom_button call.
-		frm.add_custom_button(__('Send by Email'), function(){
-			// Render the message template server-side before showing
-			// Render message server-side via get_message
+		//// Neoffice — upstream's "Resend Payment Email" button (which re-sends the stored mail as it is) is
+		//// replaced by a "Send by Email" dialog (b83a0c8847 + 2483c36bc4, 2026-03-15; 132320ee4d, 2026-05-30):
+		//// (1) the message is rendered on the server (get_rendered_message), so the dialog shows its Jinja
+		//// placeholders resolved and the amount with its currency ("22.90 CHF", not "22.9"); (2) the sender
+		//// may edit recipients, subject and message; (3) the attachments listed are the real ones, from
+		//// neoffice_theme (get_payment_email_attachments), the reference document shown meanwhile and when
+		//// neoffice_theme is absent; (4) the mail leaves through send_edited_payment_email (payment_request.py),
+		//// which keeps upstream's gates and asks the right to write the request. Upstream's `sending_email`
+		//// flag guards against a double send. Rewritten at the merge with v15.123.0: same behaviour, the old
+		//// block was mis-indented. Cross-app dependency: this file calls into neoffice_theme.
+		frm.add_custom_button(__("Send by Email"), function () {
 			frappe.call({
-				method: 'erpnext.accounts.doctype.payment_request.payment_request.get_rendered_message',
+				method: "erpnext.accounts.doctype.payment_request.payment_request.get_rendered_message",
 				args: { docname: frm.doc.name },
-				callback: function(r) {
-					let rendered_message = r.message || frm.doc.message || '';
+				callback: function (r) {
+					const rendered_message = r.message || frm.doc.message || "";
+					const reference =
+						"📎 " + (frm.doc.reference_name || "") + " (" + __(frm.doc.reference_doctype || "") + ")";
 
-					let d = new frappe.ui.Dialog({
-						title: __('Send Payment Request by Email'),
-						size: 'large',
+					const d = new frappe.ui.Dialog({
+						title: __("Send Payment Request by Email"),
+						size: "large",
 						fields: [
 							{
-								fieldname: 'recipients',
-								fieldtype: 'Data',
-								label: __('To'),
+								fieldname: "recipients",
+								fieldtype: "Data",
+								label: __("To"),
 								default: frm.doc.email_to,
 								reqd: 1,
 							},
 							{
-								fieldname: 'subject',
-								fieldtype: 'Data',
-								label: __('Subject'),
+								fieldname: "subject",
+								fieldtype: "Data",
+								label: __("Subject"),
 								default: frm.doc.subject,
 								reqd: 1,
 							},
 							{
-								fieldname: 'message',
-								fieldtype: 'Text Editor',
-								label: __('Message'),
+								fieldname: "message",
+								fieldtype: "Text Editor",
+								label: __("Message"),
 								default: rendered_message,
 							},
 							{
-								fieldname: 'attachments_info',
-								fieldtype: 'HTML',
-								options: '<div style="margin-top:10px; padding:10px; background:#f5f5f5; border-radius:4px; font-size:12px;">'
-									+ '<strong>' + __('Attachments') + ' :</strong><br>'
-									+ '<span class="pr-email-attachments">📎 ' + (frm.doc.reference_name || '') + ' (' + __(frm.doc.reference_doctype || '') + ')</span>'
-									+ '</div>',
+								fieldname: "attachments_info",
+								fieldtype: "HTML",
+								options:
+									'<div style="margin-top:10px; padding:10px; background:#f5f5f5; border-radius:4px; font-size:12px;">' +
+									"<strong>" +
+									__("Attachments") +
+									" :</strong><br>" +
+									'<span class="pr-email-attachments">' +
+									frappe.utils.escape_html(reference) +
+									"</span></div>",
 							},
 						],
-				primary_action_label: __('Send'),
-				primary_action: function(values) {
-					d.hide();
-					frappe.call({
-						method: "erpnext.accounts.doctype.payment_request.payment_request.resend_payment_email",
-						args: {
-							docname: frm.doc.name,
-							recipients: values.recipients,
-							subject: values.subject,
-							message: values.message,
+						primary_action_label: __("Send"),
+						primary_action: function (values) {
+							if (sending_email) {
+								frappe.show_alert({ message: __("Sending Email"), indicator: "blue" });
+								return;
+							}
+							sending_email = true;
+							d.hide();
+							frappe.call({
+								method: "erpnext.accounts.doctype.payment_request.payment_request.send_edited_payment_email",
+								args: {
+									docname: frm.doc.name,
+									recipients: values.recipients,
+									subject: values.subject,
+									message: values.message,
+								},
+								freeze: true,
+								freeze_message: __("Sending"),
+								callback: function (r) {
+									if (!r.exc) {
+										frappe.msgprint(__("Message Sent"));
+									}
+								},
+								always: function () {
+									sending_email = false;
+								},
+							});
 						},
-						freeze: true,
-						freeze_message: __("Sending"),
-						callback: function (r) {
-							if (!r.exc) {
-								frappe.msgprint(__("Message Sent"));
+					});
+					d.show();
+
+					// the real attachment list: the request and its reference document
+					frappe.call({
+						method: "neoffice_theme.override_doctype.payment_request.get_payment_email_attachments",
+						args: { docname: frm.doc.name },
+						callback: function (ar) {
+							if (ar.message && ar.message.length) {
+								d.$wrapper.find(".pr-email-attachments").html(
+									ar.message
+										.map(function (a) {
+											return frappe.utils.escape_html(
+												"📎 " + (a.name || "") + " (" + __(a.doctype || "") + ")"
+											);
+										})
+										.join("<br>")
+								);
 							}
 						},
 					});
 				},
-			});
-			d.show();
-
-			// Neoffice: replace the placeholder with the real attachment list
-			// (reference document + linked delivery note(s)).
-			frappe.call({
-				method: 'neoffice_theme.override_doctype.payment_request.get_payment_email_attachments',
-				args: { docname: frm.doc.name },
-				callback: function (ar) {
-					if (ar.message && ar.message.length) {
-						d.$wrapper.find('.pr-email-attachments').html(
-							ar.message.map(function (a) {
-								return '📎 ' + (a.name || '') + ' (' + __(a.doctype || '') + ')';
-							}).join('<br>')
-						);
-					}
-				},
-			});
-				}
 			});
 		});
 	}

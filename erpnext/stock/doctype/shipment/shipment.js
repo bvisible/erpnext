@@ -174,7 +174,10 @@ frappe.ui.form.on("Shipment", {
 							__("Email or Phone/Mobile of the Contact are mandatory to continue.") +
 								"</br>" +
 								__("Please set Email/Phone for the contact") +
-								` <a href='/app/contact/${contact_name}'>${contact_name}</a>`
+								` <a href="${frappe.utils.get_form_link(
+									"Contact",
+									contact_name
+								)}">${frappe.utils.escape_html(contact_name)}</a>`
 						);
 					}
 					let contact_display = r.message.contact_display;
@@ -261,9 +264,9 @@ frappe.ui.form.on("Shipment", {
 		frappe.db.get_value(
 			"User",
 			{ name: frappe.session.user },
-			["full_name", "last_name", "email", "phone", "mobile_no"],
+			["full_name", "email", "phone", "mobile_no"],
 			(r) => {
-				if (!(r.last_name && r.email && (r.phone || r.mobile_no))) {
+				if (!(r.full_name && r.email && (r.phone || r.mobile_no))) {
 					if (delivery_type == "Delivery") {
 						frm.set_value("delivery_company", "");
 						frm.set_value("delivery_contact", "");
@@ -272,9 +275,9 @@ frappe.ui.form.on("Shipment", {
 						frm.set_value("pickup_contact", "");
 					}
 					frappe.throw(
-						__("Last Name, Email or Phone/Mobile of the user are mandatory to continue.") +
+						__("Full Name, Email or Phone/Mobile of the user are mandatory to continue.") +
 							"</br>" +
-							__("Please first set Last Name, Email and Phone for the user") +
+							__("Please first set Full Name, Email and Phone for the user") +
 							` <a href="/app/user/${frappe.session.user}">${frappe.session.user}</a>`
 					);
 				}

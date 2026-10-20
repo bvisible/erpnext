@@ -11,13 +11,14 @@ from frappe.utils.data import nowtime
 import erpnext
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import get_dimensions
 from erpnext.accounts.doctype.budget.budget import validate_expense_against_budget
-from erpnext.accounts.party import get_party_details
-from erpnext.buying.utils import update_last_purchase_rate, validate_for_items
-from erpnext.controllers.accounts_controller import get_taxes_and_charges
+from erpnext.accounts.party import _get_party_details
+from erpnext.buying.utils import update_last_purchase_rate, validate_duplicate_items, validate_for_items
+from erpnext.controllers.accounts_controller import _get_taxes_and_charges
 from erpnext.controllers.sales_and_purchase_return import get_rate_for_return
 from erpnext.controllers.subcontracting_controller import SubcontractingController
+from erpnext.setup.utils import get_exchange_rate
 from erpnext.stock.get_item_details import get_conversion_factor
-from erpnext.stock.utils import get_incoming_rate
+from erpnext.stock.utils import _get_incoming_rate
 
 
 class QtyMismatchError(ValidationError):
@@ -47,6 +48,8 @@ class BuyingController(SubcontractingController):
 
 		if self.doctype == "Purchase Invoice":
 			self.validate_purchase_receipt_if_update_stock()
+			if not self.update_stock:
+				validate_duplicate_items(self)
 
 		if self.doctype == "Purchase Receipt" or (self.doctype == "Purchase Invoice" and self.update_stock):
 			# self.validate_purchase_return()
@@ -136,7 +139,7 @@ class BuyingController(SubcontractingController):
 			for row in self.items:
 				if row.rate <= 0:
 					# override the rate with valuation rate
-					row.rate = get_incoming_rate(
+					row.rate = _get_incoming_rate(
 						{
 							"item_code": row.item_code,
 							"warehouse": row.warehouse,
@@ -165,7 +168,7 @@ class BuyingController(SubcontractingController):
 		# set contact and address details for supplier, if they are not mentioned
 		if getattr(self, "supplier", None):
 			self.update_if_missing(
-				get_party_details(
+				_get_party_details(
 					self.supplier,
 					party_type="Supplier",
 					doctype=self.doctype,
@@ -183,9 +186,23 @@ class BuyingController(SubcontractingController):
 
 		if self.meta.get_field("taxes"):
 			if self.get("taxes_and_charges") and not self.get("taxes") and not for_validate:
-				taxes = get_taxes_and_charges("Purchase Taxes and Charges Template", self.taxes_and_charges)
+				taxes = _get_taxes_and_charges("Purchase Taxes and Charges Template", self.taxes_and_charges)
 				for tax in taxes:
 					self.append("taxes", tax)
+
+	def set_transaction_date_exchange_rate(self):
+		"""Replace the exchange rate mapped from a Purchase Order with the posting date rate."""
+		if not (
+			self.currency
+			and frappe.db.get_single_value("Buying Settings", "use_transaction_date_exchange_rate")
+			and not any(item.get("purchase_receipt") or item.get("purchase_invoice") for item in self.items)
+		):
+			return
+
+		self.use_transaction_date_exchange_rate = 1
+		self.conversion_rate = get_exchange_rate(
+			self.currency, self.company_currency, self.posting_date, "for_buying"
+		)
 
 	def set_supplier_from_item_default(self):
 		if self.meta.get_field("supplier") and not self.supplier:
@@ -327,7 +344,7 @@ class BuyingController(SubcontractingController):
 				last_item_idx = d.idx
 
 		total_valuation_amount = sum(
-			flt(d.base_tax_amount_after_discount_amount)
+			flt(d.base_tax_amount_after_discount_amount) * (-1 if d.get("add_deduct_tax") == "Deduct" else 1)
 			for d in self.get("taxes")
 			if d.category in ["Valuation", "Valuation and Total"]
 		)
@@ -358,7 +375,7 @@ class BuyingController(SubcontractingController):
 					)
 					valuation_amount_adjustment -= item.item_tax_amount
 
-				self.round_floats_in(item)
+				self.round_floats_in(item, do_not_round_fields=["conversion_factor"])
 				if flt(item.conversion_factor) == 0.0:
 					item.conversion_factor = (
 						get_conversion_factor(item.item_code, item.uom).get("conversion_factor") or 1.0
@@ -366,7 +383,7 @@ class BuyingController(SubcontractingController):
 
 				net_rate = item.base_net_amount
 				if item.sales_incoming_rate:  # for internal transfer
-					net_rate = item.qty * item.sales_incoming_rate
+					net_rate = self.get_internal_transfer_qty(item) * item.sales_incoming_rate
 
 				if (
 					not net_rate
@@ -377,9 +394,11 @@ class BuyingController(SubcontractingController):
 				):
 					net_rate = item.rejected_qty * item.net_rate
 
-				qty_in_stock_uom = flt(item.qty * item.conversion_factor)
-				if not qty_in_stock_uom and item.get("rejected_qty"):
-					qty_in_stock_uom = flt(item.rejected_qty * item.conversion_factor)
+				qty_in_stock_uom = (
+					get_stock_qty(item, item.qty)
+					or get_stock_qty(item, item.rejected_qty)
+					or flt(item.qty) * flt(item.conversion_factor)
+				)
 
 				if self.get("is_old_subcontracting_flow"):
 					item.rm_supp_cost = self.get_supplied_items_cost(item.name, reset_outgoing_rate)
@@ -459,7 +478,7 @@ class BuyingController(SubcontractingController):
 				if not posting_time:
 					posting_time = nowtime()
 
-				outgoing_rate = get_incoming_rate(
+				outgoing_rate = _get_incoming_rate(
 					{
 						"item_code": d.item_code,
 						"warehouse": d.get("from_warehouse"),
@@ -578,6 +597,26 @@ class BuyingController(SubcontractingController):
 					# //// Neoffice — upstream injects the raw English DocType name into a translated sentence; we translate the name with _().
 					frappe.throw(_("{0} {1} is {2}").format(_(ref_doctype), d.get(ref_fieldname), _(status)))
 
+	def get_internal_transfer_qty(self, row) -> float:
+		if flt(row.qty) or not self.is_internal_receipt():
+			return flt(row.qty)
+
+		return flt(row.rejected_qty)
+
+	def is_internal_receipt(self) -> bool:
+		return self.doctype == "Purchase Receipt" and self.is_internal_transfer()
+
+	def get_source_warehouse_qty(self, row, accepted_qty):
+		if not (self.is_internal_receipt() and flt(row.rejected_qty)):
+			return accepted_qty
+
+		if row.get("serial_and_batch_bundle") or row.get("rejected_serial_and_batch_bundle"):
+			return accepted_qty
+
+		rejected_qty = flt(flt(row.rejected_qty) * flt(row.conversion_factor), row.precision("stock_qty"))
+
+		return flt(accepted_qty + rejected_qty, row.precision("stock_qty"))
+
 	def update_stock_ledger(self, allow_negative_stock=False, via_landed_cost_voucher=False):
 		self.update_ordered_and_reserved_qty()
 
@@ -589,9 +628,10 @@ class BuyingController(SubcontractingController):
 				continue
 
 			if d.warehouse:
-				pr_qty = flt(flt(d.qty) * flt(d.conversion_factor), d.precision("stock_qty"))
+				pr_qty = get_stock_qty(d, d.qty)
+				source_qty = self.get_source_warehouse_qty(d, pr_qty)
 
-				if pr_qty:
+				if pr_qty or source_qty:
 					if d.from_warehouse and (
 						(not cint(self.is_return) and self.docstatus == 1)
 						or (cint(self.is_return) and self.docstatus == 2)
@@ -607,7 +647,7 @@ class BuyingController(SubcontractingController):
 						from_warehouse_sle = self.get_sl_entries(
 							d,
 							{
-								"actual_qty": -1 * pr_qty,
+								"actual_qty": -1 * source_qty,
 								"warehouse": d.from_warehouse,
 								"outgoing_rate": d.rate,
 								"recalculate_rate": 1,
@@ -632,7 +672,9 @@ class BuyingController(SubcontractingController):
 								or self.is_return
 								or (self.is_internal_transfer() and self.docstatus == 2)
 								else self.get_package_for_target_warehouse(
-									d, type_of_transaction=type_of_transaction
+									d,
+									type_of_transaction=type_of_transaction,
+									via_landed_cost_voucher=via_landed_cost_voucher,
 								)
 							),
 						},
@@ -678,7 +720,7 @@ class BuyingController(SubcontractingController):
 						from_warehouse_sle = self.get_sl_entries(
 							d,
 							{
-								"actual_qty": -1 * pr_qty,
+								"actual_qty": -1 * source_qty,
 								"warehouse": d.from_warehouse,
 								"recalculate_rate": 1,
 								"serial_and_batch_bundle": (
@@ -701,9 +743,7 @@ class BuyingController(SubcontractingController):
 						d,
 						{
 							"warehouse": d.rejected_warehouse,
-							"actual_qty": flt(
-								flt(d.rejected_qty) * flt(d.conversion_factor), d.precision("stock_qty")
-							),
+							"actual_qty": get_stock_qty(d, d.rejected_qty),
 							"incoming_rate": valuation_rate_for_rejected_item if not self.is_return else 0.0,
 							"outgoing_rate": valuation_rate_for_rejected_item if self.is_return else 0.0,
 							"serial_and_batch_bundle": d.rejected_serial_and_batch_bundle,
@@ -720,7 +760,22 @@ class BuyingController(SubcontractingController):
 			via_landed_cost_voucher=via_landed_cost_voucher,
 		)
 
-	def get_package_for_target_warehouse(self, item, warehouse=None, type_of_transaction=None) -> str:
+	def get_package_for_target_warehouse(
+		self, item, warehouse=None, type_of_transaction=None, via_landed_cost_voucher=None
+	) -> str:
+		if via_landed_cost_voucher and item.get("warehouse"):
+			if sabb := frappe.db.get_value(
+				"Serial and Batch Bundle",
+				{
+					"voucher_detail_no": item.name,
+					"warehouse": item.get("warehouse"),
+					"docstatus": 1,
+					"is_cancelled": 0,
+				},
+				"name",
+			):
+				return sabb
+
 		if not item.serial_and_batch_bundle:
 			return ""
 
@@ -744,7 +799,7 @@ class BuyingController(SubcontractingController):
 			if po and po_item_rows:
 				po_obj = frappe.get_doc("Purchase Order", po)
 
-				if po_obj.status in ["Closed", "Cancelled"]:
+				if po_obj.status == "Cancelled" or (po_obj.status == "Closed" and not self.get("is_return")):
 					frappe.throw(
 						_("{0} {1} is cancelled or closed").format(_("Purchase Order"), po),
 						frappe.InvalidStatusError,
@@ -761,11 +816,7 @@ class BuyingController(SubcontractingController):
 		if self.doctype in ["Purchase Receipt", "Purchase Invoice"]:
 			self.process_fixed_asset()
 
-		if self.doctype in [
-			"Purchase Order",
-			"Purchase Receipt",
-			"Purchase Invoice",
-		] and not frappe.db.get_single_value("Buying Settings", "disable_last_purchase_rate"):
+		if self.doctype in ["Purchase Order", "Purchase Receipt", "Purchase Invoice"]:
 			update_last_purchase_rate(self, is_submit=1)
 
 	def on_cancel(self):
@@ -774,11 +825,7 @@ class BuyingController(SubcontractingController):
 		if self.get("is_return"):
 			return
 
-		if self.doctype in [
-			"Purchase Order",
-			"Purchase Receipt",
-			"Purchase Invoice",
-		] and not frappe.db.get_single_value("Buying Settings", "disable_last_purchase_rate"):
+		if self.doctype in ["Purchase Order", "Purchase Receipt", "Purchase Invoice"]:
 			update_last_purchase_rate(self, is_submit=0)
 
 		if self.doctype in ["Purchase Receipt", "Purchase Invoice"]:
@@ -1054,3 +1101,8 @@ def validate_item_type(doc, fieldname, message):
 @erpnext.allow_regional
 def update_regional_item_valuation_rate(doc):
 	pass
+
+
+def get_stock_qty(row, qty) -> float:
+	"""Qty of a row in the stock UOM, rounded as the stock ledger posts it."""
+	return flt(flt(qty) * flt(row.conversion_factor), row.precision("stock_qty"))

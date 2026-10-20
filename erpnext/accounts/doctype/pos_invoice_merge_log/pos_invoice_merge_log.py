@@ -146,6 +146,7 @@ class POSInvoiceMergeLog(Document):
 
 		sales_invoice.is_consolidated = 1
 		sales_invoice.set_posting_time = 1
+		sales_invoice.update_stock = 1
 
 		if not sales_invoice.posting_date:
 			sales_invoice.posting_date = getdate(self.posting_date)
@@ -174,6 +175,7 @@ class POSInvoiceMergeLog(Document):
 
 			credit_note.is_consolidated = 1
 			credit_note.set_posting_time = 1
+			credit_note.update_stock = 1
 			credit_note.posting_date = getdate(self.posting_date)
 			credit_note.posting_time = get_time(self.posting_time)
 			# TODO: return could be against multiple sales invoice which could also have been consolidated?
@@ -215,6 +217,8 @@ class POSInvoiceMergeLog(Document):
 
 		loyalty_amount_sum, loyalty_points_sum, idx = 0, 0, 1
 
+		reversed_rows = get_reversed_rows([doc.return_against for doc in data if doc.is_return])
+
 		for doc in data:
 			map_doc(doc, invoice, table_map={"doctype": invoice.doctype})
 
@@ -237,9 +241,13 @@ class POSInvoiceMergeLog(Document):
 				si_item.pos_invoice = doc.name
 				si_item.pos_invoice_item = item.name
 				if doc.is_return:
-					si_item.sales_invoice_item = get_sales_invoice_item(
-						doc.return_against, item.pos_invoice_item
-					)
+					reversed_row = reversed_rows.get(item.pos_invoice_item) or frappe._dict()
+					si_item.sales_invoice_item = reversed_row.get("name")
+					# quote the rate of the row being reversed: rounding an invoice-level discount
+					# can leave a return's net rate a minor unit above the sale's, and
+					# validate_returned_items refuses a return priced above its original
+					if si_item.sales_invoice_item:
+						si_item.rate = reversed_row.rate
 				if item.serial_and_batch_bundle:
 					si_item.serial_and_batch_bundle = item.serial_and_batch_bundle
 				items.append(si_item)
@@ -435,6 +443,29 @@ def update_item_wise_tax_detail(consolidate_tax_row, tax_row):
 			consolidated_tax_detail.update({item_code: [tax_data[0], tax_data[1]]})
 
 	consolidate_tax_row.item_wise_tax_detail = json.dumps(consolidated_tax_detail, separators=(",", ":"))
+
+
+def get_reversed_rows(return_against):
+	"""Rows of the consolidated sales these returns reverse, keyed by the POS invoice row."""
+	if not return_against:
+		return {}
+
+	sales_invoice = DocType("Sales Invoice")
+	sales_invoice_item = DocType("Sales Invoice Item")
+
+	rows = (
+		frappe.qb.from_(sales_invoice)
+		.from_(sales_invoice_item)
+		.select(sales_invoice_item.name, sales_invoice_item.rate, sales_invoice_item.pos_invoice_item)
+		.where(
+			(sales_invoice.name == sales_invoice_item.parent)
+			& (sales_invoice.is_return == 0)
+			& (sales_invoice_item.pos_invoice.isin(return_against))
+			& (sales_invoice.docstatus == 1)
+		)
+	).run(as_dict=True)
+
+	return {row.pos_invoice_item: row for row in rows}
 
 
 def get_all_unconsolidated_invoices():
@@ -681,26 +712,3 @@ def get_error_message(message) -> str:
 		return message["message"]
 	except Exception:
 		return str(message)
-
-
-def get_sales_invoice_item(return_against_pos_invoice, pos_invoice_item):
-	try:
-		SalesInvoice = DocType("Sales Invoice")
-		SalesInvoiceItem = DocType("Sales Invoice Item")
-
-		query = (
-			frappe.qb.from_(SalesInvoice)
-			.from_(SalesInvoiceItem)
-			.select(SalesInvoiceItem.name)
-			.where(
-				(SalesInvoice.name == SalesInvoiceItem.parent)
-				& (SalesInvoice.is_return == 0)
-				& (SalesInvoiceItem.pos_invoice == return_against_pos_invoice)
-				& (SalesInvoiceItem.pos_invoice_item == pos_invoice_item)
-			)
-		)
-
-		result = query.run(as_dict=True)
-		return result[0].name if result else None
-	except Exception:
-		return None

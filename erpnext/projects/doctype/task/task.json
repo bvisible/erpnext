@@ -170,10 +170,10 @@
    "oldfieldtype": "Data"
   },
   {
-   "fetch_from": "type.weight",
    "fieldname": "task_weight",
    "fieldtype": "Float",
-   "label": "Weight"
+   "label": "Weight",
+   "non_negative": 1
   },
   {
    "fieldname": "column_break_11",
@@ -305,7 +305,7 @@
    "label": "More Info"
   },
   {
-   "depends_on": "eval:doc.status == \"Closed\" || doc.status == \"Pending Review\"",
+   "depends_on": "eval:doc.status == \"Completed\" || doc.status == \"Pending Review\"",
    "fieldname": "review_date",
    "fieldtype": "Date",
    "label": "Review Date",
@@ -313,7 +313,7 @@
    "oldfieldtype": "Date"
   },
   {
-   "depends_on": "eval:doc.status == \"Closed\"",
+   "depends_on": "eval:doc.status == \"Completed\"",
    "fieldname": "closing_date",
    "fieldtype": "Date",
    "label": "Closing Date",
@@ -406,7 +406,7 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 5,
- "modified": "2026-09-04 10:05:00.000000",
+ "modified": "2026-10-12 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Task",
@@ -424,6 +424,18 @@
    "role": "Projects User",
    "share": 1,
    "write": 1
+  },
+  {
+   "role": "Accounts User",
+   "select": 1
+  },
+  {
+   "role": "Employee",
+   "select": 1
+  },
+  {
+   "role": "Manufacturing User",
+   "select": 1
   }
  ],
  "quick_entry": 1,

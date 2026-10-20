@@ -5,6 +5,11 @@ from frappe.utils import cstr, now, today
 from pypika import functions
 
 
+def disable_opportunity_creation_on_contact_us_disabled(doc, method):
+	if doc.is_disabled:
+		frappe.db.set_single_value("CRM Settings", "enable_opportunity_creation_from_contact_us", 0)
+
+
 def update_lead_phone_numbers(contact, method):
 	if contact.phone_nos:
 		contact_lead = contact.get_link_for("Lead")
@@ -42,7 +47,7 @@ def copy_comments(doctype, docname, doc):
 		comment.name = None
 		comment.reference_doctype = doc.doctype
 		comment.reference_name = doc.name
-		comment.insert()
+		comment.insert(ignore_permissions=True)
 
 
 def link_communications(doctype, docname, doc):
@@ -145,6 +150,10 @@ def link_open_events(ref_doctype, ref_docname, doc):
 
 @frappe.whitelist()
 def get_open_activities(ref_doctype, ref_docname):
+	# both arguments are caller-supplied and the ToDo/Event rows are read with get_all, so the
+	# referenced document decides who may see its activities. doc= applies User Permissions.
+	frappe.has_permission(ref_doctype, doc=ref_docname, throw=True)
+
 	tasks = get_open_todos(ref_doctype, ref_docname)
 	events = get_open_events(ref_doctype, ref_docname)
 
@@ -161,6 +170,7 @@ def get_open_todos(ref_doctype, ref_docname):
 			"allocated_to",
 			"date",
 		],
+		order_by="date asc",
 	)
 
 
@@ -185,6 +195,7 @@ def get_open_events(ref_doctype, ref_docname):
 			& (event_link.reference_docname == ref_docname)
 			& (event.status == "Open")
 		)
+		.orderby(event.starts_on)
 	)
 	data = query.run(as_dict=True)
 
@@ -220,7 +231,10 @@ class CRMNote(Document):
 		notify_mentions(self.doctype, self.name, note)
 
 	@frappe.whitelist()
-	def edit_note(self, note, row_id):
+	def edit_note(self, note: str, row_id: str):
+		# db_update() skips the write check that save() does in add_note/delete_note
+		self.check_permission("write")
+
 		for d in self.notes:
 			if cstr(d.name) == row_id:
 				d.note = note

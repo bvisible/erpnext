@@ -20,7 +20,7 @@
             <div class="col-xs-6">
                 <table>
                     {# //// Neoffice — upstream prints this caption as static English text, so a French voucher shows it in English; we wrap it in _() (14aa3224ce "fix(i18n): translate the captions of the standard voucher print formats and of the fiscal-year notification"). #}
-                    <tr><td><strong>{{ _("Date") }}: </strong></td><td>{{  frappe.utils.format_date(doc.creation)  }}</td></tr>
+                    <tr><td><strong>{{ _("Date") }}: </strong></td><td>{{  frappe.utils.format_date(doc.posting_date)  }}</td></tr>
                 </table>
             </div>
     </div>

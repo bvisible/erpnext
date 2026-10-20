@@ -39,30 +39,41 @@ class TestNeofficeSecurityBackports(FrappeTestCase):
 		frappe.db.rollback()
 
 	def test_create_customer_makes_a_customer_and_nothing_else(self):
-		# GHSA-x635-wr4c-7345, upstream 45b232d369: the request's own "doctype" key made any record
+		# GHSA-x635-wr4c-7345, upstream 45b232d369: the request's own "doctype" key made any record. Since the merge
+		# with v15.123.0 the endpoint is also closed while Frappe CRM synchronisation is off (66d0a60140), and open
+		# only to its allowed users: the allowlist is tested past that gate, the gate on its own.
+		from unittest import mock
+
 		from erpnext.crm.frappe_crm_api import create_customer
 
 		intruder = "neoffice-security-intruder@example.com"
 		customer_group = frappe.db.get_value("Customer Group", {"is_group": 0}, "name")
 		territory = frappe.db.get_value("Territory", {"is_group": 0}, "name")
-		frappe.set_user(PORTAL_USER)
-		create_customer(
-			frappe._dict(
-				{
-					"doctype": "User",
-					"email": intruder,
-					"first_name": "Intruder",
-					"customer_name": "Neoffice Security Customer",
-					"customer_type": "Company",
-					"customer_group": customer_group,
-					"territory": territory,
-					"disabled": 1,
-					"contacts": "[]",
-				}
-			)
+		request = frappe._dict(
+			{
+				"doctype": "User",
+				"email": intruder,
+				"first_name": "Intruder",
+				"customer_name": "Neoffice Security Customer",
+				"customer_type": "Company",
+				"customer_group": customer_group,
+				"territory": territory,
+				"disabled": 1,
+				"contacts": "[]",
+			}
 		)
 
+		# the gate: synchronisation off (a plain update, rolled back in tearDown) refuses everyone
+		frappe.db.set_single_value("CRM Settings", "enable_frappe_crm_data_synchronization", 0)
+		frappe.set_user(PORTAL_USER)
+		self.assertRaises(frappe.ValidationError, create_customer, request)
+
+		# the allowlist: past the gate, only the allowed fields of the request reach the new Customer, whoever
+		# calls (as Administrator, so the test does not depend on the Customer rights of a site with Frappe CRM)
 		frappe.set_user("Administrator")
+		with mock.patch("erpnext.crm.frappe_crm_api.validate_frappe_crm_sync"):
+			create_customer(request)
+
 		self.assertFalse(frappe.db.exists("User", intruder))
 		customer = frappe.db.get_value(
 			"Customer", {"customer_name": "Neoffice Security Customer"}, ["name", "disabled"], as_dict=True

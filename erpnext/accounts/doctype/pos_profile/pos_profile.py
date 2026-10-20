@@ -61,7 +61,6 @@ class POSProfile(Document):
 		tax_category: DF.Link | None
 		taxes_and_charges: DF.Link | None
 		tc_name: DF.Link | None
-		update_stock: DF.Check
 		validate_stock_on_save: DF.Check
 		warehouse: DF.Link
 		write_off_account: DF.Link
@@ -203,15 +202,14 @@ class POSProfile(Document):
 	def set_defaults(self, include_current_pos=True):
 		frappe.defaults.clear_default("is_pos")
 
-		if not include_current_pos:
-			condition = " where pfu.name != '%s' and pfu.default = 1 " % self.name.replace("'", "'")
-		else:
-			condition = " where pfu.default = 1 "
+		pfu = frappe.qb.DocType("POS Profile User")
 
-		pos_view_users = frappe.db.sql_list(
-			f"""select pfu.user
-			from `tabPOS Profile User` as pfu {condition}"""
-		)
+		query = frappe.qb.from_(pfu).select(pfu.user).where(pfu.default == 1)
+
+		if not include_current_pos:
+			query = query.where(pfu.name != self.name)
+
+		pos_view_users = query.run(as_list=1, pluck=True)
 
 		for user in pos_view_users:
 			if user:
@@ -273,69 +271,40 @@ def pos_profile_query(doctype, txt, searchfield, start, page_len, filters):
 	user = frappe.session["user"]
 	company = filters.get("company") or frappe.defaults.get_user_default("company")
 
-	args = {
-		"user": user,
-		"start": start,
-		"company": company,
-		"page_len": page_len,
-		"txt": "%%%s%%" % txt,
-	}
+	allowed_pos_profiles = frappe.get_list("POS Profile", pluck="name")
 
-	pos_profile = frappe.db.sql(
-		"""select pf.name
-		from
-			`tabPOS Profile` pf, `tabPOS Profile User` pfu
-		where
-			pfu.parent = pf.name and pfu.user = %(user)s and pf.company = %(company)s
-			and (pf.name like %(txt)s)
-			and pf.disabled = 0 limit %(page_len)s offset %(start)s""",
-		args,
+	if not allowed_pos_profiles:
+		return {}
+
+	pf = frappe.qb.DocType("POS Profile")
+	pfu = frappe.qb.DocType("POS Profile User")
+
+	pos_profile = (
+		frappe.qb.from_(pf)
+		.inner_join(pfu)
+		.on(pfu.parent == pf.name)
+		.select(pf.name)
+		.where((pfu.user == user) & (pf.company == company) & pf.name.like(f"%{txt}%") & (pf.disabled == 0))
+		.where(pf.name.isin(allowed_pos_profiles))
+		.limit(page_len)
+		.offset(start)
+		.run()
 	)
 
 	if not pos_profile:
-		del args["user"]
-
-		pos_profile = frappe.db.sql(
-			"""select pf.name
-			from
-				`tabPOS Profile` pf left join `tabPOS Profile User` pfu
-			on
-				pf.name = pfu.parent
-			where
-				ifnull(pfu.user, '') = ''
-				and pf.company = %(company)s
-				and pf.name like %(txt)s
-				and pf.disabled = 0""",
-			args,
+		pos_profile = (
+			frappe.qb.from_(pf)
+			.left_join(pfu)
+			.on(pf.name == pfu.parent)
+			.select(pf.name)
+			.where(
+				(pfu.user.isnull() | (pfu.user == ""))
+				& (pf.company == company)
+				& pf.name.like(f"%{txt}%")
+				& (pf.disabled == 0)
+				& (pf.name.isin(allowed_pos_profiles))
+			)
+			.run()
 		)
 
 	return pos_profile
-
-
-@frappe.whitelist()
-def set_default_profile(pos_profile, company):
-	modified = now()
-	user = frappe.session.user
-
-	if pos_profile and company:
-		frappe.db.sql(
-			""" update `tabPOS Profile User` pfu, `tabPOS Profile` pf
-			set
-				pfu.default = 0, pf.modified = %s, pf.modified_by = %s
-			where
-				pfu.user = %s and pf.name = pfu.parent and pf.company = %s
-				and pfu.default = 1""",
-			(modified, user, user, company),
-			auto_commit=1,
-		)
-
-		frappe.db.sql(
-			""" update `tabPOS Profile User` pfu, `tabPOS Profile` pf
-			set
-				pfu.default = 1, pf.modified = %s, pf.modified_by = %s
-			where
-				pfu.user = %s and pf.name = pfu.parent and pf.company = %s and pf.name = %s
-			""",
-			(modified, user, user, company, pos_profile),
-			auto_commit=1,
-		)

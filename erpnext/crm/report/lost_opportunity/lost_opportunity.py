@@ -117,7 +117,6 @@ def get_join(filters):
 		join = """JOIN `tabOpportunity Lost Reason Detail`
 			ON `tabOpportunity Lost Reason Detail`.parenttype = 'Opportunity' and
 			`tabOpportunity Lost Reason Detail`.parent = `tabOpportunity`.name and
-			-- //// Neoffice — backport of upstream 1604c21602 (SQL and output escaping): the lost reason is a bound parameter, see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
 			`tabOpportunity Lost Reason Detail`.lost_reason=%(lost_reason)s
 			"""
 

@@ -14,6 +14,7 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 	erpnext.selling.SellingController
 ) {
 	setup(doc) {
+		this.setup_accounting_dimension_triggers();
 		this.setup_posting_date_time_check();
 		super.setup(doc);
 		this.frm.make_methods = {
@@ -42,6 +43,7 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 			"Unreconcile Payment Entries",
 			"Serial and Batch Bundle",
 			"Bank Transaction",
+			"Packing Slip",
 		];
 
 		if (!this.frm.doc.__islocal && !this.frm.doc.customer && this.frm.doc.debit_to) {
@@ -92,7 +94,7 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 			erpnext.accounts.ledger_preview.show_stock_ledger_preview(this.frm);
 		}
 
-		if (doc.docstatus == 1 && doc.outstanding_amount != 0) {
+		if (doc.docstatus == 1 && doc.outstanding_amount != 0 && frappe.model.can_create("Payment Entry")) {
 			this.frm.add_custom_button(__("Payment"), () => this.make_payment_entry(), __("Create"));
 			this.frm.page.set_inner_btn_group_as_primary(__("Create"));
 		}
@@ -104,51 +106,66 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 				return item.is_delivered_by_supplier ? true : false;
 			});
 
-			if (doc.outstanding_amount >= 0 || Math.abs(flt(doc.outstanding_amount)) < flt(doc.grand_total)) {
+			if (
+				frappe.model.can_create("Sales Invoice") &&
+				(doc.outstanding_amount >= 0 || Math.abs(flt(doc.outstanding_amount)) < flt(doc.grand_total))
+			) {
 				cur_frm.add_custom_button(__("Return / Credit Note"), this.make_sales_return, __("Create"));
 				cur_frm.page.set_inner_btn_group_as_primary(__("Create"));
 			}
 
-			if (cint(doc.update_stock) != 1) {
+			if (cint(doc.update_stock) != 1 && frappe.model.can_create("Delivery Note")) {
 				// show Make Delivery Note button only if Sales Invoice is not created from Delivery Note
 				var from_delivery_note = false;
 				from_delivery_note = cur_frm.doc.items.some(function (item) {
 					return item.delivery_note ? true : false;
 				});
 
-				if (!from_delivery_note && !is_delivered_by_supplier) {
-					cur_frm.add_custom_button(
-						__("Delivery"),
-						cur_frm.cscript["Make Delivery Note"],
-						__("Create")
+				if (!is_delivered_by_supplier) {
+					const should_create_delivery_note = doc.items.some(
+						(item) =>
+							item.qty - item.delivered_qty > 0 &&
+							!item.dn_detail &&
+							!item.delivered_by_supplier
 					);
+					if (should_create_delivery_note) {
+						this.frm.add_custom_button(
+							__("Delivery Note"),
+							this.frm.cscript["Make Delivery Note"],
+							__("Create")
+						);
+					}
 				}
 			}
 
 			if (doc.outstanding_amount > 0) {
-				cur_frm.add_custom_button(
-					__("Payment Request"),
-					function () {
-						me.make_payment_request();
-					},
-					__("Create")
-				);
-				this.frm.add_custom_button(
-					__("Invoice Discounting"),
-					this.make_invoice_discounting.bind(this),
-					__("Create")
-				);
+				if (frappe.boot.user.in_create.includes("Payment Request")) {
+					this.frm.add_custom_button(
+						__("Payment Request"),
+						function () {
+							me.make_payment_request();
+						},
+						__("Create")
+					);
+				}
+				if (frappe.model.can_create("Invoice Discounting")) {
+					this.frm.add_custom_button(
+						__("Invoice Discounting"),
+						this.make_invoice_discounting.bind(this),
+						__("Create")
+					);
+				}
 
 				const payment_is_overdue = doc.payment_schedule
 					.map((row) => Date.parse(row.due_date) < Date.now())
 					.reduce((prev, current) => prev || current, false);
 
-				if (payment_is_overdue) {
+				if (payment_is_overdue && frappe.model.can_create("Dunning")) {
 					this.frm.add_custom_button(__("Dunning"), this.make_dunning.bind(this), __("Create"));
 				}
 			}
 
-			if (doc.docstatus === 1) {
+			if (doc.docstatus === 1 && frappe.model.can_create("Maintenance Schedule")) {
 				cur_frm.add_custom_button(
 					__("Maintenance Schedule"),
 					this.make_maintenance_schedule.bind(this),
@@ -156,16 +173,14 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 				);
 			}
 		}
-
-		// Show buttons only when pos view is active
-		if (cint(doc.docstatus == 0) && cur_frm.page.current_view_name !== "pos" && !doc.is_return) {
-			this.frm.cscript.sales_order_btn();
-			this.frm.cscript.delivery_note_btn();
-			this.frm.cscript.quotation_btn();
-		}
+		this.toggle_get_items();
 
 		this.set_default_print_format();
-		if (doc.docstatus == 1 && !doc.inter_company_invoice_reference) {
+		if (
+			doc.docstatus == 1 &&
+			!doc.inter_company_invoice_reference &&
+			frappe.model.can_create("Purchase Invoice")
+		) {
 			let internal = me.frm.doc.is_internal_customer;
 			if (internal) {
 				let button_label =
@@ -174,12 +189,31 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 						: "Inter Company Purchase Invoice";
 
 				me.frm.add_custom_button(
-					button_label,
+					__(button_label),
 					function () {
 						me.make_inter_company_invoice();
 					},
 					__("Create")
 				);
+
+				frappe.call({
+					method: "erpnext.accounts.doctype.sales_invoice.sales_invoice.get_received_items",
+					args: {
+						reference_name: me.frm.doc.name,
+						doctype: "Purchase Invoice",
+						reference_fieldname: "sales_invoice_item",
+					},
+					callback: function (r) {
+						if (r.exc) return;
+						const received_items = r.message || {};
+						const has_pending_qty = me.frm.doc.items.some(
+							(item) => flt(item.stock_qty) - flt(received_items[item.name] || 0) > 0
+						);
+						if (!has_pending_qty) {
+							me.frm.remove_custom_button(__(button_label), __("Create"));
+						}
+					},
+				});
 			}
 		}
 
@@ -248,6 +282,143 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 		}
 	}
 
+	toggle_get_items() {
+		const buttons = ["Sales Order", "Quotation", "Timesheet", "Delivery Note"];
+
+		buttons.forEach((label) => {
+			this.frm.remove_custom_button(label, "Get Items From");
+		});
+
+		if (cint(this.frm.doc.docstatus) !== 0 || this.frm.page.current_view_name === "pos") {
+			return;
+		}
+
+		if (!this.frm.doc.is_return) {
+			this.frm.cscript.sales_order_btn();
+			this.frm.cscript.quotation_btn();
+			this.frm.cscript.timesheet_btn();
+		}
+
+		this.frm.cscript.delivery_note_btn();
+	}
+
+	//// Neoffice — upstream's Timesheet button, rewritten for us (0f8787d3d6, v14→v15 port; ported here when
+	//// upstream moved the button into this method, merge with v15.123.0): the dialog also asks for the
+	//// "Timesheet billing Item" (default "MO") and, once the timesheets are pulled, appends ONE invoice line
+	//// per billing rate ("12 h @ 120.00") on that item instead of forty timesheet lines, then saves. The
+	//// button stays outside upstream's "Get Items From" group, as before. Fixed at the port, as the old
+	//// marker asked: the duplicated col_break_1 / to_time / project fields are gone; the lines are added
+	//// once add_timesheet_data (async) has resolved, not after a 200 ms setTimeout that raced it; each line
+	//// is a plain {item_code, qty, rate} (it was an *Item* document from get_new_doc("Item")); the invoice is
+	//// saved once, not once per rate; rows already on the invoice (no rate carried) are not billed again.
+	timesheet_btn() {
+		var me = this;
+
+		me.frm.add_custom_button(
+			__("Timesheet"),
+			function () {
+				let d = new frappe.ui.Dialog({
+					title: __("Fetch Timesheet"),
+					fields: [
+						{
+							label: __("From"),
+							fieldname: "from_time",
+							fieldtype: "Date",
+							reqd: 1,
+						},
+						{
+							label: __("Item Code"),
+							fieldname: "item_code",
+							fieldtype: "Link",
+							options: "Item",
+							get_query: () => {
+								return {
+									query: "erpnext.controllers.queries.item_query",
+									filters: {
+										is_sales_item: 1,
+										customer: me.frm.doc.customer,
+										has_variants: 0,
+									},
+								};
+							},
+						},
+						{
+							fieldtype: "Column Break",
+							fieldname: "col_break_1",
+						},
+						{
+							label: __("To"),
+							fieldname: "to_time",
+							fieldtype: "Date",
+							reqd: 1,
+						},
+						{
+							fieldtype: "Section Break",
+							fieldname: "section_break_1",
+						},
+						{
+							label: __("Project"),
+							fieldname: "project",
+							fieldtype: "Link",
+							options: "Project",
+							default: me.frm.doc.project,
+						},
+						{
+							fieldtype: "Column Break",
+							fieldname: "col_break_2",
+						},
+						{
+							fieldtype: "Section Break",
+							fieldname: "section_break_2",
+						},
+						{
+							label: __("Timesheet billing Item"),
+							fieldname: "item",
+							fieldtype: "Link",
+							options: "Item",
+							reqd: 1,
+							default: "MO",
+						},
+					],
+					primary_action: function () {
+						const data = d.get_values();
+						d.hide();
+						Promise.resolve(
+							me.frm.events.add_timesheet_data(me.frm, {
+								from_time: data.from_time,
+								to_time: data.to_time,
+								project: data.project,
+								item_code: data.item_code,
+							})
+						).then(() => {
+							const hours_by_rate = {};
+							(me.frm.doc.timesheets || []).forEach((timesheet) => {
+								// only the rows just pulled carry their rate (append_time_log)
+								if (timesheet.rate === undefined || timesheet.rate === null) return;
+								hours_by_rate[timesheet.rate] =
+									(hours_by_rate[timesheet.rate] || 0) + flt(timesheet.billing_hours);
+							});
+							const rates = Object.keys(hours_by_rate);
+							if (!rates.length) return;
+
+							rates.forEach((rate) => {
+								me.frm.add_child("items", {
+									item_code: data.item,
+									qty: hours_by_rate[rate],
+									rate: flt(rate),
+								});
+							});
+							me.frm.refresh_field("items");
+							me.frm.save();
+						});
+					},
+					primary_action_label: __("Get Timesheets"),
+				});
+				d.show();
+			}
+		);
+	}
+
 	sales_order_btn() {
 		var me = this;
 		this.$sales_order_btn = this.frm.add_custom_button(
@@ -263,9 +434,10 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 					get_query_filters: {
 						docstatus: 1,
 						status: ["not in", ["Closed", "On Hold"]],
-						per_billed: ["<", 99.99],
 						company: me.frm.doc.company,
 					},
+					get_query_method:
+						"erpnext.selling.doctype.sales_order.sales_order.get_potentially_billable_sales_orders",
 					allow_child_item_selection: true,
 					child_fieldname: "items",
 					child_columns: ["item_code", "item_name", "qty", "amount", "billed_amt"],
@@ -312,6 +484,12 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 		this.$delivery_note_btn = this.frm.add_custom_button(
 			__("Delivery Note"),
 			function () {
+				if (!me.frm.doc.customer) {
+					frappe.throw({
+						title: __("Mandatory"),
+						message: __("Please Select a Customer"),
+					});
+				}
 				erpnext.utils.map_current_doc({
 					method: "erpnext.stock.doctype.delivery_note.delivery_note.make_sales_invoice",
 					source_doctype: "Delivery Note",
@@ -324,7 +502,7 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 						var filters = {
 							docstatus: 1,
 							company: me.frm.doc.company,
-							is_return: 0,
+							is_return: me.frm.doc.is_return,
 						};
 						if (me.frm.doc.customer) filters["customer"] = me.frm.doc.customer;
 						return {
@@ -443,12 +621,14 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 	}
 
 	items_add(doc, cdt, cdn) {
-		var row = frappe.get_doc(cdt, cdn);
-		this.frm.script_manager.copy_from_first_row("items", row, [
-			"income_account",
-			"discount_account",
-			"cost_center",
-		]);
+		const row = frappe.get_doc(cdt, cdn);
+		const field_copy = ["income_account", "discount_account", "cost_center"];
+		if (doc.project) {
+			frappe.model.set_value(cdt, cdn, "project", doc.project);
+		} else {
+			field_copy.push("project");
+		}
+		this.frm.script_manager.copy_from_first_row("items", row, field_copy);
 	}
 
 	set_dynamic_labels() {
@@ -584,6 +764,14 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 
 		this.calculate_taxes_and_totals();
 	}
+
+	apply_tds(frm) {
+		this.frm.clear_table("tax_withholding_entries");
+	}
+
+	is_return() {
+		this.toggle_get_items();
+	}
 };
 
 // for backward compatibility: combine new and previous states
@@ -645,10 +833,6 @@ cur_frm.cscript.income_account = function (doc, cdt, cdn) {
 
 cur_frm.cscript.expense_account = function (doc, cdt, cdn) {
 	erpnext.utils.copy_value_in_all_rows(doc, cdt, cdn, "items", "expense_account");
-};
-
-cur_frm.cscript.cost_center = function (doc, cdt, cdn) {
-	erpnext.utils.copy_value_in_all_rows(doc, cdt, cdn, "items", "cost_center");
 };
 
 cur_frm.set_query("debit_to", function (doc) {
@@ -1094,154 +1278,6 @@ frappe.ui.form.on("Sales Invoice", {
 	},
 
 	refresh: function (frm) {
-		if (frm.doc.docstatus === 0 && !frm.doc.is_return) {
-			frm.add_custom_button(
-				__("Timesheet"),
-				function () {
-					let d = new frappe.ui.Dialog({
-						title: __("Fetch Timesheet"),
-						fields: [
-							{
-								label: __("From"),
-								fieldname: "from_time",
-								fieldtype: "Date",
-								reqd: 1,
-							},
-							{
-								label: __("Item Code"),
-								fieldname: "item_code",
-								fieldtype: "Link",
-								options: "Item",
-								get_query: () => {
-									return {
-										query: "erpnext.controllers.queries.item_query",
-										filters: {
-											is_sales_item: 1,
-											customer: frm.doc.customer,
-											has_variants: 0,
-										},
-									};
-								},
-							},
-							//// Neoffice — TO REVIEW: the Get Timesheets dialog declares col_break_1, to_time and project
-							//// TWICE. The duplicate arrived with the upstream merge ef8ddb9de6 (2025-02-26): upstream had
-							//// reworked its own dialog fields and the resolution kept both copies (the file went from one
-							//// `col_break_1` to two at exactly that commit). Frappe keeps the LAST field of a duplicated
-							//// fieldname, so the layout still works by accident. Ours proper are the Section Breaks, the
-							//// second Column Break and the reqd "Timesheet billing Item" Link (default "MO") — the item
-							//// the aggregated hours are billed on. Drop the first copy at the merge.
-							{
-								fieldtype: "Column Break",
-								fieldname: "col_break_1",
-							},
-							{
-								label: __("To"),
-								fieldname: "to_time",
-								fieldtype: "Date",
-								reqd: 1,
-							},
-							{
-								label: __("Project"),
-								fieldname: "project",
-								fieldtype: "Link",
-								options: "Project",
-								default: frm.doc.project,
-							},
-							{
-								fieldtype: "Column Break",
-								fieldname: "col_break_1",
-							},
-							{
-								label: __("To"),
-								fieldname: "to_time",
-								fieldtype: "Date",
-								reqd: 1,
-							},
-							//// added for new ux
-							{
-								fieldtype: "Section Break",
-								fieldname: "section_break_1",
-							},
-							////
-							{
-								label: __("Project"),
-								fieldname: "project",
-								fieldtype: "Link",
-								options: "Project",
-								default: frm.doc.project,
-							},
-							//// added for new ux + features
-							{
-								fieldtype: "Column Break",
-								fieldname: "col_break_2",
-							},
-							{
-								fieldtype: "Section Break",
-								fieldname: "section_break_2",
-							},
-							{
-								"label" : __("Timesheet billing Item"),
-								"fieldname": "item",
-								"fieldtype": "Link",
-								"options": "Item",
-								"reqd": 1,
-								"default": "MO"
-							}
-							////
-						],
-						primary_action: function () {
-							const data = d.get_values();
-							//// Neoffice — added after the upstream add_timesheet_data call (0f8787d3d6, v14→v15 port):
-							//// the pulled timesheet lines are grouped by billing rate and one Sales Invoice item per rate
-							//// is appended, so the customer sees "12 h @ 120.00" instead of forty timesheet lines.
-							//// TO REVIEW before the upstream merge, three defects visible in the code below:
-							////   - the 200 ms setTimeout races the model updates queued by add_timesheet_data;
-							////   - `frappe.model.get_new_doc("Item")` builds an *Item* document and appends it to the
-							////     `items` child table (which is Sales Invoice Item);
-							////   - `frm.save()` is called INSIDE the per-rate loop, i.e. once per distinct rate.
-							//// Same commit dropped upstream's `__("Get Items From")` button group on this button.
-							//// added — aggregate pulled timesheets into one billing item per rate
-							frm.events.add_timesheet_data(frm, {
-								from_time: data.from_time,
-								to_time: data.to_time,
-								project: data.project,
-								item_code: data.item_code,
-							});
-							let timesheet_rates = {};
-							setTimeout(function() {
-								frm.doc.timesheets.forEach(function (timesheet) {
-									if (timesheet.rate in timesheet_rates) {
-										timesheet_rates[timesheet.rate] += timesheet.billing_hours;
-									} else {
-										timesheet_rates[timesheet.rate] = timesheet.billing_hours;
-									}
-								});
-								Object.entries(timesheet_rates).forEach(([rate, hours]) => {
-									/*let child = frm.add_child("items");
-									let timesheet_item_data = {
-										"item_code": data.item,
-										"qty": hours,
-										"rate": rate,
-									}
-									frappe.model.set_value(child.doctype, child.name, timesheet_item_data);*/
-									var childRow = frappe.model.get_new_doc("Item");
-									childRow.item_code = data.item;
-									childRow.qty = hours;
-									childRow.rate = rate;
-
-									frm.add_child("items", childRow);
-									frm.save();
-								});
-							}, 200);
-							////
-							d.hide();
-						},
-						primary_action_label: __("Get Timesheets"),
-					});
-					d.show();
-				});
-		}
-
 		if (frm.doc.is_debit_note) {
 			frm.set_df_property("return_against", "label", __("Adjustment Against"));
 		}
