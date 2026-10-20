@@ -1856,7 +1856,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		sales_order.items[0].qty = 21
 		sales_order.save()
-		self.assertEqual(sales_order.taxes[0].tax_amount, 0)
+		# //// Neoffice — a shipping that becomes free removes its row instead of keeping one at 0 (the
+		# //// "Multiple Constraints" divergence in ShippingRule.apply: no "0.00" freight line on a customer's
+		# //// document). Upstream asserted taxes[0].tax_amount == 0 (neoffice-maintenance#1751).
+		self.assertFalse([tax for tax in sales_order.taxes if tax.account_head == shipping_rule.account])
 
 	@change_settings(
 		"Accounts Settings",
