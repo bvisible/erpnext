@@ -11,6 +11,8 @@ frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm
 	render_dialog() {
 		this.mandatory = this.mandatory.concat(this.get_variant_fields());
 		super.render_dialog();
+		//// Neoffice — the customer's currency starts as the site's default currency (cd944c87cd, 2025-12-01):
+		//// our Customer requires default_currency, which upstream's quick entry left empty.
 
 		// Set default currency from system settings
 		if (this.dialog && this.dialog.fields_dict.default_currency) {
@@ -39,11 +41,13 @@ frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm
 		};
 
 		Object.entries(map_field_names).forEach(([fieldname, new_fieldname]) => {
+			//// Neoffice — only the aliases the dialog holds are renamed (4ebfb48987), see map_alias_fields.
 			if (this.dialog.doc[fieldname] !== undefined) {
 				this.dialog.doc[new_fieldname] = this.dialog.doc[fieldname];
 				delete this.dialog.doc[fieldname];
 			}
 		});
+	//// Neoffice — end of map_alias_fields (see its marker).
 	}
 
 	insert() {

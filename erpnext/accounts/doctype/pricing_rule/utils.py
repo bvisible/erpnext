@@ -908,6 +908,9 @@ def validate_coupon_code(coupon_name):
 		frappe.throw(_("Sorry, this coupon code's validity has not started"))
 	elif coupon.valid_upto and coupon.valid_upto < getdate(today()):
 		frappe.throw(_("Sorry, this coupon code's validity has expired"))
+	# //// Neoffice — gift cards (255a047ed1, 2025-03-24 "Update coupon code and POS"): a Gift Card coupon is
+	# //// valid while it has a balance left (gift_card_amount), not while it has uses left; a normal coupon
+	# //// keeps upstream's maximum-use check.
 
 	# Check remaining balance for gift cards
 	if is_gift_card:
@@ -927,11 +930,13 @@ def update_coupon_code_count(coupon_name, transaction_type):
 
 	if coupon:
 		if transaction_type == "used":
+			# //// Neoffice — a gift card counts its uses but has no maximum (255a047ed1, 2025-03-24).
 			if is_gift_card:
 				# For gift cards, we don't check the number of uses
 				coupon.used = coupon.used + 1
 				coupon.save(ignore_permissions=True)
 			else:
+				# //// Neoffice — a normal coupon keeps upstream's rule: used fewer times than its maximum.
 				# For normal coupons, use standard validation
 				if coupon.used < coupon.maximum_use:
 					coupon.used = coupon.used + 1
@@ -941,6 +946,7 @@ def update_coupon_code_count(coupon_name, transaction_type):
 						_("{0} Coupon used are {1}. Allowed quantity is exhausted").format(
 							coupon.coupon_code, coupon.used
 						)
+					# //// Neoffice — see the gift-card branch above: the same message, wrapped differently.
 					)
 		elif transaction_type == "cancelled":
 			if coupon.used > 0:

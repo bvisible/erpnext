@@ -19,6 +19,7 @@ from erpnext.accounts.utils import (
 	QueryPaymentLedger,
 	create_gain_loss_journal,
 	get_outstanding_invoices,
+	# //// Neoffice — invoices already in a payment run are left out of the reconciliation (17ff44f699, 2026-07-21).
 	get_proposed_invoices,
 	reconcile_against_document,
 )

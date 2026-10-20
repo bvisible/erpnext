@@ -2163,6 +2163,7 @@ class SalesInvoice(SellingController):
 				# redeemption should be done against same doctype
 				# also it shouldn't be against itself
 				continue
+			# //// Neoffice — the sign of the redeemed points (c8f5d68e84, 2026-07-01), explained below.
 			# Neoffice fix (loyalty audit 2026-07): redemption_details holds the SUM of redeemed
 			# points per source entry, which is NEGATIVE. Subtracting it double-counted and made
 			# available_points GROW with each redemption -> unbounded over-redemption, negative
@@ -3033,6 +3034,8 @@ def update_multi_mode_option(doc, pos_profile):
 	for row in pos_profile.get("payments"):
 		payment_mode = mode_of_payments_info.get(row.mode_of_payment)
 		if not payment_mode:
+			# //// Neoffice — a DISABLED mode of payment is told apart from one without an account (084fa3e5d7,
+			# //// 2026-08-25): upstream said "account missing" for both, and a cashier looked for an account that existed.
 			if not frappe.db.get_value("Mode of Payment", row.mode_of_payment, "enabled"):
 				disabled_modes.append(get_link_to_form("Mode of Payment", row.mode_of_payment))
 			else:
@@ -3042,6 +3045,7 @@ def update_multi_mode_option(doc, pos_profile):
 		payment_mode.default = row.default
 		append_payment(payment_mode)
 
+	# //// Neoffice — the disabled modes are named in one message (084fa3e5d7, see above).
 	if disabled_modes:
 		frappe.throw(
 			_("Mode of Payment {0} is disabled. Enable it, or remove it from POS Profile {1}.").format(

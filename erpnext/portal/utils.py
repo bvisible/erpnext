@@ -56,6 +56,7 @@ def create_customer_or_supplier():
 	"""
 	user = frappe.session.user
 
+	# //// Neoffice — a User flagged skip_customer_creation is left alone (see the header of this function).
 	user_doc = frappe.get_doc("User", user)
 	if hasattr(user_doc, "flags") and getattr(user_doc.flags, "skip_customer_creation", False) or user_doc.user_type != "Website User":
 		return

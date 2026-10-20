@@ -110,6 +110,8 @@ erpnext.accounts.unreconcile_payment = {
 					label: __("Allocations"),
 					fieldname: "allocations",
 					fieldtype: "Table",
+					//// Neoffice — the allocations can be edited before unreconciling (1c82f0adea, 2025-03-18): upstream shows
+					//// them read-only, so a partial unreconciliation could not be chosen.
 					read_only: 0,
 					fields: child_table_fields,
 					cannot_add_rows: true,

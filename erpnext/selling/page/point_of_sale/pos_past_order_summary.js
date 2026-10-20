@@ -365,6 +365,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 						this.email_dialog.set_values({ email_id: "", content: "" });
 						this.email_dialog.hide();
 					} else {
+						//// Neoffice — the dialog is emptied after a mail, and an error is said in a message (see above).
 						frappe.msgprint(__("There were errors while sending email. Please try again."));
 					}
 				}

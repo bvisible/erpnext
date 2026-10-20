@@ -1,3 +1,4 @@
+<!-- //// Neoffice — added file (no upstream equivalent): test guide of the POS Viewer customer display (33e5705d01, 2025-11-05). -->
 # Guide de Test - POS Viewer
 
 Ce document décrit comment tester la fonctionnalité POS Viewer.

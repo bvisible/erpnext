@@ -1,3 +1,4 @@
+<!-- //// Neoffice — added file (no upstream equivalent): documentation of the POS Viewer customer display (33e5705d01, 2025-11-05). -->
 # POS Viewer - External Cart Display
 
 ## Description

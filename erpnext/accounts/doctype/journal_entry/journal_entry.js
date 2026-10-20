@@ -1445,6 +1445,10 @@ frappe.ui.form.on("Journal Entry", {
 			"Unreconcile Payment Entries",
 			"Bank Transaction",
 		];
+		//// Neoffice — Swiss VAT on the journal entry (90bc163a95, 2025-03-19; ccc013d833, 2026-02-05): read the
+		//// company's VAT status (Neoffice Company Settings, through erpnext.journal_entry_utils defined at the end
+		//// of this file), hide "Without VAT" / "VAT excluded" for a non-VAT or flat-rate company and switch the
+		//// calculation off on a draft, then attach the VAT listener to every row. Upstream has no VAT logic here.
 
 		// Ensure our utility module is available
 		frappe.provide("erpnext.journal_entry_utils");
@@ -1503,6 +1507,7 @@ frappe.ui.form.on("Journal Entry", {
 		}
 
 		erpnext.toggle_naming_series();
+		//// Neoffice — the same VAT-status check on every refresh (see setup above).
 		
 		erpnext.journal_entry_utils.getCompanyVatInfo(frm.doc.company, (vatInfo) => {
 		    if (!vatInfo.isVatCompany) {
@@ -1635,6 +1640,8 @@ frappe.ui.form.on("Journal Entry", {
 		}
 
 		erpnext.accounts.unreconcile_payment.add_unreconcile_btn(frm);
+		//// Neoffice — on a draft only (d18204d322, 2026-06-25: a submitted entry is never touched), re-attach the
+		//// VAT listener to each row (see setup above).
 		
 		if (frm.doc.docstatus == 0) {
 		    // Check if our utility module is available
@@ -1740,6 +1747,7 @@ frappe.ui.form.on("Journal Entry", {
 		});
 
 		erpnext.accounts.dimensions.update_dimension(frm, frm.doctype);
+		//// Neoffice — the company changed: its VAT status is read again (see setup above).
 		
 		erpnext.journal_entry_utils.getCompanyVatInfo(frm.doc.company, (vatInfo) => {
 		    if (!vatInfo.isVatCompany) {
@@ -1817,6 +1825,7 @@ var update_jv_details = function (doc, r) {
 	$.each(r, function (i, d) {
 		var row = frappe.model.add_child(doc, "Journal Entry Account", "accounts");
 		frappe.model.set_value(row.doctype, row.name, "account", d.account);
+		//// Neoffice — rows added from a template get the VAT listener too (see setup above).
 		
 		// Ensure our utility module is available
 		frappe.provide("erpnext.journal_entry_utils");
@@ -1997,6 +2006,7 @@ erpnext.accounts.JournalEntry = class JournalEntry extends frappe.ui.form.Contro
 		cur_frm.cscript.update_totals(doc);
 
 		erpnext.accounts.dimensions.copy_dimension_from_first_row(this.frm, cdt, cdn, "accounts");
+		//// Neoffice — a new row gets the VAT listener (see setup above).
 		
 		// Ensure our utility module is available
 		frappe.provide("erpnext.journal_entry_utils");
@@ -2058,6 +2068,7 @@ frappe.ui.form.on("Journal Entry Account", {
 
 	account: function (frm, dt, dn) {
 		erpnext.journal_entry.set_account_details(frm, dt, dn);
+		//// Neoffice — the account of a row changed: its VAT line is worked out again (processTVA).
 		
 		const row = locals[dt][dn];
 		
@@ -2075,6 +2086,8 @@ frappe.ui.form.on("Journal Entry Account", {
 
 	debit_in_account_currency: function (frm, cdt, cdn) {
 		erpnext.journal_entry.set_exchange_rate(frm, cdt, cdn);
+		//// Neoffice — a row carries a debit OR a credit: entering a debit clears the credit, then the VAT line
+		//// of the row is worked out again (processTVA, see setup above).
 		
 		var d = locals[cdt][cdn];
 		
@@ -2106,6 +2119,7 @@ frappe.ui.form.on("Journal Entry Account", {
 
 	credit_in_account_currency: function (frm, cdt, cdn) {
 		erpnext.journal_entry.set_exchange_rate(frm, cdt, cdn);
+		//// Neoffice — the same for a credit: it clears the debit, then the VAT line follows.
 		
 		var d = locals[cdt][cdn];
 		
@@ -2243,6 +2257,11 @@ $.extend(erpnext.journal_entry, {
 		refresh_field("exchange_rate", cdn, "accounts");
 	},
 
+	//// Neoffice — Quick Journal Entry rewritten (4d43b72be3, 2026-05-07 "match Document Scan layout"; 0b0229bfa2,
+	//// 71d3a3eaa5, 81cae88934, 2026-05-07/08; e37cdf4df5, b913b1e300, 2026-07-14): the dialog follows the Document
+	//// Scan layout (template, credit/debit, amount, reference, cost center, project, "Without VAT"), applies the
+	//// company's VAT rules, never opens twice (a second dialog left an invisible backdrop over the form) and is
+	//// not offered on a submitted entry. Upstream's dialog only asks for an account pair and an amount.
 	quick_entry: function(frm) {
         // Guard: never stack two Quick Journal Entry dialogs. On a fresh doc
         // the form `refresh` can fire more than once, and a second dialog
@@ -2552,6 +2571,8 @@ $.extend(erpnext.journal_entry, {
 	},
 });
 
+//// Neoffice — added (90bc163a95, 2025-03-19), no upstream equivalent: the VAT helpers used above
+//// (getCompanyVatInfo, setupVatListener, processTVA, forceDirect), which write the VAT line of each row.
 // Initialize our VAT module
 frappe.provide("erpnext.journal_entry_utils");
 
@@ -2630,6 +2651,8 @@ $.extend(erpnext.journal_entry, {
 		let row = locals[dt][dn];
 		let length = frm.doc.accounts.length;
 		if (row.idx != length) return;
+		//// Neoffice — upstream balances the last row automatically; a row the VAT processing is writing (or an
+		//// entry flagged while it runs) is left alone, otherwise the balance and the VAT line fight over the amount.
 		
 		// Do not automatically balance for rows being processed for VAT
 		// or if the document has a flag indicating that VAT processing is in progress

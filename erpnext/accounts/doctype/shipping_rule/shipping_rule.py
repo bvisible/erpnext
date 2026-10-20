@@ -1075,6 +1075,7 @@ class ShippingRule(Document):
 				"add_deduct_tax": "Add"
 			}
 
+		# //// Neoffice — part of the rewritten add_shipping_rule_to_tax_table (Multiple Constraints, see the class header).
 		# Final step: append the main shipping row and any tax rows
 		try:
 			# Find the maximum idx currently in the taxes table

@@ -196,6 +196,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, customer=
 			item.stock_uom,
 			item.image AS item_image,
 			item.is_stock_item,
+			-- //// Neoffice — variant_of, for the variant attributes of get_items (see its marker)
 			item.variant_of,
 			item.sales_uom
 		FROM

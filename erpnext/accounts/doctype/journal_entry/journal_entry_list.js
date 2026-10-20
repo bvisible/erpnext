@@ -9,6 +9,7 @@ frappe.listview_settings["Journal Entry"] = {
 		if (doc.docstatus == 0) {
 			return [__("Draft"), "red", "docstatus,=,0"];
 		} else if (doc.docstatus == 2) {
+			//// Neoffice — the same bracket fix for Cancelled (see the marker above get_indicator).
 			return [__("Cancelled"), "grey", "docstatus,=,2"];
 		} else if (doc.docstatus === 1) {
 			if (doc.reversal_of && doc.voucher_type == "Exchange Rate Revaluation") {

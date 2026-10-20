@@ -551,6 +551,7 @@ erpnext.PointOfSale.Controller = class {
 	make_new_invoice() {
 		return frappe.run_serially([
 			() => frappe.dom.freeze(),
+			//// Neoffice — the customer display (pos-viewer) is cleared with a thank-you on a new sale (064a6df140).
 			() => this.clear_pos_viewer_cart(true), // Signal sale completed
 			() => this.make_sales_invoice_frm(),
 			() => this.set_pos_profile_data(),
@@ -788,6 +789,9 @@ erpnext.PointOfSale.Controller = class {
 							}
 						}
 					});
+					//// Neoffice — price entry for a zero-rate item (ff5fa58951 and the nine fixes of 2025-12-06): an item
+					//// sold at a price typed at the till opens a dialog with a numpad, keyboard input and a clear button,
+					//// one dialog at a time, Enter submitting once. Upstream adds a zero-price line.
 
 					// Initialize price value
 					d.price_value = 0;
@@ -966,6 +970,8 @@ erpnext.PointOfSale.Controller = class {
 						updateDisplay();
 						$price_input.focus();
 					});
+
+//// Neoffice — upstream's refusal of an item without a price (alert, error sound) gives way to the price dialog above.
 
 					return;
 				}

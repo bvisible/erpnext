@@ -352,6 +352,7 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 							fieldtype: "Date",
 							reqd: 1,
 						},
+						//// Neoffice — layout of our dialog (see the marker of timesheet_btn).
 						{
 							fieldtype: "Section Break",
 							fieldname: "section_break_1",
@@ -363,6 +364,7 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 							options: "Project",
 							default: me.frm.doc.project,
 						},
+						//// Neoffice — the billing item of the aggregated lines (see the marker of timesheet_btn).
 						{
 							fieldtype: "Column Break",
 							fieldname: "col_break_2",
@@ -381,8 +383,10 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 						},
 					],
 					primary_action: function () {
+						//// Neoffice — upstream's call moved into the promise below (see the marker of timesheet_btn).
 						const data = d.get_values();
 						d.hide();
+						//// Neoffice — the lines per rate, once the timesheets are pulled (see the marker of timesheet_btn).
 						Promise.resolve(
 							me.frm.events.add_timesheet_data(me.frm, {
 								from_time: data.from_time,
@@ -415,6 +419,7 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 					primary_action_label: __("Get Timesheets"),
 				});
 				d.show();
+			//// Neoffice — no "Get Items From" group (see the marker of timesheet_btn).
 			}
 		);
 	}

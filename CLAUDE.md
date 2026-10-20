@@ -1,3 +1,4 @@
+<!-- //// Neoffice — added file (no upstream equivalent): working notes on this repository for code assistants (064a6df140, 2025-11-26). -->
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.

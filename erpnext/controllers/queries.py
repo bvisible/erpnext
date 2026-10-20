@@ -239,6 +239,7 @@ def item_query(doctype, txt, searchfield, start, page_len, filters, as_dict=Fals
 			and tabItem.has_variants=0
 			and (tabItem.end_of_life > %(today)s or ifnull(tabItem.end_of_life, '0000-00-00')='0000-00-00')
 			and ({scond} or tabItem.item_code IN (select parent from `tabItem Barcode` where barcode LIKE %(txt)s)
+			-- //// Neoffice — the supplier part number search, see the marker above the query
 			or tabItem.item_code IN (select parent from `tabItem Supplier` where supplier_part_no LIKE %(txt)s)
 				{description_cond})
 			{fcond} {mcond}

@@ -1865,6 +1865,8 @@ class AccountsController(TransactionBase):
 		precision_loss = self.get("base_net_total") - flt(
 			self.get("net_total") * self.conversion_rate, self.precision("net_total")
 		)
+		# //// Neoffice — a NEGATIVE precision loss is posted on the other side (69e15141a4, 2025-11-25): upstream
+		# //// always used one side and posted the signed value, so a negative rounding difference unbalanced the GL.
 
 		against = self.supplier if self.doctype == "Purchase Invoice" else self.customer
 
@@ -1872,6 +1874,7 @@ class AccountsController(TransactionBase):
 		# For Purchase Invoice: positive loss = credit, negative loss = debit
 		# For Sales Invoice: positive loss = debit, negative loss = credit
 		if precision_loss:
+			# //// Neoffice — the side follows the sign of the loss (69e15141a4, see above).
 			if self.doctype == "Purchase Invoice":
 				credit_or_debit = "credit" if precision_loss > 0 else "debit"
 			else:
@@ -1882,6 +1885,7 @@ class AccountsController(TransactionBase):
 					{
 						"account": round_off_account,
 						"against": against,
+						# //// Neoffice — the amount is posted as a positive value on the side chosen above (69e15141a4).
 						credit_or_debit: abs(precision_loss),
 						"cost_center": round_off_cost_center
 						if self.use_company_roundoff_cost_center

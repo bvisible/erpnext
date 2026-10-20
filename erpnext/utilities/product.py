@@ -70,6 +70,7 @@ def get_price(item_code, price_list, customer_group, company, qty=1, party=None,
 			# Store original price as MRP before any discount is applied
 			mrp = price_obj.price_list_rate or 0
 
+			# //// Neoffice — the struck-through price comes from the price list rate (see above).
 			if pricing_rule:
 
 				if pricing_rule.pricing_rule_for == "Discount Percentage":

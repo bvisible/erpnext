@@ -106,6 +106,7 @@ erpnext.PointOfSale.ItemCart = class {
 				<div class="net-total-value">0.00</div>
 			</div>
 			<div class="taxes-container"></div>
+			<!-- //// Neoffice — the cart shows its discount (da71070613, 2023-11-15), hidden until there is one. -->
 			<div class="discount-container hidden">
 				<div>${__('Discount')}</div>
 				<div>0.00</div>
@@ -672,6 +673,7 @@ erpnext.PointOfSale.ItemCart = class {
 					${frappe.utils.escape_html(item_data.item_name)}
 				</div>
 				${get_description_html()}
+				<!-- //// Neoffice — a line for the variant attributes and one for the item discount (0f8787d3d6, 419a1db67a). -->
 				<div id="varInfo_${item_data.idx}" class="item-desc" style="display:block;height:18px;"></div>
 			</div>
 			<div class="item-show-discount">
@@ -750,6 +752,7 @@ erpnext.PointOfSale.ItemCart = class {
 						const parsed = new DOMParser().parseFromString(clean_description, "text/html");
 						clean_description = parsed.body.textContent || "";
 					} catch (error) {
+						//// Neoffice — fallback of the text extraction above (see its marker).
 						// Fallback: remove all HTML tags
 						clean_description = clean_description
 							.replace(/<[^>]*>/g, " ")

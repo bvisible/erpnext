@@ -37,6 +37,7 @@ erpnext.PointOfSale.ItemSelector = class {
 					<div class="search-field"></div>
 					<div class="item-group-field"></div>
 				</div>
+				<!-- //// Neoffice — the item-group buttons (parent groups, then groups), see has_items in point_of_sale.py -->
 				<div class="parent-item-group-container"></div>
 				<div class="item-group-container"></div>
 				<div class="items-container"></div>
@@ -87,6 +88,7 @@ erpnext.PointOfSale.ItemSelector = class {
 		return frappe.call({
 			method: "erpnext.selling.page.point_of_sale.point_of_sale.get_items",
 			freeze: true,
+			//// Neoffice — the customer is sent too, for its promotional prices (7ecd583775), see get_items.
 			args: { start, page_length, price_list, item_group, pos_profile, customer, search_term },
 		});
 	}
@@ -178,6 +180,7 @@ erpnext.PointOfSale.ItemSelector = class {
 				data-rate="${frappe.utils.escape_html(price_list_rate || 0)}"
 				data-stock-uom="${frappe.utils.escape_html(item.stock_uom)}"
 				title="${frappe.utils.escape_html(item.item_name)}">
+				<!-- //// Neoffice — the variant attributes (see div_attr) -->
 				<div class="wrap-item-attribute">${div_attr}</div>
 				${get_item_image_html()}
 
@@ -185,6 +188,7 @@ erpnext.PointOfSale.ItemSelector = class {
 					<div class="item-name">
 						${frappe.utils.escape_html(frappe.ellipsis(item.item_name, 18))}
 					</div>
+					<!-- //// Neoffice — the price with its promotion (see get_promo_price_html) -->
 					${get_promo_price_html()}
 				</div>
 			</div>`;
@@ -330,6 +334,7 @@ erpnext.PointOfSale.ItemSelector = class {
 				<a class="btn-open no-decoration" title="${__("Clear")}">
 					${frappe.utils.icon("close", "sm")}
 				</a>
+			<!-- //// Neoffice — a camera scan button next to the clear button (c9f1137f61, 2025-03-21) -->
 			</span>
 			<span style="display: inline;position: absolute;right: 8px;top: 2px;" id="scanBarcode">
 				<a class="btn-open no-decoration" title="${__("Scan")}">
@@ -337,6 +342,7 @@ erpnext.PointOfSale.ItemSelector = class {
 				</a>
 			</span>`
 		);
+		//// Neoffice — the clear and scan buttons of the search field (c9f1137f61).
 	
 		this.$clear_search_btn = this.search_field.$wrapper.find(".link-btn:last-child");
 		this.$scan_barcode_btn = this.search_field.$wrapper.find("#scanBarcode");
@@ -345,6 +351,7 @@ erpnext.PointOfSale.ItemSelector = class {
 			this.set_search_value("");
 			this.search_field.set_focus();
 		});
+		//// Neoffice — scanning with the camera adds the item (c9f1137f61, 2025-03-21), see the button above.
 	
 		this.$scan_barcode_btn.on("click", () => {
 			new frappe.ui.Scanner({

@@ -49,6 +49,7 @@ frappe.listview_settings["Purchase Invoice"] = {
 			Overdue: "red",
 			"Partly Paid": "yellow",
 			"Internal Transfer": "darkgrey",
+			//// Neoffice — the "In Payment Run" status (8f46440155, 2026-01-31), see purchase_invoice.py.
 			"In Payment Run": "blue",
 		};
 

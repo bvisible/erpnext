@@ -839,6 +839,9 @@ def get_stock_availability(item_code, warehouse):
 		# Available = actual - reserved (Sales Order) - POS reserved
 		available_qty = bin_qty - reserved_qty - pos_sales_qty
 
+		# //// Neoffice — the till may sell the actual qty less what Sales Orders reserve (1173e7b64c, 2025-12-15,
+		# //// "include reserved_qty in POS stock availability"): upstream ignored the reservations, so a till sold
+		# //// goods already promised to an order.
 		return available_qty, is_stock_item, is_negative_stock_allowed(item_code=item_code)
 	else:
 		is_stock_item = True
@@ -881,6 +884,7 @@ def get_bundle_availability(bundle_item_code, warehouse):
 		# Available = actual - reserved (Sales Order)
 		item_available = item_bin_qty - item_reserved_qty
 
+		# //// Neoffice — a bundle is limited by its items' stock less what Sales Orders reserve (1173e7b64c).
 		max_available_bundles = item_available / item.qty
 		if bundle_bin_qty > max_available_bundles and frappe.get_value(
 			"Item", item.item_code, "is_stock_item"
@@ -905,6 +909,7 @@ def get_bin_qty(item_code, warehouse):
 		as_dict=1,
 	)
 
+	# //// Neoffice — returns the reserved qty as well (1173e7b64c, 2025-12-15), see get_stock_availability.
 	if bin_data:
 		return bin_data[0].actual_qty or 0, bin_data[0].reserved_qty or 0
 	return 0, 0
