@@ -139,6 +139,8 @@ jobs:
       erpnext_bootstrap: false
       skip_build: true
       build_frappe_assets: true
+      # //// Neoffice — the portal hook reads Webshop Settings (owned by webshop); install it so the test runs the real path (neoffice-maintenance#1756)
+      install_apps: webshop
       test_args: "--module erpnext.portal.test_portal_homonyms_get_separate_customers"
     secrets: inherit
 
