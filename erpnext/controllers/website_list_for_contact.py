@@ -7,7 +7,8 @@ import json
 import frappe
 from frappe import _
 from frappe.modules.utils import get_module_app
-from frappe.utils import flt, has_common
+# //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
+from frappe.utils import cint, flt, has_common
 from frappe.utils.user import is_website_user
 
 

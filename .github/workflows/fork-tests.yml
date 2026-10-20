@@ -26,6 +26,22 @@ on:
       - "erpnext/crm/doctype/appointment/**"
       - "erpnext/accounts/doctype/cheque_print_template/**"
       - "erpnext/accounts/doctype/payment_request/**"
+      - "erpnext/accounts/doctype/budget/**"
+      - "erpnext/accounts/doctype/journal_entry/**"
+      - "erpnext/accounts/doctype/opening_invoice_creation_tool/**"
+      - "erpnext/accounts/doctype/payment_entry/**"
+      - "erpnext/accounts/report/inactive_sales_items/**"
+      - "erpnext/bulk_transaction/**"
+      - "erpnext/controllers/status_updater.py"
+      - "erpnext/controllers/website_list_for_contact.py"
+      - "erpnext/crm/report/lost_opportunity/**"
+      - "erpnext/edi/doctype/code_list/**"
+      - "erpnext/manufacturing/doctype/workstation/**"
+      - "erpnext/selling/report/inactive_customers/**"
+      - "erpnext/selling/report/sales_analytics/**"
+      - "erpnext/setup/doctype/authorization_control/**"
+      - "erpnext/stock/doctype/material_request/**"
+      - "erpnext/stock/stock_balance.py"
       - ".github/workflows/fork-tests.yml"
   pull_request:
     paths:
@@ -36,6 +52,22 @@ on:
       - "erpnext/crm/doctype/appointment/**"
       - "erpnext/accounts/doctype/cheque_print_template/**"
       - "erpnext/accounts/doctype/payment_request/**"
+      - "erpnext/accounts/doctype/budget/**"
+      - "erpnext/accounts/doctype/journal_entry/**"
+      - "erpnext/accounts/doctype/opening_invoice_creation_tool/**"
+      - "erpnext/accounts/doctype/payment_entry/**"
+      - "erpnext/accounts/report/inactive_sales_items/**"
+      - "erpnext/bulk_transaction/**"
+      - "erpnext/controllers/status_updater.py"
+      - "erpnext/controllers/website_list_for_contact.py"
+      - "erpnext/crm/report/lost_opportunity/**"
+      - "erpnext/edi/doctype/code_list/**"
+      - "erpnext/manufacturing/doctype/workstation/**"
+      - "erpnext/selling/report/inactive_customers/**"
+      - "erpnext/selling/report/sales_analytics/**"
+      - "erpnext/setup/doctype/authorization_control/**"
+      - "erpnext/stock/doctype/material_request/**"
+      - "erpnext/stock/stock_balance.py"
   workflow_dispatch:
 
 concurrency:
@@ -92,4 +124,29 @@ jobs:
       skip_build: true
       build_frappe_assets: true
       test_args: "--module erpnext.tests.test_neoffice_security_backports"
+    secrets: inherit
+
+  # //// Neoffice — the upstream tests of the modules whose SQL was hardened ahead of the merge (neoffice-maintenance#1748).
+  # //// They need ERPNext's own test records, which a copy of a production site does not have: a fresh site runs them.
+  sql_backports:
+    name: sql fixes — ${{ matrix.module }}
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - erpnext.selling.report.inactive_customers.test_inactive_customers
+          - erpnext.accounts.doctype.opening_invoice_creation_tool.test_opening_invoice_creation_tool
+          - erpnext.accounts.doctype.budget.test_budget
+          - erpnext.accounts.doctype.journal_entry.test_journal_entry
+          - erpnext.stock.doctype.material_request.test_material_request
+          - erpnext.selling.doctype.sales_order.test_sales_order
+          - erpnext.accounts.doctype.payment_entry.test_payment_entry
+          - erpnext.manufacturing.doctype.workstation.test_workstation
+    uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
+    with:
+      app: erpnext
+      erpnext_bootstrap: false
+      skip_build: true
+      build_frappe_assets: true
+      test_args: "--module ${{ matrix.module }}"
     secrets: inherit

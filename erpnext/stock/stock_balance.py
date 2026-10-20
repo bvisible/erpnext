@@ -233,7 +233,8 @@ def set_stock_balance_as_per_serial_no(
 	if not posting_time:
 		posting_time = nowtime()
 
-	condition = " and item.name='%s'" % item_code.replace("'", "'") if item_code else ""
+	# //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
+	condition = " and item.name=%s" % frappe.db.escape(item_code, percent=False) if item_code else ""
 
 	bin = frappe.db.sql(
 		"""select bin.item_code, bin.warehouse, bin.actual_qty, item.stock_uom

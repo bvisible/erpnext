@@ -406,14 +406,17 @@ class Analytics:
 				break
 
 	def get_groups(self):
-		if self.filters.tree_type == "Territory":
-			parent = "parent_territory"
-		if self.filters.tree_type == "Customer Group":
-			parent = "parent_customer_group"
-		if self.filters.tree_type == "Item Group":
-			parent = "parent_item_group"
-		if self.filters.tree_type == "Supplier Group":
-			parent = "parent_supplier_group"
+		# //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
+		parent_field_map = {
+			"Territory": "parent_territory",
+			"Customer Group": "parent_customer_group",
+			"Item Group": "parent_item_group",
+			"Supplier Group": "parent_supplier_group",
+		}
+		if self.filters.tree_type not in parent_field_map:
+			frappe.throw(_("Invalid Tree Type {0}").format(self.filters.tree_type))
+
+		parent = parent_field_map[self.filters.tree_type]
 
 		self.depth_map = frappe._dict()
 
@@ -431,6 +434,10 @@ class Analytics:
 
 	def get_teams(self):
 		self.depth_map = frappe._dict()
+
+		# //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
+		if not frappe.db.exists("DocType", self.filters.doc_type):
+			frappe.throw(_("Invalid Document Type {0}").format(self.filters.doc_type))
 
 		self.group_entries = frappe.db.sql(
 			f""" select * from (select "Order Types" as name, 0 as lft,

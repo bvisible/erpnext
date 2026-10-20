@@ -405,10 +405,12 @@ def get_workstations(**kwargs):
 
 	for d in data:
 		d.workstation_name = get_link_to_form("Workstation", d.name)
-		d.status_image = d.on_status_image
+		# //// Neoffice — backport of upstream 928f984198, d047caf4aa (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
+		d.status_image = frappe.utils.escape_html(d.on_status_image)
 		d.background_color = color_map.get(d.status, "var(--red-600)")
 		d.workstation_link = get_url_to_form("Workstation", d.name)
 		if d.status != "Production":
-			d.status_image = d.off_status_image
+			# //// Neoffice — backport of upstream 928f984198, d047caf4aa (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
+			d.status_image = frappe.utils.escape_html(d.off_status_image)
 
 	return data

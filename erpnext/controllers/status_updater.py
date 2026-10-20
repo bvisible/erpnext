@@ -389,9 +389,11 @@ class StatusUpdater(Document):
 		for args in self.status_updater:
 			# condition to include current record (if submit or no if cancel)
 			if self.docstatus == 1:
-				args["cond"] = " or parent='%s'" % self.name.replace('"', '"')
+				# //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
+				args["cond"] = " or parent=%s" % frappe.db.escape(self.name)
 			else:
-				args["cond"] = " and parent!='%s'" % self.name.replace('"', '"')
+				# //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
+				args["cond"] = " and parent!=%s" % frappe.db.escape(self.name)
 
 			self._update_children(args, update_modified)
 
@@ -421,9 +423,11 @@ class StatusUpdater(Document):
 				args["second_source_condition"] = frappe.db.sql(
 					""" select ifnull((select sum({second_source_field})
 					from `tab{second_source_dt}`
-					where `{second_join_field}`='{detail_id}'
+					-- //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): the id is a bound parameter, see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
+					where `{second_join_field}`=%(detail_id)s
 					and (`tab{second_source_dt}`.docstatus=1)
-					{second_source_extra_cond}), 0) """.format(**args)
+					{second_source_extra_cond}), 0) """.format(**args),
+					{"detail_id": args["detail_id"]},
 				)[0][0]
 
 			if args["detail_id"]:
@@ -434,9 +438,11 @@ class StatusUpdater(Document):
 					frappe.db.sql(
 						"""
 						(select ifnull(sum({source_field}), 0)
-							from `tab{source_dt}` where `{join_field}`='{detail_id}'
+							-- //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): the id is a bound parameter, see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
+							from `tab{source_dt}` where `{join_field}`=%(detail_id)s
 							and (docstatus=1 {cond}) {extra_cond})
-				""".format(**args)
+				""".format(**args),
+						{"detail_id": args["detail_id"]},
 					)[0][0]
 					or 0.0
 				)
@@ -447,7 +453,9 @@ class StatusUpdater(Document):
 				frappe.db.sql(
 					"""update `tab{target_dt}`
 					set {target_field} = {source_dt_value} {update_modified}
-					where name='{detail_id}'""".format(**args)
+					-- //// Neoffice — backport of upstream ce8fce78f1 (SQL and output escaping): the id is a bound parameter, see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
+					where name=%(detail_id)s""".format(**args),
+					{"detail_id": args["detail_id"]},
 				)
 
 	def _update_percent_field_in_targets(self, args, update_modified=True):

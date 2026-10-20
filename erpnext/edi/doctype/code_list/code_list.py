@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 
 import frappe
 from frappe.model.document import Document
+# //// Neoffice — backport of upstream 76e910e8c0 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
+from frappe.utils import escape_html
 
 if TYPE_CHECKING:
 	from lxml.etree import Element
@@ -63,14 +65,19 @@ class CodeList(Document):
 
 	def from_genericode(self, root: "Element"):
 		"""Extract Code List details from genericode XML"""
-		self.title = root.find(".//Identification/ShortName").text
+		# //// Neoffice — backport of upstream 76e910e8c0 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
+		self.title = escape_html(root.find(".//Identification/ShortName").text)
 		self.version = root.find(".//Identification/Version").text
 		self.canonical_uri = root.find(".//CanonicalUri").text
 		# optionals
-		self.description = getattr(root.find(".//Identification/LongName"), "text", None)
-		self.publisher = getattr(root.find(".//Identification/Agency/ShortName"), "text", None)
+		# //// Neoffice — backport of upstream 76e910e8c0 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
+		self.description = escape_html(getattr(root.find(".//Identification/LongName"), "text", None))
+		self.publisher = escape_html(getattr(root.find(".//Identification/Agency/ShortName"), "text", None))
 		if not self.publisher:
-			self.publisher = getattr(root.find(".//Identification/Agency/LongName"), "text", None)
+			# //// Neoffice — backport of upstream 76e910e8c0 (SQL and output escaping): see neoffice-maintenance#1748. Drop at the next merge of upstream version-15.
+			self.publisher = escape_html(
+				getattr(root.find(".//Identification/Agency/LongName"), "text", None)
+			)
 		self.publisher_id = getattr(root.find(".//Identification/Agency/Identifier"), "text", None)
 		self.url = getattr(root.find(".//Identification/LocationUri"), "text", None)
 
