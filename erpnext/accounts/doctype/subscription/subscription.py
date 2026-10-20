@@ -677,7 +677,7 @@ class Subscription(Document):
 			)
 
 		if self.current_invoice and getdate(_current_start_date) <= getdate(
-				self.current_invoice.posting_date
+			self.current_invoice.posting_date
 		) <= getdate(_current_end_date):
 			return True
 

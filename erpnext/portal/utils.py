@@ -262,16 +262,11 @@ def create_party_contact(doctype, fullname, user, party_name):
 
 
 def party_exists(doctype, user):
-	# //// Neoffice — body unchanged in substance (upstream returns the membership test directly; ours
-	# //// stores it in `result` first). This helper is no longer called by
-	# //// create_customer_or_supplier() above, which does its own three-way lookup. The file also
-	# //// lost its final newline (28b1f44368, 2025-04-28).
-	# //// check if contact exists against party and if it is linked to the doctype
+	# check if contact exists against party and if it is linked to the doctype
 	contact_name = frappe.db.get_value("Contact", {"email_id": user})
 	if contact_name:
 		contact = frappe.get_doc("Contact", contact_name)
 		doctypes = [d.link_doctype for d in contact.links]
-		result = doctype in doctypes
-		return result
+		return doctype in doctypes
 
 	return False
