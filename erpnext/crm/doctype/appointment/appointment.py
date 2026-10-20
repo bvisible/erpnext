@@ -10,6 +10,7 @@ from frappe.desk.form.assign_to import add as add_assignment
 from frappe.model.document import Document
 from frappe.share import add_docshare
 from frappe.utils import get_url, getdate, now
+from frappe.utils.html_utils import escape_html  # //// Neoffice — backport of upstream 2ca71f16c4 (see below)
 from frappe.utils.verified_command import get_signed_params
 
 
@@ -140,7 +141,10 @@ class Appointment(Document):
 			lead.append(
 				"notes",
 				{
-					"note": self.customer_details,
+					# //// Neoffice — backport of upstream 2ca71f16c4 (v15.119.1, GHSA-rv4r-c8v3-3hrc): the details a visitor
+					# //// typed on the public booking page are escaped. Stored raw in the Lead's notes, they ran as script in
+					# //// the session of the colleague who opened the Lead. Drop at the next merge of upstream version-15 (#1748).
+					"note": escape_html(self.customer_details),
 					"added_by": frappe.session.user,
 					"added_on": now(),
 				},

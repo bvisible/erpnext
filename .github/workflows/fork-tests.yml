@@ -20,11 +20,20 @@ on:
     paths:
       - "erpnext/accounts/doctype/subscription/**"
       - "erpnext/selling/doctype/quotation/**"
+      # //// Neoffice — the security fixes taken from upstream ahead of the merge (neoffice-maintenance#1748)
+      - "erpnext/tests/test_neoffice_security_backports.py"
+      - "erpnext/crm/frappe_crm_api.py"
+      - "erpnext/crm/doctype/appointment/**"
+      - "erpnext/accounts/doctype/cheque_print_template/**"
       - ".github/workflows/fork-tests.yml"
   pull_request:
     paths:
       - "erpnext/accounts/doctype/subscription/**"
       - "erpnext/selling/doctype/quotation/**"
+      - "erpnext/tests/test_neoffice_security_backports.py"
+      - "erpnext/crm/frappe_crm_api.py"
+      - "erpnext/crm/doctype/appointment/**"
+      - "erpnext/accounts/doctype/cheque_print_template/**"
   workflow_dispatch:
 
 concurrency:
@@ -68,4 +77,17 @@ jobs:
       skip_build: true
       build_frappe_assets: true
       test_args: "--module erpnext.selling.doctype.quotation.test_quotation_neoffice"
+    secrets: inherit
+
+  # //// Neoffice — the security fixes taken from upstream version-15 ahead of the full merge (neoffice-maintenance#1748):
+  # //// each test fails on the code before its fix.
+  security_backports:
+    name: security — upstream fixes taken ahead of the merge
+    uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
+    with:
+      app: erpnext
+      erpnext_bootstrap: false
+      skip_build: true
+      build_frappe_assets: true
+      test_args: "--module erpnext.tests.test_neoffice_security_backports"
     secrets: inherit

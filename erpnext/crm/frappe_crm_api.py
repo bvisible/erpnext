@@ -149,6 +149,23 @@ def contact_exists(email, mobile_no):
 	return False
 
 
+# //// Neoffice — backport of upstream 45b232d369 (v15.111.0, GHSA-x635-wr4c-7345): only these fields of the
+# //// request reach the new Customer. The request was spread into `get_doc` and inserted with permission checks
+# //// off, so its own "doctype" key won: any signed-in account, portal customers included, could create any record
+# //// (a System Manager user). Drop at the next merge of upstream version-15, which also gates the endpoint behind
+# //// CRM Settings (66d0a60140). neoffice-maintenance#1748.
+CUSTOMER_ALLOWED_FIELDS = {
+	"customer_name",
+	"customer_group",
+	"customer_type",
+	"territory",
+	"default_currency",
+	"industry",
+	"website",
+	"crm_deal",
+}
+
+
 @frappe.whitelist()
 def create_customer(customer_data=None):
 	if not customer_data:
@@ -157,9 +174,12 @@ def create_customer(customer_data=None):
 	try:
 		customer_name = frappe.db.exists("Customer", {"customer_name": customer_data.get("customer_name")})
 		if not customer_name:
-			customer = frappe.get_doc({"doctype": "Customer", **customer_data}).insert(
-				ignore_permissions=True
-			)
+			# //// Neoffice — backport of upstream 45b232d369: a new Customer, filled from the allowlist above only.
+			customer = frappe.new_doc("Customer")
+			for field in CUSTOMER_ALLOWED_FIELDS:
+				if customer_data.get(field) is not None:
+					customer.set(field, customer_data.get(field))
+			customer.insert(ignore_permissions=True)
 			customer_name = customer.name
 
 		contacts = json.loads(customer_data.get("contacts"))

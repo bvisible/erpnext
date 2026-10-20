@@ -48,6 +48,12 @@ class ChequePrintTemplate(Document):
 
 @frappe.whitelist()
 def create_or_update_cheque_print_format(template_name):
+	# //// Neoffice — backport of upstream 2f5b93e308 (v15.111.0, GHSA-w996-r7v3-87wr): the Print Format built here
+	# //// from the template's fields is Jinja, rendered on the server: building it is a System Manager's act. Any
+	# //// user who could write a Cheque Print Template ran template code through it. On our fleet only Administrator
+	# //// holds System Manager. Drop at the next merge of upstream version-15 (#1748).
+	frappe.only_for("System Manager")
+
 	if not frappe.db.exists("Print Format", template_name):
 		cheque_print = frappe.new_doc("Print Format")
 		cheque_print.update(
