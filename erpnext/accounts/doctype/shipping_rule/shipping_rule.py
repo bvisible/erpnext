@@ -870,6 +870,9 @@ class ShippingRule(Document):
 					shipping_labels.append(rule.label)
 		except:
 			pass
+		# //// Neoffice — this rule's own label even when the list above could not be read (neoffice-maintenance#1769).
+		if self.label and self.label not in shipping_labels:
+			shipping_labels.append(self.label)
 			
 		# Identify shipping taxes to remove
 		shipping_taxes_to_remove = []
@@ -882,18 +885,12 @@ class ShippingRule(Document):
 			if not hasattr(tax, "description") or not tax.description:
 				continue
 				
-			# Check using description - look for any shipping rule label
-			if any(label in tax.description for label in shipping_labels):
-				shipping_taxes_to_remove.append(i)
-				continue
-				
-			# Check for generic shipping terms
-			if (self.label in tax.description or
-				"shipping" in tax.description.lower() or
-				"delivery" in tax.description.lower() or
-				"freight" in tax.description.lower() or
-				"port" in tax.description.lower() or
-				"multi" in tax.description.lower()):
+			# //// Neoffice — only the rows a shipping rule writes: its label alone, or the label followed by " - "
+			# //// (a constraint group, or a VAT row on the freight). The old test was "the label anywhere" plus
+			# //// generic words (shipping, delivery, freight, port, multi), which also removed a row such as
+			# //// « Taxe d'importation », « Transport » or « Multiplicateur » when the freight became free
+			# //// (neoffice-maintenance#1769).
+			if any(tax.description == label or tax.description.startswith(f"{label} - ") for label in shipping_labels):
 				shipping_taxes_to_remove.append(i)
 		
 		# Remove shipping taxes in reverse order to avoid index issues

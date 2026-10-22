@@ -102,35 +102,15 @@ def create_customer_or_supplier():
 					existing_party.save()
 				return existing_party
 
-	# //// Before creating, check if a customer with the same name already exists
+	# //// Neoffice — the by-name match that used to sit here is removed (neoffice-maintenance#1756,
+	# //// closing this file's "TO REVIEW" note). It linked a new portal account to any existing
+	# //// Customer whose customer_name equalled the user's full name, so two people who share a
+	# //// name shared one Customer and the second saw the first's orders, invoices and addresses.
+	# //// Upstream create_party() always makes a new party; ERPNext appends a number when a
+	# //// customer_name repeats, so no DuplicateEntryError results. The Portal User and Contact
+	# //// lookups above still reunite a returning user with their own party.
 	fullname = frappe.utils.get_fullname(user)
-	
-	if doctype == "Customer":
-		# Check if a customer with this name already exists
-		existing_by_name = frappe.db.get_value("Customer", 
-			{"customer_name": fullname}, 
-			"name")
-		
-		if existing_by_name:
-			# Customer with this name exists, link it to the user instead of creating a duplicate
-			existing_customer = frappe.get_doc("Customer", existing_by_name)
-			
-			# Link to Portal User if not already linked
-			if not frappe.db.exists("Portal User", {"parent": existing_by_name, "user": user}):
-				existing_customer.append("portal_users", {"user": user})
-				existing_customer.flags.ignore_permissions = True
-				existing_customer.flags.ignore_mandatory = True
-				existing_customer.save()
-			
-			# Create/update contact if needed
-			if not contact_name:
-				try:
-					create_party_contact("Customer", fullname, user, existing_customer.name)
-				except:
-					pass
-			
-			return existing_customer
-	
+
 	# //// Create a new entity only if none exists
 	party = frappe.new_doc(doctype)
 	
@@ -160,38 +140,16 @@ def create_customer_or_supplier():
 			"supplier_type": "Individual",
 		})
 
-	# Check if a customer with this name already exists before inserting
-	if doctype == "Customer":
-		existing = frappe.db.get_value("Customer", {"customer_name": fullname}, "name")
-		if existing:
-			# Customer with this name already exists, use it instead of creating duplicate
-			existing_customer = frappe.get_doc("Customer", existing)
-			if not frappe.db.exists("Portal User", {"parent": existing, "user": user}):
-				existing_customer.append("portal_users", {"user": user})
-				existing_customer.flags.ignore_permissions = True
-				existing_customer.save()
-			return existing_customer
-	
+	# //// Neoffice — a second by-name match stood here (the same homonym bug as above,
+	# //// neoffice-maintenance#1756); removed. ERPNext appends a number for a duplicate
+	# //// customer_name, so the insert below does not collide.
 	party.flags.ignore_mandatory = True
 	try:
 		party.insert(ignore_permissions=True)
 	except frappe.DuplicateEntryError as e:
-		# If we get a duplicate error, it means a customer with this name already exists
-		# This can happen due to race conditions or naming series issues
-		if doctype == "Customer":
-			# Try to find the existing customer
-			existing = frappe.get_all("Customer",
-				filters=[["customer_name", "=", fullname]],
-				fields=["name"],
-				limit=1)
-			if existing:
-				existing_customer = frappe.get_doc("Customer", existing[0].name)
-				# Link to user if not already linked
-				if not frappe.db.exists("Portal User", {"parent": existing[0].name, "user": user}):
-					existing_customer.append("portal_users", {"user": user})
-					existing_customer.flags.ignore_permissions = True
-					existing_customer.save()
-				return existing_customer
+		# //// Neoffice — this used to find the Customer with the same customer_name and link the user
+		# //// to it, which merged two people who share a name (neoffice-maintenance#1756). Just log and
+		# //// bail; ERPNext appends a number for a duplicate customer_name, so this path is not normally hit.
 		frappe.log_error("Error inserting party (duplicate)", f"Duplicate error inserting {doctype}: {str(e)}")
 		return None
 	except Exception as e:
