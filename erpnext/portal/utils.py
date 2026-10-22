@@ -50,6 +50,15 @@ def set_default_role(doc, method):
 # ////   - it reads the `Webshop Settings` single, which the webshop app owns, not erpnext;
 # ////   - upstream's party_exists() is now only used by the (unmarked) callers below.
 # //// Resolve this function from the two commits above, not line by line.
+# //// Neoffice — added function (no upstream equivalent), see create_customer_or_supplier.
+def _non_group_customer_group():
+	"""The Customer Group of Selling Settings when it is not a group, else the first one that is not."""
+	group = frappe.db.get_single_value("Selling Settings", "customer_group")
+	if group and not frappe.db.get_value("Customer Group", group, "is_group"):
+		return group
+	return frappe.db.get_value("Customer Group", {"is_group": 0}, "name", order_by="creation asc")
+
+
 def create_customer_or_supplier():
 	"""Based on the default Role (Customer, Supplier), create a Customer / Supplier.
 	Called on_session_creation hook.
@@ -126,7 +135,9 @@ def create_customer_or_supplier():
 			"customer_name": fullname,
 			"customer_type": "Individual",
 			"territory": territory,
-			"customer_group": "All Customer Groups",
+			# //// Neoffice — the root "All Customer Groups" is a group, which Customer.validate refuses when chosen
+			# //// (erpnext 15.123, 7a227e048e): a login that has to open a customer died on it.
+			"customer_group": _non_group_customer_group(),
 			"default_currency": default_currency
 		})
 		

@@ -394,6 +394,15 @@ class Customer(TransactionBase):
 		if not self.customer_group:
 			return
 
+		# //// Neoffice — upstream (7a227e048e, 2026-03-26) refuses a group-type Customer Group at EVERY save. On the
+		# //// fleet the French root "Tous les Groupes Client" is the default of Selling Settings and a group, and
+		# //// customers created by the shop, the till and NORA carry it (on osiris 185 of 292): none of them could
+		# //// be saved any more (a phone number, a portal user, a loyalty program). The check now applies where a
+		# //// group is chosen: a new customer, or a changed group. Drop it when the fleet's customers are moved to
+		# //// a non-group Customer Group.
+		if not self.is_new() and not self.has_value_changed("customer_group"):
+			return
+
 		is_group = frappe.db.get_value("Customer Group", self.customer_group, "is_group")
 		if is_group:
 			frappe.throw(
