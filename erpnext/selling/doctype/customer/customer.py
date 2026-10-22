@@ -786,18 +786,33 @@ def make_contact(args, is_primary_contact=1):
 		contact.add_phone(args.get("mobile_no"), is_primary_mobile_no=True)
 	# //// Neoffice — reuse an existing Contact instead of creating a second one (b8d3deee22,
 	# //// 2023-12-22 "add missing fix"): upstream always inserts a new Contact, so a customer whose
-	# //// e-mail already had one ended up with duplicates. Note the consequence: when a Contact is
-	# //// found, the object built above is DISCARDED and the found one is updated and re-inserted —
-	# //// which is why the final insert had to become ignore_permissions=True (marked below).
-	# //// TO REVIEW: matching on e-mail alone merges two people sharing a mailbox (info@…).
-	# //// added if-else condition
-	existing = frappe.db.get_all("Contact", filters={"email_id": args.get("email_id")})
+	# //// e-mail already had one ended up with duplicates. When a Contact is reused, the object built
+	# //// above is DISCARDED and the found one is updated instead.
+	# //// That reuse used to find the Contact by e-mail ALONE and RE-INSERT it: any party created with
+	# //// an e-mail another Contact already carried (a placeholder typed in the quick-entry dialog, a
+	# //// shared mailbox) got a COPY of the other party's Contact — still linked to the other party,
+	# //// named with what was typed here, and set as this party's primary contact. Its contact panel
+	# //// showed nobody and « Customer Primary Contact » named a stranger (27 customers on one client,
+	# //// 2026-10, neoffice-maintenance#1801). A Contact is now reused only when it already belongs to THIS party or to nobody
+	# //// (_reusable_contact); it is saved where it is, never re-inserted; a party never takes another
+	# //// party's Contact. No e-mail, nothing to match on: an empty filter matches every Contact that
+	# //// has no e-mail either.
+	existing = _reusable_contact(args.get("email_id"), args.get("doctype"), args.get("name"))
 	if existing:
-		contact = frappe.get_doc("Contact", existing[0].name)
+		contact = frappe.get_doc("Contact", existing)
+		if not any(
+			row.link_doctype == args.get("doctype") and row.link_name == args.get("name")
+			for row in contact.links
+		):
+			contact.append("links", {"link_doctype": args.get("doctype"), "link_name": args.get("name")})
 	if args.get("first_name"):
 		contact.first_name = args.get("first_name")
 	if args.get("last_name"):
 		contact.last_name = args.get("last_name")
+
+	if existing:
+		contact.save(ignore_permissions=True)
+		return contact
 
 	if flags := args.get("flags"):
 		contact.insert(ignore_permissions=flags.get("ignore_permissions"))
@@ -806,6 +821,30 @@ def make_contact(args, is_primary_contact=1):
 		contact.insert(ignore_permissions=True) # //// added ignore_permissions=True
 
 	return contact
+
+
+# //// Neoffice — added function (no upstream equivalent); see the reuse block in make_contact.
+def _reusable_contact(email_id, party_doctype, party_name):
+	"""The Contact carrying this e-mail that a party may reuse: one already linked to that party, else
+	one linked to nobody. Never a Contact that belongs to another party."""
+	email_id = (email_id or "").strip()
+	if not email_id:
+		return None
+
+	unowned = None
+	for name in frappe.get_all(
+		"Contact", filters={"email_id": email_id}, pluck="name", order_by="creation asc"
+	):
+		links = frappe.get_all(
+			"Dynamic Link",
+			filters={"parenttype": "Contact", "parent": name},
+			fields=["link_doctype", "link_name"],
+		)
+		if any(row.link_doctype == party_doctype and row.link_name == party_name for row in links):
+			return name
+		if not links and unowned is None:
+			unowned = name
+	return unowned
 
 
 def make_address(args, is_primary_address=1, is_shipping_address=1):
