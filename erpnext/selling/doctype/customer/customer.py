@@ -810,6 +810,7 @@ def make_contact(args, is_primary_contact=1):
 	if args.get("last_name"):
 		contact.last_name = args.get("last_name")
 
+	# //// Neoffice — see the block marker above: save reused contact in place, skip re-insert
 	if existing:
 		contact.save(ignore_permissions=True)
 		return contact
