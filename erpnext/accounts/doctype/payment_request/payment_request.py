@@ -903,6 +903,8 @@ def get_rendered_message(docname):
 	"""Return the rendered message for the Payment Request email dialog."""
 	pr = frappe.get_doc("Payment Request", docname)
 	pr.check_permission("read")
+	# //// Neoffice — as upstream's resend_payment_email since 15.124.0: the text names what the reference document says.
+	frappe.has_permission(pr.reference_doctype, "read", pr.reference_name, throw=True)
 	return pr.get_message()
 
 
@@ -918,6 +920,10 @@ def get_rendered_message(docname):
 def send_edited_payment_email(docname, recipients=None, subject=None, message=None):
 	doc = frappe.get_doc("Payment Request", docname)
 	doc.check_permission("write")
+	# //// Neoffice — the rights upstream's resend_payment_email asks for since 15.124.0 (to send, and to read the
+	# //// reference document the mail carries), on top of the right to write the request.
+	doc.check_permission("email")
+	frappe.has_permission(doc.reference_doctype, "read", doc.reference_name, throw=True)
 	if not (
 		doc.docstatus == 1
 		and doc.payment_request_type == "Inward"

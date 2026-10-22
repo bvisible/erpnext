@@ -835,8 +835,8 @@ def get_stock_availability(item_code, warehouse):
 		# //// 2023-11-08 "add total_reserved_qty in calc stock POS"; reworked by 1173e7b64c, 2025-12-15
 		# //// "include reserved_qty in POS stock availability calculation"): stock already promised to a
 		# //// submitted Sales Order was still offered at the till, so the shop sold the same unit twice.
-		# //// get_bin_qty() below therefore returns a TUPLE — every caller had to change.
-		bin_qty, reserved_qty = get_bin_qty(item_code, warehouse)
+		# //// get_bin_and_reserved_qty() below returns the pair; get_bin_qty stays upstream's.
+		bin_qty, reserved_qty = get_bin_and_reserved_qty(item_code, warehouse)
 		pos_sales_qty = get_pos_reserved_qty(item_code, warehouse)
 		# Available = actual - reserved (Sales Order) - POS reserved
 		available_qty = bin_qty - reserved_qty - pos_sales_qty
@@ -882,7 +882,7 @@ def get_bundle_availability(bundle_item_code, warehouse):
 	for item in product_bundle.items:
 		# //// Neoffice — same reserved_qty deduction for Product Bundles (1173e7b64c, 2025-12-15):
 		# //// upstream divides the raw Bin.actual_qty by the bundle line qty.
-		item_bin_qty, item_reserved_qty = get_bin_qty(item.item_code, warehouse)
+		item_bin_qty, item_reserved_qty = get_bin_and_reserved_qty(item.item_code, warehouse)
 		# Available = actual - reserved (Sales Order)
 		item_available = item_bin_qty - item_reserved_qty
 
@@ -897,11 +897,23 @@ def get_bundle_availability(bundle_item_code, warehouse):
 	return bundle_bin_qty - pos_sales_qty
 
 
-# //// Neoffice — SIGNATURE CHANGE (1173e7b64c, 2025-12-15): upstream selects actual_qty only and
-# //// returns a scalar; ours selects reserved_qty too and returns the pair
-# //// (actual_qty, reserved_qty). Any upstream or third-party caller expecting a number breaks
-# //// silently on the tuple — check every `get_bin_qty(` call site at the merge.
 def get_bin_qty(item_code, warehouse):
+	bin_qty = frappe.db.sql(
+		"""select actual_qty from `tabBin`
+		where item_code = %s and warehouse = %s
+		limit 1""",
+		(item_code, warehouse),
+		as_dict=1,
+	)
+
+	return bin_qty[0].actual_qty or 0 if bin_qty else 0
+
+
+# //// Neoffice — added function (1173e7b64c, 2025-12-15): the actual AND the reserved quantity of a Bin. Until the
+# //// merge of v15.124.1 get_bin_qty itself returned this pair, which broke any caller expecting upstream's number
+# //// (get_product_bundle_stock_availability, new in 15.123, raised a TypeError on every bundle line of a POS
+# //// Invoice). get_bin_qty is upstream's again; only the callers of ours ask for the pair.
+def get_bin_and_reserved_qty(item_code, warehouse):
 	"""Get actual_qty and reserved_qty from Bin."""
 	bin_data = frappe.db.sql(
 		"""select actual_qty, reserved_qty from `tabBin`
@@ -911,7 +923,6 @@ def get_bin_qty(item_code, warehouse):
 		as_dict=1,
 	)
 
-	# //// Neoffice — returns the reserved qty as well (1173e7b64c, 2025-12-15), see get_stock_availability.
 	if bin_data:
 		return bin_data[0].actual_qty or 0, bin_data[0].reserved_qty or 0
 	return 0, 0
