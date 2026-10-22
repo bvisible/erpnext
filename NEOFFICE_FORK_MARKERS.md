@@ -216,6 +216,20 @@ those edits are recorded here (the code edits are marked in place with `//// Neo
 
 ---
 
+## Merge with upstream v15.124.1 (2026-10-22)
+
+`fork_markers.py check --base v15.124.1 --head HEAD --upstream-base v15.124.1` answers 0 unmarked hunks.
+Nothing is added to the list below, except what the merge settled in files that cannot carry a comment:
+
+- `erpnext/locale/fr.po`, `erpnext/locale/main.pot`: upstream migrated its CSV catalogues to PO (`ba0f3c68f3`), so
+  both sides added the file. Upstream's text is the frame (header, order, new strings); our French wins wherever
+  it is not empty and differs (1 980 entries: « société », Neoffice's wording), upstream's wins where ours is
+  empty (8), and the 768 entries only we have stay at the end. No HTML entity in any msgstr.
+- `erpnext/translations/*.csv`: deleted by upstream, `fr.csv` included (it was the only one we had touched, by one
+  entry which the PO already carries).
+- `erpnext/selling/doctype/sales_order_item/sales_order_item.json`: upstream's file (new field
+  `mapped_additional_discount_amount`) with our column / list view properties reapplied by property, and `row_format`.
+
 ## Merge with upstream v15.123.0 — the files without comment syntax that were never listed (2026-10-20)
 
 Inventoried at the merge of upstream `version-15` v15.123.0 (`e864addb6c`), when `fork_markers.py check

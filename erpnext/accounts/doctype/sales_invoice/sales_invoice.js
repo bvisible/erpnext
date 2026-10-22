@@ -382,9 +382,8 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 							default: "MO",
 						},
 					],
-					primary_action: function () {
+					primary_action: function (data) {
 						//// Neoffice — upstream's call moved into the promise below (see the marker of timesheet_btn).
-						const data = d.get_values();
 						d.hide();
 						//// Neoffice — the lines per rate, once the timesheets are pulled (see the marker of timesheet_btn).
 						Promise.resolve(
@@ -763,7 +762,9 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 			this.frm.doc.is_cash_or_non_trade_discount
 		);
 
-		if (!this.frm.doc.is_cash_or_non_trade_discount) {
+		if (this.frm.doc.is_cash_or_non_trade_discount) {
+			this.clear_mapped_discounts();
+		} else {
 			this.frm.set_value("additional_discount_account", "");
 		}
 

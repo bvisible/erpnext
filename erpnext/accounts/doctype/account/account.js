@@ -130,8 +130,7 @@ frappe.ui.form.on("Account", {
 					default: frm.doc.name,
 				},
 			],
-			primary_action: function () {
-				var data = d.get_values();
+			primary_action: function (data) {
 				frappe.call({
 					method: "erpnext.accounts.doctype.account.account.merge_account",
 					args: {
@@ -179,8 +178,7 @@ frappe.ui.form.on("Account", {
 					read_only_depends_on: 'eval:frappe.session.user != "Administrator" && ' + frm.doc.tax_code //// added
 				},
 			],
-			primary_action: function () {
-				var data = d.get_values();
+			primary_action: function (data) {
 				if (
 					data.account_number === frm.doc.account_number &&
 					data.account_name === frm.doc.account_name

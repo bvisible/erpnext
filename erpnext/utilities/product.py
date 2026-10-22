@@ -41,6 +41,7 @@ def get_price(item_code, price_list, customer_group, company, qty=1, party=None,
 					"stock_qty": qty,
 					"transaction_type": "selling",
 					"price_list": price_list,
+					"price_list_rate": price[0].price_list_rate,
 					"customer_group": customer_group,
 					"company": company,
 					"conversion_rate": 1,
@@ -73,6 +74,12 @@ def get_price(item_code, price_list, customer_group, company, qty=1, party=None,
 			# //// Neoffice — the struck-through price comes from the price list rate (see above).
 			if pricing_rule:
 
+				price_obj.price_list_rate = pricing_rule.get("price_list_rate", mrp)
+				if pricing_rule.margin_type == "Percentage":
+					price_obj.price_list_rate *= 1 + flt(pricing_rule.margin_rate_or_amount) / 100
+				elif pricing_rule.margin_type == "Amount":
+					price_obj.price_list_rate += flt(pricing_rule.margin_rate_or_amount)
+
 				if pricing_rule.pricing_rule_for == "Discount Percentage":
 					price_obj.discount_percent = pricing_rule.discount_percentage
 					price_obj.formatted_discount_percent = str(flt(pricing_rule.discount_percentage, 0)) + "%"
@@ -80,24 +87,23 @@ def get_price(item_code, price_list, customer_group, company, qty=1, party=None,
 						price_obj.price_list_rate * (1.0 - (flt(pricing_rule.discount_percentage) / 100.0))
 					)
 
-				if pricing_rule.pricing_rule_for == "Rate":
-					rate_discount = flt(mrp) - flt(pricing_rule.price_list_rate)
+				elif pricing_rule.pricing_rule_for == "Discount Amount":
+					price_obj.price_list_rate -= flt(pricing_rule.discount_amount)
+
+				if pricing_rule.pricing_rule_for in ("Rate", "Discount Amount"):
+					rate_discount = flt(mrp) - flt(price_obj.price_list_rate)
 					if rate_discount > 0:
 						price_obj.formatted_discount_rate = fmt_money(
 							rate_discount, currency=price_obj["currency"]
 						)
-					price_obj.price_list_rate = pricing_rule.price_list_rate or 0
 
 				# //// Neoffice — added block (793f38c40b, 2023-10-30; 7eea61c52e, 2025-12-06; 70250637fb,
-				# //// 2026-02-01). Upstream handles "Discount Percentage" and "Rate" but never subtracts a
-				# //// "Discount Amount" rule from the price list rate, so such a promotion showed at full price
-				# //// on the webshop and at the till. The rest of the block exposes the rule's validity window
-				# //// (valid_from / valid_upto) on the returned price so the shop can display "offer ends on…".
+				# //// 2026-02-01). It exposes the rule's validity window (valid_from / valid_upto) on the returned
+				# //// price so the shop can display "offer ends on…". Our subtraction of a "Discount Amount" rule
+				# //// from the price list rate is gone: upstream does it since 15.124.0 (the elif above), and both
+				# //// together took the discount twice.
 				# //// The `synchronized_rule` guard just below is documented on its own lines (ecdec25916).
 				# //// added code block
-				if pricing_rule.pricing_rule_for == "Discount Amount":
-					price_obj.price_list_rate = flt(price_obj.price_list_rate - pricing_rule.discount_amount)
-
 				if pricing_rule.pricing_rules:
 					valid_from = frappe.db.get_value("Pricing Rule", json.loads(pricing_rule.pricing_rules)[0], "valid_from")
 					valid_upto = frappe.db.get_value("Pricing Rule", json.loads(pricing_rule.pricing_rules)[0], "valid_upto")
@@ -134,8 +140,7 @@ def get_price(item_code, price_list, customer_group, company, qty=1, party=None,
 						frappe.db.get_value("Currency", price_obj.currency, "symbol", cache=True)
 						or price_obj.currency
 					)
-					or ""
-				)
+				) or ""
 
 				uom_conversion_factor = frappe.db.sql(
 					"""select	C.conversion_factor
