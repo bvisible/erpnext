@@ -159,7 +159,7 @@ jobs:
       erpnext_bootstrap: false
       skip_build: true
       build_frappe_assets: true
-      test_args: "--module erpnext.projects.doctype.project.test_project"
+      test_args: "--doctype Project" # not --module: only a doctype run builds the Company, Customer and Item records the tests need
     secrets: inherit
 
   quotation:

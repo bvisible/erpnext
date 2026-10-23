@@ -170,7 +170,13 @@ class TestOpeningInvoiceCreationTool(FrappeTestCase):
 		).insert()
 
 		# makes the template the default for the party, as it would be on a live site
-		make_tax_rule(tax_type="Sales", company=company, sales_tax_template=template.name, save=1)
+		# //// Neoffice — the rule is for every customer group: a Tax Rule takes the site's default Customer Group, and a test
+		# //// site's default is a leaf now (setup/utils.py, set_defaults_for_tests: 15.124 refuses a customer in a group-type
+		# //// Customer Group). An invoice inserted from a bare dict has no customer group yet, so get_tax_template looks for
+		# //// the root's rules and a rule bound to a leaf never matched (si.taxes stayed empty).
+		make_tax_rule(
+			tax_type="Sales", company=company, sales_tax_template=template.name, customer_group="", save=1
+		)
 
 		tool = self.make_invoices(company=company, return_doc=True)
 		invoices = tool.make_invoices()
