@@ -51,6 +51,8 @@ on:
       - "erpnext/setup/doctype/authorization_control/**"
       - "erpnext/stock/doctype/material_request/**"
       - "erpnext/stock/stock_balance.py"
+      # //// Neoffice — the purchase cost of a project counts the Journal Entry expense lines (neoffice-maintenance#1748)
+      - "erpnext/projects/doctype/project/**"
       - ".github/workflows/fork-tests.yml"
   pull_request:
     paths:
@@ -86,6 +88,8 @@ on:
       - "erpnext/setup/doctype/authorization_control/**"
       - "erpnext/stock/doctype/material_request/**"
       - "erpnext/stock/stock_balance.py"
+      # //// Neoffice — the purchase cost of a project counts the Journal Entry expense lines (neoffice-maintenance#1748)
+      - "erpnext/projects/doctype/project/**"
   workflow_dispatch:
 
 concurrency:
@@ -143,6 +147,19 @@ jobs:
       skip_build: true
       build_frappe_assets: true
       test_args: "--module erpnext.selling.doctype.customer.test_neoffice_customer_group"
+    secrets: inherit
+
+  # //// Neoffice — Project.update_purchase_costing counts the Journal Entry expense lines in every rebuild (merge of v15.124.1,
+  # //// neoffice-maintenance#1748); the module also holds upstream's cost tests, which must keep passing next to it.
+  project_cost:
+    name: project — the purchase cost counts Journal Entry expenses
+    uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
+    with:
+      app: erpnext
+      erpnext_bootstrap: false
+      skip_build: true
+      build_frappe_assets: true
+      test_args: "--module erpnext.projects.doctype.project.test_project"
     secrets: inherit
 
   quotation:
