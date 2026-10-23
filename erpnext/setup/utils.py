@@ -223,7 +223,13 @@ def _enable_all_roles_for_admin():
 
 def set_defaults_for_tests():
 	defaults = {
-		"customer_group": get_root_of("Customer Group"),
+		# //// Neoffice — a Customer Group that is not a group, when the site has one. Upstream 15.124 (7a227e048e)
+		# //// refuses a customer in a group-type Customer Group, and the root, which this function made the
+		# //// default, is one: every test (or suite of an app) that creates a customer without naming its group
+		# //// failed. Selling Settings' link filter wants a leaf there, and so will the fleet once its default
+		# //// is moved off the root.
+		"customer_group": frappe.db.get_value("Customer Group", {"is_group": 0}, "name", order_by="lft asc")
+		or get_root_of("Customer Group"),
 		"territory": get_root_of("Territory"),
 	}
 	frappe.db.set_single_value("Selling Settings", defaults)
