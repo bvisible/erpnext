@@ -915,7 +915,25 @@ class ShippingRule(Document):
 				original_taxes.append(tax.as_dict())
 			else:
 				original_taxes.append(dict(tax or {}))
-				
+
+		# //// Neoffice — upstream (v15.124.0, "shipping rule without cost center") updates the existing shipping
+		# //// row in place when the rule has no cost center, so the row keeps the cost center it already had
+		# //// (empty, unset or the company default). Our rewrite below deletes the row and builds a new one with
+		# //// `self.cost_center`, which lost it (the upstream test test_sales_order_with_shipping_rule_without_cost_center
+		# //// fails on that code: None != ""). The row we are about to replace gives its cost center back.
+		shipping_cost_center = self.cost_center
+		if not shipping_cost_center:
+			default_cost_center = erpnext.get_default_cost_center(doc.company)
+			previous_rows = [
+				row
+				for row in original_taxes
+				if row.get("account_head") == self.account
+				and row.get("charge_type") == "Actual"
+				and row.get("cost_center") in (None, "", default_cost_center)
+			]
+			if previous_rows:
+				shipping_cost_center = previous_rows[-1].get("cost_center")
+
 		# First remove any existing shipping charges
 		self.remove_shipping_charges_from_tax_table(doc)
 		
@@ -1050,7 +1068,8 @@ class ShippingRule(Document):
 				"charge_type": "Actual",
 				"description": description,
 				"account_head": self.account,
-				"cost_center": self.cost_center,
+				# //// Neoffice — the cost center of the row replaced when the rule has none (see shipping_cost_center above)
+				"cost_center": shipping_cost_center,
 				"tax_amount": base_shipping_amount
 			}
 		else:
@@ -1063,7 +1082,8 @@ class ShippingRule(Document):
 				"charge_type": "Actual",
 				"description": description,
 				"account_head": self.account,
-				"cost_center": self.cost_center,
+				# //// Neoffice — the cost center of the row replaced when the rule has none (see shipping_cost_center above)
+				"cost_center": shipping_cost_center,
 				"tax_amount": base_shipping_amount,
 				# //// Neoffice — upstream's category since the merge with v15.123.0: "Valuation and Total" only when
 				# //// the document has stock or asset items, "Total" otherwise (a valuation charge on an invoice of
