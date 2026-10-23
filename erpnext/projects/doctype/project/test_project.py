@@ -514,6 +514,35 @@ class TestProject(FrappeTestCase):
 		self.assertEqual(project.total_purchase_cost, 0)
 		self.assertEqual(project.total_consumed_material_cost, 1000)
 
+	# //// Neoffice — added test, see Project.update_purchase_costing().
+	def test_journal_entry_expenses_are_part_of_every_rebuild_of_the_purchase_cost(self):
+		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
+		from erpnext.projects.doctype.project.project import update_purchase_cost
+
+		project = make_project({"project_name": f"_Test Journal Cost {frappe.generate_hash(length=6)}"})
+		# the project is on both lines: only the Expense line is a cost
+		entry = make_journal_entry(
+			"_Test Account Cost for Goods Sold - _TC",
+			"_Test Bank - _TC",
+			100,
+			project=project.name,
+			submit=True,
+		)
+
+		update_purchase_cost({project.name})
+		project.reload()
+		self.assertEqual(project.total_purchase_cost, 100)
+
+		# the rebuild a save of the project makes, which used to wipe what a hook had added
+		project.save()
+		project.reload()
+		self.assertEqual(project.total_purchase_cost, 100)
+
+		entry.cancel()
+		update_purchase_cost({project.name})
+		project.reload()
+		self.assertEqual(project.total_purchase_cost, 0)
+
 	def test_landed_cost_after_delivery_reaches_consumed_cost(self):
 		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note

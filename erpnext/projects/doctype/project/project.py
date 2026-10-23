@@ -409,7 +409,18 @@ class Project(Document):
 		)
 
 	def update_purchase_costing(self):
-		self.total_purchase_cost = self.get_non_stock_purchase_cost() - self.get_capitalised_landed_cost()
+		# //// Neoffice — the expense lines of Journal Entries booked against the project are part of the
+		# //// purchase cost. Upstream rebuilds `total_purchase_cost` from the invoice items alone, on every
+		# //// purchase invoice, stock receipt and project save, so the amount a Journal Entry hook added
+		# //// incrementally was wiped by the next rebuild (a 100 entry showed 100, one project save later 0).
+		# //// Counting them in the rebuild itself is the only place that survives. Small expenses in the
+		# //// trades (taxis, petty cash, recurring subscriptions) are routinely booked by Journal Entry.
+		# //// Drop this once upstream counts them (nothing suggests it will).
+		self.total_purchase_cost = (
+			self.get_non_stock_purchase_cost()
+			- self.get_capitalised_landed_cost()
+			+ self.get_journal_entry_expenses()
+		)
 
 	def get_non_stock_purchase_cost(self) -> float:
 		invoice_item = qb.DocType("Purchase Invoice Item")
@@ -431,6 +442,26 @@ class Project(Document):
 					| (invoice_item.delivered_by_supplier == 1)
 				)
 				& (purchase_order.is_subcontracted.isnull() | (purchase_order.is_subcontracted == 0))
+			)
+		).run()
+		return flt(amount[0][0])
+
+	# //// Neoffice — added method, see update_purchase_costing().
+	def get_journal_entry_expenses(self) -> float:
+		journal_entry = qb.DocType("Journal Entry")
+		entry_line = qb.DocType("Journal Entry Account")
+		account = qb.DocType("Account")
+		amount = (
+			qb.from_(entry_line)
+			.join(journal_entry)
+			.on(journal_entry.name == entry_line.parent)
+			.join(account)
+			.on(account.name == entry_line.account)
+			.select(Sum(entry_line.debit - entry_line.credit))
+			.where(
+				(entry_line.project == self.name)
+				& (journal_entry.docstatus == 1)
+				& (account.root_type == "Expense")
 			)
 		).run()
 		return flt(amount[0][0])
