@@ -873,7 +873,7 @@ $.extend(erpnext.item, {
 				let field = me.multiple_variant_dialog.get_field(frappe.scrub(row.attribute));
 				if (!field) return;
 				let $link = $(
-					`<a href="#" class="neo-attr-select-all text-muted" style="font-size:11px;display:inline-block;margin:2px 0 6px;">${__("Select all")}</a>`
+					`<a href="#" class="neo-attr-select-all text-muted" style="font-size:11px;display:inline-block;margin:2px 0 6px 8px;">${__("Select all")}</a>`
 				);
 				$link.on("click", (e) => {
 					e.preventDefault();

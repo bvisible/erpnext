@@ -8,7 +8,7 @@ import json
 import frappe
 from frappe import _
 from frappe.query_builder import Case
-from frappe.utils import cstr, flt
+from frappe.utils import cint, cstr, flt
 
 from erpnext.utilities.product import get_item_codes_by_attributes
 
@@ -389,17 +389,21 @@ def create_multiple_variants(item, args, use_template_image=False):
 	count = 0
 	if isinstance(args, str):
 		args = json.loads(args)
+	# //// Neoffice — the "Manage Stock" choice of the dialog rides in `args`; it is read BEFORE the empty values are
+	# //// dropped. An unchecked box is 0, which that filter removed, so the `args.pop("is_stock_item")` that followed
+	# //// raised a KeyError and a batch of non-stock variants could never be created (found 2026-10-30).
+	manage_stock = args.pop("is_stock_item", None)
 	args = {key: values for key, values in args.items() if values}
 
-	manage_stock = args.get("is_stock_item") # //// added
-	args.pop("is_stock_item") # //// added
 	template_item = frappe.get_doc("Item", item)
 	args_set = generate_keyed_value_combinations(args)
 
 	for attribute_values in args_set:
 		if not get_variant(item, args=attribute_values):
 			variant = create_variant(item, attribute_values)
-			variant.is_stock_item = manage_stock # //// added
+			# //// Neoffice — the dialog's "Manage Stock" choice (3594a46c69); absent for a caller that does not send it
+			if manage_stock is not None:
+				variant.is_stock_item = cint(manage_stock)
 			if use_template_image and template_item.image:
 				variant.image = template_item.image
 			variant.save()

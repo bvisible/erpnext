@@ -239,3 +239,16 @@ jobs:
       build_frappe_assets: true
       test_args: ${{ matrix.args }}
     secrets: inherit
+
+  # //// Neoffice — the "Manage Stock" choice of the multiple-variants dialog: unchecked, it used to raise a KeyError
+  # //// (the empty-value filter dropped the 0 before it was read), so non-stock variants could not be made in a batch.
+  item_variant_manage_stock:
+    name: item variants — the Manage Stock choice
+    uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
+    with:
+      app: erpnext
+      erpnext_bootstrap: false
+      skip_build: true
+      build_frappe_assets: true
+      test_args: "--module erpnext.controllers.test_neoffice_item_variant"
+    secrets: inherit
