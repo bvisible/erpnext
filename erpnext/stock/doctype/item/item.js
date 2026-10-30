@@ -872,6 +872,7 @@ $.extend(erpnext.item, {
 				if (!Array.isArray(values) || !values.length || values.length > 300) return;
 				let field = me.multiple_variant_dialog.get_field(frappe.scrub(row.attribute));
 				if (!field) return;
+				// //// Neoffice — see the block marker above: left margin added (c50547732a)
 				let $link = $(
 					`<a href="#" class="neo-attr-select-all text-muted" style="font-size:11px;display:inline-block;margin:2px 0 6px 8px;">${__("Select all")}</a>`
 				);

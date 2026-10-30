@@ -8,6 +8,8 @@ import json
 import frappe
 from frappe import _
 from frappe.query_builder import Case
+
+# //// Neoffice — see the block marker below: cint needed for manage_stock (c50547732a)
 from frappe.utils import cint, cstr, flt
 
 from erpnext.utilities.product import get_item_codes_by_attributes
