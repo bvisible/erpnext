@@ -14,6 +14,13 @@ from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 test_dependencies = ["Purchase Invoice", "Sales Invoice"]
 
 
+# //// Neoffice — unittest removed assertDictContainsSubset in Python 3.12, the version the fleet and its tests run on,
+# //// and these tests still call it (five of them failed with AttributeError). Same check, spelled with assertEqual
+# //// on the expected keys, which also prints the two dicts side by side when it fails.
+def assert_dict_contains_subset(test, expected, actual):
+	test.assertEqual({key: actual.get(key) for key in expected}, expected)
+
+
 class TestGrossProfit(FrappeTestCase):
 	def setUp(self):
 		self.create_company()
@@ -230,7 +237,7 @@ class TestGrossProfit(FrappeTestCase):
 			"gross_profit_%": -50.0,
 		}
 		gp_entry = [x for x in data if x.parent_invoice == sinv.name]
-		self.assertDictContainsSubset(expected_entry_without_dn, gp_entry[0])
+		assert_dict_contains_subset(self, expected_entry_without_dn, gp_entry[0])  # //// Neoffice — see the helper above
 
 		# make delivery note
 		dn = make_delivery_note(sinv.name)
@@ -258,7 +265,7 @@ class TestGrossProfit(FrappeTestCase):
 			"gross_profit_%": 0.0,
 		}
 		gp_entry = [x for x in data if x.parent_invoice == sinv.name]
-		self.assertDictContainsSubset(expected_entry_with_dn, gp_entry[0])
+		assert_dict_contains_subset(self, expected_entry_with_dn, gp_entry[0])  # //// Neoffice — see the helper above
 
 	def test_bundled_delivery_note_with_different_warehouses(self):
 		"""
@@ -389,7 +396,7 @@ class TestGrossProfit(FrappeTestCase):
 			"gross_profit_%": -25.0,
 		}
 		gp_entry = [x for x in data if x.parent_invoice == sinv.name]
-		self.assertDictContainsSubset(expected_entry, gp_entry[0])
+		assert_dict_contains_subset(self, expected_entry, gp_entry[0])  # //// Neoffice — see the helper above
 
 	def test_crnote_against_invoice_with_multiple_instances_of_same_item(self):
 		"""
@@ -430,8 +437,8 @@ class TestGrossProfit(FrappeTestCase):
 		gp_entry = [x for x in data if x.parent_invoice == sinv.name]
 		# Both items of Invoice should have '0' qty
 		self.assertEqual(len(gp_entry), 2)
-		self.assertDictContainsSubset(expected_entry, gp_entry[0])
-		self.assertDictContainsSubset(expected_entry, gp_entry[1])
+		assert_dict_contains_subset(self, expected_entry, gp_entry[0])  # //// Neoffice — see the helper above
+		assert_dict_contains_subset(self, expected_entry, gp_entry[1])  # //// Neoffice — see the helper above
 
 	def test_standalone_cr_notes(self):
 		"""
@@ -472,7 +479,7 @@ class TestGrossProfit(FrappeTestCase):
 			"gross_profit_%": -100.0,
 		}
 		gp_entry = [x for x in data if x.parent_invoice == sinv.name]
-		self.assertDictContainsSubset(expected_entry, gp_entry[0])
+		assert_dict_contains_subset(self, expected_entry, gp_entry[0])  # //// Neoffice — see the helper above
 
 	def test_different_rates_in_si_and_dn(self):
 		from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
@@ -564,7 +571,7 @@ class TestGrossProfit(FrappeTestCase):
 			"gross_profit_%": 12.5,
 		}
 		gp_entry = [x for x in data if x.parent_invoice == sinv.name]
-		self.assertDictContainsSubset(expected_entry, gp_entry[0])
+		assert_dict_contains_subset(self, expected_entry, gp_entry[0])  # //// Neoffice — see the helper above
 
 	def test_valuation_rate_without_previous_sle(self):
 		"""

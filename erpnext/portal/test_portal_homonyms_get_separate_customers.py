@@ -3,6 +3,8 @@
 # //// second account to the first's Customer, or the second sees the first's orders and invoices
 # //// (neoffice-maintenance#1756).
 
+import unittest
+
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
@@ -29,6 +31,10 @@ class TestPortalHomonymsGetSeparateCustomers(FrappeTestCase):
 
     @classmethod
     def setUpClass(cls):
+        # the portal hook reads Webshop Settings, a doctype of the webshop app: without it the test cannot run the
+        # real path (the CI job of this module installs webshop; a plain erpnext site does not)
+        if "webshop" not in frappe.get_installed_apps():
+            raise unittest.SkipTest("webshop is not installed on this site")
         super().setUpClass()
         cls._role = frappe.db.get_single_value("Portal Settings", "default_role")
         frappe.db.set_single_value("Portal Settings", "default_role", "Customer")

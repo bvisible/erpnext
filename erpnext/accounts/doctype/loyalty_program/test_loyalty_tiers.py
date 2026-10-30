@@ -194,9 +194,10 @@ class TestLoyaltyTotals(FrappeTestCase):
 class TestLoyaltyDetailsAreForWhoReadsTheCustomer(FrappeTestCase):
 	"""`get_loyalty_program_details_with_points` is whitelisted: a portal account could read the
 	lifetime spend, the points and the tier of ANY customer through it, while the list of the
-	entries is refused to them. When the function is the endpoint itself, the caller must be able
-	to read the customer. The web shop calls it from Python, in the same process, for its own
-	customer: that path is left alone."""
+	entries is refused to them. The caller must be able to read the customer, whether the function
+	is reached as the endpoint or called from Python: since upstream v15.123.0 the check is the
+	function's first line (the fork's own version only applied it to the endpoint). The web shop
+	no longer calls it as the portal account: it goes through webshop's `loyalty_rights`."""
 
 	ENDPOINT = (
 		"erpnext.accounts.doctype.loyalty_program.loyalty_program.get_loyalty_program_details_with_points"
@@ -239,6 +240,7 @@ class TestLoyaltyDetailsAreForWhoReadsTheCustomer(FrappeTestCase):
 	def test_staff_who_read_the_customer_still_get_them_over_http(self):
 		self.assertIn("loyalty_points", self.call_as("Administrator", as_endpoint=True))
 
-	def test_the_web_shop_reading_its_own_customer_in_process_is_not_blocked(self):
-		"""Not called as the endpoint: webshop pages, checkout and cart run it as the portal account."""
-		self.assertIn("loyalty_points", self.call_as(self.portal, as_endpoint=False))
+	def test_a_portal_account_is_refused_in_process_too(self):
+		"""Not called as the endpoint either: the refusal no longer depends on how the function is reached."""
+		with self.assertRaises(frappe.PermissionError):
+			self.call_as(self.portal, as_endpoint=False)

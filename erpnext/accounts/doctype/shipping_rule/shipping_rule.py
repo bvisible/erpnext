@@ -7,7 +7,7 @@
 import frappe
 from frappe import _, msgprint, throw
 from frappe.model.document import Document
-from frappe.utils import flt, fmt_money
+from frappe.utils import cint, flt, fmt_money  # //// Neoffice — cint, for the row references (see _remap_row_ids)
 
 import erpnext
 
@@ -851,13 +851,22 @@ class ShippingRule(Document):
 	# //// language-independent lowercase form) is dropped, so an unrelated tax line named e.g.
 	# //// "Port autonome" would be silently removed. The bare `except:` above it hides errors too.
 	# //// Start: Custom Shipping Rule - Multiple Constraints ////
-	def remove_shipping_charges_from_tax_table(self, doc):
+	def remove_shipping_charges_from_tax_table(self, doc, remap_row_ids=True):
 		"""
 		Remove all shipping-related charges from the tax table.
 		
 		Args:
 			doc: The document to remove shipping charges from
+			remap_row_ids: renumber the rows left and the "previous row" references of the rows that
+				point at them (see _remap_row_ids). add_shipping_rule_to_tax_table asks for False and
+				does it itself, once the new rows are back in place.
+
+		Returns the rows removed and, by their old idx, all the rows the table had before.
 		"""
+		# //// Neoffice — the table as it was, before any row leaves it (see _remap_row_ids)
+		old_idx_to_row = {
+			tax.get("idx"): tax for tax in doc.get("taxes", []) if tax.get("idx")
+		}
 		# Get all shipping account heads and labels to identify shipping taxes
 		shipping_accounts = []
 		shipping_labels = []
@@ -894,8 +903,50 @@ class ShippingRule(Document):
 				shipping_taxes_to_remove.append(i)
 		
 		# Remove shipping taxes in reverse order to avoid index issues
+		removed_rows = [doc.taxes[idx] for idx in sorted(shipping_taxes_to_remove)]
 		for idx in sorted(shipping_taxes_to_remove, reverse=True):
 			doc.taxes.pop(idx)
+
+		# //// Neoffice — the rows left are numbered again and the "previous row" references follow them. Upstream
+		# //// never removes a shipping row, it updates it in place; ours takes the rows out, so a row such as a VAT
+		# //// "On Previous Row Total" pointing at the freight kept a number that no longer meant anything and the
+		# //// invoice was refused ("Cannot refer row number greater than or equal to current row number").
+		if old_idx_to_row and remap_row_ids:
+			for i, tax in enumerate(doc.get("taxes", [])):
+				tax.idx = i + 1
+			self._remap_row_ids(doc, old_idx_to_row)
+
+		return removed_rows, old_idx_to_row
+
+	# //// Neoffice — added (no upstream equivalent), see remove_shipping_charges_from_tax_table.
+	def _remap_row_ids(self, doc, old_idx_to_row, replacement=None):
+		"""Point every "previous row" reference at the row it meant, now that the table has been rebuilt.
+
+		old_idx_to_row: the rows by their number before the rebuild. replacement: a removed row (by id()) mapped to
+		the row that took its place; a removed row with none is replaced by the closest row before it that is still
+		in the table (what "previous row" meant after the removal), or left alone when there is none."""
+		replacement = replacement or {}
+		present = {id(tax) for tax in doc.get("taxes", [])}
+		for tax in doc.get("taxes", []):
+			ref = cint(tax.get("row_id"))
+			if not ref or tax.get("charge_type") not in ("On Previous Row Amount", "On Previous Row Total"):
+				continue
+			target = old_idx_to_row.get(ref)
+			if target is None:
+				continue
+			if id(target) in replacement:
+				target = replacement[id(target)]
+			elif id(target) not in present:
+				target = next(
+					(
+						old_idx_to_row[n]
+						for n in range(ref - 1, 0, -1)
+						if n in old_idx_to_row and id(old_idx_to_row[n]) in present
+					),
+					None,
+				)
+			if target is not None and target.get("idx"):
+				tax.row_id = str(target.idx) if isinstance(tax.get("row_id"), str) else target.idx
 	
 	def add_shipping_rule_to_tax_table(self, doc, shipping_amount):
 		# ////shipping_charge = {
@@ -935,7 +986,8 @@ class ShippingRule(Document):
 				shipping_cost_center = previous_rows[-1].get("cost_center")
 
 		# First remove any existing shipping charges
-		self.remove_shipping_charges_from_tax_table(doc)
+		# //// Neoffice — the rows removed come back where they were, see the end of this method
+		removed_rows, old_idx_to_row = self.remove_shipping_charges_from_tax_table(doc, remap_row_ids=False)
 		
 		# Store loyalty taxes separately and remove them temporarily
 		loyalty_taxes = []
@@ -1103,7 +1155,7 @@ class ShippingRule(Document):
 
 			# Add the main shipping charge with the next available idx
 			new_tax_row["idx"] = max_idx + 1
-			doc.append("taxes", new_tax_row)
+			new_rows = [doc.append("taxes", new_tax_row)]  # //// Neoffice — the rows added, to put them back in place
 			max_idx += 1
 
 			# Add all tax rows
@@ -1121,7 +1173,7 @@ class ShippingRule(Document):
 				tax_row["idx"] = max_idx
 
 				# Add the tax row
-				doc.append("taxes", tax_row)
+				new_rows.append(doc.append("taxes", tax_row))  # //// Neoffice — see above
 
 			# Now restore loyalty taxes at the end with incremented idx values
 			for loyalty_tax in loyalty_taxes:
@@ -1129,9 +1181,29 @@ class ShippingRule(Document):
 				loyalty_tax.idx = max_idx
 				doc.append("taxes", loyalty_tax)
 
+			# //// Neoffice — the new rows take the place of the ones they replace instead of the end of the table, and
+			# //// the "previous row" references of the other rows follow (they pointed at the old numbers). Upstream
+			# //// updates the shipping row where it stands; ours rebuilds it, which sent a VAT row set to "On Previous
+			# //// Row Total" of the freight to a number that was no longer before it.
+			if removed_rows:
+				loyalty_ids = {id(tax) for tax in loyalty_taxes}
+				new_ids = {id(tax) for tax in new_rows}
+				kept = [tax for tax in doc.taxes if id(tax) not in new_ids and id(tax) not in loyalty_ids]
+				kept_ids = {id(tax) for tax in kept}
+				first_old_idx = min(
+					(i for i, row in old_idx_to_row.items() if any(row is r for r in removed_rows)), default=0
+				)
+				position = sum(1 for i, row in old_idx_to_row.items() if i < first_old_idx and id(row) in kept_ids)
+				doc.taxes[:] = kept[:position] + new_rows + kept[position:] + list(loyalty_taxes)
+
 			# Reindex all taxes to ensure sequential idx values
 			for i, tax in enumerate(doc.taxes):
 				tax.idx = i + 1
+
+			# //// Neoffice — see above: a row that pointed at a row removed now points at the one that replaced it
+			if removed_rows and old_idx_to_row:
+				replacement = {id(row): new_rows[min(n, len(new_rows) - 1)] for n, row in enumerate(removed_rows)}
+				self._remap_row_ids(doc, old_idx_to_row, replacement)
 
 			# Store shipping rule information in document for reference
 			doc.shipping_rule = self.name

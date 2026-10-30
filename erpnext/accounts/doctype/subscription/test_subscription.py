@@ -94,7 +94,12 @@ class TestSubscription(FrappeTestCase):
 
 		current_invoice.db_set("outstanding_amount", 0)
 		current_invoice.db_set("status", "Paid")
-		subscription.process()
+		# //// Neoffice — upstream runs the next pass at today's date, which with the exact-day gate only rolls the period
+		# //// forward. Our gate is `>=` (catch-up, neoffice-maintenance#1556): a pass dated eight years later bills the
+		# //// periods in between, and the invoice of the next period is unpaid again. Our first pass already rolled the
+		# //// period forward after billing it, so the pass that checks "paid brings it back to Active, nothing is billed"
+		# //// is dated inside the period that was billed, before the next one begins.
+		subscription.process(posting_date="2018-01-15")
 
 		self.assertEqual(subscription.status, "Active")
 		self.assertEqual(subscription.current_invoice_start, add_months(subscription.start_date, 1))
@@ -303,7 +308,9 @@ class TestSubscription(FrappeTestCase):
 		settings.save()
 
 		subscription = create_subscription(start_date="2018-01-01")
-		subscription.process()  # generate first invoice
+		# //// Neoffice — a pass inside the first period, as upstream's pass at today's date amounted to with its
+		# //// exact-day gate; ours (`>=`, catch-up) would bill every period up to today (neoffice-maintenance#1556).
+		subscription.process(posting_date="2018-01-15")
 
 		# Generate an invoice for the cancelled period
 		subscription.cancel_subscription()
@@ -422,7 +429,8 @@ class TestSubscription(FrappeTestCase):
 		invoice.db_set("outstanding_amount", 0)
 		invoice.db_set("status", "Paid")
 
-		subscription.process()
+		# //// Neoffice — dated inside the period that was billed, see test_status_goes_back_to_active_after_invoice_is_paid
+		subscription.process(posting_date="2018-01-15")
 		self.assertEqual(subscription.status, "Active")
 
 		# A new invoice is generated
@@ -614,7 +622,10 @@ class TestSubscription(FrappeTestCase):
 		# recreate most recent invoice
 		subscription.process(posting_date="2022-01-31")
 
-		self.assertEqual(len(subscription.invoices), 2)
+		# //// Neoffice — upstream leaves the eleven months in between unbilled (two invoices). Ours bills them: a
+		# //// subscription that fell behind is caught up, up to MAX_CATCH_UP_PERIODS periods per pass
+		# //// (neoffice-maintenance#1556). The two invoices already made are the same ones.
+		self.assertEqual(len(subscription.invoices), 13)
 		self.assertEqual(
 			getdate(frappe.db.get_value("Sales Invoice", subscription.invoices[0].name, "from_date")),
 			getdate("2021-01-01"),
@@ -622,6 +633,11 @@ class TestSubscription(FrappeTestCase):
 		self.assertEqual(
 			getdate(frappe.db.get_value("Sales Invoice", subscription.invoices[1].name, "from_date")),
 			getdate("2021-02-01"),
+		)
+		# //// Neoffice — the last invoice caught up is January 2022's
+		self.assertEqual(
+			getdate(frappe.db.get_value("Sales Invoice", subscription.invoices[-1].name, "from_date")),
+			getdate("2022-01-01"),
 		)
 
 	def test_subscription_invoice_generation_before_days(self):
