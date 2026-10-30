@@ -462,3 +462,7 @@ erpnext.patches.v16_0.remove_invalid_fetch_from_italy_payment_schedule_swift_num
 erpnext.patches.v16_0.set_user_on_timesheets
 # //// Neoffice — drops the system-generated Task-description-reqd Property Setter (#207)
 erpnext.patches.v15_0.neoffice_drop_task_description_reqd_setter
+erpnext.patches.v16_0.scope_voice_call_settings_to_desk_users
+execute:frappe.db.set_value("Dunning", {"docstatus": 0}, "status", "Draft", update_modified=False)
+execute:frappe.db.set_value("Dunning", {"docstatus": 2}, "status", "Cancelled", update_modified=False)
+execute:frappe.get_attr("erpnext.accounts.doctype.cheque_print_template.cheque_print_template.update_existing_cheque_print_formats")()

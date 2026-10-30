@@ -216,6 +216,30 @@ those edits are recorded here (the code edits are marked in place with `//// Neo
 
 ---
 
+## Merge with upstream v15.124.3 (2026-10-30)
+
+Three conflicts, settled as follows (`erpnext/patches.txt` kept both lists). The two others are recorded here because the
+code we dropped or moved is no longer visible as a marker:
+
+- `erpnext/accounts/doctype/pricing_rule/utils.py`: upstream fixed the defect our `neoffice-maintenance#744` block fixed
+  (a coupon-based transaction rule wiped a discount typed by a user): it no longer resets the field to 0 and removes the
+  discount of a coupon that was taken off through its own bookkeeping of the transaction rules
+  (`get_transaction_pricing_rules`, `remove_transaction_discount`). Taken as upstream has it: our helper
+  `_is_discount_of_removed_coupon` and its branch are deleted, as are the two gift-card bypasses (`Quotation` of type
+  Shopping Cart, `Sales Invoice`) that only skipped the reset upstream no longer does. The `POS Invoice` Gift Card branch
+  (added 2025-03-25) stays.
+- `erpnext/stock/doctype/item/item.js`: upstream rebuilt the "Select Attribute Values" dialog around one searchable
+  `MultiSelectPills` per attribute (numeric ranges are no longer enumerated). Upstream's dialog is the frame; our four
+  additions are re-applied on it, marked in place: the "Manage Stock" checkbox (functional: read by
+  `controllers/item_variant.py`), the already-created variants (count line, plus an "already created" hint on the
+  suggestions of values that have a variant), and a "Select all / Deselect all" link per attribute with at most 300
+  values. The column-index walking (`i === 0 || i === 1`) and the heading-to-attribute mapping we added to
+  `get_selected_attributes()` are gone: upstream reads the values by attribute row, which fixes what that mapping worked
+  around (translated headings posted as attribute names).
+
+`fork_markers.py check --base v15.124.3 --head HEAD --upstream-base v15.124.3` answers 0 unmarked hunks.
+No catalogue (`.po`) or JSON divergence changed with this merge.
+
 ## Merge with upstream v15.124.1 (2026-10-22)
 
 `fork_markers.py check --base v15.124.1 --head HEAD --upstream-base v15.124.1` answers 0 unmarked hunks.

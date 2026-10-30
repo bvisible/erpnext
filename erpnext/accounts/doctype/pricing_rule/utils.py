@@ -595,8 +595,6 @@ def apply_pricing_rule_on_transaction(doc):
 
 		for d in pricing_rules:
 			if d.price_or_product_discount == "Price":
-				if d.apply_discount_on:
-					doc.set("apply_discount_on", d.apply_discount_on)
 				# Variable to track whether the condition has been met
 				condition_met = False
 				fields_set = set()
@@ -611,6 +609,8 @@ def apply_pricing_rule_on_transaction(doc):
 						frappe.msgprint(_("User has not applied rule on the invoice {0}").format(doc.name))
 					else:
 						if not d.coupon_code_based:
+							if d.apply_discount_on:
+								doc.set("apply_discount_on", d.apply_discount_on)
 							doc.set(field, d.get(pr_field))
 							fields_set.add(field)
 							applied_rules.append(d.name)
@@ -656,6 +656,8 @@ def apply_pricing_rule_on_transaction(doc):
 							)
 							if coupon_code_pricing_rule == d.name:
 								# if selected coupon code is linked with pricing rule
+								if d.apply_discount_on:
+									doc.set("apply_discount_on", d.apply_discount_on)
 								doc.set(field, d.get(pr_field))
 								fields_set.add(field)
 								applied_rules.append(d.name)
@@ -663,28 +665,6 @@ def apply_pricing_rule_on_transaction(doc):
 								# Set the condition_met variable to True and break out of the loop
 								condition_met = True
 								break
-
-							else:
-								# reset discount if not linked
-								doc.set(field, 0)
-						# //// START : Add bypass for gift card coupon
-						elif doc.doctype == "Quotation" and doc.get("order_type") == "Shopping Cart" and doc.get("gift_card_coupon"):
-							continue
-						elif doc.doctype == "Sales Invoice":
-							continue
-						# //// END : Add bypass for gift card coupon
-						# //// Neoffice — upstream resets the field to 0 here ("coupon code based but no coupon
-						# //// code selected"). It cannot tell the discount a coupon gave from one a user typed:
-						# //// any coupon-based transaction rule of the company (each gift card sold at the till
-						# //// creates one) wiped the additional discount of every quotation, sales order and
-						# //// delivery note at save, without a message (neoffice-maintenance#744). Only the
-						# //// discount this rule gave goes: its coupon was removed by this save and the value
-						# //// was left as the coupon set it. A discount typed by a user stays.
-						elif _is_discount_of_removed_coupon(doc, d, field):
-							doc.set(field, 0)
-							if field == "additional_discount_percentage":
-								# the amount derives from the percentage, and a zero percentage no longer recomputes it
-								doc.set("discount_amount", 0)
 
 				if has_rule_discount and fields_set:
 					# clear the discount set by the previously applied rule which this rule does not set
@@ -719,7 +699,41 @@ def get_transaction_pricing_rules(doc):
 	if doc_before_save := doc.get_doc_before_save():
 		rows += doc_before_save.get("pricing_rules") or []
 
-	return {d.pricing_rule for d in rows if d.pricing_rule and not d.item_code and not d.child_docname}
+	pricing_rules = {
+		d.pricing_rule for d in rows if d.pricing_rule and not d.item_code and not d.child_docname
+	}
+	if (
+		pricing_rules
+		or not doc_before_save
+		or not doc_before_save.get("coupon_code")
+		or doc_before_save.coupon_code == doc.get("coupon_code")
+		or doc_before_save.ignore_pricing_rule
+	):
+		return pricing_rules
+
+	# Older documents did not track transaction rules. Check the saved coupon before removing its discount.
+	values = {"pricing_rule": frappe.db.get_value("Coupon Code", doc_before_save.coupon_code, "pricing_rule")}
+	conditions = get_other_conditions(
+		"name = %(pricing_rule)s and apply_on = 'Transaction' and price_or_product_discount = 'Price'"
+		" and coupon_code_based = 1 and disable = 0",
+		values,
+		doc_before_save,
+	)
+	coupon_rules = frappe.db.sql(f"select * from `tabPricing Rule` where {conditions}", values, as_dict=True)
+	coupon_rules = filter_pricing_rules_for_qty_amount(
+		doc_before_save.total_qty, doc_before_save.total, coupon_rules
+	)
+	for rule in filter_pricing_rule_based_on_condition(coupon_rules, doc_before_save):
+		field = "additional_discount_percentage" if rule.discount_percentage else "discount_amount"
+		discount = rule.discount_percentage or rule.discount_amount
+		if (
+			discount
+			and doc_before_save.apply_discount_on == rule.apply_discount_on
+			and doc_before_save.get(field) == flt(discount, doc_before_save.precision(field))
+		):
+			pricing_rules.add(rule.name)
+
+	return pricing_rules
 
 
 def set_transaction_pricing_rules(doc, applied_rules):
@@ -765,19 +779,6 @@ def remove_transaction_discount(doc, pricing_rules):
 		title=_("Discount Removed"),
 		indicator="orange",
 	)
-
-
-# //// Neoffice — added helper (no upstream equivalent), see its caller in
-# //// apply_pricing_rule_on_transaction (neoffice-maintenance#744).
-def _is_discount_of_removed_coupon(doc, pricing_rule, field):
-	"""True when this save took off the coupon of `pricing_rule` and left `field` as the coupon set it."""
-	previous = doc.get_doc_before_save()
-	if not previous or not previous.get("coupon_code"):
-		return False
-	if frappe.db.get_value("Coupon Code", previous.coupon_code, "pricing_rule") != pricing_rule.name:
-		return False
-	precision = doc.precision(field)
-	return flt(doc.get(field), precision) == flt(previous.get(field), precision)
 
 
 def remove_free_item(doc):

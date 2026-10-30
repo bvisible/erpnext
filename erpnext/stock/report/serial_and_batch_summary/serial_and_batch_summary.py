@@ -106,6 +106,7 @@ def get_columns(filters, data):
 				{
 					"label": _("Voucher Type"),
 					"fieldname": "voucher_type",
+					"fieldtype": "Select",
 					"width": 120,
 				},
 				{
