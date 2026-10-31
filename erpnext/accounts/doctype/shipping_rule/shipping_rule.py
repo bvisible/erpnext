@@ -903,6 +903,11 @@ class ShippingRule(Document):
 				shipping_taxes_to_remove.append(i)
 		
 		# Remove shipping taxes in reverse order to avoid index issues
+		# //// Neoffice — keep the removed rows themselves, not just their ids, so
+		# //// add_shipping_rule_to_tax_table can put them back where they were instead of appending
+		# //// at the end; appending at the end is what left a tax row "On Previous Row Total" of the
+		# //// freight pointing at a row that was no longer before it (bc9743e11c "fix(tests): the full
+		# //// suite of erpnext is green again on the fork, each red for its own cause").
 		removed_rows = [doc.taxes[idx] for idx in sorted(shipping_taxes_to_remove)]
 		for idx in sorted(shipping_taxes_to_remove, reverse=True):
 			doc.taxes.pop(idx)
