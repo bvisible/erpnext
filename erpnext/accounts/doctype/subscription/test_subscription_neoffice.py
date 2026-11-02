@@ -11,9 +11,12 @@
 # //// Both directions are asserted: the catch-up must work AND the future period must not
 # //// bill. A test for only one of them would pass with the bug.
 import unittest
+from unittest.mock import patch
 
 import frappe
 from frappe.utils import add_days, add_months, getdate, nowdate
+
+from erpnext.accounts.doctype.subscription.subscription import process_all
 
 
 class TestSubscriptionInvoiceGate(unittest.TestCase):
@@ -158,4 +161,40 @@ class TestCancelledStaysCancelled(unittest.TestCase):
 		sub = self._subscription("Unpaid", None)
 		sub.set_subscription_status(nowdate())
 		self.assertEqual(sub.status, "Active")
+class FailingSubscription:
+	def __init__(self, name):
+		self.name = name
+
+	def process(self, posting_date):
+		raise frappe.ValidationError("no fiscal year")
+
+	def log_error(self, title):
+		frappe.log_error(f"{title} {self.name}")
+
+
+class TestEveryFailureIsKept(unittest.TestCase):
+	"""The nightly job rolls back after a failed subscription: without a commit, the next failure took the error row
+	of the one before with it, and four subscriptions failing every night logged only the last (#2153)."""
+
+	NAMES = ("test-kept-first", "test-kept-last")
+
+	def tearDown(self):
+		for name in self.NAMES:
+			frappe.db.delete("Error Log", {"method": f"Subscription failed {name}"})
+		frappe.db.commit()
+
+	def test_a_night_of_failures_logs_each_of_them(self):
+		real_get_doc = frappe.get_doc
+
+		def get_doc(*args, **kwargs):
+			if args and args[0] == "Subscription":
+				return FailingSubscription(args[1])
+			return real_get_doc(*args, **kwargs)
+
+		with patch.object(frappe, "get_doc", side_effect=get_doc):
+			process_all(list(self.NAMES), nowdate())
+		for name in self.NAMES:
+			self.assertTrue(frappe.db.exists("Error Log", {"method": f"Subscription failed {name}"}), name)
+
+
 # //// Neoffice ▲▲▲

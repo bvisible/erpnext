@@ -892,4 +892,7 @@ def process_all(subscription: list, posting_date: DateTimeLikeObject | None = No
 		except frappe.ValidationError:
 			frappe.db.rollback()
 			subscription.log_error("Subscription failed")
+			# //// Neoffice — committed here: the rollback of the next failed subscription took this row with it,
+			# //// so a night of four failures logged only the last one (neoffice-maintenance#2153).
+			frappe.db.commit()
 
