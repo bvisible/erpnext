@@ -9,7 +9,13 @@ from frappe.query_builder import Criterion
 
 import erpnext
 from erpnext.accounts.utils import build_qb_match_conditions
-from erpnext.setup.doctype.employee.employee import InactiveEmployeeStatusError
+
+# //// Neoffice — the reminder recipient helpers are exercised by a test added below
+from erpnext.setup.doctype.employee.employee import (
+	InactiveEmployeeStatusError,
+	get_all_employee_emails,
+	get_employee_emails,
+)
 
 test_records = frappe.get_test_records("Employee")
 
@@ -209,6 +215,36 @@ class TestEmployee(unittest.TestCase):
 
 		self.assertEqual(qb_employee_list, employee_list)
 		frappe.set_user("Administrator")
+
+	# //// Neoffice — added test: a user id that is not an address (the Administrator's user name) must never be
+	# a recipient of the birthday and anniversary reminders; the employee's own address is used, or nobody.
+	def test_a_user_id_that_is_not_an_address_is_never_a_recipient(self):
+		# Built here rather than by make_employee: its gender and employment type do not exist on every site
+		company = erpnext.get_default_company()
+		employee = frappe.get_doc(
+			{
+				"doctype": "Employee",
+				"first_name": "Admin Link Test",
+				"company": company,
+				"date_of_birth": "1990-05-08",
+				"date_of_joining": "2013-01-01",
+				"gender": "Female",
+				"company_email": "test_emp_admin_link@company.com",
+				"status": "Active",
+			}
+		).insert(ignore_links=True)
+		employee = employee.name
+		# Every user is named by its address, except the Administrator
+		frappe.db.set_value("Employee", employee, "user_id", "Administrator")
+
+		recipients = get_all_employee_emails(company)
+		self.assertNotIn("Administrator", recipients)
+		self.assertIn("test_emp_admin_link@company.com", recipients)
+		self.assertEqual(get_employee_emails([employee]), ["test_emp_admin_link@company.com"])
+
+		frappe.db.set_value("Employee", employee, {"company_email": None, "personal_email": None})
+		self.assertNotIn("Administrator", get_all_employee_emails(company))
+		self.assertEqual(get_employee_emails([employee]), [])
 
 	def tearDown(self):
 		frappe.db.rollback()

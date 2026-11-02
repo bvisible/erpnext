@@ -411,6 +411,16 @@ def create_user(employee, user=None, email=None):
 	return user.name
 
 
+# //// Neoffice — added helper. The Administrator is the one user not named by its e-mail address, and upstream
+# read the user id as an address: the birthday and anniversary reminders went to the name "Administrator",
+# the mail relay refused it (501 5.1.3) and every retry sent a failure notice. Only a real address is a recipient.
+def get_employee_mail_address(user_id, company_email, personal_email):
+	"""The first of the user id, company email and personal email that is an e-mail address, else None"""
+	for address in (user_id, company_email, personal_email):
+		if address and validate_email_address(address):
+			return address
+
+
 def get_all_employee_emails(company):
 	"""Returns list of employee emails either based on user_id or company_email"""
 	employee_list = frappe.get_all(
@@ -423,7 +433,8 @@ def get_all_employee_emails(company):
 		user, company_email, personal_email = frappe.db.get_value(
 			"Employee", employee, ["user_id", "company_email", "personal_email"]
 		)
-		email = user or company_email or personal_email
+		# //// Neoffice — an address, never the Administrator's user name (see get_employee_mail_address)
+		email = get_employee_mail_address(user, company_email, personal_email)
 		if email:
 			employee_emails.append(email)
 	return employee_emails
@@ -438,7 +449,8 @@ def get_employee_emails(employee_list):
 		user, company_email, personal_email = frappe.db.get_value(
 			"Employee", employee, ["user_id", "company_email", "personal_email"]
 		)
-		email = user or company_email or personal_email
+		# //// Neoffice — an address, never the Administrator's user name (see get_employee_mail_address)
+		email = get_employee_mail_address(user, company_email, personal_email)
 		if email:
 			employee_emails.append(email)
 	return employee_emails
