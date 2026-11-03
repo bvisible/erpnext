@@ -64461,3 +64461,25 @@ msgstr "Débit (devise du compte)"
 msgid "Invoiced Amount (Excl. Tax)"
 msgstr "Montant facturé (hors taxes)"
 
+# //// Neoffice — added entries (no upstream equivalent): the whole phrase said of the Dunning doctype, without {0}.
+# //// Our frappe fork (translate.js) asks the doctype's name as the context first: « Nouveau(elle) Relance » and
+# //// « Voir tous les Relance » cannot be built in French from one phrase and a label (maintenance#2161).
+msgctxt "Dunning"
+msgid "New {0}"
+msgstr "Nouvelle relance"
+
+msgctxt "Dunning"
+msgid "Create your first {0}"
+msgstr "Créez votre première relance"
+
+msgctxt "Dunning"
+msgid "Create a new {0}"
+msgstr "Créer une nouvelle relance"
+
+msgctxt "Dunning"
+msgid "You haven't created a {0} yet"
+msgstr "Vous n'avez pas encore créé de relance"
+
+msgctxt "Dunning"
+msgid "View all {0}"
+msgstr "Voir toutes les relances"

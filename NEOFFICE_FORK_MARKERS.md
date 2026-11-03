@@ -323,3 +323,12 @@ the workspaces are synced from the hub, and a JSON change that the hub overrides
 - `erpnext/stock/workspace/stock/stock.json` — charts +Evolution Mouvements Stock −Warehouse wise Stock Value; content (layout) edited; icon "stock"→"lucide-warehouse"; idx 0→1; indicator_color null→"green"; links +Traceability, Alcohol Type, Warehouses & Catalogs, Inventory Dimension, Supplier Catalog, Supplier Catalog Log… −Customs Tariff Number, Settings, Stock Settings, Unit of Measure (UOM), Item Variant Settings, Item Attribute…; number_cards +Mouvements Stock Mois, Valeur Mouvements Année, Livraisons du Mois, Articles en Stock −Total Warehouses, Total Stock Value, Total Active Items; parent_page ""→null; restrict_to_domain ""→"Gestion"; sequence_id 7.0→10.0; shortcuts +Brand, Item Group −Learn Inventory Management. Commits: fe317f8402 (2026-06-12, "feat(workspaces): Neoffice workspace layouts — Quick Access shortcuts,"); f032a768e2 (2024-09-23, "last updates").
 - `erpnext/support/workspace/service/service.json` — added file (no upstream equivalent). Commits: fe317f8402 (2026-06-12, "feat(workspaces): Neoffice workspace layouts — Quick Access shortcuts,").
 - `erpnext/support/workspace/support/support.json` — content (layout) edited; indicator_color null→""; links −Issues, Issue, Issue Type, Issue Priority, Maintenance, Maintenance Schedule…; parent_page ""→"Selling"; restrict_to_domain ""→"Gestion"; sequence_id 12.0→10.0; shortcuts −Issue, Maintenance Visit, Service Level Agreement. Commits: f032a768e2 (2024-09-23, "last updates").
+
+## Phrases said of one doctype (2026-11-03)
+
+- `erpnext/locale/fr.po` — 5 entries added at the end under `msgctxt "Dunning"` (« Nouvelle relance », « Créez votre
+  première relance », « Créer une nouvelle relance », « Vous n'avez pas encore créé de relance », « Voir toutes les
+  relances »), with a `# //// Neoffice` comment. Our frappe fork (`translate.js`) asks for "New {0}", "Create your first
+  {0}", "Create a new {0}", "You haven't created a {0} yet" and "View all {0}" with the doctype's name as the context
+  first, so a catalogue can say the whole phrase of one doctype: French cannot build « Nouvelle relance » from
+  « Nouveau(elle) {0} » and a label (neoffice-maintenance#2161). The msgstr carries no `{0}` on purpose.
