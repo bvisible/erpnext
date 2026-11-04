@@ -234,6 +234,7 @@ class PurchaseInvoice(BuyingController):
 				"source_field": "amount",
 				"percent_join_field": "purchase_order",
 				"overflow_type": "billing",
+				"billing_flag": "update_billed_amount_in_purchase_order",
 				"extra_cond": """ and exists(select name from `tabPurchase Invoice`
 				where name=`tabPurchase Invoice Item`.parent and (is_return=0 or update_billed_amount_in_purchase_order=1))""",
 			}
@@ -1106,8 +1107,8 @@ class PurchaseInvoice(BuyingController):
 			# //// string put on every item GL entry (total + currency, the customer_reference — our Custom
 			# //// Field — and the first 40 chars of the description) so a Swiss bank statement line can be
 			# //// matched back to the invoice, and `tax_excluded`, telling whether the line is booked net.
-			# //// The upstream loop below runs on `flt(item.base_net_amount) or (update_stock and
-			# //// item.valuation_rate)`, WIDER than this guard: until 2026-09-03 a line with a zero net
+			# //// The upstream loop below runs on `flt(item.base_net_amount) or (update_stock and a valuation
+			# //// rate or a stock value)`, WIDER than this guard: until 2026-09-03 a line with a zero net
 			# //// amount but a valuation rate reached `"remarks": remark` with `remark` never assigned
 			# //// (NameError). Both names are now defined on every line.
 			remark = None
@@ -1126,7 +1127,10 @@ class PurchaseInvoice(BuyingController):
 				tax_excluded = flt(item.base_net_amount, item.precision("base_net_amount")) == flt(item.base_amount, item.precision("base_net_amount")) # //// added
 				account_currency = get_account_currency(item.expense_account)
 
-			if flt(item.base_net_amount) or (self.get("update_stock") and item.valuation_rate):
+			if flt(item.base_net_amount) or (
+				self.get("update_stock")
+				and (item.valuation_rate or voucher_wise_stock_value.get((item.name, item.warehouse)))
+			):
 				if item.item_code:
 					frappe.get_cached_value("Item", item.item_code, "asset_category")
 
@@ -1489,10 +1493,9 @@ class PurchaseInvoice(BuyingController):
 
 	def make_stock_adjustment_entry(self, gl_entries, item, voucher_wise_stock_value, account_currency):
 		net_amt_precision = item.precision("base_net_amount")
-		val_rate_db_precision = 6 if cint(item.precision("valuation_rate")) <= 6 else 9
 
 		warehouse_debit_amount = flt(
-			flt(item.valuation_rate, val_rate_db_precision) * get_stock_qty(item, item.qty),
+			flt(item.valuation_rate) * get_stock_qty(item, item.qty),
 			net_amt_precision,
 		)
 

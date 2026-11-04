@@ -396,6 +396,7 @@ erpnext.PointOfSale.Controller = class {
 
 					return Promise.resolve();
 				},
+				add_batch_item: (item, batch_no) => this.add_batch_item(item, batch_no),
 
 				highlight_cart_item: (item) => {
 					const cart_item = this.cart.get_cart_item(item);
@@ -648,6 +649,54 @@ erpnext.PointOfSale.Controller = class {
 		this.page.set_indicator(this.pos_profile, "blue");
 	}
 
+	add_batch_item(item, batch_no) {
+		const doc = this.frm.doc;
+		const { item_code, uom, stock_uom, warehouse } = item;
+		return frappe
+			.call({
+				method: "erpnext.stock.get_item_details.get_item_details",
+				freeze: true,
+				args: {
+					doc,
+					args: {
+						item_code,
+						batch_no,
+						uom,
+						warehouse,
+						qty: 1,
+						doctype: doc.doctype,
+						company: doc.company,
+						customer: doc.customer,
+						price_list: doc.selling_price_list,
+						currency: doc.currency,
+						price_list_currency: doc.price_list_currency,
+						conversion_rate: doc.conversion_rate,
+						plc_conversion_rate: doc.plc_conversion_rate,
+						is_pos: doc.is_pos,
+						ignore_pricing_rule: doc.ignore_pricing_rule,
+					},
+				},
+			})
+			.then(({ message }) =>
+				frappe.run_serially([
+					() => this.item_details.toggle_item_details_section(null),
+					() =>
+						this.on_cart_update({
+							field: "qty",
+							value: "+1",
+							item: {
+								item_code,
+								batch_no,
+								uom,
+								stock_uom,
+								warehouse,
+								rate: message.price_list_rate,
+							},
+						}),
+				])
+			);
+	}
+
 	async on_cart_update(args) {
 		frappe.dom.freeze();
 		if (this.frm.doc.set_warehouse !== this.settings.warehouse) {
@@ -678,7 +727,7 @@ erpnext.PointOfSale.Controller = class {
 				if (["qty", "conversion_factor"].includes(field) && value > 0 && !this.allow_negative_stock) {
 					const qty_needed =
 						field === "qty" ? value * item_row.conversion_factor : item_row.qty * value;
-					await this.check_stock_availability(item_row, qty_needed, this.frm.doc.set_warehouse);
+					await this.check_stock_availability(item_row, qty_needed, item_row.warehouse);
 				}
 
 				if (this.is_current_item_being_edited(item_row) || from_selector) {
@@ -696,7 +745,7 @@ erpnext.PointOfSale.Controller = class {
 			} else {
 				if (!this.frm.doc.customer) return this.raise_customer_selection_alert();
 
-				const { item_code, batch_no, serial_no, rate, uom, stock_uom } = item;
+				const { item_code, batch_no, serial_no, rate, uom, stock_uom, warehouse } = item;
 
 				if (!item_code) return;
 
@@ -983,27 +1032,27 @@ erpnext.PointOfSale.Controller = class {
 				}
 
 				new_item["use_serial_batch_fields"] = 1;
-				new_item["warehouse"] = this.settings.warehouse;
+				new_item["warehouse"] = warehouse || this.settings.warehouse;
 				if (field === "serial_no") new_item["qty"] = value.split(`\n`).length || 0;
 
 				item_row = this.frm.add_child("items", new_item);
 
 				if (field === "qty" && value !== 0 && !this.allow_negative_stock) {
 					const qty_needed = value * item_row.conversion_factor;
-					await this.check_stock_availability(item_row, qty_needed, this.frm.doc.set_warehouse);
+					await this.check_stock_availability(item_row, qty_needed, item_row.warehouse);
 				}
 
 				await this.trigger_new_item_events(item_row);
 
 				this.update_cart_html(item_row);
 
-				if (this.item_details.$component.is(":visible")) this.edit_item_details_of(item_row);
-
 				if (
-					this.check_serial_batch_selection_needed(item_row) &&
-					!this.item_details.$component.is(":visible")
-				)
+					this.item_details.$component.is(":visible") ||
+					(item_row.has_batch_no && !batch_no) ||
+					this.check_serial_batch_selection_needed(item_row)
+				) {
 					this.edit_item_details_of(item_row);
+				}
 			}
 		} catch (error) {
 			console.log(error);
@@ -1022,7 +1071,7 @@ erpnext.PointOfSale.Controller = class {
 		frappe.utils.play_sound("error");
 	}
 
-	get_item_from_frm({ name, item_code, batch_no, uom, rate }) {
+	get_item_from_frm({ name, item_code, batch_no, serial_no, uom, rate, warehouse }) {
 		let item_row = null;
 		if (name) {
 			item_row = this.frm.doc.items.find((i) => i.name == name);
@@ -1030,11 +1079,13 @@ erpnext.PointOfSale.Controller = class {
 			// if item is clicked twice from item selector
 			// then "item_code, batch_no, uom, rate" will help in getting the exact item
 			// to increase the qty by one
-			const has_batch_no = batch_no !== "null" && batch_no !== null;
+			const has_batch_no = batch_no && batch_no !== "null";
 			item_row = this.frm.doc.items.find(
 				(i) =>
 					i.item_code === item_code &&
-					(!has_batch_no || (has_batch_no && i.batch_no === batch_no)) &&
+					(!has_batch_no || i.batch_no === batch_no) &&
+					(!warehouse || i.warehouse === warehouse) &&
+					Boolean(i.serial_no) === Boolean(serial_no && serial_no !== "null") &&
 					i.uom === uom &&
 					i.price_list_rate === flt(rate)
 			);

@@ -31,8 +31,24 @@ def get_pricing_rules(args, doc=None):
 	if not frappe.db.exists("Pricing Rule", {"disable": 0, args.transaction_type: 1}):
 		return
 
+	coupon_pricing_rule = (
+		frappe.get_cached_value("Coupon Code", args.coupon_code, "pricing_rule")
+		if args.get("coupon_code")
+		else None
+	)
 	for apply_on in ["Item Code", "Item Group", "Brand"]:
-		pricing_rules.extend(_get_pricing_rules(apply_on, args, values))
+		candidates = [
+			rule
+			for rule in _get_pricing_rules(apply_on, args, values)
+			if not rule.coupon_code_based
+			or rule.name == coupon_pricing_rule
+			or (
+				doc
+				and not doc.meta.has_field("coupon_code")
+				and rule.name in get_applied_pricing_rules(args.get("pricing_rules"))
+			)
+		]
+		pricing_rules.extend(filter_pricing_rule_based_on_condition(candidates, doc))
 		if pricing_rules and pricing_rules[0].has_priority:
 			continue
 
@@ -40,8 +56,6 @@ def get_pricing_rules(args, doc=None):
 			break
 
 	rules = []
-
-	pricing_rules = filter_pricing_rule_based_on_condition(pricing_rules, doc)
 
 	if not pricing_rules:
 		return []
@@ -898,7 +912,13 @@ def get_pricing_rule_items(pr_doc, other_items=False) -> list:
 	return list(set(apply_on_data))
 
 
-def validate_coupon_code(coupon_name):
+def validate_coupon_code(coupon_name, customer=None):
+	# //// Neoffice — upstream (v15.124.4, 39834d11a7) added `customer` and refuses a Gift Card whose
+	# //// customer is not the buyer. Ours are bearer cards with a balance: the webshop sells one to a
+	# //// customer for someone else (the coupon keeps the buyer as its customer) and the till accepts
+	# //// whoever brings the code, which is the secret; POSNext dropped upstream's "a Gift Card needs a
+	# //// customer" for the same reason (pos_next/api/promotions.py). The parameter is kept so upstream's
+	# //// callers (Sales Order, POS Invoice, Quotation) work; it never refuses a gift card (maintenance#2218).
 	# //// Change fore return POS
 	coupon = frappe.get_doc("Coupon Code", coupon_name)
 	# Check if it's a gift card
@@ -915,7 +935,9 @@ def validate_coupon_code(coupon_name):
 
 	# Check remaining balance for gift cards
 	if is_gift_card:
-		if flt(coupon.gift_card_amount) <= 0:
+		# //// Neoffice — read with .get(): gift_card_amount is a Custom Field of POSNext, absent from a site
+		# //// without it, where the attribute raised AttributeError instead of refusing the card.
+		if flt(coupon.get("gift_card_amount")) <= 0:
 			frappe.throw(_("Sorry, this gift card has no remaining balance"))
 	else:
 		# For normal coupons, use standard validation
