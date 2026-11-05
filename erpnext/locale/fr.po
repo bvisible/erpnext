@@ -25917,9 +25917,10 @@ msgstr "Échéanciers d'Entretien"
 msgid "Maintenance Status"
 msgstr "Statut d'Entretien"
 
+# //// Neoffice — « submit » is « valider » here: « envoyé » told a user something had gone out when nothing had
 #: erpnext/assets/doctype/asset_maintenance_log/asset_maintenance_log.py:59
 msgid "Maintenance Status has to be Cancelled or Completed to Submit"
-msgstr "Le statut de maintenance doit être annulé ou complété pour pouvoir être envoyé"
+msgstr "Le statut de maintenance doit être annulé ou complété pour pouvoir être validé"
 
 #. Label of a Data field in DocType 'Asset Maintenance Task'
 #: erpnext/assets/doctype/asset_maintenance_task/asset_maintenance_task.json:37
@@ -40399,9 +40400,10 @@ msgstr "Ligne n ° {}: Facture PDV {} a été {}"
 msgid "Row #{}: POS Invoice {} is not against customer {}"
 msgstr "Ligne n ° {}: la facture PDV {} n'est pas contre le client {}"
 
+# //// Neoffice — « submit » is « valider » here: « envoyé » told a user something had gone out when nothing had
 #: erpnext/accounts/doctype/pos_invoice_merge_log/pos_invoice_merge_log.py:88
 msgid "Row #{}: POS Invoice {} is not submitted yet"
-msgstr "Ligne n ° {}: La facture PDV {} n'est pas encore envoyée"
+msgstr "Ligne n ° {}: La facture PDV {} n'est pas encore validée"
 
 #: erpnext/assets/doctype/asset_maintenance/asset_maintenance.py:41
 msgid "Row #{}: Please asign task to a member."
@@ -54324,9 +54326,10 @@ msgstr ""
 msgid "{0} has been modified after you pulled it. Please pull it again."
 msgstr "{0} a été modifié après que vous l'avez récupéré. Veuillez le récupérer à nouveau."
 
+# //// Neoffice — « submit » is « valider » here: « envoyé » told a user something had gone out when nothing had
 #: erpnext/setup/default_success_action.py:15
 msgid "{0} has been submitted successfully"
-msgstr "{0} a été envoyé avec succès"
+msgstr "{0} a été validé avec succès"
 
 #: erpnext/projects/doctype/project/project_dashboard.html:15
 msgid "{0} hours"
