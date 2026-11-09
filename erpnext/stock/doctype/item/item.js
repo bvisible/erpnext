@@ -37,7 +37,10 @@ frappe.ui.form.on("Item", {
 	},
 
 	setup: function (frm) {
-		frm.set_query("item_group", () => ({ filters: { is_group: 0 } }));
+		//// Neoffice — upstream (807b367ab91, "allow parent item groups in filters") limits the Item Group field of the
+		// Item form to leaf groups (is_group = 0). Our installs file items directly under parent groups ("Products",
+		// "Services", ...), so the filter left them impossible to pick. Removed: the server never enforced it. Drop this
+		// marker if Neoffice ever requires items to sit in leaf groups only.
 		frm.add_fetch("attribute", "numeric_values", "numeric_values");
 		frm.add_fetch("attribute", "from_range", "from_range");
 		frm.add_fetch("attribute", "to_range", "to_range");
