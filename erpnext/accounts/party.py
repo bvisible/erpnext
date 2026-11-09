@@ -457,7 +457,9 @@ def set_account_and_due_date(party, account, party_type, company, posting_date, 
 
 
 @frappe.whitelist()
-def get_party_account(party_type, party=None, company=None, include_advance=False):
+# //// Neoffice — `party_type` and `company` reach frappe.db.get_value as filters: annotated so that a JSON body cannot
+# //// turn them into an operator (Frappe refuses anything but a string once the parameter is annotated).
+def get_party_account(party_type: str, party=None, company: str | None = None, include_advance=False):
 	"""Returns the account for the given `party`.
 	Will first search in party (Customer / Supplier) record, if not found,
 	will search in group (Customer Group / Supplier Group),
