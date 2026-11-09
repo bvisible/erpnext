@@ -315,7 +315,15 @@ class Item(Document):
 		if not self.is_stock_item:
 			return
 
-		if not self.valuation_rate and not self.standard_rate and not self.is_customer_provided_item:
+		# //// Neoffice — the opening stock is valued at what the goods cost: the purchase price the quick entry asks
+		# //// for (buying_standard_rate, a Neoffice custom field: .get(), absent on a site without it), not the selling
+		# //// price, which overstated the stock (neoffice-maintenance#1473). Upstream: valuation_rate, else standard_rate.
+		if (
+			not self.valuation_rate
+			and not self.get("buying_standard_rate")
+			and not self.standard_rate
+			and not self.is_customer_provided_item
+		):
 			frappe.throw(_("Valuation Rate is mandatory if Opening Stock entered"))
 
 		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
@@ -349,7 +357,8 @@ class Item(Document):
 					item_code=self.name,
 					target=default_warehouse,
 					qty=self.opening_stock,
-					rate=self.valuation_rate or self.standard_rate,
+					# //// Neoffice — the purchase price comes before the selling price (see the check above)
+					rate=self.valuation_rate or self.get("buying_standard_rate") or self.standard_rate,
 					company=default.company,
 					posting_date=getdate(),
 					posting_time=nowtime(),
