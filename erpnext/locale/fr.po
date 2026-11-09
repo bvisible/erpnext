@@ -11024,13 +11024,15 @@ msgstr "Contact:"
 msgid "Contacts"
 msgstr "Contacts"
 
+# //// Neoffice — upstream's « Contre-passation » is a reversal; a Contra Entry moves money between two of the
+# //// company's own bank and cash accounts (maintenance#2421). Keep ours on upstream merges.
 #. Option for the 'Entry Type' (Select) field in DocType 'Journal Entry'
 #. Option for the 'Journal Entry Type' (Select) field in DocType 'Journal Entry
 #. Template'
 #: erpnext/accounts/doctype/journal_entry/journal_entry.json:93
 #: erpnext/accounts/doctype/journal_entry_template/journal_entry_template.json:31
 msgid "Contra Entry"
-msgstr "Contre-passation"
+msgstr "Transfert interne"
 
 #. Name of a DocType
 #. Label of a Link in the CRM Workspace

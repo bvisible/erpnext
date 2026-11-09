@@ -354,3 +354,11 @@ again (marked), or, if the decision itself has changed, edit the row and say why
   raised by `Dunning.before_submit` (`erpnext/accounts/doctype/dunning/dunning.py`, marked in place): upstream stops with
   a bare « Income Account is required… » and no way forward, while the account is only ever set on the Dunning Type
   (the field of the dunning is copied from it, and Frappe does not copy it again while a document is being submitted).
+
+## « Contra Entry » is a transfer, not a reversal (2026-11-09)
+
+- `erpnext/locale/fr.po` — the msgstr of `Contra Entry` (the Journal Entry's type, also in the Journal Entry Template) is
+  « Transfert interne » instead of upstream's « Contre-passation », with a `# //// Neoffice` comment above the entry.
+  Upstream's word is a reversal; the entry moves money between two of the company's own bank and cash accounts, and the
+  French screen led a person to think it cancelled something (neoffice-maintenance#2421). Keep our msgstr at the next
+  merge.
