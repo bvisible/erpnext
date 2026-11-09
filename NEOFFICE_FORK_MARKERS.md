@@ -332,3 +332,16 @@ the workspaces are synced from the hub, and a JSON change that the hub overrides
   {0}", "Create a new {0}", "You haven't created a {0} yet" and "View all {0}" with the doctype's name as the context
   first, so a catalogue can say the whole phrase of one doctype: French cannot build « Nouvelle relance » from
   « Nouveau(elle) {0} » and a label (neoffice-maintenance#2161). The msgstr carries no `{0}` on purpose.
+
+## Contracts — what upstream must not bring back (2026-11-09)
+
+A marker explains a removal; it does not stop the next upstream merge from putting the same rule back, in another
+file or another form, with no conflict. Each row below is a decision that a machine checks on every push
+(`scripts/fork_contracts.py` of bvisible/neoffice-ci, run by the fork-markers workflow): `absent` = no matching file may
+contain the pattern, `present` = every matching file must. A red run means upstream undid a decision: remove the change
+again (marked), or, if the decision itself has changed, edit the row and say why. Never delete a row to get green.
+
+| Contract | Rule | Pattern | Why |
+| --- | --- | --- | --- |
+| `erpnext/stock/doctype/item/item.js` | absent | `set_query\(\s*"item_group"` | #2398: upstream limits the Item form to leaf item groups; our items sit under parent groups (Products, Services...), so the form stopped offering them. Parent groups stay selectable. |
+| `erpnext/stock/doctype/item/item.json` | absent | `"link_filters":\s*"\[\[\\"Item Group\\"` | #2398: the same restriction, as upstream first wrote it (merge of 2026-10-20), in the DocType JSON. |
