@@ -6,6 +6,32 @@ from erpnext.accounts.party import get_default_price_list, set_price_list
 
 
 class PartyTestCase(FrappeTestCase):
+	# //// Neoffice — a value that is no Party Type (the translated label "Client" for "Customer") says so,
+	# //// where upstream died on None.lower() with an HTTP 500 (neoffice-maintenance#1099)
+	def test_get_party_account_refuses_an_unknown_party_type_with_a_readable_error(self):
+		from erpnext.accounts.party import get_party_account
+
+		for party_type in ("Client", "No Such Party Type"):
+			with self.subTest(party_type=party_type):
+				with self.assertRaises(frappe.DoesNotExistError) as raised:
+					get_party_account(party_type, "_Test Customer", "_Test Company")
+				self.assertIn(party_type, str(raised.exception))
+				self.assertIn("Party Type", str(raised.exception))
+
+	def test_get_party_account_still_gives_the_default_account_of_a_known_party_type(self):
+		from erpnext.accounts.party import get_party_account
+
+		company = "_Test Company"
+		for party_type, field in (
+			("Customer", "default_receivable_account"),
+			("Supplier", "default_payable_account"),
+		):
+			with self.subTest(party_type=party_type):
+				self.assertEqual(
+					get_party_account(party_type, None, company),
+					frappe.get_cached_value("Company", company, field),
+				)
+
 	def test_get_default_price_list_should_return_none_for_invalid_group(self):
 		customer = frappe.get_doc(
 			{"doctype": "Customer", "customer_name": "test customer", "customer_group": "Individual"}

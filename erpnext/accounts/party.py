@@ -514,6 +514,13 @@ def get_party_account(party_type, party=None, company=None, include_advance=Fals
 		# get default account on the basis of party type
 		if not account:
 			account_type = frappe.get_cached_value("Party Type", party_type, "account_type")
+			# //// Neoffice — upstream calls account_type.lower() on whatever the cache returns. A value that is
+			# //// not a Party Type (the translated label "Client" sent for "Customer") gives None there, and the
+			# //// call died with "'NoneType' object has no attribute 'lower'", an HTTP 500 on the payment
+			# //// reconciliation screen (neoffice-maintenance#1099). Say what is wrong instead; same message as
+			# //// the guards of validate_account_party_type. Remove when upstream guards it.
+			if not account_type:
+				frappe.throw(_("{0} is not a valid Party Type").format(party_type), frappe.DoesNotExistError)
 			default_account_name = "default_" + account_type.lower() + "_account"
 			account = frappe.get_cached_value("Company", company, default_account_name)
 
