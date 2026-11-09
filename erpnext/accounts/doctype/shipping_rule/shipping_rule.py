@@ -229,8 +229,10 @@ class ShippingRule(Document):
 					# Set flag to avoid showing multiple messages
 					doc._skip_shipping_rule_notification = True
 			
-			# Clear shipping rule fields from the document
-			doc.shipping_rule = ""
+			# //// Neoffice — neoffice-maintenance#1466 (point 1): the rule STAYS on the document, at a rate of 0. It used to
+			# //// be cleared (`doc.shipping_rule = ""`) when a bracket cost 0.00 (« free above 500 »): the controller applies
+			# //// the rule only while the document names it, so once the order was above the free threshold the rule left the
+			# //// document and never came back when the order was reduced below it. Only the rule's rows leave the tax table.
 			doc.shipping_rule_rate = 0
 			
 			# Remove any existing shipping charges from tax table
