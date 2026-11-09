@@ -345,3 +345,12 @@ again (marked), or, if the decision itself has changed, edit the row and say why
 | --- | --- | --- | --- |
 | `erpnext/stock/doctype/item/item.js` | absent | `set_query\(\s*"item_group"` | #2398: upstream limits the Item form to leaf item groups; our items sit under parent groups (Products, Services...), so the form stopped offering them. Parent groups stay selectable. |
 | `erpnext/stock/doctype/item/item.json` | absent | `"link_filters":\s*"\[\[\\"Item Group\\"` | #2398: the same restriction, as upstream first wrote it (merge of 2026-10-20), in the DocType JSON. |
+
+## A dunning that has a fee but no Income Account says what is missing (2026-11-09)
+
+- `erpnext/locale/fr.po` and `erpnext/locale/main.pot` — 3 entries added at the end (« Compte de Produits manquant » and
+  the two sentences that tell a person to set the Income Account on the Dunning Type, with a link, or in the Accounting
+  Details section when the dunning has no type), with a `# //// Neoffice` comment in `fr.po`. They belong to the message
+  raised by `Dunning.before_submit` (`erpnext/accounts/doctype/dunning/dunning.py`, marked in place): upstream stops with
+  a bare « Income Account is required… » and no way forward, while the account is only ever set on the Dunning Type
+  (the field of the dunning is copied from it, and Frappe does not copy it again while a document is being submitted).

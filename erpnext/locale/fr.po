@@ -64486,3 +64486,14 @@ msgstr "Vous n'avez pas encore créé de relance"
 msgctxt "Dunning"
 msgid "View all {0}"
 msgstr "Voir toutes les relances"
+
+# //// Neoffice — added entries (no upstream equivalent in this catalogue): the refusal to validate a dunning that has
+# //// a fee but no Income Account says what is missing and links to the Dunning Type where it is set (dunning.py).
+msgid "Income Account missing"
+msgstr "Compte de Produits manquant"
+
+msgid "This dunning has a fee or interest to collect, but no Income Account to book it on. Set the Income Account (Accounting Details section) on the Dunning Type {0}, then validate this dunning again."
+msgstr "Cette relance comporte des frais ou des intérêts à encaisser, mais aucun Compte de Produits pour les comptabiliser. Renseignez le Compte de Produits (section Détails comptables) sur le Type de relance {0}, puis validez à nouveau cette relance."
+
+msgid "This dunning has a fee or interest to collect, but no Income Account to book it on. Set the Income Account in the Accounting Details section, then validate this dunning again."
+msgstr "Cette relance comporte des frais ou des intérêts à encaisser, mais aucun Compte de Produits pour les comptabiliser. Renseignez le Compte de Produits dans la section Détails comptables, puis validez à nouveau cette relance."

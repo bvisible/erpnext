@@ -61988,3 +61988,16 @@ msgstr ""
 #: erpnext/accounts/party.py:80
 msgid "{0}: {1} does not exists"
 msgstr ""
+
+#: erpnext/accounts/doctype/dunning/dunning.py:132
+msgid "Income Account missing"
+msgstr ""
+
+#: erpnext/accounts/doctype/dunning/dunning.py:123
+#, python-brace-format
+msgid "This dunning has a fee or interest to collect, but no Income Account to book it on. Set the Income Account (Accounting Details section) on the Dunning Type {0}, then validate this dunning again."
+msgstr ""
+
+#: erpnext/accounts/doctype/dunning/dunning.py:129
+msgid "This dunning has a fee or interest to collect, but no Income Account to book it on. Set the Income Account in the Accounting Details section, then validate this dunning again."
+msgstr ""

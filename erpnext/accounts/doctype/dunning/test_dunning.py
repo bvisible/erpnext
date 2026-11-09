@@ -6,6 +6,7 @@ from unittest.mock import patch
 import frappe
 from frappe.client import insert
 from frappe.model import mapper
+from frappe.tests.roles import as_role  # //// Neoffice — plays the act as a real role, not Administrator
 from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, flt, nowdate, today
 
@@ -584,6 +585,31 @@ class TestDunning(FrappeTestCase):
 
 		dunning.reload()
 		self.assertEqual(dunning.status, "Unresolved")
+
+	# //// Neoffice — added test: a dunning with a fee whose Dunning Type has no Income Account is refused with a
+	# message that says the account is missing and links to the Dunning Type, the one place where it is set.
+	def test_submit_without_income_account_links_to_the_dunning_type(self):
+		create_dunning_type("Unbooked Fee Notice", fee=5.0, interest=0.0, is_default=0)
+		dunning_type = "Unbooked Fee Notice - _TC"
+		frappe.db.set_value("Dunning Type", dunning_type, {"income_account": None, "cost_center": None})
+		dunning = create_dunning(overdue_days=15, dunning_type_name=dunning_type)
+		self.assertFalse(dunning.income_account)
+
+		with as_role("head_accountant"), self.assertRaises(frappe.ValidationError) as refusal:
+			dunning.submit()
+
+		message = str(refusal.exception)
+		self.assertIn("Income Account", message)
+		self.assertIn(frappe.utils.get_link_to_form("Dunning Type", dunning_type), message)
+
+		# once the account is set on the Dunning Type the same draft validates, without any reload
+		income_account = get_income_account("_Test Company")
+		frappe.db.set_value("Dunning Type", dunning_type, "income_account", income_account)
+		dunning = frappe.get_doc("Dunning", dunning.name)
+		with as_role("head_accountant"):
+			dunning.submit()
+		self.assertEqual(dunning.docstatus, 1)
+		self.assertEqual(frappe.db.get_value("Dunning", dunning.name, "income_account"), income_account)
 
 
 def create_dunning(overdue_days, dunning_type_name=None):

@@ -105,8 +105,31 @@ class Dunning(AccountsController):
 			)
 
 	def before_submit(self):
+		if self.dunning_amount and not self.income_account and self.dunning_type:
+			# //// Neoffice — Frappe does not refresh fetch_from fields while a document is being submitted, so a draft
+			# saved before the account was set on its Dunning Type would keep the empty value for ever: read it again.
+			accounts = frappe.db.get_value(
+				"Dunning Type", self.dunning_type, ["income_account", "cost_center"], as_dict=True
+			)
+			if accounts and accounts.income_account:
+				self.income_account = accounts.income_account
+				self.cost_center = self.cost_center or accounts.cost_center
 		if self.dunning_amount and not self.income_account:
-			frappe.throw(_("Income Account is required to collect dunning fees or interest."))
+			# //// Neoffice — upstream stops with a bare message and no way forward. The account is copied from
+			# the Dunning Type on every save (fetch_if_empty is off), so typing it on the dunning is overwritten:
+			# say what is missing and link to the Dunning Type, the one place where it is set.
+			if self.dunning_type:
+				message = _(
+					"This dunning has a fee or interest to collect, but no Income Account to book it on. "
+					"Set the Income Account (Accounting Details section) on the Dunning Type {0}, "
+					"then validate this dunning again."
+				).format(frappe.utils.get_link_to_form("Dunning Type", self.dunning_type))
+			else:
+				message = _(
+					"This dunning has a fee or interest to collect, but no Income Account to book it on. "
+					"Set the Income Account in the Accounting Details section, then validate this dunning again."
+				)
+			frappe.throw(message, title=_("Income Account missing"))
 		self.status = "Unresolved"
 		self.superseded_by = None
 
