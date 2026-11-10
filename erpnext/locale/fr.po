@@ -5276,6 +5276,7 @@ msgstr "Appliquer une réduction sur le prix"
 msgid "Apply Multiple Pricing Rules"
 msgstr "Appliquer plusieurs règles de tarification"
 
+# //// Neoffice — sentence case: upstream's msgstr was « Appliquer Sur » (neoffice-maintenance#2501). Keep ours at the next merge.
 #. Label of a Select field in DocType 'Pricing Rule'
 #. Label of a Select field in DocType 'Promotional Scheme'
 #. Label of a Link field in DocType 'Service Level Agreement'
@@ -5283,7 +5284,7 @@ msgstr "Appliquer plusieurs règles de tarification"
 #: erpnext/accounts/doctype/promotional_scheme/promotional_scheme.json:59
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.json:140
 msgid "Apply On"
-msgstr "Appliquer Sur"
+msgstr "Appliquer sur"
 
 #. Label of a Check field in DocType 'Purchase Receipt'
 #. Label of a Check field in DocType 'Stock Entry'

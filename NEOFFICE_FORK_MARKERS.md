@@ -362,3 +362,9 @@ again (marked), or, if the decision itself has changed, edit the row and say why
   Upstream's word is a reversal; the entry moves money between two of the company's own bank and cash accounts, and the
   French screen led a person to think it cancelled something (neoffice-maintenance#2421). Keep our msgstr at the next
   merge.
+
+## « Appliquer sur » in sentence case (2026-11-11)
+
+- `erpnext/locale/fr.po` — the msgstr of `Apply On` (a field of Pricing Rule, Promotional Scheme and Service Level Agreement) is « Appliquer sur » instead of
+  upstream's « Appliquer Sur », with a `# //// Neoffice` comment above the entry (neoffice-maintenance#2501). Keep our
+  msgstr at the next merge.
