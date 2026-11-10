@@ -64489,6 +64489,68 @@ msgctxt "Dunning"
 msgid "View all {0}"
 msgstr "Voir toutes les relances"
 
+# //// Neoffice — added entries (no upstream equivalent): the same whole phrases for the item, customer and supplier
+# //// dialogs and lists, which showed « Nouveau(elle) Article » in a filmed guided tour (maintenance#2161, NEO-1055).
+msgctxt "Item"
+msgid "New {0}"
+msgstr "Nouvel article"
+
+msgctxt "Item"
+msgid "Create your first {0}"
+msgstr "Créez votre premier article"
+
+msgctxt "Item"
+msgid "Create a new {0}"
+msgstr "Créer un nouvel article"
+
+msgctxt "Item"
+msgid "You haven't created a {0} yet"
+msgstr "Vous n'avez pas encore créé d'article"
+
+msgctxt "Item"
+msgid "View all {0}"
+msgstr "Voir tous les articles"
+
+msgctxt "Customer"
+msgid "New {0}"
+msgstr "Nouveau client"
+
+msgctxt "Customer"
+msgid "Create your first {0}"
+msgstr "Créez votre premier client"
+
+msgctxt "Customer"
+msgid "Create a new {0}"
+msgstr "Créer un nouveau client"
+
+msgctxt "Customer"
+msgid "You haven't created a {0} yet"
+msgstr "Vous n'avez pas encore créé de client"
+
+msgctxt "Customer"
+msgid "View all {0}"
+msgstr "Voir tous les clients"
+
+msgctxt "Supplier"
+msgid "New {0}"
+msgstr "Nouveau fournisseur"
+
+msgctxt "Supplier"
+msgid "Create your first {0}"
+msgstr "Créez votre premier fournisseur"
+
+msgctxt "Supplier"
+msgid "Create a new {0}"
+msgstr "Créer un nouveau fournisseur"
+
+msgctxt "Supplier"
+msgid "You haven't created a {0} yet"
+msgstr "Vous n'avez pas encore créé de fournisseur"
+
+msgctxt "Supplier"
+msgid "View all {0}"
+msgstr "Voir tous les fournisseurs"
+
 # //// Neoffice — added entries (no upstream equivalent in this catalogue): the refusal to validate a dunning that has
 # //// a fee but no Income Account says what is missing and links to the Dunning Type where it is set (dunning.py).
 msgid "Income Account missing"
