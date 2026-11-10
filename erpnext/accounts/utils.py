@@ -2397,7 +2397,16 @@ def create_gain_loss_journal(
 	party_account_currency = frappe.get_cached_value("Account", party_account, "account_currency")
 
 	if not gain_loss_account:
-		frappe.throw(_("Please set default Exchange Gain/Loss Account in Company {}").format(company))
+		# //// Neoffice — maintenance#2325: upstream names the company as plain text, and a first payment in a foreign
+		# //// currency was refused with no way to the setting (the chart import leaves the field empty). The company
+		# //// is a link to its form, where the account is set (Accounts tab, Exchange Gain / Loss section); same msgid,
+		# //// so its translation stands.
+		frappe.throw(
+			_("Please set default Exchange Gain/Loss Account in Company {}").format(
+				frappe.utils.get_link_to_form("Company", company)
+			),
+			title=_("Exchange Gain / Loss"),
+		)
 	gain_loss_account_currency = get_account_currency(gain_loss_account)
 	company_currency = frappe.get_cached_value("Company", company, "default_currency")
 
