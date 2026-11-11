@@ -1187,35 +1187,62 @@ erpnext.journal_entry_utils.continueQuickEntry = function(frm, values, createNew
 };
 
 // Create basic debit and credit rows
+//// Neoffice — the Quick Journal Entry dialog was rewritten on 2026-05-07 (fields counterparty_account, totalization_account,
+//// totalization, credit_or_debit) but this function kept reading upstream's debit_account / credit_account / debit, which the
+//// dialog no longer has: without a template the entry came out as two rows with no account and the save was refused ("Account
+//// is required in every row"). It now builds the same two rows as the template path (bank/cash first, then the charge/income).
 erpnext.journal_entry_utils.createBasicEntryRows = function(frm, values) {
     // Clear the table first
     frm.clear_table("accounts");
-    
-    // Add the debit row
-    var debitRow = frm.fields_dict.accounts.grid.add_new_row();
-    if (values.debit_account) {
-        frappe.model.set_value(debitRow.doctype, debitRow.name, "account", values.debit_account);
-    }
-    frappe.model.set_value(
-        debitRow.doctype,
-        debitRow.name,
-        "debit_in_account_currency",
-        values.debit || values.totalization || 0
-    );
-    
-    // Add the credit row
-    var creditRow = frm.fields_dict.accounts.grid.add_new_row();
-    if (values.credit_account) {
-        frappe.model.set_value(creditRow.doctype, creditRow.name, "account", values.credit_account);
-    }
-    frappe.model.set_value(
-        creditRow.doctype,
-        creditRow.name,
-        "credit_in_account_currency",
-        values.debit || values.totalization || 0
-    );
-    
+
+    //// Neoffice — the rows read the fields of the rewritten dialog (see the note above the function)
+    const amount = values.totalization || 0;
+    // "Credit" = an expense: the bank/cash is credited and the charge debited ("Debit" = an income: the opposite)
+    const isExpense = values.credit_or_debit === "Credit";
+
+    // Totalization row (bank / cash)
+    const totalizationRow = frm.fields_dict.accounts.grid.add_new_row();
+    totalizationRow._is_totalization_row = true;
+    this.populateRow(totalizationRow.doctype, totalizationRow.name, [
+        values.totalization_account, undefined, undefined,
+        isExpense ? 0 : amount, isExpense ? amount : 0,
+        undefined, null, null,
+    ]);
+
+    // Counterparty row (charge / income)
+    const counterpartyRow = frm.fields_dict.accounts.grid.add_new_row();
+    this.populateRow(counterpartyRow.doctype, counterpartyRow.name, [
+        values.counterparty_account, undefined, undefined,
+        isExpense ? amount : 0, isExpense ? 0 : amount,
+        undefined, values.cost_center || null, values.project || null,
+    ]);
+
     refresh_field("accounts");
+};
+
+//// Neoffice — added: with "Amount without tax" (is_vat_excluded) the amount typed in the dialog is the NET one. processTVA keeps it
+//// on the charge/income row and adds the VAT row on top, but the dialog had given the bank/cash (totalization) row the same typed
+//// amount, so the entry came out short by the VAT (net 100.00 -> bank 100.00 against 100.00 + 8.10) and "Validate" refused it
+//// ("Total Debit must be equal to Total Credit"). The totalization row must carry what the other side adds up to, as
+//// neoffice_theme.mobile.create_journal_entry_from_scan already does. Run just before the save, once every VAT row exists.
+erpnext.journal_entry_utils.balanceTotalizationRow = function(frm) {
+    if (!frm.doc.is_vat_excluded || frm.doc.disable_calculation) return;
+
+    const rows = frm.doc.accounts || [];
+    const totalizationRow = rows.find(r => r._is_totalization_row);
+    if (!totalizationRow) return;
+
+    const isCredit = flt(totalizationRow.credit_in_account_currency) > 0;
+    const otherSide = rows
+        .filter(r => r !== totalizationRow)
+        .reduce((sum, r) => sum + flt(isCredit ? r.debit_in_account_currency : r.credit_in_account_currency), 0);
+    if (!otherSide) return;
+
+    const amount = this.toDecimal(otherSide);
+    this.forceDirect(totalizationRow, isCredit ? { credit: amount, debit: 0 } : { debit: amount, credit: 0 });
+    if (cur_frm && cur_frm.cscript.update_totals) {
+        cur_frm.cscript.update_totals(frm.doc);
+    }
 };
 
 // Process an entry based on a template
@@ -1241,6 +1268,8 @@ erpnext.journal_entry_utils.processTemplateBasedEntry = function(frm, values, te
     if (templateDoc.accounting_entry_totalization && templateDoc.accounting_entry_totalization.length > 0) {
         const totalizationDoc = templateDoc.accounting_entry_totalization[0];
         const totalizationRow = frm.fields_dict.accounts.grid.add_new_row();
+        //// Neoffice — marks the bank/cash row for balanceTotalizationRow (see there)
+        totalizationRow._is_totalization_row = true;
 
         this.populateRow(
             totalizationRow.doctype,
@@ -1396,6 +1425,8 @@ erpnext.journal_entry_utils.finishQuickEntry = function(frm, submitDoc, createNe
 
 // Function to save the document
 erpnext.journal_entry_utils.saveDocument = function(frm, submitDoc, createNew) {
+    //// Neoffice — the VAT rows are all there by now: carry the bank/cash row to net + VAT when the amount was typed without tax
+    this.balanceTotalizationRow(frm);
     frm.save().then(() => {
         if (submitDoc) {
             // Submit after saving
