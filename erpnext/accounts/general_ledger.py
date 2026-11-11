@@ -833,6 +833,10 @@ def check_freezing_date(posting_date, adv_adj=False):
 	"""
 	if not adv_adj:
 		acc_frozen_upto = frappe.db.get_value("Accounts Settings", None, "acc_frozen_upto")
+		# //// Neoffice — an empty date stored as text (« 0001-01-01 », « 0000-00-00 ») freezes nothing (maintenance#1550).
+		# //// The raw value is truthy and getdate() reads it as None: the comparison below raised a TypeError at every
+		# //// ledger posting, and the site booked nothing until the setting was cleared by hand.
+		acc_frozen_upto = getdate(acc_frozen_upto) if acc_frozen_upto else None
 		if acc_frozen_upto:
 			frozen_accounts_modifier = frappe.db.get_value(
 				"Accounts Settings", None, "frozen_accounts_modifier"
