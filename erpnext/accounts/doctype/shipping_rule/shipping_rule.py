@@ -272,12 +272,12 @@ class ShippingRule(Document):
 		Returns:
 			float: The calculated shipping amount based on constraints
 		"""
-		# Validation des conditions
+		# //// Neoffice — the comments of this added method are English (maintenance#1466): the conditions come first
 		if not self.condition_multiple_constraints:
 			frappe.throw(_("No conditions defined for the shipping rule with multiple constraints. Please add at least one condition."), title=_("Incomplete configuration"))
 			return 0.0
 		
-		# Vérifier que les unités de mesure sont définies
+		# Then the units of measure
 		if not self.weight_uom:
 			frappe.throw(_("Please define the weight unit for the shipping rule with multiple constraints."), title=_("Configuration incomplete"))
 		
@@ -509,12 +509,13 @@ class ShippingRule(Document):
 						valid_groups[group]["invalid_reasons"] = []
 					
 					# Format reason with appropriate units
+					# //// Neoffice — an open range ends at "∞", no word to translate (it was the French « infini », maintenance#1466)
 					reason = _("The value {0} {1} ({2}) is not within the range {3}-{4}").format(
 						constraint_label,
 						flt(constraint_value, precision=2),
 						constraint_uom,
 						flt(min_value, precision=2),
-						_("infini") if max_value == float('inf') else flt(max_value, precision=2)
+						"∞" if max_value == float('inf') else flt(max_value, precision=2)
 					)
 					valid_groups[group]["invalid_reasons"].append(reason)
 								
