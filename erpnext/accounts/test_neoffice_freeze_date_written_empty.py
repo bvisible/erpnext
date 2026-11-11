@@ -15,12 +15,16 @@ from erpnext.accounts.general_ledger import check_freezing_date
 
 
 def _settings(frozen_upto):
-	def get_value(doctype, name=None, fieldname=None, *args, **kwargs):
+	"""The two settings check_freezing_date reads; every other read goes to the database as it was called."""
+
+	def get_value(*args, **kwargs):
+		doctype = args[0] if args else kwargs.get("doctype")
+		fieldname = args[2] if len(args) > 2 else kwargs.get("fieldname")
 		if doctype == "Accounts Settings" and fieldname == "acc_frozen_upto":
 			return frozen_upto
 		if doctype == "Accounts Settings" and fieldname == "frozen_accounts_modifier":
 			return None
-		return original(doctype, name, fieldname, *args, **kwargs)
+		return original(*args, **kwargs)
 
 	original = frappe.db.get_value
 	return mock.patch.object(frappe.db, "get_value", side_effect=get_value)
