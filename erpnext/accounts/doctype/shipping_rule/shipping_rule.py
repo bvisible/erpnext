@@ -515,6 +515,7 @@ class ShippingRule(Document):
 						flt(constraint_value, precision=2),
 						constraint_uom,
 						flt(min_value, precision=2),
+						# //// Neoffice — see the block marker above: open range reads ∞
 						"∞" if max_value == float('inf') else flt(max_value, precision=2)
 					)
 					valid_groups[group]["invalid_reasons"].append(reason)
