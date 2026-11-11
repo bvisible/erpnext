@@ -384,10 +384,27 @@ class TestCustomer(FrappeTestCase):
 		self.assertEqual(middle, None)
 		self.assertEqual(last, "Doe")
 
+		# //// Neoffice — neoffice-maintenance#1103: the words before the last one are the first name, no screen of
+		# //// ours shows a middle name; a particle just before the last word goes with the family name.
 		first, middle, last = parse_full_name("John Michael Doe")
-		self.assertEqual(first, "John")
-		self.assertEqual(middle, "Michael")
+		self.assertEqual(first, "John Michael")
+		self.assertEqual(middle, None)
 		self.assertEqual(last, "Doe")
+
+		# //// Neoffice — neoffice-maintenance#1103: the names the contact of an Individual customer is cut from.
+		for full_name, expected in (
+			("Marie Claire Dupont", ("Marie Claire", None, "Dupont")),
+			("Jean de la Fontaine", ("Jean", None, "de la Fontaine")),
+			("Jean De La Fontaine", ("Jean", None, "De La Fontaine")),
+			("Ludwig van der Rohe", ("Ludwig", None, "van der Rohe")),
+			("Anne Marie von Arx", ("Anne Marie", None, "von Arx")),
+			("Valery Giscard d' Estaing", ("Valery Giscard", None, "d' Estaing")),
+			("Paolo della Rocca", ("Paolo", None, "della Rocca")),
+			("Le Corbusier", ("Le", None, "Corbusier")),
+			("  Marie   Claire  Dupont ", ("Marie Claire", None, "Dupont")),
+		):
+			with self.subTest(full_name=full_name):
+				self.assertEqual(parse_full_name(full_name), expected)
 
 	def test_portal_user_contact_link(self):
 		user_email = frappe.generate_hash() + "@example.com"

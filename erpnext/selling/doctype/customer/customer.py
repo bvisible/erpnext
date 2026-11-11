@@ -1031,11 +1031,24 @@ def get_customer_primary(doctype, txt, searchfield, start, page_len, filters):
 	return query.run()
 
 
+# //// Neoffice — the words that open a family name ("Jean de la Fontaine", "Ludwig van der Rohe"), see parse_full_name.
+NAME_PARTICLES = frozenset(
+	{"d'", "d\u2019", "da", "de", "del", "della", "den", "der", "des", "di", "du", "la", "le", "van", "von"}
+)
+
+
 def parse_full_name(full_name: str) -> tuple[str, str | None, str | None]:
 	"""Parse full name into first name, middle name and last name"""
+	# //// Neoffice — neoffice-maintenance#1103: upstream kept the first word as the first name and put the words
+	# //// between the first and the last into middle_name, which no Neoffice screen shows: "Marie Claire Dupont"
+	# //// read "Marie Dupont" on the contact of an Individual customer. The last word is the family name and the
+	# //// words before it the first name ("Marie Claire" / "Dupont"); the particles just before the last word go
+	# //// with it ("Jean de la Fontaine" -> "Jean" / "de la Fontaine"), always leaving one word of first name.
+	# //// middle_name stays in the signature for the callers (Lead, Customer, Supplier) and is always None.
 	names = full_name.split()
-	first_name = names[0]
-	middle_name = " ".join(names[1:-1]) if len(names) > 2 else None
-	last_name = names[-1] if len(names) > 1 else None
-
-	return first_name, middle_name, last_name
+	if len(names) < 2:
+		return names[0], None, None
+	start = len(names) - 1
+	while start > 1 and names[start - 1].lower() in NAME_PARTICLES:
+		start -= 1
+	return " ".join(names[:start]), None, " ".join(names[start:])
