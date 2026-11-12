@@ -2486,7 +2486,10 @@ $.extend(erpnext.journal_entry, {
         fields.push({
             fieldname: "totalization_account",
             fieldtype: "Link",
-            label: __("Bank / Cash Account"),
+            //// Neoffice — « Bank / Cash Account » named the account on the other side of the entry, which a template can
+            //// make a customer's or a supplier's (a credit note puts the receivable there). « Counterpart Account » is true
+            //// whatever it holds (Jérémy, 12.11); the same label in the Document Scan dialog (neoffice_theme).
+            label: __("Counterpart Account"),
             options: "Account",
             get_query: () => ({ filters: { company: company, is_group: 0 } }),
         });
