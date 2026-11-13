@@ -237,7 +237,15 @@ because what was dropped or reshaped no longer shows as a marker (neoffice-maint
   `party.py` (`validate_party_account_rows`), `buying_controller.py` (`get_on_hold_or_closed_reference`).
 
 `fork_markers.py check --base v15.125.0 --head <merge> --upstream-base v15.125.0` answers 0 unmarked hunks; both
-contracts hold. No catalogue (`.po`) or JSON divergence changed with this merge (upstream did not touch `fr.po`).
+contracts hold. Upstream did not touch `fr.po` in this release; the catalogue is completed after the merge:
+
+- `erpnext/locale/main.pot` regenerated (`bench generate-pot-file`, Babel 2.18), plus, at the end, the 741 entries the
+  extractor no longer finds but `fr.po` translates (strings added by hand or reworded upstream: kept so that the next
+  regeneration does not lose them silently).
+- `erpnext/locale/fr.po`: 757 strings that had no French (most of them new in 15.125.0) filled by Haiku through
+  `fill_po_in_place.py` (245 in place, 512 appended at the end). Left empty on purpose: product names (Drive, NeoPOS),
+  workspace texts whose msgid is already French, and "Progress % for a task must be between 0 and 100." (msgfmt reads
+  "% f" as a format directive that no French sentence carries).
 
 ## Merge with upstream v15.124.3 (2026-10-30)
 
