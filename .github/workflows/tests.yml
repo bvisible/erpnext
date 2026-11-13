@@ -36,6 +36,10 @@ jobs:
     uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
     with:
       app: erpnext
+      # //// Neoffice — payments installed first, as upstream's own CI does (.github/helper/install.sh): since
+      # //// v15.125.0 the test-record walk reaches Payment Gateway, a doctype of payments, and the whole run
+      # //// stopped before its first test ("DocType Payment Gateway not found", run 43472565858, maintenance#2648).
+      install_apps: payments
       app_ref: ${{ inputs.app_ref || '' }}
       upstream_preview: ${{ inputs.upstream_preview || false }}
       erpnext_bootstrap: false   # erpnext IS the app under test: its own before_tests runs
