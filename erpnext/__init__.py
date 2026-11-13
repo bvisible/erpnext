@@ -3,9 +3,8 @@ import inspect
 
 import frappe
 from frappe.utils import cstr
-from frappe.utils.user import is_website_user
 
-__version__ = "15.124.5"
+__version__ = "15.125.0"
 
 
 def get_default_company(user=None):
@@ -154,6 +153,8 @@ def allow_regional(fn):
 
 
 def check_app_permission():
+	from frappe.utils.user import is_website_user
+
 	if frappe.session.user == "Administrator":
 		return True
 

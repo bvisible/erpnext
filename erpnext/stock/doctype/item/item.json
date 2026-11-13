@@ -238,7 +238,8 @@
    "depends_on": "is_stock_item",
    "fieldname": "valuation_rate",
    "fieldtype": "Currency",
-   "label": "Valuation Rate"
+   "label": "Valuation Rate",
+   "non_negative": 1
   },
   {
    "bold": 1,
@@ -710,7 +711,8 @@
    "depends_on": "enable_deferred_revenue",
    "fieldname": "no_of_months",
    "fieldtype": "Int",
-   "label": "No of Months (Revenue)"
+   "label": "No of Months (Revenue)",
+   "non_negative": 1
   },
   {
    "default": "0",
@@ -722,7 +724,8 @@
    "depends_on": "enable_deferred_expense",
    "fieldname": "no_of_months_exp",
    "fieldtype": "Int",
-   "label": "No of Months (Expense)"
+   "label": "No of Months (Expense)",
+   "non_negative": 1
   },
   {
    "collapsible": 1,
@@ -938,7 +941,7 @@
  "image_field": "image",
  "links": [],
  "make_attachments_public": 1,
- "modified": "2026-09-07 19:53:27.830229",
+ "modified": "2026-11-05 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
