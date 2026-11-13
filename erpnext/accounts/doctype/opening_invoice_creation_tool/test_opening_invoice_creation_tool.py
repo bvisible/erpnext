@@ -263,7 +263,14 @@ class TestOpeningInvoiceCreationTool(FrappeTestCase):
 
 	@classmethod
 	def tearDownClass(cls):
+		# //// Neoffice — setUpClass creates the dimensions BEFORE FrappeTestCase.setUpClass, whose commit makes them last,
+		# //// while the class's rollback runs after this method and undid the disabling: « Location » stayed mandatory for
+		# //// the Balance Sheet of _Test Company in every later test (123 errors in Payment Entry, Payment Request and
+		# //// Payment Order on the full suite of 13.11). The class's own records are rolled back first, as FrappeTestCase
+		# //// would do, then the disabling is committed like the creation was.
+		frappe.db.rollback()
 		disable_dimension()
+		frappe.db.commit()
 		super().tearDownClass()
 
 

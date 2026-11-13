@@ -4720,6 +4720,11 @@ class TestSalesInvoice(FrappeTestCase):
 		si.submit()
 
 		frappe.db.set_single_value("Accounts Settings", "acc_frozen_upto", getdate("2019-01-31"))
+		# //// Neoffice — the deferred booking below commits (deferred_revenue.py), so tearDown's rollback no longer takes the
+		# //// freezing date back: every later test that books before 31.01.2019 was refused (« You are not authorized to
+		# //// add or update entries before 01-31-2019 », 10 errors on the full suite of 13.11). Cleared and committed after
+		# //// tearDown's rollback.
+		self.addCleanup(clear_freezing_date)
 
 		pda1 = frappe.get_doc(
 			dict(
@@ -6531,3 +6536,9 @@ def make_recurring_invoice(reference, from_date, to_date):
 	auto_repeat = frappe._dict(frequency="Monthly")
 	new_invoice.run_method("on_recurring", reference_doc=reference, auto_repeat_doc=auto_repeat)
 	return new_invoice.insert()
+
+
+# //// Neoffice — added function (no upstream equivalent): see test_multi_currency_deferred_revenue_via_journal_entry
+def clear_freezing_date():
+	frappe.db.set_single_value("Accounts Settings", "acc_frozen_upto", None)
+	frappe.db.commit()

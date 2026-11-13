@@ -1009,7 +1009,8 @@ class TestFirstResponseTime(TestSetUp):
 		from erpnext.support.doctype.issue.issue import Issue
 
 		self.assertTrue(Issue.split_issue in frappe.whitelisted)
-		self.assertEqual(frappe.allowed_http_methods_for_whitelisted_func[Issue.split_issue], ["POST"])
+		# //// Neoffice — our frappe fork stores the allowed methods as a tuple (v16 parity): compare the methods
+		self.assertEqual(list(frappe.allowed_http_methods_for_whitelisted_func[Issue.split_issue]), ["POST"])
 
 	def test_split_issue_through_run_doc_method(self):
 		from frappe.handler import run_doc_method

@@ -56,7 +56,11 @@ class TestWhitelistedMethodsPostOnly(FrappeTestCase):
 			with self.subTest(path=path):
 				method = resolve(path)
 				self.assertIn(method, frappe.whitelisted)
-				self.assertEqual(frappe.allowed_http_methods_for_whitelisted_func.get(method), ["POST"])
+				# //// Neoffice — our frappe fork stores the allowed methods as a tuple (v16 parity, frappe/__init__.py
+				# //// whitelist), upstream v15 as a list: the test compares the methods, not the container
+				self.assertEqual(
+					list(frappe.allowed_http_methods_for_whitelisted_func.get(method) or ()), ["POST"]
+				)
 
 
 def resolve(path: str):
