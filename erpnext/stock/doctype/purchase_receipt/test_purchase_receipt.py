@@ -3937,7 +3937,23 @@ class TestPurchaseReceipt(FrappeTestCase):
 		# //// Neoffice — an item of its own: the backdated repost walks every later ledger entry of the item in
 		# the warehouse, and _Test Item kept entries of a Sales Invoice another class deleted without them
 		# ("Sales Invoice ... not found", full suite of 13.11, maintenance#2648).
-		item_code = make_item("_Test Item Tax Heads LCV Repost", {"is_stock_item": 1}).name
+		item_code = make_item(
+			"_Test Item Tax Heads LCV Repost",
+			{
+				"is_stock_item": 1,
+				# //// Neoffice — the company defaults of _Test Item, whose cost center the expected entries name
+				"item_defaults": [
+					{
+						"company": "_Test Company",
+						"default_warehouse": "_Test Warehouse - _TC",
+						"expense_account": "_Test Account Cost for Goods Sold - _TC",
+						"buying_cost_center": "_Test Cost Center - _TC",
+						"selling_cost_center": "_Test Cost Center - _TC",
+						"income_account": "Sales - _TC",
+					}
+				],
+			},
+		).name
 		po = create_purchase_order(item_code=item_code, qty=10, rate=100, do_not_save=1)
 		po.taxes = []
 		po.append(
@@ -4106,7 +4122,23 @@ class TestPurchaseReceipt(FrappeTestCase):
 		# //// Neoffice — an item of its own: the backdated repost walks every later ledger entry of the item in
 		# the warehouse, and _Test Item kept entries of a Sales Invoice another class deleted without them
 		# ("Sales Invoice ... not found", full suite of 13.11, maintenance#2648).
-		item_code = make_item("_Test Item Tax Heads Repost", {"is_stock_item": 1}).name
+		item_code = make_item(
+			"_Test Item Tax Heads Repost",
+			{
+				"is_stock_item": 1,
+				# //// Neoffice — the company defaults of _Test Item, whose cost center the expected entries name
+				"item_defaults": [
+					{
+						"company": "_Test Company",
+						"default_warehouse": "_Test Warehouse - _TC",
+						"expense_account": "_Test Account Cost for Goods Sold - _TC",
+						"buying_cost_center": "_Test Cost Center - _TC",
+						"selling_cost_center": "_Test Cost Center - _TC",
+						"income_account": "Sales - _TC",
+					}
+				],
+			},
+		).name
 		po = create_purchase_order(item_code=item_code, qty=10, rate=100, do_not_save=1)
 		po.taxes = []
 		po.append(

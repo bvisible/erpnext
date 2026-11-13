@@ -2628,6 +2628,13 @@ class TestSalesInvoice(FrappeTestCase):
 		)
 
 		create_dimension()
+		# //// Neoffice — the dimensions are switched off after tearDown's rollback, and committed: the first
+		# create_dimension of a run adds columns, which commits Location as mandatory for the balance sheet, and
+		# the disable_dimension() at the end of this test was rolled back by tearDown. Every later test of the
+		# class then asked for a Location (28 errors when the Sales Invoice tests ran alone, 13.11,
+		# maintenance#2648).
+		self.addCleanup(frappe.db.commit)
+		self.addCleanup(disable_dimension)
 
 		si = create_sales_invoice(do_not_save=True)
 		si.items = []
