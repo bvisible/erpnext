@@ -27,7 +27,14 @@ class TestDeliveryTrip(FrappeTestCase):
 		create_test_contact_and_address()
 		address = create_address(driver)
 
-		self.delivery_trip = create_delivery_trip(driver, address)
+		# //// Neoffice — the stops take this setUp's own contact, the one that has an email. Upstream's
+		# create_test_contact_and_address empties the Contact table first; our fork keeps that delete off (it
+		# wiped production data on a shared database), so contacts of _Test Customer committed by other classes
+		# stay, the first one found has no email, and the dispatch mail had no one to go to (full suite of
+		# 13.11, maintenance#2648).
+		self.delivery_trip = create_delivery_trip(
+			driver, address, contact=get_contact_with_email("_Test Customer")
+		)
 
 	def tearDown(self):
 		frappe.db.rollback()
@@ -415,6 +422,21 @@ def create_vehicle():
 			}
 		)
 		vehicle.insert()
+
+
+# //// Neoffice — added function (see TestDeliveryTrip.setUp): the customer's default address, and the contact
+# create_test_contact_and_address just made, which carries an email.
+def get_contact_with_email(customer):
+	contact = get_contact_and_address(customer)
+	contact.contact_person = frappe._dict(
+		parent=frappe.db.get_value(
+			"Contact",
+			{"first_name": f"_Test Contact for {customer}", "email_id": ["is", "set"]},
+			"name",
+			order_by="creation desc",
+		)
+	)
+	return contact
 
 
 def create_delivery_trip(driver, address, contact=None):

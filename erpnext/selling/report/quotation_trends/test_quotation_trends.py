@@ -27,6 +27,13 @@ class TestQuotationTrends(FrappeTestCase):
 					"companies": [{"company": "_Test Company"}],
 				}
 			).insert(ignore_if_duplicate=True)
+		# //// Neoffice — the totals are read from a clean year: quotations of _Test Company for 2026 committed by
+		# other classes are taken out inside this test's transaction (tearDown rolls it back). They added 2000 to
+		# every total in the full suite of 13.11 (maintenance#2648).
+		frappe.db.delete(
+			"Quotation",
+			{"company": "_Test Company", "transaction_date": ("between", ["2026-01-01", "2026-12-31"])},
+		)
 
 	def tearDown(self):
 		frappe.db.rollback()

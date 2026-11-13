@@ -93,10 +93,34 @@ class TestCurrencyExchange(unittest.TestCase):
 	def setUp(self):
 		# unittest.TestCase does not roll back, so remove the 2031 records that earlier tests inserted
 		frappe.db.delete("Currency Exchange", {"date": (">=", "2031-01-01")})
+		# //// Neoffice — the fleet's CI points Currency Exchange Settings to a local stub (provider Custom), and this
+		# //// test's mock only answers frankfurter.dev and exchangerate.host: it got a 404 and read a rate of 0. The
+		# //// provider the mock knows is set for the test, and the site's own is put back in tearDown.
+		settings = frappe.get_single("Currency Exchange Settings")
+		self.exchange_settings = None
+		if settings.service_provider != "frankfurter.dev":
+			self.exchange_settings = frappe._dict(
+				service_provider=settings.service_provider,
+				api_endpoint=settings.api_endpoint,
+				use_http=settings.use_http,
+				req_params=[{"key": row.key, "value": row.value} for row in settings.req_params],
+				result_key=[{"key": row.key} for row in settings.result_key],
+			)
+			settings.service_provider = "frankfurter.dev"
+			settings.save()
 
 	def tearDown(self):
 		frappe.db.set_single_value("Accounts Settings", "allow_stale", 1)
 		self.clear_cache()
+		# //// Neoffice — see setUp: the site's own provider is put back
+		if self.exchange_settings:
+			settings = frappe.get_single("Currency Exchange Settings")
+			settings.service_provider = self.exchange_settings.service_provider
+			settings.api_endpoint = self.exchange_settings.api_endpoint
+			settings.use_http = self.exchange_settings.use_http
+			settings.set("req_params", self.exchange_settings.req_params)
+			settings.set("result_key", self.exchange_settings.result_key)
+			settings.save()
 
 	def test_exchange_rate(self, mock_get):
 		save_new_records(test_records)

@@ -323,6 +323,13 @@ class TestIssue(TestSetUp):
 					"send_welcome_email": 0,
 				}
 			).insert(ignore_permissions=True)
+		# //// Neoffice — upstream frappe creates a Contact for every new User; our frappe fork does not
+		# (frappe/core/doctype/user/user.py, create_contact only updates one that exists), so the portal
+		# user's Contact is made here when it is missing.
+		if not frappe.db.exists("Contact", {"email_id": user}):
+			portal_contact = frappe.get_doc({"doctype": "Contact", "first_name": "Portal", "user": user})
+			portal_contact.add_email(user, is_primary=True)
+			portal_contact.insert(ignore_permissions=True)
 		contact = frappe.get_doc("Contact", {"email_id": user})
 		contact.links = []
 		contact.append("links", {"link_doctype": "Customer", "link_name": "_Test Customer"})

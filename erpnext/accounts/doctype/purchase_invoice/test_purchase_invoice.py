@@ -49,12 +49,19 @@ test_ignore = ["Serial No"]
 class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 	@classmethod
 	def setUpClass(self):
+		# //// Neoffice — remember the value found, put back in tearDownClass.
+		self._unlink_payment_on_cancel = frappe.db.get_single_value(
+			"Accounts Settings", "unlink_payment_on_cancellation_of_invoice"
+		)
 		unlink_payment_on_cancel_of_invoice()
 		frappe.db.set_single_value("Buying Settings", "allow_multiple_items", 1)
 
 	@classmethod
 	def tearDownClass(self):
-		unlink_payment_on_cancel_of_invoice(0)
+		# //// Neoffice — put back the value this class found (the setting's default is 1), not 0: upstream's 0
+		# stayed for every later class, whose invoices then kept their payment links on cancel (full suite of
+		# 13.11, test_accounts_controller, maintenance#2648).
+		unlink_payment_on_cancel_of_invoice(self._unlink_payment_on_cancel)
 
 	def tearDown(self):
 		frappe.db.rollback()

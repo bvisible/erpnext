@@ -17,6 +17,11 @@ class TestProfitAndLossStatement(AccountsTestMixin, FrappeTestCase):
 		self.create_company()
 		self.create_customer()
 		self.create_item()
+		# //// Neoffice — the report is read on a company without other ledger entries: what other classes
+		# committed for _Test Company is taken out inside this test's transaction (tearDown rolls it back),
+		# as test_accounts_controller does. It added 90 000 to this month in the full suite of 13.11
+		# (maintenance#2648).
+		self.clear_old_entries()
 
 	def tearDown(self):
 		frappe.db.rollback()

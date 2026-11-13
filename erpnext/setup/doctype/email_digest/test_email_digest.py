@@ -478,7 +478,11 @@ class TestEmailDigest(FrappeTestCase):
 		order.insert()
 		order.submit()
 		self.assertNotEqual(order.base_grand_total, order.grand_total)
-		self.assertEqual(digest.get_purchase_order()["value"] - before, order.base_grand_total)
+		# //// Neoffice — a difference of two float totals (6415.799999999988 for 6415.8 when other orders exist): compared
+		# //// to the cent, the precision of the amounts
+		self.assertAlmostEqual(
+			digest.get_purchase_order()["value"] - before, order.base_grand_total, places=2
+		)
 
 	def test_document_totals_exclude_drafts(self):
 		digest = create_email_digest(company="_Test Company", do_not_save=True)

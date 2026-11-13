@@ -32,11 +32,18 @@ class TestDunning(FrappeTestCase):
 		super().setUpClass()
 		create_dunning_type("First Notice", fee=0.0, interest=0.0, is_default=1)
 		create_dunning_type("Second Notice", fee=10.0, interest=10.0, is_default=0)
+		# //// Neoffice — remember the value found, put back in tearDownClass.
+		cls._unlink_payment_on_cancel = frappe.db.get_single_value(
+			"Accounts Settings", "unlink_payment_on_cancellation_of_invoice"
+		)
 		unlink_payment_on_cancel_of_invoice()
 
 	@classmethod
 	def tearDownClass(cls):
-		unlink_payment_on_cancel_of_invoice(0)
+		# //// Neoffice — put back the value this class found (the setting's default is 1), not 0: upstream's 0
+		# stayed for every later class, whose invoices then kept their payment links on cancel (full suite of
+		# 13.11, test_accounts_controller, maintenance#2648).
+		unlink_payment_on_cancel_of_invoice(cls._unlink_payment_on_cancel)
 		super().tearDownClass()
 
 	@change_settings("Accounts Settings", {"allow_multi_currency_invoices_against_single_party_account": 1})

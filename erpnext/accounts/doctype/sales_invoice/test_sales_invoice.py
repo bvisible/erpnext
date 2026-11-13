@@ -234,11 +234,18 @@ class TestSalesInvoice(FrappeTestCase):
 
 	@classmethod
 	def setUpClass(self):
+		# //// Neoffice — remember the value found, put back in tearDownClass.
+		self._unlink_payment_on_cancel = frappe.db.get_single_value(
+			"Accounts Settings", "unlink_payment_on_cancellation_of_invoice"
+		)
 		unlink_payment_on_cancel_of_invoice()
 
 	@classmethod
 	def tearDownClass(self):
-		unlink_payment_on_cancel_of_invoice(0)
+		# //// Neoffice — put back the value this class found (the setting's default is 1), not 0: upstream's 0
+		# stayed for every later class, whose invoices then kept their payment links on cancel (full suite of
+		# 13.11, test_accounts_controller, maintenance#2648).
+		unlink_payment_on_cancel_of_invoice(self._unlink_payment_on_cancel)
 
 	def test_sales_invoice_qty(self):
 		si = create_sales_invoice(qty=0, do_not_save=True)
