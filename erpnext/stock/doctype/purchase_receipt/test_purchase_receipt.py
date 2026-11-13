@@ -3914,6 +3914,18 @@ class TestPurchaseReceipt(FrappeTestCase):
 		company_doc.stock_received_but_not_billed = stock_rbnb
 		company_doc.default_inventory_account = stock_in_hand
 		company_doc.save()
+		# //// Neoffice — the company is put back even when the test stops halfway: the teardown at the end of
+		# the test never ran when the repost failed, and _Test Company stayed in perpetual inventory for the rest
+		# of the class (test_zero_valuation_rate_for_batched_item then asked for a Difference Account, full
+		# suite of 13.11, maintenance#2648).
+		self.addCleanup(
+			company_doc.db_set,
+			{
+				"enable_perpetual_inventory": 0,
+				"stock_received_but_not_billed": None,
+				"default_inventory_account": None,
+			},
+		)
 
 		packaging_charges_account = create_account(
 			account_name="Packaging Charges",
@@ -3922,7 +3934,11 @@ class TestPurchaseReceipt(FrappeTestCase):
 			account_type="Tax",
 		)
 
-		po = create_purchase_order(qty=10, rate=100, do_not_save=1)
+		# //// Neoffice — an item of its own: the backdated repost walks every later ledger entry of the item in
+		# the warehouse, and _Test Item kept entries of a Sales Invoice another class deleted without them
+		# ("Sales Invoice ... not found", full suite of 13.11, maintenance#2648).
+		item_code = make_item("_Test Item Tax Heads LCV Repost", {"is_stock_item": 1}).name
+		po = create_purchase_order(item_code=item_code, qty=10, rate=100, do_not_save=1)
 		po.taxes = []
 		po.append(
 			"taxes",
@@ -4067,6 +4083,18 @@ class TestPurchaseReceipt(FrappeTestCase):
 		company_doc.stock_received_but_not_billed = stock_rbnb
 		company_doc.default_inventory_account = stock_in_hand
 		company_doc.save()
+		# //// Neoffice — the company is put back even when the test stops halfway: the teardown at the end of
+		# the test never ran when the repost failed, and _Test Company stayed in perpetual inventory for the rest
+		# of the class (test_zero_valuation_rate_for_batched_item then asked for a Difference Account, full
+		# suite of 13.11, maintenance#2648).
+		self.addCleanup(
+			company_doc.db_set,
+			{
+				"enable_perpetual_inventory": 0,
+				"stock_received_but_not_billed": None,
+				"default_inventory_account": None,
+			},
+		)
 
 		packaging_charges_account = create_account(
 			account_name="Packaging Charges",
@@ -4075,7 +4103,11 @@ class TestPurchaseReceipt(FrappeTestCase):
 			account_type="Tax",
 		)
 
-		po = create_purchase_order(qty=10, rate=100, do_not_save=1)
+		# //// Neoffice — an item of its own: the backdated repost walks every later ledger entry of the item in
+		# the warehouse, and _Test Item kept entries of a Sales Invoice another class deleted without them
+		# ("Sales Invoice ... not found", full suite of 13.11, maintenance#2648).
+		item_code = make_item("_Test Item Tax Heads Repost", {"is_stock_item": 1}).name
+		po = create_purchase_order(item_code=item_code, qty=10, rate=100, do_not_save=1)
 		po.taxes = []
 		po.append(
 			"taxes",

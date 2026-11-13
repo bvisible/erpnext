@@ -694,6 +694,11 @@ def make_customers(count):
 					"customer_name": customer_name,
 					"customer_group": "_Test Customer Group",
 					"territory": "_Test Territory",
+					# //// Neoffice — our Customer fills an empty billing currency with the default company's
+					# (customer.py, validate); on the test site that is Wind Power LLC, in USD, so the till
+					# invoices took USD and their merged Sales Invoice met Debtors - _TC in INR. The
+					# customers bill in _Test Company's currency, as upstream's did by default.
+					"default_currency": "INR",
 				}
 			)
 			.insert()
