@@ -160,7 +160,10 @@ def get_asset_categories_for_grouped_by_category(filters):
 def get_assets_for_grouped_by_category(filters):
 	condition = ""
 	if filters.get("asset_category"):
-		condition = f" and a.asset_category = '{filters.get('asset_category')}'"
+		# //// Neoffice — upstream v15 interpolates the filter value into the SQL text (SQL injection through the report
+		# //// filters, GHSA-q65v-fm9p-9vh3). Bound as a query parameter like finance_book. Upstream fixed it on version-16
+		# //// only (16.9.0, c6000c0522, query builder rewrite); remove this when v15 gets that fix (neoffice-maintenance#2648).
+		condition = " and a.asset_category = %(asset_category)s"
 	finance_book_filter = f" and {get_finance_book_condition(filters)}"
 	if filters.get("finance_book"):
 		condition += " and exists (select 1 from `tabAsset Depreciation Schedule` ads where ads.asset = a.name and ads.finance_book = %(finance_book)s)"
@@ -236,6 +239,7 @@ def get_assets_for_grouped_by_category(filters):
 			"from_date": filters.from_date,
 			"company": filters.company,
 			"finance_book": filters.get("finance_book", ""),
+			"asset_category": filters.get("asset_category"),  # //// Neoffice — see above
 		},
 		as_dict=1,
 	)
@@ -414,7 +418,10 @@ def get_permitted_assets(asset_details: list) -> list:
 def get_assets_for_grouped_by_asset(filters):
 	condition = ""
 	if filters.get("asset"):
-		condition = f" and a.name = '{filters.get('asset')}'"
+		# //// Neoffice — upstream v15 interpolates the filter value into the SQL text (SQL injection through the report
+		# //// filters, GHSA-q65v-fm9p-9vh3). Bound as a query parameter like finance_book. Upstream fixed it on version-16
+		# //// only (16.9.0, c6000c0522, query builder rewrite); remove this when v15 gets that fix (neoffice-maintenance#2648).
+		condition = " and a.name = %(asset)s"
 	finance_book_filter = f" and {get_finance_book_condition(filters)}"
 	if filters.get("finance_book"):
 		condition += " and exists (select 1 from `tabAsset Depreciation Schedule` ads where ads.asset = a.name and ads.finance_book = %(finance_book)s)"
@@ -490,6 +497,7 @@ def get_assets_for_grouped_by_asset(filters):
 			"from_date": filters.from_date,
 			"company": filters.company,
 			"finance_book": filters.get("finance_book", ""),
+			"asset": filters.get("asset"),  # //// Neoffice — see above
 		},
 		as_dict=1,
 	)

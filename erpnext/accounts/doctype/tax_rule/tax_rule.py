@@ -118,21 +118,33 @@ class TaxRule(Document):
 				conds += " and "
 			conds += f"""ifnull({d}, '') = {frappe.db.escape(cstr(filters[d]))}"""
 
+		# //// Neoffice — upstream version-15 writes from_date, to_date and name into the SQL text between quotes, unescaped
+		# //// (GHSA-q65v-fm9p-9vh3, SQL injection; upstream fixed it on version-16 only, 16.9.0, e2800e343e, with a query
+		# //// builder rewrite). The three values are escaped here and the query stays upstream's v15 one; remove this when
+		# //// version-15 gets the fix (neoffice-maintenance#2648).
+		from_date = frappe.db.escape(cstr(self.from_date))
+		to_date = frappe.db.escape(cstr(self.to_date))
+		name = frappe.db.escape(cstr(self.name))
+
 		if self.from_date and self.to_date:
-			conds += f""" and ((from_date > '{self.from_date}' and from_date < '{self.to_date}') or
-					(to_date > '{self.from_date}' and to_date < '{self.to_date}') or
-					('{self.from_date}' > from_date and '{self.from_date}' < to_date) or
-					('{self.from_date}' = from_date and '{self.to_date}' = to_date))"""
+			# //// Neoffice — the escaped values (see above)
+			conds += f""" and ((from_date > {from_date} and from_date < {to_date}) or
+					(to_date > {from_date} and to_date < {to_date}) or
+					({from_date} > from_date and {from_date} < to_date) or
+					({from_date} = from_date and {to_date} = to_date))"""
 
 		elif self.from_date and not self.to_date:
-			conds += f""" and to_date > '{self.from_date}'"""
+			# //// Neoffice — the escaped values (see above)
+			conds += f""" and to_date > {from_date}"""
 
 		elif self.to_date and not self.from_date:
-			conds += f""" and from_date < '{self.to_date}'"""
+			# //// Neoffice — the escaped values (see above)
+			conds += f""" and from_date < {to_date}"""
 
+		# //// Neoffice — the escaped name (see above)
 		tax_rule = frappe.db.sql(
 			f"select name, priority \
-			from `tabTax Rule` where {conds} and name != '{self.name}'",
+			from `tabTax Rule` where {conds} and name != {name}",
 			as_dict=1,
 		)
 

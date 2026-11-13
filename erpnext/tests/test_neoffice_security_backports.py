@@ -132,3 +132,42 @@ class TestNeofficeSecurityBackports(FrappeTestCase):
 		self.assertRaises(
 			frappe.DoesNotExistError, make_payment_request, dt="Sales Invoice", dn="neoffice-no-such-invoice"
 		)
+
+	def test_the_asset_report_binds_its_filters_instead_of_writing_them_into_the_sql(self):
+		# GHSA-q65v-fm9p-9vh3, fixed upstream on version-16 only (16.9.0, c6000c0522): asset_category and asset were
+		# written into the SQL text between quotes, so a quote in a filter broke the query and a crafted one rewrote it
+		from erpnext.accounts.report.asset_depreciations_and_balances.asset_depreciations_and_balances import (
+			execute,
+		)
+
+		company = frappe.db.get_value("Company", {}, "name")
+		frappe.set_user(DESK_USER)
+		for group_by, fieldname in (("Asset Category", "asset_category"), ("Asset", "asset")):
+			with self.subTest(group_by=group_by):
+				filters = frappe._dict(
+					company=company,
+					from_date="2026-01-01",
+					to_date="2026-12-31",
+					group_by=group_by,
+				)
+				filters[fieldname] = "neoffice-no-such-value'"
+				columns, data = execute(filters)
+				self.assertEqual(data, [])
+
+	def test_a_tax_rule_compares_its_dates_and_name_escaped(self):
+		# GHSA-q65v-fm9p-9vh3, fixed upstream on version-16 only (16.9.0, e2800e343e): from_date, to_date and name were
+		# written into the SQL text between quotes
+		company = frappe.db.get_value("Company", {}, "name")
+		frappe.set_user(DESK_USER)
+		for from_date, to_date in (
+			("2026-01-01'", "2026-12-31"),
+			("2026-01-01'", None),
+			(None, "2026-12-31'"),
+		):
+			with self.subTest(from_date=from_date, to_date=to_date):
+				rule = frappe.new_doc("Tax Rule")
+				rule.update(
+					{"tax_type": "Sales", "company": company, "from_date": from_date, "to_date": to_date}
+				)
+				rule.name = "neoffice-no-such-rule'"
+				rule.validate_filters()  # the code before the fix raised a SQL syntax error here
