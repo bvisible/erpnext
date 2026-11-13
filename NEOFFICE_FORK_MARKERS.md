@@ -216,6 +216,29 @@ those edits are recorded here (the code edits are marked in place with `//// Neo
 
 ---
 
+## Merge with upstream v15.125.0 (2026-11-13)
+
+Upstream's hardening release (reports limited to what the user may read, 28 methods moved to POST only or given a
+stricter guard, new validations, 13 patches). 14 files in conflict, settled as the merge commit says; recorded here
+because what was dropped or reshaped no longer shows as a marker (neoffice-maintenance#2648):
+
+- `erpnext/accounts/doctype/purchase_invoice/purchase_invoice.py`, `sales_invoice.py`: our commented-out entries of
+  `ignore_linked_doctypes` (marked "TO REVIEW" since the v15.123.0 merge: inert, and cancelling a paid invoice without
+  unlinking its payment is not wanted) are dropped; upstream's "Quality Inspection" is taken.
+- `erpnext/stock/doctype/item/item.py`: `add_price(price_list=None, company=None, buying=False)`. Upstream now resolves a
+  selling price list (`get_selling_price_list`) and converts the standard rate into its currency; our `buying` keyword
+  keeps the buying price list it is given and the purchase price (`buying_standard_rate`, a custom field), converted at
+  the buying rate. Test: `erpnext/tests/test_neoffice_merge_15_125.py`.
+- `erpnext/accounts/doctype/pos_invoice/pos_invoice.py`: upstream subtracts `Bin.reserved_stock` (Stock Reservation
+  Entries) from what the till may sell; we subtract `Bin.reserved_qty` (Sales Orders). A v15 Stock Reservation Entry is
+  always made for a Sales Order, so `get_bin_and_reserved_qty` holds the larger of the two, never their sum (the same
+  for Product Bundles). Upstream's `is_negative_stock_allowed_in_pos` is kept. Same test file.
+- Translations reapplied where upstream moved the code we had translated: `account.py` (`validate_accounts_can_be_merged`),
+  `party.py` (`validate_party_account_rows`), `buying_controller.py` (`get_on_hold_or_closed_reference`).
+
+`fork_markers.py check --base v15.125.0 --head <merge> --upstream-base v15.125.0` answers 0 unmarked hunks; both
+contracts hold. No catalogue (`.po`) or JSON divergence changed with this merge (upstream did not touch `fr.po`).
+
 ## Merge with upstream v15.124.3 (2026-10-30)
 
 Three conflicts, settled as follows (`erpnext/patches.txt` kept both lists). The two others are recorded here because the
