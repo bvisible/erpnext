@@ -162,6 +162,15 @@ class Supplier(TransactionBase):
 		if not self.supplier_group:
 			return
 
+		# //// Neoffice — upstream (v15.125.0, merged at 494dd1ed) refuses a group-type Supplier Group at EVERY save. On
+		# //// our instances the default of Buying Settings is the root "All Supplier Groups", a group, and most
+		# //// suppliers carry it (on our working instance 179 of 251): none of them could be saved any more (an IBAN, a
+		# //// phone number), and the purchase invoice of a scan that brings a new IBAN failed with it. As for the
+		# //// customer (customer.py, validate_customer_group), the check applies where a group is chosen: a new
+		# //// supplier, or a changed group. Drop it when the fleet's suppliers are moved to a non-group Supplier Group.
+		if not self.is_new() and not self.has_value_changed("supplier_group"):
+			return
+
 		if frappe.db.get_value("Supplier Group", self.supplier_group, "is_group"):
 			frappe.throw(
 				_("Cannot select a Group type Supplier Group. Please select a non-group Supplier Group."),

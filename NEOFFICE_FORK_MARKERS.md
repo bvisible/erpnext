@@ -376,6 +376,7 @@ again (marked), or, if the decision itself has changed, edit the row and say why
 | --- | --- | --- | --- |
 | `erpnext/stock/doctype/item/item.js` | absent | `set_query\(\s*"item_group"` | #2398: upstream limits the Item form to leaf item groups; our items sit under parent groups (Products, Services...), so the form stopped offering them. Parent groups stay selectable. |
 | `erpnext/stock/doctype/item/item.json` | absent | `"link_filters":\s*"\[\[\\"Item Group\\"` | #2398: the same restriction, as upstream first wrote it (merge of 2026-10-20), in the DocType JSON. |
+| `erpnext/buying/doctype/supplier/supplier.py` | present | `if not self\.is_new\(\) and not self\.has_value_changed\("supplier_group"\)` | #2648: upstream v15.125.0 refuses a group-type Supplier Group at every save; most of our suppliers sit in the root, so the check applies to a new supplier or a changed group only, as for the customer. |
 
 ## A dunning that has a fee but no Income Account says what is missing (2026-11-09)
 
@@ -399,3 +400,15 @@ again (marked), or, if the decision itself has changed, edit the row and say why
 - `erpnext/locale/fr.po` — the msgstr of `Apply On` (a field of Pricing Rule, Promotional Scheme and Service Level Agreement) is « Appliquer sur » instead of
   upstream's « Appliquer Sur », with a `# //// Neoffice` comment above the entry (neoffice-maintenance#2501). Keep our
   msgstr at the next merge.
+
+## A supplier already in a group-type Supplier Group still saves (2026-11-13)
+
+- `erpnext/buying/doctype/supplier/supplier.py`, `validate_supplier_group` (marked in place): upstream v15.125.0 (merged
+  at `494dd1ed`) refuses a group-type Supplier Group at every save of a supplier. Most suppliers of our instances sit in
+  the root "All Supplier Groups", the default of Buying Settings (on our working instance 179 of 251): an IBAN or a phone
+  number could no longer be saved on them, and the purchase invoice of a scan that brings a new IBAN failed with it. As
+  for the customer (`customer.py`, `validate_customer_group`), the check applies to a new supplier or a changed group
+  (neoffice-maintenance#2648); the contract above keeps it. Drop it when the fleet's suppliers are moved to a non-group
+  Supplier Group.
+- `erpnext/buying/doctype/supplier/test_supplier_group_on_save.py` — added file: a supplier already in a group-type group
+  saves, a new one or a group changed to one is refused.
