@@ -4961,8 +4961,9 @@ msgstr "Différence de montant avec la facture d'achat"
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.json:2030
 #: erpnext/selling/doctype/sales_order/sales_order.json:1541
 #: erpnext/stock/doctype/delivery_note/delivery_note.json:1295
+# //// Neoffice — « commission » takes two m (neoffice-maintenance#1466)
 msgid "Amount Eligible for Commission"
-msgstr "Montant éligible à comission"
+msgstr "Montant éligible à la commission"
 
 #. Label of a Column Break field in DocType 'Cheque Print Template'
 #: erpnext/accounts/doctype/cheque_print_template/cheque_print_template.json:228
@@ -64551,6 +64552,43 @@ msgstr "Vous n'avez pas encore créé de fournisseur"
 msgctxt "Supplier"
 msgid "View all {0}"
 msgstr "Voir tous les fournisseurs"
+
+# //// Neoffice — added entries (no upstream equivalent): the titles of the eleven Incoterms that
+# //// erpnext/setup/doctype/incoterm/incoterms.csv writes on every site, in their French names (Incoterms® 2020).
+# //// Incoterm is a translated doctype, so its title is read through the catalogue wherever it is shown (a link
+# //// field, its list); the stored records keep their English titles (neoffice-maintenance#1466).
+msgid "Ex Works"
+msgstr "À l'usine"
+
+msgid "Free Carrier"
+msgstr "Franco transporteur"
+
+msgid "Free Alongside Ship"
+msgstr "Franco le long du navire"
+
+msgid "Free On Board"
+msgstr "Franco à bord"
+
+msgid "Carriage Paid To"
+msgstr "Port payé jusqu'à"
+
+msgid "Carriage and Insurance Paid to"
+msgstr "Port payé, assurance comprise, jusqu'à"
+
+msgid "Cost and Freight"
+msgstr "Coût et fret"
+
+msgid "Cost, Insurance and Freight"
+msgstr "Coût, assurance et fret"
+
+msgid "Delivered At Place"
+msgstr "Rendu au lieu de destination"
+
+msgid "Delivered At Place Unloaded"
+msgstr "Rendu au lieu de destination déchargé"
+
+msgid "Delivered Duty Paid"
+msgstr "Rendu droits acquittés"
 
 # //// Neoffice — added entries (no upstream equivalent in this catalogue): the refusal to validate a dunning that has
 # //// a fee but no Income Account says what is missing and links to the Dunning Type where it is set (dunning.py).
