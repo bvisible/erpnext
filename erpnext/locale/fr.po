@@ -67125,3 +67125,39 @@ msgstr "{0} : {1} a un {2} non valide."
 #, python-brace-format
 msgid "{} Submitted"
 msgstr "{} soumis"
+
+# Neoffice: the short descriptions of the eleven Incoterms (maintenance#1466), written by us; the English source is
+# filled by neoffice_theme.patches.fill_incoterm_descriptions_2026_11 and read through this catalogue.
+
+msgid "The seller makes the goods available at their own premises; transport, insurance and customs are the buyer's responsibility."
+msgstr "Le vendeur met la marchandise à disposition dans ses locaux ; transport, assurance et douane sont à la charge de l'acheteur."
+
+msgid "The seller hands the goods, cleared for export, to the carrier chosen by the buyer, at the agreed place."
+msgstr "Le vendeur remet la marchandise, dédouanée à l'export, au transporteur choisi par l'acheteur, au lieu convenu."
+
+msgid "The seller pays for carriage to the agreed destination; the risk passes to the buyer once the goods are handed to the first carrier."
+msgstr "Le vendeur paie le transport jusqu'à la destination convenue ; le risque passe à l'acheteur dès la remise au premier transporteur."
+
+msgid "Like CPT, and the seller also insures the goods (extended cover) up to the destination."
+msgstr "Comme CPT, et le vendeur assure en plus la marchandise (couverture étendue) jusqu'à la destination."
+
+msgid "The seller delivers to the agreed place of destination, ready to be unloaded; the buyer unloads and pays the import duties."
+msgstr "Le vendeur livre au lieu de destination convenu, prête à être déchargée ; l'acheteur décharge et paie les droits d'importation."
+
+msgid "The seller delivers to the agreed place of destination and unloads the goods; the buyer pays the import duties."
+msgstr "Le vendeur livre au lieu de destination convenu et décharge la marchandise ; l'acheteur paie les droits d'importation."
+
+msgid "The seller delivers to the buyer's premises, with transport, customs and import duties paid."
+msgstr "Le vendeur livre chez l'acheteur, transport, douane et droits d'importation payés."
+
+msgid "The seller places the goods alongside the ship at the agreed port of shipment; the buyer bears everything afterwards (sea or inland waterway transport)."
+msgstr "Le vendeur dépose la marchandise le long du navire, au port d'embarquement convenu ; l'acheteur supporte tout ensuite (transport maritime ou fluvial)."
+
+msgid "The seller loads the goods on board the ship; from that moment the buyer bears the risk and the costs (sea or inland waterway transport)."
+msgstr "Le vendeur charge la marchandise à bord du navire ; l'acheteur supporte le risque et les coûts dès ce moment (transport maritime ou fluvial)."
+
+msgid "The seller pays for sea freight to the port of destination; the risk passes to the buyer once the goods are loaded on board."
+msgstr "Le vendeur paie le transport maritime jusqu'au port de destination ; le risque passe à l'acheteur dès le chargement à bord."
+
+msgid "Like CFR, and the seller also insures the goods (minimum cover) up to the port of destination."
+msgstr "Comme CFR, et le vendeur assure en plus la marchandise (assurance minimale) jusqu'au port de destination."
