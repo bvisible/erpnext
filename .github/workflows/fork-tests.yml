@@ -45,6 +45,9 @@ on:
       # //// Neoffice — get_price: a Discount Amount rule is taken off once (merge of v15.124.1)
       - "erpnext/utilities/product.py"
       - "erpnext/utilities/test_product_neoffice.py"
+      # //// Neoffice — a transaction pricing rule that sets nothing does not recompute the document again (maintenance#2429)
+      - "erpnext/accounts/doctype/pricing_rule/utils.py"
+      - "erpnext/accounts/doctype/pricing_rule/test_neoffice_transaction_rules_recompute_once.py"
       - "erpnext/selling/doctype/customer/**"
       - "erpnext/crm/report/lost_opportunity/**"
       - "erpnext/edi/doctype/code_list/**"
@@ -91,6 +94,9 @@ on:
       # //// Neoffice — get_price: a Discount Amount rule is taken off once (merge of v15.124.1)
       - "erpnext/utilities/product.py"
       - "erpnext/utilities/test_product_neoffice.py"
+      # //// Neoffice — a transaction pricing rule that sets nothing does not recompute the document again (maintenance#2429)
+      - "erpnext/accounts/doctype/pricing_rule/utils.py"
+      - "erpnext/accounts/doctype/pricing_rule/test_neoffice_transaction_rules_recompute_once.py"
       - "erpnext/selling/doctype/customer/**"
       - "erpnext/crm/report/lost_opportunity/**"
       - "erpnext/edi/doctype/code_list/**"
@@ -153,6 +159,19 @@ jobs:
       skip_build: true
       build_frappe_assets: true
       test_args: "--module erpnext.utilities.test_product_neoffice"
+    secrets: inherit
+
+  # //// Neoffice — a transaction pricing rule that sets nothing does not recompute the document again (maintenance#2429):
+  # //// an order of a shop was recomputed 43 times per save.
+  transaction_rules:
+    name: pricing rules — a transaction rule that sets nothing does not recompute again
+    uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
+    with:
+      app: erpnext
+      erpnext_bootstrap: false
+      skip_build: true
+      build_frappe_assets: true
+      test_args: "--module erpnext.accounts.doctype.pricing_rule.test_neoffice_transaction_rules_recompute_once"
     secrets: inherit
 
   # //// Neoffice — the Customer Group of a customer is checked where it is chosen, not at every save (merge of v15.124.1).

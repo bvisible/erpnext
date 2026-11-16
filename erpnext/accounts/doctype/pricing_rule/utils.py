@@ -609,6 +609,8 @@ def apply_pricing_rule_on_transaction(doc):
 		if not pricing_rules:
 			remove_free_item(doc)
 
+		# //// Neoffice — the discount the document was last recomputed with in this loop (maintenance#2429): see below
+		recomputed_with = None
 		for d in pricing_rules:
 			if d.price_or_product_discount == "Price":
 				# Variable to track whether the condition has been met
@@ -687,7 +689,16 @@ def apply_pricing_rule_on_transaction(doc):
 					for field in {"additional_discount_percentage", "discount_amount"} - fields_set:
 						doc.set(field, 0)
 
-				doc.calculate_taxes_and_totals()
+				# //// Neoffice — upstream recomputes the whole document after every transaction rule of price that passes its
+				# //// filters, even one that sets nothing: a coupon-based rule without its coupon, the most common kind on a shop
+				# //// (every coupon and gift card has its rule). Measured on a shop's order paid on invoice (maintenance#2429): 43
+				# //// recomputations per save, 258 for one order, 0.7 s of its 4 s. The first rule still recomputes, as upstream
+				# //// does (what validate changed since its own computation, the advances for one, is taken in); a later rule
+				# //// recomputes only when the discount differs from the one the document was last recomputed with, otherwise
+				# //// the result would be the same. Remove when upstream skips the rules that set nothing.
+				if _transaction_discount_of(doc) != recomputed_with:
+					doc.calculate_taxes_and_totals()
+					recomputed_with = _transaction_discount_of(doc)
 
 				# Break out of the main loop if the condition is met
 				if condition_met:
@@ -707,6 +718,16 @@ def apply_pricing_rule_on_transaction(doc):
 	if flt(doc.get("grand_total")) != flt(grand_total):
 		# payment schedule is validated before pricing rules are applied, so it has to be reset as per the new total
 		doc.validate_all_documents_schedule()
+
+
+# //// Neoffice — added (maintenance#2429), see apply_pricing_rule_on_transaction: what a transaction rule of price sets on a
+# //// document, and the discount its computation reads.
+def _transaction_discount_of(doc):
+	return (
+		doc.get("apply_discount_on"),
+		flt(doc.get("additional_discount_percentage")),
+		flt(doc.get("discount_amount")),
+	)
 
 
 def get_transaction_pricing_rules(doc):
