@@ -2068,6 +2068,33 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		refresh_field('items');
 	}
 
+	//// Neoffice — added method (no upstream equivalent), called from apply_price_list below (neoffice-maintenance#1073).
+	//// When apply_price_list swaps a row's price_list_rate (price list, currency, UOM or conversion factor changed), upstream
+	//// keeps the row's discount_amount, worked out on the OLD price, and apply_pricing_rule_on_item trusts that amount over
+	//// discount_percentage: a 15 % discount read 13.667 % on the new price, and the rate followed the old amount. The server
+	//// cannot repair it (_set_values_for_item_list skips the amount whenever a percentage comes back). So an amount that is
+	//// no longer discount_percentage of the new price is dropped, and apply_pricing_rule_on_item works it out again from the
+	//// percentage, which is what the callback asks for. A flat "Discount Amount" pricing rule is an amount and stays.
+	drop_stale_discount_amount(cdt, cdn) {
+		const item = frappe.get_doc(cdt, cdn);
+		if (!item || !flt(item.discount_percentage) || !flt(item.discount_amount) || !flt(item.price_list_rate)) return;
+		if (item.pricing_rule_for === "Discount Amount") return;
+
+		// the same base as apply_pricing_rule_on_item (taxes_and_totals.js)
+		let base = flt(item.price_list_rate);
+		if (["Sales Order", "Quotation"].includes(item.parenttype) && item.blanket_order_rate) {
+			base = flt(item.blanket_order_rate) * (flt(item.conversion_factor) || 1);
+		}
+		base = item.margin_type === "Percentage"
+			? base * (1 + flt(item.margin_rate_or_amount) / 100)
+			: base + flt(item.margin_rate_or_amount);
+
+		const expected = (base * flt(item.discount_percentage)) / 100;
+		if (Math.abs(flt(item.discount_amount) - expected) > Math.max(0.01, base * 0.00001)) {
+			item.discount_amount = 0;
+		}
+	}
+
 	apply_price_list(item, reset_plc_conversion) {
 		// We need to reset plc_conversion_rate sometimes because the call to
 		// `erpnext.stock.get_item_details.apply_price_list` is sensitive to its value
@@ -2107,6 +2134,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 							if(args.items.length) {
 								me._set_values_for_item_list(r.message.children);
 								$.each(r.message.children || [], function(i, d) {
+									me.drop_stale_discount_amount(d.doctype, d.name); //// Neoffice — #1073, see the method above
 									me.apply_discount_on_item(d, d.doctype, d.name, 'discount_percentage');
 								});
 							}

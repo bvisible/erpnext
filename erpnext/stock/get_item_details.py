@@ -1754,6 +1754,11 @@ def apply_price_list_on_item(args, doc=None):
 	args.stock_qty = flt(args.qty) * flt(args.conversion_factor)
 
 	if not source_row:
+		# //// Neoffice — a pricing rule works out its discount on args.price_list_rate (apply_price_discount_rule), which
+		# //// is still the OLD rate the form sent; _get_item_details hands the looked-up rate to the rules, this path did
+		# //// not, so a 10 % rule came back as 10 % of the old price after a price list change (neoffice-maintenance#1073).
+		if item_details.get("price_list_rate") is not None:
+			args.price_list_rate = item_details.price_list_rate
 		item_details.update(get_pricing_rule_for_item(args, doc=doc))
 
 	return item_details
