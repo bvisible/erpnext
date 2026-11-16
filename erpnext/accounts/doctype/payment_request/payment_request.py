@@ -1002,7 +1002,7 @@ def get_print_format_list(ref_doctype):
 
 
 # //// Neoffice — added (2483c36bc4, 2026-03-15): renders get_message() server-side so the
-# //// Send-by-Email dialog shows the resolved text ("Bonjour Daniel Moret", "22.90 CHF") instead
+# //// Send-by-Email dialog shows the resolved text ("Bonjour Jean Exemple", "22.90 CHF") instead
 # //// of the raw Jinja template. No upstream equivalent. Only for who can read the request (the
 # //// rendered text names the customer and the amount): checked since the merge with v15.123.0.
 @frappe.whitelist()
