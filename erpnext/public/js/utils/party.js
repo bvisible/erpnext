@@ -114,6 +114,7 @@ erpnext.utils.get_party_details = function (frm, method, args, callback) {
 		callback: function (r) {
 			if (r.message) {
 				frm.supplier_tds = r.message.supplier_tds;
+				const tax_category_before = frm.doc.tax_category; //// Neoffice — see the last step below
 				frm.updating_party_details = true;
 				frappe.run_serially([
 					() => frm.set_value(r.message),
@@ -122,6 +123,22 @@ erpnext.utils.get_party_details = function (frm, method, args, callback) {
 						if (callback) callback();
 						frm.refresh();
 						erpnext.utils.add_item(frm);
+					},
+					//// Neoffice — the party's tax category picks the lines' tax templates, as the tax_category field does
+					//// when it is changed by hand (transaction.js update_item_tax_map). Upstream sets the field while
+					//// updating_party_details is up, so its handler returns early and lines already on the document keep
+					//// templates picked for no category: a purchase order made from a sales order (no supplier yet) kept
+					//// the sale's VAT template and its VAT due accounts after a supplier on « Purchase VAT » was chosen
+					//// (neoffice-maintenance#1466). Remove if upstream re-picks the templates after the party.
+					() => {
+						if (
+							frm.doc.tax_category !== tax_category_before &&
+							(frm.doc.items || []).length &&
+							frm.cscript &&
+							frm.cscript.update_item_tax_map
+						) {
+							return frm.cscript.update_item_tax_map();
+						}
 					},
 				]);
 			}

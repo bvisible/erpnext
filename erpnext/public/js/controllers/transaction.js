@@ -2314,6 +2314,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 				},
 				callback: function(r) {
 					if (!r.exc) {
+						const accounts_before = me.item_tax_accounts(); //// Neoffice — see drop_unused_item_tax_rows
 						$.each(me.frm.doc.items || [], function (i, item) {
 							if (
 								item.name &&
@@ -2325,10 +2326,48 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 								me.add_taxes_from_item_tax_template(item.item_tax_rate);
 							}
 						});
+						me.drop_unused_item_tax_rows(accounts_before); //// Neoffice — #1466
 					}
 				}
 			});
 		}
+	}
+
+	//// Neoffice — added methods (no upstream equivalent), called from update_item_tax_map (neoffice-maintenance#1466).
+	//// When the lines' tax templates change (a tax category set by hand or by the party), add_taxes_from_item_tax_template
+	//// adds rows for the new templates' accounts, but the rows the old templates brought stay: a purchase order made from
+	//// a sales order kept the sale's « TVA … - Due » rows at 0.00. A row is dropped only when its account came from the
+	//// lines' old templates, no line's template names it any more, and it is an « On Net Total » row at rate 0: with no
+	//// line naming its account it can only come to 0.00, so no amount changes.
+	item_tax_accounts() {
+		const accounts = new Set();
+		(this.frm.doc.items || []).forEach((item) => {
+			let tax_map = item.item_tax_rate || {};
+			if (typeof tax_map === "string") {
+				try {
+					tax_map = JSON.parse(tax_map || "{}");
+				} catch (e) {
+					tax_map = {};
+				}
+			}
+			Object.keys(tax_map || {}).forEach((account) => accounts.add(account));
+		});
+		return accounts;
+	}
+
+	drop_unused_item_tax_rows(accounts_before) {
+		const accounts_now = this.item_tax_accounts();
+		const unused = (this.frm.doc.taxes || []).filter(
+			(tax) =>
+				accounts_before.has(tax.account_head) &&
+				!accounts_now.has(tax.account_head) &&
+				tax.charge_type === "On Net Total" &&
+				!flt(tax.rate)
+		);
+		if (!unused.length) return;
+		unused.forEach((tax) => frappe.model.clear_doc(tax.doctype, tax.name));
+		this.frm.refresh_field("taxes");
+		this.calculate_taxes_and_totals();
 	}
 
 	item_tax_template(doc, cdt, cdn) {
