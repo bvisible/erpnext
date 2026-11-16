@@ -25882,8 +25882,9 @@ msgstr "Rôle de maintenance"
 #: erpnext/maintenance/doctype/maintenance_visit/maintenance_visit.json:282
 #: erpnext/selling/doctype/sales_order/sales_order.js:752
 #: erpnext/support/workspace/support/support.json:68
+# //// Neoffice — French capitalises the first word of a name only, as « Nouvel échéancier d'entretien » (neoffice-maintenance#2559)
 msgid "Maintenance Schedule"
-msgstr "Échéancier d'Entretien"
+msgstr "Échéancier d'entretien"
 
 #. Name of a DocType
 #. Label of a Link field in DocType 'Maintenance Visit'
@@ -31691,8 +31692,9 @@ msgstr "Références de Paiement"
 #: erpnext/accounts/workspace/receivables/receivables.json:67
 #: erpnext/buying/doctype/purchase_order/purchase_order.js:457
 #: erpnext/selling/doctype/sales_order/sales_order.js:791
+# //// Neoffice — French capitalises the first word of a name only, as « Nouvelle requête de paiement » (neoffice-maintenance#2559)
 msgid "Payment Request"
-msgstr "Requête de Paiement"
+msgstr "Requête de paiement"
 
 #. Label of a Float field in DocType 'Payment Entry Reference'
 #: erpnext/accounts/doctype/payment_entry_reference/payment_entry_reference.json:148
@@ -64589,6 +64591,33 @@ msgstr "Rendu au lieu de destination déchargé"
 
 msgid "Delivered Duty Paid"
 msgstr "Rendu droits acquittés"
+
+# //// Neoffice — added entries (no upstream equivalent): the green alert after the six documents of
+# //// default_success_action.py is asked with the doctype as its context (our frappe fork, success_action.js), so
+# //// French says it whole: « Facture de vente a été validé avec succès » (neoffice-maintenance#2559).
+msgctxt "Sales Invoice"
+msgid "{0} has been submitted successfully"
+msgstr "La facture de vente a été validée avec succès"
+
+msgctxt "Quotation"
+msgid "{0} has been submitted successfully"
+msgstr "Le devis a été validé avec succès"
+
+msgctxt "Sales Order"
+msgid "{0} has been submitted successfully"
+msgstr "La commande client a été validée avec succès"
+
+msgctxt "Delivery Note"
+msgid "{0} has been submitted successfully"
+msgstr "Le bon de livraison a été validé avec succès"
+
+msgctxt "Purchase Invoice"
+msgid "{0} has been submitted successfully"
+msgstr "La facture d'achat a été validée avec succès"
+
+msgctxt "Purchase Receipt"
+msgid "{0} has been submitted successfully"
+msgstr "La réception d'achat a été validée avec succès"
 
 # //// Neoffice — added entries (no upstream equivalent in this catalogue): the refusal to validate a dunning that has
 # //// a fee but no Income Account says what is missing and links to the Dunning Type where it is set (dunning.py).
