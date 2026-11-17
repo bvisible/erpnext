@@ -379,6 +379,14 @@ again (marked), or, if the decision itself has changed, edit the row and say why
 | `erpnext/stock/doctype/delivery_trip/delivery_trip.py` | present | `NEOFFICE_CLOSED_STOPS = \("Failed", "Skipped"\)` | #2832: upstream v15.125 refuses a delivery note on two rounds that are not cancelled; our logistics keeps the stop of a failed or freed delivery on its round as history and hands the note to a new round. The stops it closed are named here. |
 | `erpnext/stock/doctype/delivery_trip/delivery_trip.py` | present | `\.notin\(NEOFFICE_CLOSED_STOPS\)` | #2832: the same, where the rule reads them: a stop our logistics closed no longer holds its note; any other stop still does, as upstream. |
 | `erpnext/buying/doctype/supplier/supplier.py` | present | `if not self\.is_new\(\) and not self\.has_value_changed\("supplier_group"\)` | #2648: upstream v15.125.0 refuses a group-type Supplier Group at every save; most of our suppliers sit in the root, so the check applies to a new supplier or a changed group only, as for the customer. |
+| `erpnext/accounts/doctype/shipping_rule/shipping_rule.py` | present | `_\(shipping_country\)` | #1466: a shipping rule kept to some countries refuses an address of another one; the message names that country in the user's language (Country is a translated doctype), where upstream gave its English name in a French sentence. |
+
+## The country a shipping rule refuses is named in the user's language (2026-11-17)
+
+- `erpnext/accounts/doctype/shipping_rule/shipping_rule.py` — `validate_countries` formats its refusal with `_(shipping_country)`
+  (marked in place): upstream put the Country's English name (« Germany ») in the French sentence, and Country is a translated
+  doctype. Test: `TestTheCountryOfARefusalIsInTheUsersLanguage` in `test_neoffice_shipping_rule_stays_on_the_document.py`. The
+  contract row above keeps it (neoffice-maintenance#1466, point 4).
 
 ## A dunning that has a fee but no Income Account says what is missing (2026-11-09)
 

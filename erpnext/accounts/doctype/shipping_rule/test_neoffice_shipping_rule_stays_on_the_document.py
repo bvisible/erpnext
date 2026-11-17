@@ -4,6 +4,7 @@
 # //// (neoffice-maintenance#1466, point 1).
 
 import frappe
+from frappe.tests.roles import as_role
 from frappe.tests.utils import FrappeTestCase
 
 RULE = "_Test Shipping Rule - Free Above 500"
@@ -64,3 +65,36 @@ class TestShippingRuleStaysOnTheDocument(FrappeTestCase):
 		rule.apply(doc)
 		self.assertEqual([row.tax_amount for row in shipping_rows(doc, rule)], [50])
 		self.assertEqual(doc.shipping_rule, RULE)
+
+
+class TestTheCountryOfARefusalIsInTheUsersLanguage(FrappeTestCase):
+	"""A rule kept to some countries refuses an address of another one, and names it in the user's language
+	(neoffice-maintenance#1466, point 4: « … pour le pays Germany … »)."""
+
+	def setUp(self):
+		frappe.db.savepoint("shipping_rule_country")
+		self.addCleanup(frappe.db.rollback, save_point="shipping_rule_country")
+		# the country's name in French, written here: a site of erpnext alone has none (the theme's catalogue gives them)
+		frappe.get_doc(
+			{
+				"doctype": "Translation",
+				"language": "fr",
+				"source_text": "Germany",
+				"translated_text": "Allemagne",
+			}
+		).insert(ignore_permissions=True)
+		frappe.translate.clear_cache()
+		self.addCleanup(frappe.translate.clear_cache)
+		lang = frappe.local.lang
+		frappe.local.lang = "fr"
+		self.addCleanup(setattr, frappe.local, "lang", lang)
+
+	def test_the_refused_country_is_named_in_the_users_language(self):
+		rule = free_above_500()
+		rule.append("countries", {"country": "Switzerland"})
+		doc = order_of(100)
+		doc.get_shipping_address = lambda: {"country": "Germany"}
+		with as_role("sales_user"), self.assertRaises(frappe.ValidationError) as refused:
+			rule.validate_countries(doc)
+		self.assertIn("Allemagne", str(refused.exception))
+		self.assertNotIn("Germany", str(refused.exception))

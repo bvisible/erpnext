@@ -840,7 +840,9 @@ class ShippingRule(Document):
 			if shipping_country not in [d.country for d in self.countries]:
 				frappe.throw(
 					_("Shipping rule not applicable for country {0} in Shipping Address").format(
-						shipping_country
+						# //// Neoffice — the country in the user's language (« Allemagne », not « Germany »): Country is a
+						# //// translated doctype, and upstream put its English name in a French sentence (maintenance#1466)
+						_(shipping_country)
 					)
 				)
 
