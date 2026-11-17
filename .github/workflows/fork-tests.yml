@@ -321,7 +321,7 @@ jobs:
     secrets: inherit
 
   # //// Neoffice — the rule « one delivery note, one round » (upstream v15.125) lets go only of a stop our logistics closed
-  # //// (neoffice-maintenance#2832): upstream's tests of the round and ours, in their one module.
+  # //// (neoffice-maintenance#2832): upstream's tests of the round and ours, the doctype's whole test file.
   delivery_trip:
     name: delivery trip — a closed stop lets its note go, an open one does not
     uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
@@ -330,5 +330,7 @@ jobs:
       erpnext_bootstrap: false
       skip_build: true
       build_frappe_assets: true # the dispatch mail of the round inlines CSS through assets.json
-      test_args: "--module erpnext.stock.doctype.delivery_trip.test_delivery_trip"
+      # `--doctype`, not `--module`: only a doctype run builds the records the round's tests stand on (`_Test Customer`,
+      # `_Test Company`…); by `--module` all 28 of them fell in setUp on « Could not find … _Test Customer ».
+      test_args: '--doctype "Delivery Trip"'
     secrets: inherit
