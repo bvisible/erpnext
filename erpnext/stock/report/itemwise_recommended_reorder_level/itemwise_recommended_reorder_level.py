@@ -8,6 +8,9 @@ from frappe.utils import flt, getdate
 
 from erpnext.accounts.report.utils import validate_date_range
 
+# //// Neoffice — a company-bound account reads its companies only (neoffice-maintenance#2838)
+from erpnext.utilities.company_bound import bound_companies
+
 
 def execute(filters=None):
 	if not filters:
@@ -150,5 +153,11 @@ def get_filtered_query(filters, table, query):
 		query = query.where(table.posting_date.between(filters["from_date"], filters["to_date"]))
 	else:
 		frappe.throw(_("From and To dates are required"))
+
+	# //// Neoffice — the stock ledger is read in SQL and the report has no company filter: an account bound to some
+	# //// companies read every company's consumption and deliveries. They are kept to its companies; nothing changes for
+	# //// an account without a bound (neoffice-maintenance#2838).
+	if companies := bound_companies("Stock Ledger Entry"):
+		query = query.where(table.company.isin(companies))
 
 	return query

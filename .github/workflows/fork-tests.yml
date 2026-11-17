@@ -80,6 +80,12 @@ on:
       - "erpnext/controllers/selling_controller.py"
       - "erpnext/controllers/buying_controller.py"
       - "erpnext/controllers/sales_and_purchase_return.py"
+      # //// Neoffice — the reports that read past the reader's permissions keep a company-bound account to its companies
+      # //// (neoffice-maintenance#2838)
+      - "erpnext/utilities/company_bound.py"
+      - "erpnext/projects/report/billing_summary.py"
+      - "erpnext/stock/report/itemwise_recommended_reorder_level/**"
+      - "erpnext/tests/test_a_bound_account_reads_no_timesheet_or_stock_of_another_company.py"
       - ".github/workflows/fork-tests.yml"
   pull_request:
     paths:
@@ -144,6 +150,12 @@ on:
       - "erpnext/controllers/selling_controller.py"
       - "erpnext/controllers/buying_controller.py"
       - "erpnext/controllers/sales_and_purchase_return.py"
+      # //// Neoffice — the reports that read past the reader's permissions keep a company-bound account to its companies
+      # //// (neoffice-maintenance#2838)
+      - "erpnext/utilities/company_bound.py"
+      - "erpnext/projects/report/billing_summary.py"
+      - "erpnext/stock/report/itemwise_recommended_reorder_level/**"
+      - "erpnext/tests/test_a_bound_account_reads_no_timesheet_or_stock_of_another_company.py"
   workflow_dispatch:
 
 concurrency:
@@ -419,4 +431,15 @@ jobs:
       build_frappe_assets: true
       test_args: '--doctype "Payment Reconciliation"'
       tests_timeout_minutes: 60
+    secrets: inherit
+
+  # //// Neoffice — the timesheet and stock reports keep a company-bound account to its companies (neoffice-maintenance#2838).
+  company_bound_reports:
+    name: reports — a company-bound account reads its companies only
+    uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
+    with:
+      app: erpnext
+      erpnext_bootstrap: false
+      skip_build: true
+      test_args: "--module erpnext.tests.test_a_bound_account_reads_no_timesheet_or_stock_of_another_company"
     secrets: inherit

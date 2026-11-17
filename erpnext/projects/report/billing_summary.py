@@ -6,6 +6,9 @@ import frappe
 from frappe import _
 from frappe.utils import flt, time_diff_in_hours
 
+# //// Neoffice — a company-bound account reads its companies only (neoffice-maintenance#2838)
+from erpnext.utilities.company_bound import bound_companies
+
 
 def get_columns():
 	return [
@@ -103,6 +106,11 @@ def get_timesheets(filters):
 		record_filters.append(["docstatus", "!=", 2])
 	if "employee" in filters:
 		record_filters.append(["employee", "=", filters.employee])
+	# //// Neoffice — the timesheets are read with get_all, past the reader's permissions, and the report has no company
+	# //// filter: an account bound to some companies read every company's hours and billing amounts. They are kept to
+	# //// its companies; nothing changes for an account without a bound (neoffice-maintenance#2838).
+	if companies := bound_companies("Timesheet"):
+		record_filters.append(["company", "in", companies])
 
 	timesheets = frappe.get_all(
 		"Timesheet", filters=record_filters, fields=["employee", "employee_name", "name"]
