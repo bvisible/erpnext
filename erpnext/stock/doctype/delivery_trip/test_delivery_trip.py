@@ -350,6 +350,8 @@ class TestDeliveryTrip(FrappeTestCase):
 	# //// Neoffice — the rule « one delivery note, one round » (upstream v15.125) lets go only of a stop our logistics closed
 	# //// (maintenance#2832): NEOFFICE_CLOSED_STOPS, read in `neo_status`, a column of the theme. A site of ERPNext alone (this
 	# //// CI) gets the column once, before any test data, as the theme adds it (`neo_status_column`, at the end of this file).
+	# //// Administrator lays the scenery (the note and its first round); the round is made again by the dispatcher, the role
+	# //// our logistics asks for (`_is_dispatcher`: Delivery Manager).
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
@@ -360,14 +362,23 @@ class TestDeliveryTrip(FrappeTestCase):
 			"Delivery Stop", {"parent": trip.name, "delivery_note": delivery_note.name}, "neo_status", state
 		)
 
+	# //// Neoffice — the dispatcher's account (maintenance#2832)
+	def as_dispatcher(self):
+		return self.set_user(self.make_delivery_user("Delivery Manager"))
+
 	def test_neoffice_a_note_on_an_open_stop_stays_refused_on_another_trip(self):
 		delivery_note = self.make_delivery_note_with_address()
 		trip = self.make_trip_for(delivery_note.name, submit=True)
 		self.neo_stop_of(trip, delivery_note, "Pending")
 
-		self.assertRaisesRegex(
-			frappe.ValidationError, "already on another Delivery Trip", self.make_trip_for, delivery_note.name
-		)
+		# //// the second round is the dispatcher's act, not Administrator's (#2832)
+		with self.as_dispatcher():
+			self.assertRaisesRegex(
+				frappe.ValidationError,
+				"already on another Delivery Trip",
+				self.make_trip_for,
+				delivery_note.name,
+			)
 
 	def test_neoffice_a_failed_or_skipped_stop_lets_its_note_go(self):
 		from erpnext.stock.doctype.delivery_trip.delivery_trip import (
@@ -375,15 +386,23 @@ class TestDeliveryTrip(FrappeTestCase):
 			get_delivery_notes_on_other_trips,
 		)
 
+		# //// Administrator lays the scenery: each note on a first round, its stop closed (#2832)
+		closed = {}
 		for state in NEOFFICE_CLOSED_STOPS:
-			with self.subTest(state=state):
-				delivery_note = self.make_delivery_note_with_address()
-				trip = self.make_trip_for(delivery_note.name, submit=True)
-				self.neo_stop_of(trip, delivery_note, state)
+			delivery_note = self.make_delivery_note_with_address()
+			trip = self.make_trip_for(delivery_note.name, submit=True)
+			self.neo_stop_of(trip, delivery_note, state)
+			closed[state] = delivery_note
 
-				self.assertEqual(list(get_delivery_notes_on_other_trips([delivery_note.name], None)), [])
-				again = self.make_trip_for(delivery_note.name)
-				self.assertEqual([stop.delivery_note for stop in again.delivery_stops], [delivery_note.name])
+		# //// then the dispatcher makes the round again (#2832)
+		with self.as_dispatcher():
+			for state, delivery_note in closed.items():
+				with self.subTest(state=state):
+					self.assertEqual(list(get_delivery_notes_on_other_trips([delivery_note.name], None)), [])
+					again = self.make_trip_for(delivery_note.name)
+					self.assertEqual(
+						[stop.delivery_note for stop in again.delivery_stops], [delivery_note.name]
+					)
 
 	def test_neoffice_without_the_theme_s_column_the_rule_is_upstream_s(self):
 		from unittest import mock
@@ -398,8 +417,14 @@ class TestDeliveryTrip(FrappeTestCase):
 				return False
 			return has_column(doctype, column)
 
-		with mock.patch.object(frappe.db, "has_column", without_the_theme):
-			self.assertRaises(frappe.ValidationError, self.make_trip_for, delivery_note.name)
+		# //// the dispatcher's act; the refusal is matched on its message, a permission error being one too (#2832)
+		with mock.patch.object(frappe.db, "has_column", without_the_theme), self.as_dispatcher():
+			self.assertRaisesRegex(
+				frappe.ValidationError,
+				"already on another Delivery Trip",
+				self.make_trip_for,
+				delivery_note.name,
+			)
 
 
 def create_address(driver):
