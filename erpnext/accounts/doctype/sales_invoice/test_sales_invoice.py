@@ -5157,6 +5157,12 @@ class TestSalesInvoice(FrappeTestCase):
 	def test_taxes_merging_from_delivery_note(self):
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 
+		# //// Neoffice — the 15 units the two notes deliver (neoffice-maintenance#1832): the fork's CI runs this suite alone,
+		# //// where the stock a full run leaves of `_Test Item` is not there (NegativeStockError, upstream's own code too).
+		make_stock_entry(  # role-check: ok scenery, the stock the notes need before the act under test
+			item_code="_Test Item", target="_Test Warehouse - _TC", qty=15, basic_rate=100
+		)
+
 		dn1 = create_delivery_note(do_not_submit=1)
 		dn1.items[0].qty = 10
 		dn1.items[0].rate = 100
@@ -6346,10 +6352,8 @@ def create_sales_invoice_against_cost_center(**args):
 	return si
 
 
-# //// Neoffice — and Stock Entry (neoffice-maintenance#1832): the fork's CI runs this file alone, and its tests that deliver
-# //// `_Test Item` (test_taxes_merging_from_delivery_note) need the stock the Stock Entry records give in a full run
-# //// (NegativeStockError otherwise, on upstream's own code too).
-test_dependencies = ["Journal Entry", "Contact", "Address", "Stock Entry"]
+# //// Neoffice — upstream's list as it is: Stock Entry, added here once, gave too little stock (neoffice-maintenance#1832)
+test_dependencies = ["Journal Entry", "Contact", "Address"]
 test_records = frappe.get_test_records("Sales Invoice")
 
 
