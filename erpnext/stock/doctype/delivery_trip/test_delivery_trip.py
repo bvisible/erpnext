@@ -347,6 +347,60 @@ class TestDeliveryTrip(FrappeTestCase):
 		self.delivery_trip.delivery_stops[0].contact = other_contact.name
 		self.assertRaises(frappe.ValidationError, self.delivery_trip.save)
 
+	# //// Neoffice — the rule « one delivery note, one round » (upstream v15.125) lets go only of a stop our logistics closed
+	# //// (maintenance#2832): NEOFFICE_CLOSED_STOPS, read in `neo_status`, a column of the theme. A site of ERPNext alone (this
+	# //// CI) gets the column once, before any test data, as the theme adds it (`neo_status_column`, at the end of this file).
+	@classmethod
+	def setUpClass(cls):
+		super().setUpClass()
+		neo_status_column()
+
+	def neo_stop_of(self, trip, delivery_note, state):
+		frappe.db.set_value(
+			"Delivery Stop", {"parent": trip.name, "delivery_note": delivery_note.name}, "neo_status", state
+		)
+
+	def test_neoffice_a_note_on_an_open_stop_stays_refused_on_another_trip(self):
+		delivery_note = self.make_delivery_note_with_address()
+		trip = self.make_trip_for(delivery_note.name, submit=True)
+		self.neo_stop_of(trip, delivery_note, "Pending")
+
+		self.assertRaisesRegex(
+			frappe.ValidationError, "already on another Delivery Trip", self.make_trip_for, delivery_note.name
+		)
+
+	def test_neoffice_a_failed_or_skipped_stop_lets_its_note_go(self):
+		from erpnext.stock.doctype.delivery_trip.delivery_trip import (
+			NEOFFICE_CLOSED_STOPS,
+			get_delivery_notes_on_other_trips,
+		)
+
+		for state in NEOFFICE_CLOSED_STOPS:
+			with self.subTest(state=state):
+				delivery_note = self.make_delivery_note_with_address()
+				trip = self.make_trip_for(delivery_note.name, submit=True)
+				self.neo_stop_of(trip, delivery_note, state)
+
+				self.assertEqual(list(get_delivery_notes_on_other_trips([delivery_note.name], None)), [])
+				again = self.make_trip_for(delivery_note.name)
+				self.assertEqual([stop.delivery_note for stop in again.delivery_stops], [delivery_note.name])
+
+	def test_neoffice_without_the_theme_s_column_the_rule_is_upstream_s(self):
+		from unittest import mock
+
+		delivery_note = self.make_delivery_note_with_address()
+		trip = self.make_trip_for(delivery_note.name, submit=True)
+		self.neo_stop_of(trip, delivery_note, "Failed")
+		has_column = frappe.db.has_column
+
+		def without_the_theme(doctype, column):
+			if (doctype, column) == ("Delivery Stop", "neo_status"):
+				return False
+			return has_column(doctype, column)
+
+		with mock.patch.object(frappe.db, "has_column", without_the_theme):
+			self.assertRaises(frappe.ValidationError, self.make_trip_for, delivery_note.name)
+
 
 def create_address(driver):
 	if not frappe.db.exists("Address", {"address_title": "_Test Address for Driver"}):
@@ -467,3 +521,19 @@ def create_delivery_trip(driver, address, contact=None):
 	).insert(ignore_permissions=True)
 
 	return delivery_trip
+
+
+# //// Neoffice — added function (no upstream equivalent): the theme's column of a stop's outcome on a site of ERPNext alone,
+# //// for the tests of the rule above (maintenance#2832).
+def neo_status_column():
+	"""`neo_status` of a Delivery Stop (neoffice_theme/logistics/stops.py), as the theme adds it: a Custom Field. A site with the
+	theme has it already; the change of the table commits, so it is made before any test data."""
+	if frappe.db.has_column("Delivery Stop", "neo_status"):
+		return
+	from frappe.custom.doctype.custom_field.custom_field import create_custom_field
+
+	create_custom_field(
+		"Delivery Stop",
+		{"fieldname": "neo_status", "label": "Status", "fieldtype": "Data", "insert_after": "visited"},
+	)
+	frappe.db.commit()

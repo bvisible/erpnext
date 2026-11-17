@@ -65,6 +65,8 @@ on:
       - "erpnext/tests/test_neoffice_merge_15_125.py"
       - "erpnext/stock/doctype/item/item.py"
       - "erpnext/accounts/doctype/pos_invoice/pos_invoice.py"
+      # //// Neoffice — the rule « one delivery note, one round » lets go of a stop our logistics closed (neoffice-maintenance#2832)
+      - "erpnext/stock/doctype/delivery_trip/**"
       - ".github/workflows/fork-tests.yml"
   pull_request:
     paths:
@@ -114,6 +116,8 @@ on:
       - "erpnext/tests/test_neoffice_merge_15_125.py"
       - "erpnext/stock/doctype/item/item.py"
       - "erpnext/accounts/doctype/pos_invoice/pos_invoice.py"
+      # //// Neoffice — the rule « one delivery note, one round » lets go of a stop our logistics closed (neoffice-maintenance#2832)
+      - "erpnext/stock/doctype/delivery_trip/**"
   workflow_dispatch:
 
 concurrency:
@@ -314,4 +318,17 @@ jobs:
       skip_build: true
       build_frappe_assets: true
       test_args: "--module erpnext.controllers.test_neoffice_item_variant"
+    secrets: inherit
+
+  # //// Neoffice — the rule « one delivery note, one round » (upstream v15.125) lets go only of a stop our logistics closed
+  # //// (neoffice-maintenance#2832): upstream's tests of the round and ours, in their one module.
+  delivery_trip:
+    name: delivery trip — a closed stop lets its note go, an open one does not
+    uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
+    with:
+      app: erpnext
+      erpnext_bootstrap: false
+      skip_build: true
+      build_frappe_assets: true # the dispatch mail of the round inlines CSS through assets.json
+      test_args: "--module erpnext.stock.doctype.delivery_trip.test_delivery_trip"
     secrets: inherit
