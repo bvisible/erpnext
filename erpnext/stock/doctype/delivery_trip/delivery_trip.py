@@ -368,10 +368,18 @@ def is_trip_value(note, field, trip_values):
 	return cstr(note.get(field)) == cstr(trip_values[field])
 
 
+# //// Neoffice — the stops Neoffice's logistics closed (neoffice_theme/logistics/stops.py, `neo_status`): the delivery
+# //// failed, or the end of its round freed the stop (Skipped). The round keeps such a stop as its history (decision of
+# //// 2026-10-03) and the note goes back to the pool, to be handed to a new round (maintenance#2832).
+NEOFFICE_CLOSED_STOPS = ("Failed", "Skipped")
+
+
 def get_delivery_notes_on_other_trips(delivery_notes, trip_name):
 	trip = frappe.qb.DocType("Delivery Trip")
 	stop = frappe.qb.DocType("Delivery Stop")
-	return (
+	# //// Neoffice — the query is kept rather than returned at once: the condition below
+	# //// lets go of the stops our logistics closed (maintenance#2832).
+	query = (
 		frappe.qb.from_(stop)
 		.inner_join(trip)
 		.on(trip.name == stop.parent)
@@ -383,8 +391,17 @@ def get_delivery_notes_on_other_trips(delivery_notes, trip_name):
 			& (trip.docstatus < 2)
 			& (trip.name != (trip_name or ""))
 		)
-		.run()
 	)
+	# //// Neoffice — upstream (0874e4d40e4, v15.125) refuses a delivery note found on any other round that is not cancelled.
+	# //// Our logistics keeps the stop of a failed or freed delivery on its round, as history, and hands the note to a new
+	# //// round: the rule refused « Hand to… » after every missed delivery (maintenance#2832). A stop it closed
+	# //// (NEOFFICE_CLOSED_STOPS) no longer holds its note; any other stop still does, as upstream. The column is the theme's:
+	# //// without it (a site without the theme, upstream's tests) the rule is upstream's, whole.
+	if frappe.db.has_column("Delivery Stop", "neo_status"):
+		from frappe.query_builder.functions import Coalesce
+
+		query = query.where(Coalesce(stop.neo_status, "").notin(NEOFFICE_CLOSED_STOPS))
+	return query.run()
 
 
 @frappe.whitelist()

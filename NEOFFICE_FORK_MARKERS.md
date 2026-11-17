@@ -376,6 +376,8 @@ again (marked), or, if the decision itself has changed, edit the row and say why
 | --- | --- | --- | --- |
 | `erpnext/stock/doctype/item/item.js` | absent | `set_query\(\s*"item_group"` | #2398: upstream limits the Item form to leaf item groups; our items sit under parent groups (Products, Services...), so the form stopped offering them. Parent groups stay selectable. |
 | `erpnext/stock/doctype/item/item.json` | absent | `"link_filters":\s*"\[\[\\"Item Group\\"` | #2398: the same restriction, as upstream first wrote it (merge of 2026-10-20), in the DocType JSON. |
+| `erpnext/stock/doctype/delivery_trip/delivery_trip.py` | present | `NEOFFICE_CLOSED_STOPS = \("Failed", "Skipped"\)` | #2832: upstream v15.125 refuses a delivery note on two rounds that are not cancelled; our logistics keeps the stop of a failed or freed delivery on its round as history and hands the note to a new round. The stops it closed are named here. |
+| `erpnext/stock/doctype/delivery_trip/delivery_trip.py` | present | `\.notin\(NEOFFICE_CLOSED_STOPS\)` | #2832: the same, where the rule reads them: a stop our logistics closed no longer holds its note; any other stop still does, as upstream. |
 | `erpnext/buying/doctype/supplier/supplier.py` | present | `if not self\.is_new\(\) and not self\.has_value_changed\("supplier_group"\)` | #2648: upstream v15.125.0 refuses a group-type Supplier Group at every save; most of our suppliers sit in the root, so the check applies to a new supplier or a changed group only, as for the customer. |
 
 ## A dunning that has a fee but no Income Account says what is missing (2026-11-09)
