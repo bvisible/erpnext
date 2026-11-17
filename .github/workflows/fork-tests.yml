@@ -67,6 +67,19 @@ on:
       - "erpnext/accounts/doctype/pos_invoice/pos_invoice.py"
       # //// Neoffice — the rule « one delivery note, one round » lets go of a stop our logistics closed (neoffice-maintenance#2832)
       - "erpnext/stock/doctype/delivery_trip/**"
+      # //// Neoffice — our money code, where upstream's own suites cover it (neoffice-maintenance#1832): the invoices carry
+      # //// our shipping rule, our loyalty and our returns; the loyalty program and the payment reconciliation carry ours too.
+      - "erpnext/accounts/doctype/sales_invoice/**"
+      - "erpnext/accounts/doctype/purchase_invoice/**"
+      - "erpnext/accounts/doctype/loyalty_program/**"
+      - "erpnext/accounts/doctype/payment_reconciliation/**"
+      - "erpnext/accounts/doctype/shipping_rule_condition_multiple_constraints/**"
+      - "erpnext/accounts/party.py"
+      - "erpnext/accounts/utils.py"
+      - "erpnext/controllers/accounts_controller.py"
+      - "erpnext/controllers/selling_controller.py"
+      - "erpnext/controllers/buying_controller.py"
+      - "erpnext/controllers/sales_and_purchase_return.py"
       - ".github/workflows/fork-tests.yml"
   pull_request:
     paths:
@@ -118,6 +131,19 @@ on:
       - "erpnext/accounts/doctype/pos_invoice/pos_invoice.py"
       # //// Neoffice — the rule « one delivery note, one round » lets go of a stop our logistics closed (neoffice-maintenance#2832)
       - "erpnext/stock/doctype/delivery_trip/**"
+      # //// Neoffice — our money code, where upstream's own suites cover it (neoffice-maintenance#1832): the invoices carry
+      # //// our shipping rule, our loyalty and our returns; the loyalty program and the payment reconciliation carry ours too.
+      - "erpnext/accounts/doctype/sales_invoice/**"
+      - "erpnext/accounts/doctype/purchase_invoice/**"
+      - "erpnext/accounts/doctype/loyalty_program/**"
+      - "erpnext/accounts/doctype/payment_reconciliation/**"
+      - "erpnext/accounts/doctype/shipping_rule_condition_multiple_constraints/**"
+      - "erpnext/accounts/party.py"
+      - "erpnext/accounts/utils.py"
+      - "erpnext/controllers/accounts_controller.py"
+      - "erpnext/controllers/selling_controller.py"
+      - "erpnext/controllers/buying_controller.py"
+      - "erpnext/controllers/sales_and_purchase_return.py"
   workflow_dispatch:
 
 concurrency:
@@ -333,4 +359,64 @@ jobs:
       # `--module`, with the file's `test_dependencies` (`_Test Customer`, `_Test Item`…). Not `--doctype "Delivery Trip"`:
       # its links lead to Payment Gateway, a doctype of the payments app this CI does not install (DoesNotExistError).
       test_args: "--module erpnext.stock.doctype.delivery_trip.test_delivery_trip"
+    secrets: inherit
+
+  # //// Neoffice — the sales invoice carries our shipping rule, loyalty and returns (neoffice-maintenance#1832): upstream's whole suite of the doctype, payments installed as
+  # //// upstream's CI does (its test records reach Payment Gateway).
+  sales_invoice:
+    name: sales invoice — our shipping rule, loyalty and returns in upstream's suite
+    uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
+    with:
+      app: erpnext
+      install_apps: payments
+      erpnext_bootstrap: false
+      skip_build: true
+      build_frappe_assets: true
+      test_args: '--doctype "Sales Invoice"'
+      tests_timeout_minutes: 60
+    secrets: inherit
+
+  # //// Neoffice — the purchase invoice carries our shipping rule and returns (neoffice-maintenance#1832): upstream's whole suite of the doctype, payments installed as
+  # //// upstream's CI does (its test records reach Payment Gateway).
+  purchase_invoice:
+    name: purchase invoice — our shipping rule and returns in upstream's suite
+    uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
+    with:
+      app: erpnext
+      install_apps: payments
+      erpnext_bootstrap: false
+      skip_build: true
+      build_frappe_assets: true
+      test_args: '--doctype "Purchase Invoice"'
+      tests_timeout_minutes: 60
+    secrets: inherit
+
+  # //// Neoffice — the loyalty program carries our tiers (neoffice-maintenance#1832): upstream's whole suite of the doctype, payments installed as
+  # //// upstream's CI does (its test records reach Payment Gateway).
+  loyalty_program:
+    name: loyalty program — our tiers in upstream's suite
+    uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
+    with:
+      app: erpnext
+      install_apps: payments
+      erpnext_bootstrap: false
+      skip_build: true
+      build_frappe_assets: true
+      test_args: '--doctype "Loyalty Program"'
+      tests_timeout_minutes: 60
+    secrets: inherit
+
+  # //// Neoffice — the payment reconciliation carries our changes (neoffice-maintenance#1832): upstream's whole suite of the doctype, payments installed as
+  # //// upstream's CI does (its test records reach Payment Gateway).
+  payment_reconciliation:
+    name: payment reconciliation — ours in upstream's suite
+    uses: bvisible/neoffice-ci/.github/workflows/frappe-app-ci.yml@main
+    with:
+      app: erpnext
+      install_apps: payments
+      erpnext_bootstrap: false
+      skip_build: true
+      build_frappe_assets: true
+      test_args: '--doctype "Payment Reconciliation"'
+      tests_timeout_minutes: 60
     secrets: inherit

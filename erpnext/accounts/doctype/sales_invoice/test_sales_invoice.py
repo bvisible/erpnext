@@ -6346,7 +6346,10 @@ def create_sales_invoice_against_cost_center(**args):
 	return si
 
 
-test_dependencies = ["Journal Entry", "Contact", "Address"]
+# //// Neoffice — and Stock Entry (neoffice-maintenance#1832): the fork's CI runs this file alone, and its tests that deliver
+# //// `_Test Item` (test_taxes_merging_from_delivery_note) need the stock the Stock Entry records give in a full run
+# //// (NegativeStockError otherwise, on upstream's own code too).
+test_dependencies = ["Journal Entry", "Contact", "Address", "Stock Entry"]
 test_records = frappe.get_test_records("Sales Invoice")
 
 
