@@ -17,6 +17,11 @@ from erpnext.stock.doctype.delivery_trip.delivery_trip import (
 )
 from erpnext.tests.utils import create_test_contact_and_address
 
+# //// Neoffice — the fork's CI runs this file alone (`--module`, maintenance#2832): the records its tests stand on
+# //// (`_Test Customer`, `_Test Item`, `_Test Warehouse - _TC`, `_Test Company`…) are built first. Not by `--doctype`:
+# //// the links of the round lead to Payment Gateway, a doctype of an app that CI does not install.
+test_dependencies = ["Customer", "Item", "Warehouse"]
+
 
 class TestDeliveryTrip(FrappeTestCase):
 	def setUp(self):
@@ -356,6 +361,8 @@ class TestDeliveryTrip(FrappeTestCase):
 	def setUpClass(cls):
 		super().setUpClass()
 		neo_status_column()
+		# //// and the stock the delivery notes of these tests take (#2832)
+		neo_stock_for_the_notes()
 
 	def neo_stop_of(self, trip, delivery_note, state):
 		frappe.db.set_value(
@@ -561,4 +568,14 @@ def neo_status_column():
 		"Delivery Stop",
 		{"fieldname": "neo_status", "label": "Status", "fieldtype": "Data", "insert_after": "visited"},
 	)
+	frappe.db.commit()
+
+
+# //// Neoffice — stock for the delivery notes these tests submit (maintenance#2832).
+def neo_stock_for_the_notes():
+	"""Stock of `_Test Item` in `_Test Warehouse - _TC`. A full run of the suite has it from the Stock Entry test records; the
+	fork's CI runs this file alone and has none, so a note would be refused on negative stock."""
+	from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
+
+	make_stock_entry(item_code="_Test Item", target="_Test Warehouse - _TC", qty=100, basic_rate=100)
 	frappe.db.commit()
