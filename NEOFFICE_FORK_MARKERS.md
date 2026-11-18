@@ -149,8 +149,10 @@ conflict at the merge.
   `stock/page/warehouse_capacity_summary` (`f032a768e2` / `da71070613`).
   **TO REVIEW**: a Domain named *Gestion* — a French word — gates these doctypes and pages. No
   commit explains it; if the Domain does not exist on a site, upstream hides the doctype.
-- `erpnext/accounts/doctype/journal_entry/journal_entry.json` and `stock/doctype/stock_ledger_entry.json`:
-  top-level `read_only: 1` (upstream: unset).
+- `erpnext/accounts/doctype/journal_entry/journal_entry.json`, `loyalty_point_entry/loyalty_point_entry.json` and
+  `stock/doctype/stock_ledger_entry.json`: top-level `read_only` is upstream's again (unset), maintenance#2859. The
+  fork had set it to 1 (da71070613, no reason given): frappe puts such a doctype in no reader's `can_read`, so
+  their readers (Auditor, POSNext Manager, Stock User, the accountants) were sent back to the home page.
 - `erpnext/accounts/doctype/loyalty_point_entry/loyalty_point_entry.json` and `stock/doctype/stock_ledger_entry.json`:
   `permissions` rewritten (`da71070613`, 2023-11-15 *updates for v15*; no rationale — **TO REVIEW**,
   a permission change is exactly what must not diverge silently).
@@ -340,7 +342,7 @@ the workspaces are synced from the hub, and a JSON change that the hub overrides
 - `erpnext/setup/module_onboarding/home/home.json` — documentation_url "https://docs.erpnext.com/docs/v14/us…→"neoffice.io/help". Commits: f032a768e2 (2024-09-23, "last updates").
 - `erpnext/setup/workspace/erpnext_settings/erpnext_settings.json` — links −Import Data, Export Data, Bulk Update, Download Backups, Deleted Documents, Email / Notifications…; restrict_to_domain ""→"Gestion"; sequence_id 19.0→64.0; shortcuts −Print Settings, System Settings, Accounts Settings, Global Defaults, Stock Settings, Selling Settings…. Commits: f032a768e2 (2024-09-23, "last updates").
 - `erpnext/stock/doctype/serial_and_batch_entry/serial_and_batch_entry.json` — `serial_no`: in_global_search null→1; `batch_no`: in_global_search null→1. Commits: da71070613 (2023-11-15, "updates for v15").
-- `erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.json` — permissions [{"export": 1, "print": 1, "read": 1,…→[{"export": 1, "print": 1, "read": 1,…; read_only null→1; restrict_to_domain null→"Gestion". Commits: da71070613 (2023-11-15, "updates for v15").
+- `erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.json` — permissions [{"export": 1, "print": 1, "read": 1,…→[{"export": 1, "print": 1, "read": 1,…; restrict_to_domain null→"Gestion". Commits: da71070613 (2023-11-15, "updates for v15").
 - `erpnext/stock/form_tour/item/item.json` — list_name null→"List"; new_document_form null→0; steps (edited); track_steps null→0; ui_tour null→0; view_name null→"Workspaces". Commits: f032a768e2 (2024-09-23, "last updates").
 - `erpnext/stock/form_tour/item_general/item_general.json` — list_name null→"List"; new_document_form null→0; steps (edited); track_steps null→0; ui_tour null→0; view_name null→"Workspaces". Commits: f032a768e2 (2024-09-23, "last updates").
 - `erpnext/stock/form_tour/material_request/material_request.json` — first_document null→0; include_name_field null→0; list_name null→"List"; new_document_form null→0; steps (edited); track_steps null→0; ui_tour null→0; view_name null→"Workspaces". Commits: f032a768e2 (2024-09-23, "last updates").

@@ -397,7 +397,6 @@
    "write": 1
   }
  ],
- "read_only": 1,
  "restrict_to_domain": "Gestion",
  "sort_field": "modified",
  "sort_order": "DESC",
