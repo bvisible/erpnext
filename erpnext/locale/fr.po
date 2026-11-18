@@ -28909,9 +28909,11 @@ msgstr "Grand Parent"
 msgid "Oldest Of Invoice Or Advance"
 msgstr "La plus ancienne entre la facture ou l'avance"
 
+# //// Neoffice — the name of a default energy point rule (maintenance#2837): upstream's French was a calque
+# //// (« Sur Client Creation »); keep ours at the next merge, a contract of NEOFFICE_FORK_MARKERS.md checks it.
 #: erpnext/setup/default_energy_point_rules.py:12
 msgid "On Converting Opportunity"
-msgstr "Sur l'opportunité de conversion"
+msgstr "À la conversion d'une opportunité"
 
 #. Label of a Datetime field in DocType 'Issue'
 #: erpnext/support/doctype/issue/issue.json:350
@@ -28955,17 +28957,23 @@ msgstr "Le Montant de la Rangée Précédente"
 msgid "On Previous Row Total"
 msgstr "Le Total de la Rangée Précédente"
 
+# //// Neoffice — the name of a default energy point rule (maintenance#2837): upstream's French was a calque
+# //// (« Sur Client Creation »); keep ours at the next merge, a contract of NEOFFICE_FORK_MARKERS.md checks it.
 #: erpnext/setup/default_energy_point_rules.py:24
 msgid "On Purchase Order Submission"
-msgstr "Sur soumission de commande"
+msgstr "À la validation d'une commande fournisseur"
 
+# //// Neoffice — the name of a default energy point rule (maintenance#2837): upstream's French was a calque
+# //// (« Sur Client Creation »); keep ours at the next merge, a contract of NEOFFICE_FORK_MARKERS.md checks it.
 #: erpnext/setup/default_energy_point_rules.py:18
 msgid "On Sales Order Submission"
-msgstr "Envoi de commande client"
+msgstr "À la validation d'une commande client"
 
+# //// Neoffice — the name of a default energy point rule (maintenance#2837): upstream's French was a calque
+# //// (« Sur Client Creation »); keep ours at the next merge, a contract of NEOFFICE_FORK_MARKERS.md checks it.
 #: erpnext/setup/default_energy_point_rules.py:30
 msgid "On Task Completion"
-msgstr "En fin de tâche"
+msgstr "À l'achèvement d'une tâche"
 
 #: erpnext/stock/report/available_batch_report/available_batch_report.js:16
 msgid "On This Date"
@@ -29019,9 +29027,11 @@ msgstr ""
 "automatiquement le lot de n° de série et de lot basé sur les champs N° de "
 "série / Lot."
 
+# //// Neoffice — the name of a default energy point rule (maintenance#2837): upstream's French was a calque
+# //// (« Sur Client Creation »); keep ours at the next merge, a contract of NEOFFICE_FORK_MARKERS.md checks it.
 #: erpnext/setup/default_energy_point_rules.py:43
 msgid "On {0} Creation"
-msgstr "Sur {0} Creation"
+msgstr "À la création : {0}"
 
 #. Option for the 'Stop Reason' (Select) field in DocType 'Downtime Entry'
 #: erpnext/manufacturing/doctype/downtime_entry/downtime_entry.json:72

@@ -382,6 +382,12 @@ again (marked), or, if the decision itself has changed, edit the row and say why
 | `erpnext/stock/doctype/delivery_trip/delivery_trip.py` | present | `\.notin\(NEOFFICE_CLOSED_STOPS\)` | #2832: the same, where the rule reads them: a stop our logistics closed no longer holds its note; any other stop still does, as upstream. |
 | `erpnext/buying/doctype/supplier/supplier.py` | present | `if not self\.is_new\(\) and not self\.has_value_changed\("supplier_group"\)` | #2648: upstream v15.125.0 refuses a group-type Supplier Group at every save; most of our suppliers sit in the root, so the check applies to a new supplier or a changed group only, as for the customer. |
 | `erpnext/accounts/doctype/shipping_rule/shipping_rule.py` | present | `_\(shipping_country\)` | #1466: a shipping rule kept to some countries refuses an address of another one; the message names that country in the user's language (Country is a translated doctype), where upstream gave its English name in a French sentence. |
+| `erpnext/setup/default_energy_point_rules.py` | present | `_\("On \{0\} Creation"\)\.format\(_\(doctype\)\)` | #2837: a creation rule names its doctype in the language it is made in (« À la création : Client »); upstream formats it with the English name, so an install in French made « … Item ». |
+| `erpnext/locale/fr.po` | present | `msgstr "À la création : \{0\}"` | #2837: the name of a default energy point rule; upstream's French (from the collaborative translation) was a calque (« Sur Client Creation », « Envoi de commande client »), and a merge of its catalogue would bring it back with no conflict. Our theme's patch renames the rules of a French site to these names. |
+| `erpnext/locale/fr.po` | present | `msgstr "À la conversion d'une opportunité"` | #2837: the name of a default energy point rule; upstream's French (from the collaborative translation) was a calque (« Sur Client Creation », « Envoi de commande client »), and a merge of its catalogue would bring it back with no conflict. Our theme's patch renames the rules of a French site to these names. |
+| `erpnext/locale/fr.po` | present | `msgstr "À la validation d'une commande client"` | #2837: the name of a default energy point rule; upstream's French (from the collaborative translation) was a calque (« Sur Client Creation », « Envoi de commande client »), and a merge of its catalogue would bring it back with no conflict. Our theme's patch renames the rules of a French site to these names. |
+| `erpnext/locale/fr.po` | present | `msgstr "À la validation d'une commande fournisseur"` | #2837: the name of a default energy point rule; upstream's French (from the collaborative translation) was a calque (« Sur Client Creation », « Envoi de commande client »), and a merge of its catalogue would bring it back with no conflict. Our theme's patch renames the rules of a French site to these names. |
+| `erpnext/locale/fr.po` | present | `msgstr "À l'achèvement d'une tâche"` | #2837: the name of a default energy point rule; upstream's French (from the collaborative translation) was a calque (« Sur Client Creation », « Envoi de commande client »), and a merge of its catalogue would bring it back with no conflict. Our theme's patch renames the rules of a French site to these names. |
 
 ## The country a shipping rule refuses is named in the user's language (2026-11-17)
 
@@ -424,3 +430,18 @@ again (marked), or, if the decision itself has changed, edit the row and say why
   Supplier Group.
 - `erpnext/buying/doctype/supplier/test_supplier_group_on_save.py` — added file: a supplier already in a group-type group
   saves, a new one or a group changed to one is refused.
+
+## The default energy point rules are named in French (2026-11-18)
+
+- `erpnext/locale/fr.po` — the msgstr of the five names of the default energy point rules (`On {0} Creation`,
+  `On Converting Opportunity`, `On Sales Order Submission`, `On Purchase Order Submission`, `On Task Completion`) are
+  « À la création : {0} », « À la conversion d'une opportunité », « À la validation d'une commande client », « À la
+  validation d'une commande fournisseur », « À l'achèvement d'une tâche », with a `# //// Neoffice` comment above each
+  entry. Upstream's were calques (« Sur Client Creation », « Sur l'opportunité de conversion », « Envoi de commande
+  client »). Written by Haiku, as every translation (neoffice-maintenance#2837). The contract rows above keep them at
+  the next merge of upstream's catalogue.
+- `erpnext/setup/default_energy_point_rules.py` — `get_default_energy_point_rules` formats « On {0} Creation » with
+  `_(doctype)` (marked in place): upstream used the doctype's English name, so a rule made in French read « … Item ».
+  Test: `erpnext/setup/test_neoffice_energy_point_rule_names.py` (added file). The theme's patch
+  `default_energy_point_rules_in_the_sites_language` reads the names from this function, in English and in French, and
+  renames the rules a French site still has under their English name.

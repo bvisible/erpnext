@@ -48,7 +48,10 @@ def get_default_energy_point_rules():
 			"reference_doctype": doctype,
 			"for_doc_event": rule.get("for_doc_event") or "Custom",
 			"condition": rule.get("condition"),
-			"rule_name": rule.get("rule_name") or _("On {0} Creation").format(doctype),
+			# //// Neoffice — the doctype is named in the language of the rule, as the sentence
+			# //// around it: upstream formats it with its English name, so an install in French
+			# //// made « … Item » (maintenance#2837).
+			"rule_name": rule.get("rule_name") or _("On {0} Creation").format(_(doctype)),
 			"points": rule.get("points"),
 			"user_field": rule.get("user_field") or "owner",
 		}
