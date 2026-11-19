@@ -332,8 +332,15 @@ class Customer(TransactionBase):
 		# //// avoid contact/address creation while importing"): upstream builds the primary Contact and
 		# //// Address on every on_update, so a Data Import of customers created one Contact and one
 		# //// Address per row — duplicating records the import was usually bringing in separately.
-		if not frappe.flags.in_import: # //// added if condition
-			self.create_primary_contact()
+		# //// Neoffice — since 2026-11-19 the CONTACT is made during an import too: a list of customers with their
+		# //// e-mail and phone is the self-service import a new client is sent to (« Importer ma liste »), and without
+		# //// it no customer of the list had a contact. The duplicates of 2024 stay away: the theme's
+		# //// create_primary_contact never gives a second contact to a customer that has one, make_contact reuses the
+		# //// contact that already carries the e-mail, and a contacts file imported afterwards is refused for an
+		# //// e-mail its customer already has (neoffice_theme contacts.refuse_contact_imported_twice). The address
+		# //// stays skipped: a customer row carries none (address_line1 is not a field of Customer).
+		self.create_primary_contact()
+		if not frappe.flags.in_import:  # //// added if condition
 			self.create_primary_address()
 
 		if self.flags.old_lead != self.lead_name:
@@ -538,7 +545,7 @@ class Customer(TransactionBase):
 		if self.name == "Passage":
 			return
 		# ////
-		
+
 		loyalty_program = get_loyalty_programs(self)
 		if not loyalty_program:
 			return
@@ -1008,8 +1015,8 @@ def make_contact(args, is_primary_contact=1):
 	if flags := args.get("flags"):
 		contact.insert(ignore_permissions=flags.get("ignore_permissions"))
 	else:
-	# ////
-		contact.insert(ignore_permissions=True) # //// added ignore_permissions=True
+		# ////
+		contact.insert(ignore_permissions=True)  # //// added ignore_permissions=True
 
 	return contact
 
