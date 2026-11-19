@@ -3070,6 +3070,11 @@ def validate_reserved_batch_nos(kwargs):
 
 
 def is_negative_stock_allowed(*, item_code: str | None = None) -> bool:
+	# //// Neoffice — a delivery the person confirmed « Deliver anyway » below zero, where the company asked to be
+	# //// asked each time (neoffice_theme space_welcome/at_work.allow_below_zero_once sets this flag in before_submit):
+	# //// that request's validation only. Upstream knows only the site-wide and per-item switches, all or nothing.
+	if frappe.flags.get("neo_negative_stock_once"):
+		return True
 	if cint(frappe.db.get_single_value("Stock Settings", "allow_negative_stock", cache=True)):
 		return True
 	if item_code and cint(frappe.db.get_value("Item", item_code, "allow_negative_stock", cache=True)):
